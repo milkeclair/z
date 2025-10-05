@@ -65,7 +65,7 @@ z.t.describe "z.io.clear"; {
       z.io.clear
 
       z.t.expect $args "\033c"
-      z.t.reset_functions "print"
+      z.t.reset_function "print"
     }
   }
 }

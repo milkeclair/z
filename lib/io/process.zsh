@@ -97,6 +97,17 @@ z.io.indent() {
   print -- $indent$*
 }
 
+# reading a line from standard input and storing it in REPLY
+#
+# REPLY: input line
+# return: null
+#
+# example:
+#  z.io.read #=> REPLY="input line"
+z.io.read() {
+  read -r REPLY
+}
+
 # printing provided arguments to stderr
 #
 # $@: arguments

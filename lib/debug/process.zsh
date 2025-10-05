@@ -18,7 +18,9 @@ z.debug() {
 
   while z.int.eq $continue 0; do
     z.io.oneline "z> "
-    read -r debug_command debug_args
+    z.io.read
+    local debug_command=${REPLY%% *}
+    local debug_args=${REPLY#* }
 
     case $debug_command in
       c|continue)
