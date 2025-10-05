@@ -1,0 +1,13 @@
+#!/bin/zsh
+
+source main.zsh
+
+z.io.clear
+z.io "File watching..."
+
+fswatch -r lib test | while read file; do
+  z.io.clear
+  local relative_path=${file#$PWD/}
+  z.io "File changed: $relative_path"
+  z.t -f
+done
