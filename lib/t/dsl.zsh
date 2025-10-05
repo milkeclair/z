@@ -99,6 +99,25 @@ z.t.expect() {
   fi
 }
 
+z.t.expect_include() {
+  local actual=$1
+  local expect=$2
+
+  if z.str.is_not_include $actual $expect; then
+    z.str.indent 4 "failed: expected [ $expect ] to be included in [ $actual ]"
+    z.str.color.red $REPLY
+    test_logs+=($REPLY)
+
+    (( failures++ ))
+    z.t._remember_failure
+    z.t._colorize_failure "red"
+
+    return 1
+  else
+    return 0
+  fi
+}
+
 z.t.expect_status() {
   local actual=$?
   local expect=$1
@@ -131,19 +150,21 @@ z.t.expect_reply.arr() {
   local -a expect=($@)
   local -a actual=($REPLY)
 
-  local expect_str="${(j: :)expect}"
-  local actual_str="${(j: :)actual}"
+  z.arr.join $expect
+  local expect_str=$REPLY
+  z.arr.join $actual
+  local actual_str=$REPLY
 
   z.t.expect "$actual_str" "$expect_str"
 }
 
-z.t.reset_functions() {
+z.t.reset_function() {
   z.is_not_null $1 && unfunction $1
   source ${z_main}
 }
 
 z.t.teardown() {
-  z.t.reset_functions
+  z.t.reset_function
   z.t._remove_tmp_dir
   z.t._log
 }
