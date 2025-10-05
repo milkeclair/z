@@ -39,3 +39,25 @@ z.str.split() {
   local IFS=$delimiter
   REPLY=(${=str})
 }
+
+# global substitute in a string
+#
+# $1: original string
+# $2: search string
+# $3: replace string
+# REPLY: modified string
+# return: null
+#
+# example:
+#  z.str.gsub "Hello World" "World" "Zsh" #=> "Hello Zsh"
+z.str.gsub() {
+  local str=$1
+  local search=$2
+  local replace=$3
+
+  if z.is_null $str || z.is_null $search; then
+    z.return $str
+  else
+    z.return ${str//$search/$replace}
+  fi
+}

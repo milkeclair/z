@@ -87,3 +87,38 @@ z.t.describe "z.str.split"; {
     }
   }
 }
+
+z.t.describe "z.str.gsub"; {
+  z.t.context "置換対象の文字列が存在する場合"; {
+    z.t.it "指定された文字列をすべて置換した文字列を返す"; {
+      z.str.gsub "Hello World" "World" "Zsh"
+      z.t.expect_reply "Hello Zsh"
+
+      z.str.gsub "foo bar foo" "foo" "baz"
+      z.t.expect_reply "baz bar baz"
+
+      z.str.gsub "aaaaa" "a" "b"
+      z.t.expect_reply "bbbbb"
+    }
+  }
+
+  z.t.context "置換対象の文字列が存在しない場合"; {
+    z.t.it "元の文字列をそのまま返す"; {
+      z.str.gsub "Hello World" "Ruby" "Zsh"
+      z.t.expect_reply "Hello World"
+
+      z.str.gsub "foo bar foo" "xyz" "baz"
+      z.t.expect_reply "foo bar foo"
+    }
+  }
+
+  z.t.context "空文字列が渡された場合"; {
+    z.t.it "空文字列を返す"; {
+      z.str.gsub "" "a" "b"
+      z.t.expect_reply ""
+
+      z.str.gsub "" "" "b"
+      z.t.expect_reply ""
+    }
+  }
+}
