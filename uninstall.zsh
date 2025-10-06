@@ -1,35 +1,3 @@
-# uninstall z
-#
-# $1: install dir (default: $HOME/.z)
-# REPLY: null
-# return: null
-#
-# example:
-#   1. z.uninstall
-#   2. z.uninstall /path/to/dir
-z.uninstall() {
-  local install_dir="${1:-$HOME/.z}"
-
-  z.install._replace_home
-
-  z.uninstall._start
-
-  z.uninstall._validate_presence_of_install_dir || return 1
-  z.uninstall._question_remove_install_dir || return 1
-  z.uninstall._remove_install_dir || return 1
-
-  if z.uninstall._zshrc_has_source_line; then
-    z.uninstall._question_remove_source_line || return 1
-    z.uninstall._remove_source_line
-  fi
-
-  z.uninstall._bye
-
-  return 0
-}
-
-# private
-
 z.install._replace_home() {
   install_dir="${install_dir/#\~/$HOME}"
 
@@ -127,6 +95,36 @@ z.uninstall._remove_source_line() {
 z.uninstall._bye() {
   echo ""
   echo "👋"
+}
+
+# uninstall z
+#
+# $1: install dir (default: $HOME/.z)
+# REPLY: null
+# return: null
+#
+# example:
+#   1. z.uninstall
+#   2. z.uninstall /path/to/dir
+z.uninstall() {
+  local install_dir="${1:-$HOME/.z}"
+
+  z.install._replace_home
+
+  z.uninstall._start
+
+  z.uninstall._validate_presence_of_install_dir || return 1
+  z.uninstall._question_remove_install_dir || return 1
+  z.uninstall._remove_install_dir || return 1
+
+  if z.uninstall._zshrc_has_source_line; then
+    z.uninstall._question_remove_source_line || return 1
+    z.uninstall._remove_source_line
+  fi
+
+  z.uninstall._bye
+
+  return 0
 }
 
 z.uninstall

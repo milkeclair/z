@@ -1,40 +1,3 @@
-# install z
-#
-# $1: install dir (default: $HOME/.z)
-# REPLY: null
-# return: null
-#
-# example:
-#   1. z.install
-#   2. z.install /path/to/dir
-z.install() {
-  local install_dir=${1:-$HOME/.z}
-  local github_repo="milkeclair/z"
-  local github_branch=${Z_INSTALL_BRANCH:-main}
-  local temp_dir
-  local source_dir
-
-  z.install._replace_home
-
-  z.install._start
-
-  z.install._question_overwrite_install_dir || return 1
-  z.install._create_temp_dir || return 1
-
-  z.install._download_archive || return 1
-  z.install._decompress_archive || return 1
-  z.install._copy_files || return 1
-  z.install._show_completion
-
-  if z.install._zshrc_exists; then
-    if z.install._question_add_to_zshrc; then
-      z.install._add_to_zshrc
-    fi
-  fi
-}
-
-# private
-
 z.install._replace_home() {
   install_dir=${install_dir/#\~/$HOME}
 
@@ -198,6 +161,41 @@ z.install._add_to_zshrc() {
   echo "source \"\$Z_ROOT/main.zsh\"" >> "$HOME/.zshrc"
   echo "✅ added to .zshrc"
   echo "   to apply changes: source ~/.zshrc"
+}
+
+# install z
+#
+# $1: install dir (default: $HOME/.z)
+# REPLY: null
+# return: null
+#
+# example:
+#   1. z.install
+#   2. z.install /path/to/dir
+z.install() {
+  local install_dir=${1:-$HOME/.z}
+  local github_repo="milkeclair/z"
+  local github_branch=${Z_INSTALL_BRANCH:-main}
+  local temp_dir
+  local source_dir
+
+  z.install._replace_home
+
+  z.install._start
+
+  z.install._question_overwrite_install_dir || return 1
+  z.install._create_temp_dir || return 1
+
+  z.install._download_archive || return 1
+  z.install._decompress_archive || return 1
+  z.install._copy_files || return 1
+  z.install._show_completion
+
+  if z.install._zshrc_exists; then
+    if z.install._question_add_to_zshrc; then
+      z.install._add_to_zshrc
+    fi
+  fi
 }
 
 z.install
