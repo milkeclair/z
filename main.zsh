@@ -29,5 +29,3 @@ z.dir() {}
 z.file() {}
 z.int() {}
 z.str() {}
-
-unset z_root

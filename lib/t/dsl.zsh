@@ -156,7 +156,7 @@ z.t.reset_function() {
     local module_path
     case $func_name in
       z.io.*)
-        module_path="${z_main}/../lib/io/process.zsh"
+        module_path="${z_root}/lib/io/process.zsh"
         ;;
       *)
         source ${z_main}
