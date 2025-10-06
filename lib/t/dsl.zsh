@@ -2,6 +2,7 @@ local file_path=$1
 
 local tests=0
 local failures=0
+local logged=0
 local test_logs=()
 
 local -A current_indexes=([describe]=0 [context]=0 [it]=0)
@@ -84,18 +85,7 @@ z.t.expect() {
   if z.not_eq $expect $actual; then
     local expect_display=${(V)expect}
     local actual_display=${(V)actual}
-    
-    z.str.indent 4 "failed: expected [ $expect_display ] but got [ $actual_display ]"
-    z.str.color.red $REPLY
-    test_logs+=($REPLY)
-
-    (( failures++ ))
-    z.t._remember_failure
-    z.t._colorize_failure "red"
-
-    return 1
-  else
-    return 0
+    z.t._handle_failure "failed: expected [ $expect_display ] but got [ $actual_display ]"
   fi
 }
 
@@ -104,17 +94,16 @@ z.t.expect_include() {
   local expect=$2
 
   if z.str.is_not_include $actual $expect; then
-    z.str.indent 4 "failed: expected [ $expect ] to be included in [ $actual ]"
-    z.str.color.red $REPLY
-    test_logs+=($REPLY)
+    z.t._handle_failure "failed: expected [ $expect ] to be included in [ $actual ]"
+  fi
+}
 
-    (( failures++ ))
-    z.t._remember_failure
-    z.t._colorize_failure "red"
+z.t.expect_exclude() {
+  local actual=$1
+  local expect=$2
 
-    return 1
-  else
-    return 0
+  if z.str.is_include $actual $expect; then
+    z.t._handle_failure "failed: expected [ $expect ] to be excluded from [ $actual ]"
   fi
 }
 
@@ -159,8 +148,24 @@ z.t.expect_reply.arr() {
 }
 
 z.t.reset_function() {
-  z.is_not_null $1 && unfunction $1
-  source ${z_main}
+  local func_name=$1
+
+  if z.is_not_null $func_name; then
+    unfunction $func_name 2>/dev/null || true
+
+    local module_path
+    case $func_name in
+      z.io.*)
+        module_path="${z_main}/../lib/io/process.zsh"
+        ;;
+      *)
+        source ${z_main}
+        return 0
+        ;;
+    esac
+
+    z.file.is $module_path && source $module_path
+  fi
 }
 
 z.t.teardown() {
@@ -219,12 +224,29 @@ z.t._colorize_failure() {
   test_logs[$i_idx]=$REPLY
 }
 
+z.t._handle_failure() {
+  local error_message=$1
+
+  z.str.indent 4 $error_message
+  z.str.color.red $REPLY
+  test_logs+=($REPLY)
+
+  (( failures++ ))
+  z.t._remember_failure
+  z.t._colorize_failure "red"
+}
+
 z.t._remove_tmp_dir() {
   z.dir.is /tmp/z_test && rm -rf /tmp/z_test
 }
 
 z.t._log() {
-  z.is_true $z_failed_only && z.int.is_zero $failures && return 0
+  z.guard; {
+    z.not_eq $logged 0 && return 0
+    z.is_true $z_failed_only && z.int.is_zero $failures && return 0
+  }
+
+  logged=1
 
   local display_path=${file_path:r}
   local padded_path=$(printf "%-25s" "$display_path")
@@ -236,25 +258,37 @@ z.t._log() {
     { z.str.color.green $message; } || { z.str.color.red $message; }
   z.io $REPLY
 
-  if z.is_false $z_all_log; then
-    for record in $failure_records; do
-      z.str.split $record ":"
-      local -a indexes=($REPLY)
-      local d_idx=$indexes[1]
-      local c_idx=$indexes[2]
-      local i_idx=$indexes[3]
-      local e_idx=$indexes[4]
-
-      z.is_not_null $d_idx && z.int.is_zero $d_idx || z.io ${test_logs[$d_idx]}
-      z.is_not_null $c_idx && z.int.is_zero $c_idx || z.io ${test_logs[$c_idx]}
-      z.is_not_null $i_idx && z.int.is_zero $i_idx || z.io ${test_logs[$i_idx]}
-      z.is_not_null $e_idx && z.int.is_zero $e_idx || z.io ${test_logs[$e_idx]}
-
-      z.io ${test_logs[$e_idx]}
-    done
-  else
+  if z.is_true $z_all_log; then
     for log in $test_logs; do
       z.io $log
     done
+
+    return 0
   fi
+
+  z.int.is_zero $failures && return 0
+
+  local prev_i_idx=""
+  for record in $failure_records; do
+    z.str.split $record ":"
+    local -a indexes=($REPLY)
+    local d_idx=$indexes[1]
+    local c_idx=$indexes[2]
+    local i_idx=$indexes[3]
+    local e_idx=$indexes[4]
+
+    if z.not_eq $prev_i_idx $i_idx; then
+      z.is_not_null $d_idx && z.int.is_not_zero $d_idx &&
+        z.io ${test_logs[$d_idx]}
+      z.is_not_null $c_idx && z.int.is_not_zero $c_idx &&
+        z.io ${test_logs[$c_idx]}
+      z.is_not_null $i_idx && z.int.is_not_zero $i_idx &&
+        z.io ${test_logs[$i_idx]}
+
+      prev_i_idx=$i_idx
+    fi
+
+    z.is_not_null $e_idx && z.int.is_not_zero $e_idx &&
+      z.io ${test_logs[$e_idx]}
+  done
 }
