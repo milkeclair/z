@@ -129,3 +129,5 @@ z.uninstall._bye() {
   echo ""
   echo "👋"
 }
+
+z.uninstall

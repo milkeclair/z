@@ -204,3 +204,5 @@ z.install._add_to_zshrc() {
   echo "✅ added to .zshrc"
   echo "   to apply changes: source ~/.zshrc"
 }
+
+z.install

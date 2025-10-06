@@ -21,9 +21,6 @@ for module in ${(k)z_modules}; do
   done
 done
 
-source "${z_root}/install.zsh"
-source "${z_root}/uninstall.zsh"
-
 z.arg() {}
 z.arr() {}
 z.dir() {}
