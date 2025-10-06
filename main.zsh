@@ -7,12 +7,10 @@ local -A z_modules=(
   ["debug"]="process"
   ["dir"]="operator:process"
   ["file"]="operator:process"
-  ["install"]="process"
   ["int"]="operator"
   ["io"]="process"
   ["str"]="color:operator:process"
   ["t"]="dsl:process"
-  ["uninstall"]="process"
 )
 
 for module in ${(k)z_modules}; do
@@ -22,6 +20,9 @@ for module in ${(k)z_modules}; do
     source "${z_root}/lib/${module}/${part}.zsh"
   done
 done
+
+source "${z_root}/install.zsh"
+source "${z_root}/uninstall.zsh"
 
 z.arg() {}
 z.arr() {}
