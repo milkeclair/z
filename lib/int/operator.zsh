@@ -80,6 +80,22 @@ z.int.is_zero() {
   z.eq $value 0
 }
 
+# check if the value is not zero
+#
+# $1: value
+# REPLY: null
+# return: 0|1
+#
+# example:
+#  z.int.is_not_zero 123 && z.io "is not zero" || z.io "is zero"
+z.int.is_not_zero() {
+  local value=$1
+
+  z.int.is $value || return 1
+
+  z.not_eq $value 0
+}
+
 # check if the value is positive
 #
 # $1: value
