@@ -174,9 +174,9 @@ z.install._zshrc_exists() {
 
 z.install._question_add_to_zshrc() {
   echo -n "add to .zshrc? (y/n): "
-  z.io.read
+  read -r response
 
-  if [[ ! $REPLY =~ ^[yY]$ ]]; then
+  if [[ ! $response =~ ^[yY]$ ]]; then
     return 1
   fi
 }
