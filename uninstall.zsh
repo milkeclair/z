@@ -61,8 +61,8 @@ z.uninstall._question_remove_install_dir() {
   echo "⚠️ removing directory: $install_dir"
   echo ""
   echo -n "sure? (y/n): "
-  z.io.read
-  if [[ ! $REPLY =~ ^[yY]$ ]]; then
+  read -r response
+  if [[ ! $response =~ ^[yY]$ ]]; then
     echo "❌ canceled"
     return 1
   fi
@@ -102,8 +102,8 @@ z.uninstall._question_remove_source_line() {
   echo "   source \"\$Z_ROOT/main.zsh\""
   echo ""
   echo -n "remove from .zshrc? (y/n): "
-  z.io.read
-  if [[ ! $REPLY =~ ^[yY]$ ]]; then
+  read -r response
+  if [[ ! $response =~ ^[yY]$ ]]; then
     echo "🙏 please remove it manually"
     return 1
   fi
@@ -128,6 +128,4 @@ z.uninstall._remove_source_line() {
 z.uninstall._bye() {
   echo ""
   echo "👋"
-
-  return 0
 }

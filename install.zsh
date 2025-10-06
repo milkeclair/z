@@ -60,8 +60,8 @@ z.install._question_overwrite_install_dir() {
 
   echo "⚠️ install dir already exists: $install_dir"
   echo -n "overwrite? (y/n): "
-  z.io.read
-  if [[ ! $REPLY =~ ^[yY]$ ]]; then
+  read -r response
+  if [[ ! $response =~ ^[yY]$ ]]; then
     echo "❌ canceled"
     return 1
   fi
