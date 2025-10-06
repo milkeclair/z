@@ -7,7 +7,7 @@ z.install._replace_home() {
 } 
 
 z.uninstall._start() {
-  echo "🗑️  uninstall z..."
+  echo "🗑️  uninstalling z..."
   echo ""
 }
 
