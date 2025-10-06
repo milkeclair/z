@@ -21,8 +21,6 @@ z.install() {
   z.install._question_overwrite_install_dir || return 1
   z.install._create_temp_dir || return 1
 
-  z.install._setup_cleanup
-
   z.install._download_archive || return 1
   z.install._decompress_archive || return 1
   z.install._copy_files || return 1
@@ -74,16 +72,6 @@ z.install._create_temp_dir() {
     echo "❌ failed to create temp dir"
     return 1
   fi
-}
-
-z.install._setup_cleanup() {
-  z.install._cleanup() {
-    if [[ -d $temp_dir ]]; then
-      rm -rf $temp_dir
-    fi
-  }
-  
-  trap z.install._cleanup EXIT
 }
 
 z.install._download_archive() {
@@ -140,14 +128,21 @@ z.install._copy_files() {
     return 1
   fi
 
-  local file="main.zsh"
+  local -a files=("main.zsh" "install.zsh" "uninstall.zsh")
 
-  if [[ -f "$source_dir/$file" ]]; then
-    echo "   📄 $file"
-    if ! cp "$source_dir/$file" "$install_dir/"; then
-      echo "❌ failed to copy: $file"
+  for file in ${files[@]}; do
+    if [[ -f "$source_dir/$file" ]]; then
+      echo "   📄 $file"
+      if ! cp "$source_dir/$file" "$install_dir/"; then
+        echo "❌ failed to copy: $file"
       return 1
     fi
+  fi
+}
+
+z.install.cleanup() {
+  if [[ -n $temp_dir && -d $temp_dir ]]; then
+    rm -rf $temp_dir
   fi
 }
 

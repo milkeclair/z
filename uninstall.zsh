@@ -79,7 +79,6 @@ z.uninstall._remove_install_dir() {
     return 1
   fi
 
-  echo "✅ uninstallation completed!"
   echo ""
 
   return 0
