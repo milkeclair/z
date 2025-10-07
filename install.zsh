@@ -93,14 +93,15 @@ z.install._copy_files() {
 
   local -a files=("main.zsh" "install.zsh" "uninstall.zsh")
 
-  for file in ${files[@]}; do
+  for file in $files; do
     if [[ -f "$source_dir/$file" ]]; then
       echo "   📄 $file"
       if ! cp "$source_dir/$file" "$install_dir/"; then
         echo "❌ failed to copy: $file"
-      return 1
+        return 1
+      fi
     fi
-  fi
+  done
 }
 
 z.install.cleanup() {
@@ -198,4 +199,6 @@ z.install() {
   fi
 }
 
-z.install
+if [[ $0 == "zsh" ]]; then
+  z.install
+fi

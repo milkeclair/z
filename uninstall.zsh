@@ -126,5 +126,3 @@ z.uninstall() {
 
   return 0
 }
-
-z.uninstall
