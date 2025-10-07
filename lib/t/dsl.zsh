@@ -214,14 +214,20 @@ z.t._colorize_failure() {
   local c_idx=${current_indexes[context]}
   local i_idx=${current_indexes[it]}
 
+  if z.int.is_not_zero $d_idx; then
   z.str.color.red ${test_logs[$d_idx]}
   test_logs[$d_idx]=$REPLY
+  fi
 
+  if z.int.is_not_zero $c_idx; then
   z.str.color.red ${test_logs[$c_idx]}
   test_logs[$c_idx]=$REPLY
+  fi
 
+  if z.int.is_not_zero $i_idx; then
   z.str.color.red ${test_logs[$i_idx]}
   test_logs[$i_idx]=$REPLY
+  fi
 }
 
 z.t._handle_failure() {
@@ -278,17 +284,13 @@ z.t._log() {
     local e_idx=$indexes[4]
 
     if z.not_eq $prev_i_idx $i_idx; then
-      z.is_not_null $d_idx && z.int.is_not_zero $d_idx &&
-        z.io ${test_logs[$d_idx]}
-      z.is_not_null $c_idx && z.int.is_not_zero $c_idx &&
-        z.io ${test_logs[$c_idx]}
-      z.is_not_null $i_idx && z.int.is_not_zero $i_idx &&
-        z.io ${test_logs[$i_idx]}
+      z.int.is_not_zero $d_idx && z.io ${test_logs[$d_idx]}
+      z.int.is_not_zero $c_idx && z.io ${test_logs[$c_idx]}
+      z.int.is_not_zero $i_idx && z.io ${test_logs[$i_idx]}
 
       prev_i_idx=$i_idx
     fi
 
-    z.is_not_null $e_idx && z.int.is_not_zero $e_idx &&
-      z.io ${test_logs[$e_idx]}
+    z.int.is_not_zero $e_idx && z.io ${test_logs[$e_idx]}
   done
 }
