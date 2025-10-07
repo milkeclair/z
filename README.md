@@ -71,3 +71,28 @@ z.t.describe "my.argument_check"; {
   }
 }
 ```
+
+## Debug
+
+This library provides a debug function for interactive debugging.
+
+### Using the Debug Function
+
+Call `z.debug` in your script to enter debug mode. When debug mode is enabled, the function will pause execution and provide an interactive prompt.
+
+Available commands in debug mode:
+
+- `c` or `continue`: Continue execution.
+- `p <var>` or `print <var>`: Print the value of a variable.
+- `h` or `help`: Show help.
+- `q` or `quit` or `exit`: Exit the script.
+
+Example:
+
+```zsh
+my.function() {
+  local var="hello"
+  z.debug  # This will enter debug mode if Z_DEBUG=0
+  z.io $var
+}
+```
