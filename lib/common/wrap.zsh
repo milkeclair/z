@@ -20,17 +20,17 @@ z.return() {
   local value=$1
 
   case $value in
-    0|"true")
-      REPLY=0
-      ;;
-    1|"false")
-      REPLY=1
-      ;;
-    "null"|"void"|"")
-      REPLY=""
-      ;;
-    *)
-      REPLY=$value
-      ;;
+  0|"true")
+    REPLY=0
+    ;;
+  1|"false")
+    REPLY=1
+    ;;
+  "null"|"void"|"")
+    REPLY=""
+    ;;
+  *)
+    REPLY=$value
+    ;;
   esac
 }

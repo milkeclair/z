@@ -7,7 +7,7 @@ z.t.describe "z.file.is"; {
 
       z.file.is /tmp/z_test/file_has.txt
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -15,7 +15,7 @@ z.t.describe "z.file.is"; {
     z.t.it "1を返す"; {
       z.file.is /tmp/z_test/file_has_not.txt
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 }
@@ -25,7 +25,7 @@ z.t.describe "z.file.is_not"; {
     z.t.it "0を返す"; {
       z.file.is_not /tmp/z_test/file_has_not.txt
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -35,7 +35,7 @@ z.t.describe "z.file.is_not"; {
 
       z.file.is_not /tmp/z_test/file_has.txt
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 }

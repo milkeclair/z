@@ -5,7 +5,7 @@ z.t.describe "z.int.is"; {
     z.t.it "trueを返す"; {
       z.int.is 123
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -13,7 +13,7 @@ z.t.describe "z.int.is"; {
     z.t.it "trueを返す"; {
       z.int.is "123"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -21,7 +21,7 @@ z.t.describe "z.int.is"; {
     z.t.it "trueを返す"; {
       z.int.is 123
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -29,7 +29,7 @@ z.t.describe "z.int.is"; {
     z.t.it "trueを返す"; {
       z.int.is "123"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -37,7 +37,7 @@ z.t.describe "z.int.is"; {
     z.t.it "trueを返す"; {
       z.int.is -123
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -45,7 +45,7 @@ z.t.describe "z.int.is"; {
     z.t.it "trueを返す"; {
       z.int.is "-123"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -53,7 +53,7 @@ z.t.describe "z.int.is"; {
     z.t.it "falseを返す"; {
       z.int.is "abc"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 }
@@ -63,7 +63,7 @@ z.t.describe "z.int.is_not"; {
     z.t.it "falseを返す"; {
       z.int.is_not 123
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -71,7 +71,7 @@ z.t.describe "z.int.is_not"; {
     z.t.it "falseを返す"; {
       z.int.is_not "123"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -79,7 +79,7 @@ z.t.describe "z.int.is_not"; {
     z.t.it "falseを返す"; {
       z.int.is_not 123
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -87,7 +87,7 @@ z.t.describe "z.int.is_not"; {
     z.t.it "falseを返す"; {
       z.int.is_not "123"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -95,7 +95,7 @@ z.t.describe "z.int.is_not"; {
     z.t.it "falseを返す"; {
       z.int.is_not -123
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -103,7 +103,7 @@ z.t.describe "z.int.is_not"; {
     z.t.it "falseを返す"; {
       z.int.is_not "-123"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -111,7 +111,7 @@ z.t.describe "z.int.is_not"; {
     z.t.it "trueを返す"; {
       z.int.is_not "abc"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 }
@@ -121,7 +121,7 @@ z.t.describe "z.int.eq"; {
     z.t.it "trueを返す"; {
       z.int.eq 123 123
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -129,7 +129,7 @@ z.t.describe "z.int.eq"; {
     z.t.it "trueを返す"; {
       z.int.eq "123" "123"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -137,7 +137,7 @@ z.t.describe "z.int.eq"; {
     z.t.it "falseを返す"; {
       z.int.eq 123 456
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -145,7 +145,7 @@ z.t.describe "z.int.eq"; {
     z.t.it "falseを返す"; {
       z.int.eq 123 "abc"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 }
@@ -155,7 +155,7 @@ z.t.describe "z.int.not_eq"; {
     z.t.it "trueを返す"; {
       z.int.not_eq 123 456
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -163,7 +163,7 @@ z.t.describe "z.int.not_eq"; {
     z.t.it "falseを返す"; {
       z.int.not_eq 123 123
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -171,7 +171,7 @@ z.t.describe "z.int.not_eq"; {
     z.t.it "falseを返す"; {
       z.int.not_eq "123" "123"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -179,7 +179,7 @@ z.t.describe "z.int.not_eq"; {
     z.t.it "falseを返す"; {
       z.int.not_eq 123 "abc"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 }
@@ -189,7 +189,7 @@ z.t.describe "z.int.is_zero"; {
     z.t.it "trueを返す"; {
       z.int.is_zero 0
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -197,7 +197,7 @@ z.t.describe "z.int.is_zero"; {
     z.t.it "trueを返す"; {
       z.int.is_zero "0"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -205,7 +205,7 @@ z.t.describe "z.int.is_zero"; {
     z.t.it "falseを返す"; {
       z.int.is_zero 123
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -213,7 +213,7 @@ z.t.describe "z.int.is_zero"; {
     z.t.it "falseを返す"; {
       z.int.is_zero "abc"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 }
@@ -223,7 +223,7 @@ z.t.describe "z.int.is_not_zero"; {
     z.t.it "falseを返す"; {
       z.int.is_not_zero 0
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -231,7 +231,7 @@ z.t.describe "z.int.is_not_zero"; {
     z.t.it "falseを返す"; {
       z.int.is_not_zero "0"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -239,7 +239,7 @@ z.t.describe "z.int.is_not_zero"; {
     z.t.it "trueを返す"; {
       z.int.is_not_zero 123
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -247,7 +247,7 @@ z.t.describe "z.int.is_not_zero"; {
     z.t.it "falseを返す"; {
       z.int.is_not_zero "abc"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 }
@@ -257,7 +257,7 @@ z.t.describe "z.int.is_positive"; {
     z.t.it "trueを返す"; {
       z.int.is_positive 123
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -265,7 +265,7 @@ z.t.describe "z.int.is_positive"; {
     z.t.it "trueを返す"; {
       z.int.is_positive "123"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -273,7 +273,7 @@ z.t.describe "z.int.is_positive"; {
     z.t.it "falseを返す"; {
       z.int.is_positive 0
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -281,7 +281,7 @@ z.t.describe "z.int.is_positive"; {
     z.t.it "falseを返す"; {
       z.int.is_positive -123
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -289,7 +289,7 @@ z.t.describe "z.int.is_positive"; {
     z.t.it "falseを返す"; {
       z.int.is_positive "abc"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 }
@@ -299,7 +299,7 @@ z.t.describe "z.int.is_negative"; {
     z.t.it "trueを返す"; {
       z.int.is_negative -123
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -307,7 +307,7 @@ z.t.describe "z.int.is_negative"; {
     z.t.it "trueを返す"; {
       z.int.is_negative "-123"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -315,7 +315,7 @@ z.t.describe "z.int.is_negative"; {
     z.t.it "falseを返す"; {
       z.int.is_negative 0
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -323,7 +323,7 @@ z.t.describe "z.int.is_negative"; {
     z.t.it "falseを返す"; {
       z.int.is_negative 123
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -331,7 +331,7 @@ z.t.describe "z.int.is_negative"; {
     z.t.it "falseを返す"; {
       z.int.is_negative "abc"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 }

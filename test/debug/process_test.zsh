@@ -5,7 +5,7 @@ z.t.describe "z.debug"; {
     z.t.it "定義されている"; {
       whence -w z.debug | grep -q "z.debug: function"
       
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -16,7 +16,7 @@ z.t.describe "z.debug"; {
 
       (z.debug <<< "q") >/dev/null 2>&1
 
-      z.t.expect_status.false
+      z.t.expect.status.false
       Z_DEBUG=$previous_debug
     }
   }
@@ -28,7 +28,7 @@ z.t.describe "z.debug"; {
 
       (z.debug <<< "q") >/dev/null 2>&1
 
-      z.t.expect_status.true
+      z.t.expect.status.true
       Z_DEBUG=$previous_debug
     }
   }
@@ -40,7 +40,7 @@ z.t.describe "z.debug"; {
 
       (z.debug <<< "c") >/dev/null 2>&1
 
-      z.t.expect_status.true
+      z.t.expect.status.true
       Z_DEBUG=$previous_debug
     }
   }
@@ -52,7 +52,7 @@ z.t.describe "z.debug"; {
 
       (z.debug <<< "continue") >/dev/null 2>&1
 
-      z.t.expect_status.true
+      z.t.expect.status.true
       Z_DEBUG=$previous_debug
     }
   }
@@ -64,7 +64,7 @@ z.t.describe "z.debug"; {
 
       (z.debug <<< "q") >/dev/null 2>&1
 
-      z.t.expect_status.false
+      z.t.expect.status.false
       Z_DEBUG=$previous_debug
     }
   }
@@ -76,7 +76,7 @@ z.t.describe "z.debug"; {
 
       (z.debug <<< "quit") >/dev/null 2>&1
 
-      z.t.expect_status.false
+      z.t.expect.status.false
       Z_DEBUG=$previous_debug
     }
   }
@@ -88,7 +88,7 @@ z.t.describe "z.debug"; {
 
       (z.debug <<< "exit") >/dev/null 2>&1
 
-      z.t.expect_status.false
+      z.t.expect.status.false
       Z_DEBUG=$previous_debug
     }
   }

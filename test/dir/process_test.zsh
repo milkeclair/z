@@ -7,7 +7,7 @@ z.t.describe "z.dir.make"; {
 
       z.dir.is /tmp/z_test/dir_make
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -17,7 +17,7 @@ z.t.describe "z.dir.make"; {
 
       z.dir.is /tmp/z_test/dir_make/sub_dir
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -27,7 +27,7 @@ z.t.describe "z.dir.make"; {
 
       z.dir.is /tmp/z_test/dir_make
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 }
@@ -40,7 +40,7 @@ z.t.describe "z.dir.remove"; {
 
       z.dir.is_not /tmp/z_test/dir_make
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -52,7 +52,7 @@ z.t.describe "z.dir.remove"; {
 
       z.dir.is_not /tmp/z_test/dir_make
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -64,7 +64,7 @@ z.t.describe "z.dir.remove"; {
 
       z.dir.is_not /tmp/z_test/dir_make
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -75,7 +75,7 @@ z.t.describe "z.dir.remove"; {
 
       z.dir.is_not /tmp/z_test/dir_make
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 }

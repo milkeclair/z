@@ -8,7 +8,7 @@ z.t.describe "z.file.make"; {
 
       z.file.is /tmp/z_test/file_make.txt
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -19,7 +19,7 @@ z.t.describe "z.file.make"; {
       z.file.is_not /tmp/z_test/non_existent_dir/file_make.txt
       z.dir.is_not /tmp/z_test/non_existent_dir
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -29,7 +29,7 @@ z.t.describe "z.file.make"; {
 
       z.file.is /tmp/z_test/file_make.txt
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 }
@@ -41,7 +41,7 @@ z.t.describe "z.file.make_with_dir"; {
 
       z.file.is /tmp/z_test/file_make_with_dir.txt
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -52,7 +52,7 @@ z.t.describe "z.file.make_with_dir"; {
       z.file.is /tmp/z_test/non_existent_dir/file_make_with_dir.txt
       z.dir.is /tmp/z_test/non_existent_dir
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -63,7 +63,7 @@ z.t.describe "z.file.make_with_dir"; {
       z.file.is /tmp/z_test/non_existent_dir/file_make_with_dir.txt
       z.dir.is /tmp/z_test/non_existent_dir
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 }
