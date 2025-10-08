@@ -104,10 +104,9 @@ z.t.describe "my.argument_check"; {
       z.t.mock "z.io.error"
 
       my.argument_check "1" "2"
-      my.argument_check "1" "2"
 
       z.t.mock.result "z.io"
-      z.t.expect.reply "" "skip_unmock"
+      z.t.expect.reply.null "skip_unmock"
 
       z.t.mock.result "z.io.error"
       z.t.expect.reply.include "2 or less args"
