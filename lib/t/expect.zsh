@@ -11,7 +11,7 @@ z.t.expect() {
 
   if z.t.mock.is_not_skippable $skip_unmock; then
     z.t.state.mock_originals
-    for func_name in ${(k)REPLY}; do
+    for func_name in $REPLY; do
       z.t.unmock $func_name
     done
   fi
@@ -28,7 +28,7 @@ z.t.expect.include() {
 
   if z.t.mock.is_not_skippable $skip_unmock; then
     z.t.state.mock_originals
-    for func_name in ${(k)REPLY}; do
+    for func_name in $REPLY; do
       z.t.unmock $func_name
     done
   fi
@@ -45,7 +45,7 @@ z.t.expect.exclude() {
 
   if z.t.mock.is_not_skippable $skip_unmock; then
     z.t.state.mock_originals
-    for func_name in ${(k)REPLY}; do
+    for func_name in $REPLY; do
       z.t.unmock $func_name
     done
   fi
@@ -59,7 +59,7 @@ z.t.expect.status() {
   z.eq $expect "true" && expect=0
   z.eq $expect "false" && expect=1
 
-  z.t.expect $actual $expect $skip_unmock
+  z.t.expect "$actual" "$expect" "$skip_unmock"
 }
 
 z.t.expect.status.true() {
@@ -74,14 +74,14 @@ z.t.expect.reply() {
   local expect=$1
   local skip_unmock=$2
 
-  z.t.expect $REPLY $expect $skip_unmock
+  z.t.expect "$REPLY" "$expect" "$skip_unmock"
 }
 
 z.t.expect.reply.null() {
   local expect=""
   local skip_unmock=$1
 
-  z.t.expect $REPLY $expect $skip_unmock
+  z.t.expect "$REPLY" "$expect" "$skip_unmock"
 }
 
 z.t.expect.reply.arr() {
@@ -103,5 +103,12 @@ z.t.expect.reply.arr() {
   z.arr.join ${actual[@]}
   local actual_str=$REPLY
 
-  z.t.expect $actual_str $expect_str $skip_unmock
+  z.t.expect "$actual_str" "$expect_str" "$skip_unmock"
+}
+
+z.t.expect.reply.include() {
+  local expect=$1
+  local skip_unmock=$2
+
+  z.t.expect.include $REPLY $expect $skip_unmock
 }

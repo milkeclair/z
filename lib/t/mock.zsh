@@ -1,12 +1,12 @@
 z.t.mock() {
   local func_name=$1
 
-  z.t.state.mock_originals.add $func_name $(functions $func_name)
+  z.t.state.mock_originals.add $func_name "$(functions $func_name)"
   z.t.state.mock_calls.set $func_name ""
   z.t.state.mock_last_func.set $func_name
 
   eval "$func_name() {
-    z.t.state.mock_calls.add \$func_name \$@
+    z.t.state.mock_calls.add \"$func_name\" \"\$@\"
   }"
 }
 

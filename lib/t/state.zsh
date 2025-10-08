@@ -129,7 +129,7 @@ z.t.state.failure_records.add() {
 }
 
 z.t.state.mock_originals() {
-  z.return ${z_test_mock_originals[@]}
+  z.return ${(k)z_test_mock_originals[@]}
 }
 
 z.t.state.mock_originals.context() {
@@ -168,8 +168,8 @@ z.t.state.mock_calls.context() {
 }
 
 z.t.state.mock_calls.add() {
-  local func_name=$1
-  local args=$2
+  local func_name=$1 && shift
+  local args=$@
 
   if z.is_not_null ${z_test_mock_calls[$func_name]}; then
     z_test_mock_calls[$func_name]="${z_test_mock_calls[$func_name]}:$args"
