@@ -57,7 +57,7 @@ z.t.describe "my.argument_check"; {
       my.argument_check "1" "2" "3"
       z.t.mock.result
 
-      z.t.expect.include $REPLY "more than 2 args"
+      z.t.expect.reply.include "more than 2 args"
     }
   }
 
@@ -73,7 +73,7 @@ z.t.describe "my.argument_check"; {
       z.t.expect.reply "" "skip_unmock"
 
       z.t.mock.result "z.io.error"
-      z.t.expect.include $REPLY "2 or less args"
+      z.t.expect.reply.include "2 or less args"
     }
   }
 }
