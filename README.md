@@ -16,10 +16,14 @@ Provide functions with readable names for syntax that is not intuitive for me.
 
 ## Usage
 
+### Library
+
+This library provides a set of utility functions for common tasks.
+
 Functions are namespaced with `z.` prefix.
 And modules are namespaced with `z.<module>.` prefix.
 
-The following rules apply under Lib.
+The following rules apply under lib.
 
 - analysis
   - Analyze without modifying the data.
@@ -31,6 +35,31 @@ The following rules apply under Lib.
 - process
   - Modify the data.
   - The return value is placed in `REPLY`, not `return`.
+
+### Testing
+
+This library provides a testing framework for writing and running tests.
+Tests are written in zsh and use a RSpec-like syntax.
+
+Tests are placed in the `test` directory.
+Tests are namespaced with `z.t.` prefix.
+And modules are namespaced with `z.t.<module>.` prefix.
+
+The following rules apply under test.
+
+- describe
+  - Describe the function or feature being tested.
+- context
+  - Describe the context in which the tests are run.
+- it
+  - Describe the expected behavior of the function or feature.
+- expect
+  - Assert the expected behavior of the function or feature.
+- mock
+  - Mock a function or command.
+  - The mock is automatically restored after the test and assertion.
+  - If you want to skip restoring in assertion, use `skip_unmock` option.
+  - The mock result is placed in `REPLY`, not `return`.
 
 ### Examples
 
