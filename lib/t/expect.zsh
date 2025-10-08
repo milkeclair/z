@@ -59,7 +59,7 @@ z.t.expect.status() {
   z.eq $expect "true" && expect=0
   z.eq $expect "false" && expect=1
 
-  z.t.expect $actual $skip_unmock
+  z.t.expect $actual $expect $skip_unmock
 }
 
 z.t.expect.status.true() {
@@ -85,6 +85,8 @@ z.t.expect.reply.null() {
 }
 
 z.t.expect.reply.arr() {
+  local -a actual=(${REPLY[@]})
+  
   local -a args=($@)
   local skip_unmock=""
   z.arg.last $args
@@ -95,11 +97,10 @@ z.t.expect.reply.arr() {
   fi
   
   local -a expect=($args)
-  local -a actual=($REPLY)
 
-  z.arr.join $expect
+  z.arr.join ${expect[@]}
   local expect_str=$REPLY
-  z.arr.join $actual
+  z.arr.join ${actual[@]}
   local actual_str=$REPLY
 
   z.t.expect $actual_str $expect_str $skip_unmock
