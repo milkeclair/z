@@ -5,7 +5,7 @@ z.t.describe "z.arr.eq"; {
     z.t.it "trueを返す"; {
       z.arr.eq "a b c" "a b c"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -13,7 +13,7 @@ z.t.describe "z.arr.eq"; {
     z.t.it "falseを返す"; {
       z.arr.eq "a b c" "a b d"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -21,7 +21,7 @@ z.t.describe "z.arr.eq"; {
     z.t.it "falseを返す"; {
       z.arr.eq "a b c" "c b a"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -29,7 +29,7 @@ z.t.describe "z.arr.eq"; {
     z.t.it "falseを返す"; {
       z.arr.eq "a b c" "a b"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 }
@@ -39,7 +39,7 @@ z.t.describe "z.arr.not_eq"; {
     z.t.it "falseを返す"; {
       z.arr.not_eq "a b c" "a b c"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -47,7 +47,7 @@ z.t.describe "z.arr.not_eq"; {
     z.t.it "trueを返す"; {
       z.arr.not_eq "a b c" "a b d"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -55,7 +55,7 @@ z.t.describe "z.arr.not_eq"; {
     z.t.it "trueを返す"; {
       z.arr.not_eq "a b c" "c b a"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -63,7 +63,7 @@ z.t.describe "z.arr.not_eq"; {
     z.t.it "trueを返す"; {
       z.arr.not_eq "a b c" "a b"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 }
@@ -73,7 +73,7 @@ z.t.describe "z.arr.is_include"; {
     z.t.it "trueを返す"; {
       z.arr.is_include "b" "a" "b" "c"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -81,7 +81,7 @@ z.t.describe "z.arr.is_include"; {
     z.t.it "falseを返す"; {
       z.arr.is_include "d" "a" "b" "c"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 }

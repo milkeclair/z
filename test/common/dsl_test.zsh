@@ -5,7 +5,7 @@ z.t.describe "z.group"; {
     z.t.it "trueを返す"; {
       z.group "name"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
 
     z.t.it "REPLYを変更しない"; {
@@ -13,7 +13,7 @@ z.t.describe "z.group"; {
 
       z.group "name"
 
-      z.t.expect_reply "original"
+      z.t.expect.reply "original"
     }
   }
 
@@ -21,13 +21,13 @@ z.t.describe "z.group"; {
     z.t.it "trueを返す"; {
       z.group
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
 
     z.t.it "REPLYを変更しない"; {
       REPLY="original"
 
-      z.t.expect_reply "original"
+      z.t.expect.reply "original"
     }
   }
 }
@@ -37,7 +37,7 @@ z.t.describe "z.guard"; {
     z.t.it "trueを返す"; {
       z.guard "guard_name"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
 
     z.t.it "REPLYを変更しない"; {
@@ -45,7 +45,7 @@ z.t.describe "z.guard"; {
 
       z.guard "guard_name"
 
-      z.t.expect_reply "original"
+      z.t.expect.reply "original"
     }
   }
 
@@ -53,7 +53,7 @@ z.t.describe "z.guard"; {
     z.t.it "trueを返す"; {
       z.guard
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
 
     z.t.it "REPLYを変更しない"; {
@@ -61,7 +61,7 @@ z.t.describe "z.guard"; {
 
       z.guard
 
-      z.t.expect_reply "original"
+      z.t.expect.reply "original"
     }
   }
 }

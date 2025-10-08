@@ -1,7 +1,7 @@
 z.t() {
   local -a test_names=()
-  local z_all_log="false"
-  local z_failed_only="false"
+  local z_test_all_log="false"
+  local z_test_failed_only="false"
 
   z.arr.count $@
   local arg_count=$REPLY
@@ -13,13 +13,13 @@ z.t() {
 
       z.arg.as $current_arg "-l|--log" 0
       if z.is_not_null $REPLY; then
-        z_all_log=$REPLY
+        z_test_all_log=$REPLY
         continue
       fi
 
       z.arg.as $current_arg "-f|--failed" 0
       if z.is_not_null $REPLY; then
-        z_failed_only=$REPLY
+        z_test_failed_only=$REPLY
         continue
       fi
 
@@ -55,13 +55,17 @@ z.t() {
   local file_count=${#files[@]}
 
   for test_file in $files; do
-    Z_ROOT=$root_dir Z_DEBUG=0 z_mode=$z_mode z_all_log=$z_all_log z_failed_only=$z_failed_only z_main=$z_main  \
+    Z_ROOT=$root_dir Z_DEBUG=0 z_mode=$z_mode z_main=$z_main \
+      Z_TEST_ALL_LOG=$z_test_all_log Z_TEST_FAILED_ONLY=$z_test_failed_only \
       zsh $test_file $test_file
 
     ((file_count--))
-    { z.int.gt $file_count 0 && z.is_true $z_all_log; } &&
-      z.io.empty
+    z.is_true $z_test_all_log && z.int.gt $file_count 0 && z.io.empty
   done
 
   cd $original_dir
+}
+
+z.t.remove_tmp_dir() {
+  z.dir.is /tmp/z_test && rm -rf /tmp/z_test
 }

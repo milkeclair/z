@@ -5,7 +5,7 @@ z.t.describe "z.str.is_empty"; {
     z.t.it "trueを返す"; {
       z.str.is_empty ""
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -13,7 +13,7 @@ z.t.describe "z.str.is_empty"; {
     z.t.it "falseを返す"; {
       z.str.is_empty "hello"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 }
@@ -23,7 +23,7 @@ z.t.describe "z.str.is_not_empty"; {
     z.t.it "falseを返す"; {
       z.str.is_not_empty ""
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -31,7 +31,7 @@ z.t.describe "z.str.is_not_empty"; {
     z.t.it "trueを返す"; {
       z.str.is_not_empty "hello"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 }
@@ -41,7 +41,7 @@ z.t.describe "z.str.is_match"; {
     z.t.it "trueを返す"; {
       z.str.is_match "hello" "h*o"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -49,7 +49,7 @@ z.t.describe "z.str.is_match"; {
     z.t.it "falseを返す"; {
       z.str.is_match "hello" "H*O"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 }
@@ -59,7 +59,7 @@ z.t.describe "z.str.is_not_match"; {
     z.t.it "falseを返す"; {
       z.str.is_not_match "hello" "h*o"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -67,7 +67,7 @@ z.t.describe "z.str.is_not_match"; {
     z.t.it "trueを返す"; {
       z.str.is_not_match "hello" "H*O"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 }
@@ -77,7 +77,7 @@ z.t.describe "z.str.is_include"; {
     z.t.it "trueを返す"; {
       z.str.is_include "hello" "ll"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -85,7 +85,7 @@ z.t.describe "z.str.is_include"; {
     z.t.it "falseを返す"; {
       z.str.is_include "hello" "LL"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 }
@@ -95,7 +95,7 @@ z.t.describe "z.str.is_not_include"; {
     z.t.it "falseを返す"; {
       z.str.is_not_include "hello" "ll"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -103,7 +103,7 @@ z.t.describe "z.str.is_not_include"; {
     z.t.it "trueを返す"; {
       z.str.is_not_include "hello" "LL"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 }
@@ -113,7 +113,7 @@ z.t.describe "z.str.is_start_with"; {
     z.t.it "trueを返す"; {
       z.str.is_start_with "hello" "he"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -121,7 +121,7 @@ z.t.describe "z.str.is_start_with"; {
     z.t.it "falseを返す"; {
       z.str.is_start_with "hello" "He"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 }
@@ -131,7 +131,7 @@ z.t.describe "z.str.is_end_with"; {
     z.t.it "trueを返す"; {
       z.str.is_end_with "hello" "lo"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -139,7 +139,7 @@ z.t.describe "z.str.is_end_with"; {
     z.t.it "falseを返す"; {
       z.str.is_end_with "hello" "LO"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 }
@@ -148,16 +148,16 @@ z.t.describe "z.str.is_path_like"; {
   z.t.context "パス形式の文字列が渡された場合"; {
     z.t.it "trueを返す"; {
       z.str.is_path_like "/usr/local/bin"
-      z.t.expect_status.true
+      z.t.expect.status.true
 
       z.str.is_path_like "~/documents"
-      z.t.expect_status.true
+      z.t.expect.status.true
 
       z.str.is_path_like "./script.sh"
-      z.t.expect_status.true
+      z.t.expect.status.true
 
       z.str.is_path_like "../config"
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -165,7 +165,7 @@ z.t.describe "z.str.is_path_like"; {
     z.t.it "falseを返す"; {
       z.str.is_path_like "not/a/path"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 }

@@ -5,7 +5,7 @@ z.t.describe "z.arr.count"; {
     z.t.it "要素数をREPLYに返す"; {
       z.arr.count "a" "b" "c"
 
-      z.t.expect_reply 3
+      z.t.expect.reply 3
     }
   }
 
@@ -13,7 +13,7 @@ z.t.describe "z.arr.count"; {
     z.t.it "0をREPLYに返す"; {
       z.arr.count
 
-      z.t.expect_reply 0
+      z.t.expect.reply 0
     }
   }
 }

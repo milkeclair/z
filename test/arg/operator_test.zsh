@@ -5,7 +5,7 @@ z.t.describe "z.arg.has_any"; {
     z.t.it "trueを返す"; {
       z.arg.has_any "a" "b" "c"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -13,7 +13,7 @@ z.t.describe "z.arg.has_any"; {
     z.t.it "falseを返す"; {
       z.arg.has_any
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 }
@@ -23,7 +23,7 @@ z.t.describe "z.arg.has_not_any"; {
     z.t.it "falseを返す"; {
       z.arg.has_not_any "a" "b" "c"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -31,7 +31,7 @@ z.t.describe "z.arg.has_not_any"; {
     z.t.it "trueを返す"; {
       z.arg.has_not_any
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 }
@@ -41,7 +41,7 @@ z.t.describe "z.arg.validate"; {
     z.t.it "trueを返す"; {
       z.arg.validate 2 "a" "b" "c"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -49,7 +49,7 @@ z.t.describe "z.arg.validate"; {
     z.t.it "falseを返す"; {
       z.arg.validate 4 "a" "b" "c"
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 
@@ -57,7 +57,7 @@ z.t.describe "z.arg.validate"; {
     z.t.it "trueを返す"; {
       z.arg.validate 3 "a" "b" "c"
 
-      z.t.expect_status.true
+      z.t.expect.status.true
     }
   }
 
@@ -65,7 +65,7 @@ z.t.describe "z.arg.validate"; {
     z.t.it "falseを返す"; {
       z.arg.validate 1
 
-      z.t.expect_status.false
+      z.t.expect.status.false
     }
   }
 }

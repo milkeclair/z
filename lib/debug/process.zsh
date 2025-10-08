@@ -8,57 +8,56 @@
 #   z.debug
 z.debug() {
   local _saved_reply=$REPLY
-  z.is_false $Z_DEBUG && return 0
+  [[ $Z_DEBUG -eq 1 ]] && return 0
 
-  z.io "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  z.io "👀: ${funcfiletrace}"
-  z.io "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  print -- "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  print -- "👀: ${funcfiletrace}"
+  print -- "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
   local continue=0
 
-  while z.int.eq $continue 0; do
-    z.io.oneline "z> "
-    z.io.read
-    local debug_command=${REPLY%% *}
-    local debug_args=${REPLY#* }
+  while [[ $continue -eq 0 ]]; do
+    print -n -- "z> "
+    read -r response
+    local debug_command=${response%% *}
+    local debug_args=${response#* }
 
     case $debug_command in
-      c|continue)
-        continue=1
-        ;;
-      p|print)
-        if z.is_not_null $debug_args; then
-          local var_name=$debug_args
-
-          if z.eq $var_name "REPLY" || z.eq $var_name "reply"; then
-            z.io $_saved_reply
-          elif z.io.null typeset -p $var_name; then
-            z.io ${(P)var_name}
-          else
-            z.io "❌: '$var_name' not found"
-          fi
+    c|continue)
+      continue=1
+      ;;
+    p|print)
+      if [[ -n $debug_args ]]; then
+        local var_name=$debug_args
+        if [[ $var_name == "REPLY" || $var_name == "reply" ]]; then
+          print -- $_saved_reply
+        elif [[ -n $(typeset -p $var_name 2>/dev/null) ]]; then
+          print -- ${(P)var_name}
         else
-          z.io "❌: p <variable_name>"
+          print -- "❌: '$var_name' not found"
         fi
-        ;;
-      h|help|"")
-        z.io "Available commands:"
-        z.io "  c, continue"
-        z.io "  p <var>"
-        z.io "  h, help"
-        z.io "  q, quit, exit"
-        ;;
-      q|quit|exit)
-        exit 1
-        ;;
-      *)
-        z.is_not_null $debug_command && eval "$debug_command $debug_args"
-        ;;
+      else
+        print -- "❌: p <variable_name>"
+      fi
+      ;;
+    h|help|"")
+      print -- "Available commands:"
+      print -- "  c, continue"
+      print -- "  p <var>"
+      print -- "  h, help"
+      print -- "  q, quit, exit"
+      ;;
+    q|quit|exit)
+      exit 1
+      ;;
+    *)
+      [[ -n $debug_command ]] && eval "$debug_command $debug_args"
+      ;;
     esac
   done
 
-  z.return $_saved_reply
-  z.io.empty
+  REPLY=$_saved_reply
+  print -- ""
 }
 
 z.debug.enable() {

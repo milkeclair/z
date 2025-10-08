@@ -16,10 +16,14 @@ Provide functions with readable names for syntax that is not intuitive for me.
 
 ## Usage
 
+### Library
+
+This library provides a set of utility functions for common tasks.
+
 Functions are namespaced with `z.` prefix.
 And modules are namespaced with `z.<module>.` prefix.
 
-The following rules apply under Lib.
+The following rules apply under lib.
 
 - analysis
   - Analyze without modifying the data.
@@ -31,6 +35,39 @@ The following rules apply under Lib.
 - process
   - Modify the data.
   - The return value is placed in `REPLY`, not `return`.
+
+### Testing
+
+This library provides a testing framework for writing and running tests.
+Tests are written in zsh and use a RSpec-like syntax.
+
+Run `z.t` to run all tests.
+z.t accepts the following options.
+
+- `-l`
+  - Display test details.
+- `-f`
+  - Display only failed tests.
+
+Tests are placed in the `test` directory.
+Tests are namespaced with `z.t.` prefix.
+And modules are namespaced with `z.t.<module>.` prefix.
+
+The following rules apply under test.
+
+- describe
+  - Describe the function or feature being tested.
+- context
+  - Describe the context in which the tests are run.
+- it
+  - Describe the expected behavior of the function or feature.
+- expect
+  - Assert the expected behavior of the function or feature.
+- mock
+  - Mock a function or command.
+  - The mock is automatically restored after the test and assertion.
+  - If you want to skip restoring in assertion, use `skip_unmock` option.
+  - The mock result is placed in `REPLY`, not `return`.
 
 ### Examples
 
@@ -49,24 +86,30 @@ my.argument_check() {
 
 Test
 ```zsh
-source ${z_main}
-
 z.t.describe "my.argument_check"; {
   z.t.context "when more than 2 args"; {
     z.t.it "prints 'more than 2 args'"; {
-      local out=$(my.argument_check "1" "2" "3")
+      z.t.mock "z.io"
 
-      z.t.expect_include $out "more than 2 args"
+      my.argument_check "1" "2" "3"
+      z.t.mock.result
+
+      z.t.expect.reply.include "more than 2 args"
     }
   }
 
   z.t.context "when 2 or less args"; {
     z.t.it "prints '2 or less args' to stderr"; {
-      local out=$(my.argument_check "1" "2" 2> /dev/null)
-      local err=$(my.argument_check "1" "2" 2>&1 1> /dev/null)
+      z.t.mock "z.io"
+      z.t.mock "z.io.error"
 
-      z.t.expect $out ""
-      z.t.expect_include $err "2 or less args"
+      my.argument_check "1" "2"
+
+      z.t.mock.result "z.io"
+      z.t.expect.reply.null "skip_unmock"
+
+      z.t.mock.result "z.io.error"
+      z.t.expect.reply.include "2 or less args"
     }
   }
 }
@@ -80,6 +123,9 @@ This library provides a debug function for interactive debugging.
 
 Call `z.debug` in your script to enter debug mode. When debug mode is enabled, the function will pause execution and provide an interactive prompt.
 
+To enable debug mode, use the `z.debug.enable` function.
+To disable debug mode, use the `z.debug.disable` function.
+
 Available commands in debug mode:
 
 - `c` or `continue`: Continue execution.
@@ -92,7 +138,7 @@ Example:
 ```zsh
 my.function() {
   local var="hello"
-  z.debug  # This will enter debug mode if Z_DEBUG=0
+  z.debug
   z.io $var
 }
 ```
