@@ -49,24 +49,31 @@ my.argument_check() {
 
 Test
 ```zsh
-source ${z_main}
-
 z.t.describe "my.argument_check"; {
   z.t.context "when more than 2 args"; {
     z.t.it "prints 'more than 2 args'"; {
-      local out=$(my.argument_check "1" "2" "3")
+      z.t.mock "z.io"
 
-      z.t.expect_include $out "more than 2 args"
+      my.argument_check "1" "2" "3"
+      z.t.mock.result
+
+      z.t.expect.include $REPLY "more than 2 args"
     }
   }
 
   z.t.context "when 2 or less args"; {
     z.t.it "prints '2 or less args' to stderr"; {
-      local out=$(my.argument_check "1" "2" 2> /dev/null)
-      local err=$(my.argument_check "1" "2" 2>&1 1> /dev/null)
+      z.t.mock "z.io"
+      z.t.mock "z.io.error"
 
-      z.t.expect $out ""
-      z.t.expect_include $err "2 or less args"
+      my.argument_check "1" "2" 2> /dev/null
+      my.argument_check "1" "2" 2>&1 1> /dev/null
+
+      z.t.mock.result "z.io"
+      z.t.expect.reply "" "skip_unmock"
+
+      z.t.mock.result "z.io.error"
+      z.t.expect.include $REPLY "2 or less args"
     }
   }
 }

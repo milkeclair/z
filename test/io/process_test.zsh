@@ -62,7 +62,7 @@ z.t.describe "z.io.clear"; {
       z.t.mock "z.io.clear"
       z.t.mock.result
 
-      z.t.expect $REPLY $'\033c'
+      z.t.expect.reply $'\033c'
     }
   }
 }

@@ -10,7 +10,7 @@ local -A z_modules=(
   ["int"]="operator"
   ["io"]="process"
   ["str"]="color:operator:process"
-  ["t"]="dsl:process"
+  ["t"]="dsl:expect:log:mock:process:state"
 )
 
 for module in ${(k)z_modules}; do

@@ -1,7 +1,8 @@
 # convert provided value into a boolean or null
+# or combine multiple values into REPLY
 #
-# $1: value
-# REPLY: converted value
+# $@: value(s)
+# REPLY: converted value or array of values
 # return: exit code
 #
 # example:
@@ -16,7 +17,13 @@
 #  z.return "" #=> REPLY=""
 #
 #  z.return "some string" #=> REPLY="some string"
+#  z.return "a" "b" "c"   #=> REPLY=("a" "b" "c")
 z.return() {
+  if z.int.gt $# 1; then
+    REPLY=($@)
+    return
+  fi
+
   local value=$1
 
   case $value in

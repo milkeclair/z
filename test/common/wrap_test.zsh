@@ -56,4 +56,12 @@ z.t.describe "z.return"; {
       z.t.expect.reply "sample_value"
     }
   }
+
+  z.t.context "複数の値を指定した場合"; {
+    z.t.it "REPLYに配列として設定する"; {
+      z.return "value1" "value2" "value3"
+
+      z.t.expect.reply.array "value1" "value2" "value3"
+    }
+  }
 }
