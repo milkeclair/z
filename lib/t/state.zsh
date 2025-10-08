@@ -155,6 +155,11 @@ z.t.state.mock_saved_indexes.context() {
   z.return ${z_test_mock_saved_indexes[$1]}
 }
 
+z.t.state.mock_saved_indexes.add() {
+  local key=$1
+  local value=$2
+  z_test_mock_saved_indexes[$key]=$value
+}
 z.t.state.mock_saved_indexes.unset() {
   unset "z_test_mock_saved_indexes[$1]" 2>/dev/null
 }
