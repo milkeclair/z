@@ -85,7 +85,7 @@ z.t.expect.reply.null() {
 }
 
 z.t.expect.reply.arr() {
-  local -a actual=(${REPLY[@]})
+  local -a actual=($REPLY)
   
   local -a args=($@)
   local skip_unmock=""
