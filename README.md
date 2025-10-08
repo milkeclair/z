@@ -41,6 +41,14 @@ The following rules apply under lib.
 This library provides a testing framework for writing and running tests.
 Tests are written in zsh and use a RSpec-like syntax.
 
+Run `z.t` to run all tests.
+z.t accepts the following options.
+
+- `-l`
+  - Display test details.
+- `-f`
+  - Display only failed tests.
+
 Tests are placed in the `test` directory.
 Tests are namespaced with `z.t.` prefix.
 And modules are namespaced with `z.t.<module>.` prefix.
@@ -95,8 +103,8 @@ z.t.describe "my.argument_check"; {
       z.t.mock "z.io"
       z.t.mock "z.io.error"
 
-      my.argument_check "1" "2" 2> /dev/null
-      my.argument_check "1" "2" 2>&1 1> /dev/null
+      my.argument_check "1" "2"
+      my.argument_check "1" "2"
 
       z.t.mock.result "z.io"
       z.t.expect.reply "" "skip_unmock"
@@ -116,6 +124,9 @@ This library provides a debug function for interactive debugging.
 
 Call `z.debug` in your script to enter debug mode. When debug mode is enabled, the function will pause execution and provide an interactive prompt.
 
+To enable debug mode, use the `z.debug.enable` function.
+To disable debug mode, use the `z.debug.disable` function.
+
 Available commands in debug mode:
 
 - `c` or `continue`: Continue execution.
@@ -128,7 +139,7 @@ Example:
 ```zsh
 my.function() {
   local var="hello"
-  z.debug  # This will enter debug mode if Z_DEBUG=0
+  z.debug
   z.io $var
 }
 ```
