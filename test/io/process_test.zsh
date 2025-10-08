@@ -59,10 +59,9 @@ z.t.describe "z.io.oneline"; {
 z.t.describe "z.io.clear"; {
   z.t.context "呼び出された場合"; {
     z.t.it "端末の画面をクリアする制御文字を出力する"; {
-      z.t.mock "z.io.clear"
-      z.t.mock.result
+      local output=$(z.io.clear)
 
-      z.t.expect.reply $'\033c'
+      z.t.expect $output $'\033c'
     }
   }
 }

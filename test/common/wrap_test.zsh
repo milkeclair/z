@@ -61,7 +61,7 @@ z.t.describe "z.return"; {
     z.t.it "REPLYに配列として設定する"; {
       z.return "value1" "value2" "value3"
 
-      z.t.expect.reply.array "value1" "value2" "value3"
+      z.t.expect.reply.arr "value1" "value2" "value3"
     }
   }
 }
