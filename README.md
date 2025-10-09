@@ -70,8 +70,8 @@ The following rules apply under test.
   - The mock result is placed in `REPLY`, not `return`.
   - Modes:
     - Default mode: Records function calls without executing original behavior.
-    - `return_original` mode: Executes original function after recording the call.
-      - `z.t.mock.return_original` function: Same as `return_original` mode.
+    - `call_original` mode: Executes original function after recording the call.
+      - `z.t.mock.call_original` function: Same as `call_original` mode.
     - Provide custom behavior: You can provide custom behavior by passing a command as the second argument.
 
 ### Examples
@@ -94,7 +94,7 @@ Test
 z.t.describe "my.argument_check"; {
   z.t.context "when more than 2 args"; {
     z.t.it "prints 'more than 2 args'"; {
-      z.t.mock.return_original "z.io"
+      z.t.mock.call_original "z.io"
 
       local output=$(my.argument_check "1" "2" "3")
 

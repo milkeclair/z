@@ -12,7 +12,7 @@ my.argument_check() {
 z.t.describe "my.argument_check"; {
   z.t.context "when more than 2 args"; {
     z.t.it "prints 'more than 2 args'"; {
-      z.t.mock.return_original "z.io"
+      z.t.mock.call_original "z.io"
 
       local output=$(my.argument_check "1" "2" "3")
 

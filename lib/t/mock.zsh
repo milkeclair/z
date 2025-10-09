@@ -9,7 +9,7 @@ z.t.mock() {
 
   eval "$(functions $func_name | sed "s/^$func_name/$original_func_name/")"
 
-  if z.eq $behavior "return_original"; then
+  if z.eq $behavior "call_original"; then
     eval "$func_name() {
       $original_func_name \"\$@\"
       z.t.state.mock_calls.add \"$func_name\" \"\$@\"
@@ -22,8 +22,8 @@ z.t.mock() {
   fi
 }
 
-z.t.mock.return_original() {
-  z.t.mock $1 "return_original"
+z.t.mock.call_original() {
+  z.t.mock $1 "call_original"
 }
 
 z.t.mock.result() {
