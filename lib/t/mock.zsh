@@ -1,13 +1,29 @@
 z.t.mock() {
   local func_name=$1
+  local behavior=$2
+  local original_func_name="original_$func_name"
 
   z.t.state.mock_originals.add $func_name "$(functions $func_name)"
   z.t.state.mock_calls.set $func_name ""
   z.t.state.mock_last_func.set $func_name
 
-  eval "$func_name() {
-    z.t.state.mock_calls.add \"$func_name\" \"\$@\"
-  }"
+  eval "$(functions $func_name | sed "s/^$func_name/$original_func_name/")"
+
+  if z.eq $behavior "return_original"; then
+    eval "$func_name() {
+      $original_func_name \"\$@\"
+      z.t.state.mock_calls.add \"$func_name\" \"\$@\"
+    }"
+  else
+    eval "$func_name() {
+      $behavior
+      z.t.state.mock_calls.add \"$func_name\" \"\$@\"
+    }"
+  fi
+}
+
+z.t.mock.return_original() {
+  z.t.mock $1 "return_original"
 }
 
 z.t.mock.result() {
