@@ -26,7 +26,7 @@ z.t.mock.result() {
   fi
 }
 
-z.t.unmock() {
+z.t.mock.unmock() {
   local func_name=$1
 
   if z.is_null $func_name; then
@@ -50,6 +50,17 @@ z.t.unmock() {
   z.t.state.mock_last_func
   if z.eq $func_name $REPLY; then
     z.t.state.mock_last_func.set ""
+  fi
+}
+
+z.t.mock.unmock.all() {
+  local skip_unmock=$1
+
+  if z.t.mock.is_not_skippable $skip_unmock; then
+    z.t.state.mock_originals
+    for func_name in $REPLY; do
+      z.t.mock.unmock $func_name
+    done
   fi
 }
 
