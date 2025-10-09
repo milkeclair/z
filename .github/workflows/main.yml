@@ -18,6 +18,7 @@ jobs:
       - name: Set up zsh
         run: sudo apt-get install -y zsh
       - name: Run tests
+        shell: zsh {0}
         run: |
           source main.zsh
           z.t
