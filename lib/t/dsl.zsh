@@ -69,11 +69,7 @@ z.t.xit() {
 }
 
 z.t.teardown() {
-  z.t.state.mock_originals
-  for func_name in $REPLY; do
-    z.t.unmock $func_name
-  done
-  
+  z.t.mock.unmock.all
   z.t.remove_tmp_dir
   z.t.log.show
 }

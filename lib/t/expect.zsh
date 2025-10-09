@@ -9,12 +9,7 @@ z.t.expect() {
     z.t.log.failure.handle "failed: expected [ $expect_display ] but got [ $actual_display ]"
   fi
 
-  if z.t.mock.is_not_skippable $skip_unmock; then
-    z.t.state.mock_originals
-    for func_name in $REPLY; do
-      z.t.unmock $func_name
-    done
-  fi
+  z.t.mock.unmock.all $skip_unmock
 }
 
 z.t.expect.include() {
@@ -26,12 +21,7 @@ z.t.expect.include() {
     z.t.log.failure.handle "failed: expected [ $expect ] to be included in [ $actual ]"
   fi
 
-  if z.t.mock.is_not_skippable $skip_unmock; then
-    z.t.state.mock_originals
-    for func_name in $REPLY; do
-      z.t.unmock $func_name
-    done
-  fi
+  z.t.mock.unmock.all $skip_unmock
 }
 
 z.t.expect.exclude() {
@@ -43,12 +33,7 @@ z.t.expect.exclude() {
     z.t.log.failure.handle "failed: expected [ $expect ] to be excluded from [ $actual ]"
   fi
 
-  if z.t.mock.is_not_skippable $skip_unmock; then
-    z.t.state.mock_originals
-    for func_name in $REPLY; do
-      z.t.unmock $func_name
-    done
-  fi
+  z.t.mock.unmock.all $skip_unmock
 }
 
 z.t.expect.status() {

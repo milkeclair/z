@@ -68,6 +68,11 @@ The following rules apply under test.
   - The mock is automatically restored after the test and assertion.
   - If you want to skip restoring in assertion, use `skip_unmock` option.
   - The mock result is placed in `REPLY`, not `return`.
+  - Modes:
+    - Default mode: Records function calls without executing original behavior.
+    - `call_original` mode: Executes original function after recording the call.
+      - `z.t.mock.call_original` function: Same as `call_original` mode.
+    - Provide custom behavior: You can provide custom behavior by passing a command as the second argument.
 
 ### Examples
 
@@ -89,21 +94,23 @@ Test
 z.t.describe "my.argument_check"; {
   z.t.context "when more than 2 args"; {
     z.t.it "prints 'more than 2 args'"; {
-      z.t.mock "z.io"
+      z.t.mock.call_original "z.io"
 
-      my.argument_check "1" "2" "3"
+      local output=$(my.argument_check "1" "2" "3")
+
       z.t.mock.result
-
       z.t.expect.reply.include "more than 2 args"
+      z.t.expect.include $output "more than 2 args"
     }
   }
 
   z.t.context "when 2 or less args"; {
     z.t.it "prints '2 or less args' to stderr"; {
+      z.t.mock "z.int.gt" "return 1"
       z.t.mock "z.io"
       z.t.mock "z.io.error"
 
-      my.argument_check "1" "2"
+      my.argument_check "1" "2" "3"
 
       z.t.mock.result "z.io"
       z.t.expect.reply.null "skip_unmock"
