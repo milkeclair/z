@@ -69,8 +69,7 @@ z.t.xit() {
 }
 
 z.t.teardown() {
-  z.t.mock.unmock.all $func_name
-  
+  z.t.mock.unmock.all
   z.t.remove_tmp_dir
   z.t.log.show
 }
