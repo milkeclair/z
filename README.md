@@ -92,8 +92,8 @@ z.t.describe "my.argument_check"; {
       z.t.mock "z.io"
 
       my.argument_check "1" "2" "3"
-      z.t.mock.result
 
+      z.t.mock.result
       z.t.expect.reply.include "more than 2 args"
     }
   }
