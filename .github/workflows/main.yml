@@ -12,10 +12,22 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      ZSH_VERSION: "5.9"
     steps:
       - uses: actions/checkout@v4
+
+      - name: Cache zsh
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: /usr/bin/zsh
+          key: ${{ runner.os }}-zsh-${{ env.ZSH_VERSION }}
+
       - name: Set up zsh
+        if: steps.cache.outputs.cache-hit != 'true'
         run: sudo apt-get install -y zsh
+
       - name: Run tests
         shell: zsh {0}
         run: |
