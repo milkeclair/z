@@ -87,8 +87,6 @@ z.t.teardown() {
 
     local i
     for ((i=1; i<=error_count; i++)); do
-      z.t.state.failures.increment
-
       local error_message=${error_lines[$i]}
       z.t.log.failure.handle $error_message
     done
