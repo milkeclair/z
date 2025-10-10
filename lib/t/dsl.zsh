@@ -80,12 +80,20 @@ z.t.teardown() {
 
   local error_flag_file="/tmp/z_test_error_$$"
   if [[ -f "$error_flag_file" ]]; then
-    local error_count=$(wc -l < "$error_flag_file" | tr -d ' ')
+    local -a error_lines
+    error_lines=("${(@f)$(<$error_flag_file)}")
+    z.arr.count $error_lines
+    local error_count=$REPLY
+
     local i
     for ((i=1; i<=error_count; i++)); do
       z.t.state.failures.increment
+
+      local error_message=${error_lines[$i]}
+      z.t.log.failure.handle $error_message
     done
-    rm -f "$error_flag_file"
+
+    z.dir.remove $error_flag_file
   fi
   
   z.t.log.show
