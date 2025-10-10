@@ -34,7 +34,7 @@ z.t.describe "my.argument_check"; {
       z.t.expect.reply.null "skip_unmock"
 
       z.t.mock.result "z.io.error"
-      z.t.expect.reply.include "2 or less args"
+      z.t.expect.reply.include "2 or less argsa"
     }
   }
 }
