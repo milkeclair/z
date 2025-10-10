@@ -1,5 +1,11 @@
 z.eq $z_mode "test" && {
   trap "z.t.teardown" EXIT
+
+  command_not_found_handler() {
+    local cmd=$1
+    z.t.state.mark_error "command not found: $cmd"
+    return 127
+  }
 }
 
 z.t.describe() {
@@ -71,5 +77,19 @@ z.t.xit() {
 z.t.teardown() {
   z.t.mock.unmock.all
   z.t.remove_tmp_dir
+
+  local error_flag_file="/tmp/z_test_error_$$"
+  if [[ -f "$error_flag_file" ]]; then
+    local error_count=$(wc -l < "$error_flag_file" | tr -d ' ')
+    local i
+    for ((i=1; i<=error_count; i++)); do
+      z.t.state.failures.increment
+    done
+    rm -f "$error_flag_file"
+  fi
+  
   z.t.log.show
+
+  z.t.state.failures
+  z.int.is_not_zero $REPLY && exit 1
 }

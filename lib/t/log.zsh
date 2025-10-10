@@ -7,9 +7,7 @@ z.t.log.failure() {
 }
 
 z.t.log.failure.remember() {
-  z.t.state.logs
-  z.arr.count $REPLY
-  local error_idx=$REPLY
+  local error_idx=${#z_test_logs[@]}
 
   z.t.state.current_idx "describe"
   local d_idx=$REPLY
@@ -97,8 +95,6 @@ z.t.log.show() {
     for log in $REPLY; do
       z.io $log
     done
-
-    return 0
   fi
 
   z.int.is_zero $failures && return 0
@@ -137,6 +133,7 @@ z.t.log.show() {
     fi
 
     z.t.state.logs.context $e_idx
-    z.int.is_not_zero $e_idx && z.io $REPLY
+    local error_log=$REPLY
+    z.int.is_not_zero $e_idx && z.io $error_log
   done
 }

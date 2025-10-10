@@ -53,17 +53,27 @@ z.t() {
   fi
 
   local file_count=${#files[@]}
+  local failed=0
 
   for test_file in $files; do
     Z_ROOT=$root_dir Z_DEBUG=0 z_mode=$z_mode z_main=$z_main \
       Z_TEST_ALL_LOG=$z_test_all_log Z_TEST_FAILED_ONLY=$z_test_failed_only \
       zsh $test_file $test_file
 
+    local exit_code=$?
+
+    z.t.state.failures
+    local test_failures=$REPLY
+
+    z.int.is_not_zero $test_failures && failed=1
+    z.int.is_not_zero $exit_code && failed=1
+
     ((file_count--))
     z.is_true $z_test_all_log && z.int.gt $file_count 0 && z.io.empty
   done
 
   cd $original_dir
+  z.int.is_not_zero $failed && return 1 || return 0
 }
 
 z.t.remove_tmp_dir() {
