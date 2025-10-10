@@ -38,6 +38,16 @@ z.t.state.failures.increment() {
   (( z_test_failures++ ))
 }
 
+z.t.state.mark_error() {
+  local message=$1
+
+  local error_flag_file="/tmp/z_test_error_$$"
+  z.file.make_with_dir $error_flag_file
+  echo $message >> $error_flag_file
+
+  return 127
+}
+
 z.t.state.logged() {
   z.return $z_test_logged
 }
