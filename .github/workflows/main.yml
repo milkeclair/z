@@ -32,7 +32,7 @@ jobs:
           wget https://sourceforge.net/projects/zsh/files/zsh/${{ env.ZSH_VERSION }}/zsh-${{ env.ZSH_VERSION }}.tar.xz/download -O zsh.tar.xz
           tar xf zsh.tar.xz
           cd zsh-${{ env.ZSH_VERSION }}
-          ./configure --prefix=$HOME/.local
+          ./configure --prefix=$HOME/.local --with-tcsetpgrp
           make
           make install
 
