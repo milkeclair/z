@@ -12,12 +12,32 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      ZSH_VERSION: "5.9"
     steps:
       - uses: actions/checkout@v4
-      - name: Set up zsh
-        run: sudo apt-get install -y zsh
-      - name: Run tests
-        shell: zsh {0}
+
+      - name: Cache zsh
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.local
+          key: ${{ runner.os }}-zsh-${{ env.ZSH_VERSION }}
+
+      - name: Build and install zsh
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          source main.zsh
-          z.t
+          sudo apt-get update
+          sudo apt-get install -y build-essential libncurses-dev yodl
+          wget https://sourceforge.net/projects/zsh/files/zsh/${{ env.ZSH_VERSION }}/zsh-${{ env.ZSH_VERSION }}.tar.xz/download -O zsh.tar.xz
+          tar xf zsh.tar.xz
+          cd zsh-${{ env.ZSH_VERSION }}
+          ./configure --prefix=$HOME/.local --with-tcsetpgrp
+          make
+          make install
+
+      - name: Run tests
+        shell: bash {0}
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          zsh -c "source main.zsh && z.t"
