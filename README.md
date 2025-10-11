@@ -149,3 +149,23 @@ my.function() {
   z.io $var
 }
 ```
+
+## Language Server
+
+This library provides a language server.
+
+Download: https://marketplace.visualstudio.com/items?itemName=milkeclair.z-ls
+
+### Features
+
+- Autocompletion
+  - Function names
+- Hover information
+  - name
+  - description
+  - parameters
+  - returns
+  - example
+- Go to definition
+- Diagnostics
+  - Function not found
