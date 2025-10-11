@@ -1,5 +1,6 @@
 import { DiagnosticSeverity } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { Func } from '../getFunctions/type';
 import { Diagnostics } from './type';
 import { functionCallRegex, functionDefRegex } from './regex';
 
@@ -7,7 +8,7 @@ export function validateTextDocument({
   functions,
   textDocument,
 }: {
-  functions: any[];
+  functions: Func[];
   textDocument: TextDocument;
 }): Diagnostics[] {
   const text = textDocument.getText();
