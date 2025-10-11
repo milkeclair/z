@@ -1,0 +1,67 @@
+{
+  "name": "z-ls",
+  "displayName": "z-ls",
+  "author": "milkeclair",
+  "publisher": "milkeclair",
+  "description": "Language Server for z",
+  "license": "MIT",
+  "version": "1.0.4",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/milkeclair/z"
+  },
+  "engines": {
+    "vscode": "^1.105.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onLanguage:shellscript"
+  ],
+  "main": "./client/dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "shellscript",
+        "aliases": [
+          "Shell Script",
+          "shellscript"
+        ],
+        "extensions": [
+          ".zsh"
+        ]
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "z-ls",
+      "properties": {
+        "z-ls.zPath": {
+          "scope": "resource",
+          "type": "string",
+          "default": "~/.z",
+          "description": "Path to the z root directory. Defaults to ~/.z"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "b": "tsc -b",
+    "clean": "rm -rf client/dist server/dist client/tsconfig.tsbuildinfo server/tsconfig.tsbuildinfo",
+    "vscode:prepublish": "tsc -b",
+    "package": "npm run clean && npm run vscode:prepublish && vsce package"
+  },
+  "dependencies": {
+    "glob": "^11.0.3",
+    "vscode-languageclient": "^9.0.1",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.12"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^3.6.2",
+    "typescript": "^5.7.3",
+    "@types/node": "^22.10.2",
+    "@types/vscode": "^1.105.0"
+  }
+}
