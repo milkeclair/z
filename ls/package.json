@@ -5,7 +5,7 @@
   "publisher": "milkeclair",
   "description": "Language Server for z",
   "license": "MIT",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "repository": {
     "type": "git",
     "url": "https://github.com/milkeclair/z"
@@ -50,7 +50,7 @@
     "b": "tsc -b",
     "clean": "rm -rf client/dist server/dist client/tsconfig.tsbuildinfo server/tsconfig.tsbuildinfo",
     "vscode:prepublish": "tsc -b",
-    "package": "npm run clean && npm run vscode:prepublish && vsce package"
+    "package": "rm -f bun.lock && bun install && npm run clean && npm run vscode:prepublish && vsce package"
   },
   "dependencies": {
     "glob": "^11.0.3",
