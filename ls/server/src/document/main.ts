@@ -53,9 +53,6 @@ export function Document(commentText: string): Result {
     const isExample = sectionRegexes.example.test(trimmedLine);
 
     if (isExample) {
-      const match = trimmedLine.match(sectionExtractRegexes.example) || [''];
-
-      exampleLines.push(match[1]);
       setCurrentSection('example');
     } else if (currentSection() === 'example') {
       const match = trimmedLine.match(sectionExtractRegexes.example) || [''];
