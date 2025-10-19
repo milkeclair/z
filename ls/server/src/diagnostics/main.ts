@@ -15,6 +15,10 @@ export function validateTextDocument({
   const lines = text.split('\n');
 
   lines.forEach((line, lineIndex) => {
+    const trimmedLine = line.trim();
+    if (trimmedLine.startsWith('#')) return;
+    if (line.includes('# zls: ignore')) return;
+
     if (functionDefRegex.test(line)) return;
 
     let match;
