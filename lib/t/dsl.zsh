@@ -79,7 +79,7 @@ z.t.teardown() {
   z.t.remove_tmp_dir
 
   local error_flag_file="/tmp/z_t_error_$$"
-  if [[ -f "$error_flag_file" ]]; then
+  if z.file.is $error_flag_file; then
     local -a error_lines
     error_lines=("${(@f)$(<$error_flag_file)}")
     z.arr.count $error_lines
@@ -93,7 +93,7 @@ z.t.teardown() {
 
     z.dir.remove $error_flag_file
   fi
-  
+
   z.t.log.show
 
   z.t.state.failures
