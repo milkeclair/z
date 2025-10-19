@@ -78,7 +78,7 @@ z.t.teardown() {
   z.t.mock.unmock.all
   z.t.remove_tmp_dir
 
-  local error_flag_file="/tmp/z_test_error_$$"
+  local error_flag_file="/tmp/z_t_error_$$"
   if [[ -f "$error_flag_file" ]]; then
     local -a error_lines
     error_lines=("${(@f)$(<$error_flag_file)}")

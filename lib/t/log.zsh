@@ -7,7 +7,7 @@ z.t.log.failure() {
 }
 
 z.t.log.failure.remember() {
-  local error_idx=${#z_test_logs[@]}
+  local error_idx=${#z_t_logs[@]}
 
   z.t.state.current_idx "describe"
   local d_idx=$REPLY
@@ -75,27 +75,8 @@ z.t.log.show() {
 
   z.t.state.logged.set "true"
 
-  z.t.state.file_path
-  local display_path=${REPLY:r}
-  local padded_path=$(printf "%-25s" $display_path)
-  z.t.state.tests
-  local tests=$REPLY
-  local padded_tests=$(printf "%3s" $tests)
-  local padded_failures=$(printf "%2s" $failures)
-  local message="$padded_path $padded_tests tests $padded_failures failures"
-
-  z.int.is_zero $failures &&
-    { z.str.color.green $message; } || { z.str.color.red $message; }
-  z.io $REPLY
-
-  z.t.state.all_log
-  if z.is_true $REPLY; then
-    z.t.state.logs
-
-    for log in $REPLY; do
-      z.io $log
-    done
-  fi
+  z.t.log.show._summary $failures
+  z.t.log._handle_all_log
 
   z.int.is_zero $failures && return 0
 
@@ -111,7 +92,7 @@ z.t.log.show() {
     local i_idx=$indexes[3]
     local e_idx=$indexes[4]
 
-    if z.not_eq $prev_d_idx $d_idx; then
+    if z.t.log._not_last_log $prev_d_idx $d_idx; then
       z.t.state.logs.context $d_idx
       z.int.is_not_zero $d_idx && z.io $REPLY
       prev_d_idx=$d_idx
@@ -119,14 +100,14 @@ z.t.log.show() {
       prev_i_idx=""
     fi
 
-    if z.not_eq $prev_c_idx $c_idx; then
+    if z.t.log._not_last_log $prev_c_idx $c_idx; then
       z.t.state.logs.context $c_idx
       z.int.is_not_zero $c_idx && z.io $REPLY
       prev_c_idx=$c_idx
       prev_i_idx=""
     fi
 
-    if z.not_eq $prev_i_idx $i_idx; then
+    if z.t.log._not_last_log $prev_i_idx $i_idx; then
       z.t.state.logs.context $i_idx
       z.int.is_not_zero $i_idx && z.io $REPLY
       prev_i_idx=$i_idx
@@ -136,4 +117,40 @@ z.t.log.show() {
     local error_log=$REPLY
     z.int.is_not_zero $e_idx && z.io $error_log
   done
+}
+
+z.t.log.show._summary() {
+  local failures=$1
+
+  z.t.state.file_path
+  local display_path=${REPLY:r}
+  local padded_path=$(printf "%-25s" $display_path)
+
+  z.t.state.tests
+  local tests=$REPLY
+  local padded_tests=$(printf "%3s" $tests)
+  local padded_failures=$(printf "%2s" $failures)
+  local message="$padded_path $padded_tests tests $padded_failures failures"
+
+  z.int.is_zero $failures &&
+    { z.str.color.green $message; } || { z.str.color.red $message; }
+  z.io $REPLY
+}
+
+z.t.log._handle_all_log() {
+  z.t.state.all_log
+  if z.is_true $REPLY; then
+    z.t.state.logs
+
+    for log in $REPLY; do
+      z.io $log
+    done
+  fi
+}
+
+z.t.log._not_last_log() {
+  local prev=$1
+  local current=$2
+
+  z.not_eq $prev $current
 }
