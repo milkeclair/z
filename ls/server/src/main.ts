@@ -1,6 +1,8 @@
+import { refreshFunctions } from './refreshFunctions/main';
 import { Document } from './document/main';
-import { getZshFunctions } from './getFunctions/main';
+import { getAllZFunctions, extractZFunctions } from './getFunctions/main';
 import { validateTextDocument } from './diagnostics/main';
+import { workspaceDiagnostics } from './diagnostics/workspace';
 import { serverCapability } from './serverCapability/main';
 import {
   zInitialize,
@@ -13,8 +15,11 @@ import { Func } from './getFunctions/type';
 
 export {
   Document,
-  getZshFunctions,
+  getAllZFunctions,
+  extractZFunctions,
+  refreshFunctions,
   validateTextDocument,
+  workspaceDiagnostics,
   serverCapability,
   zInitialize,
   zCompletion,

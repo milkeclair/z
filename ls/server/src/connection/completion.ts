@@ -2,9 +2,9 @@ import {
   CompletionItem,
   CompletionParams,
   TextDocuments,
+  TextDocument,
   CompletionItemKind,
-} from 'vscode-languageserver';
-import { TextDocument } from 'vscode-languageserver-textdocument';
+} from '../vscode_type';
 import { Func } from '../getFunctions/type';
 import { zFunctionCallRegex } from './regex';
 

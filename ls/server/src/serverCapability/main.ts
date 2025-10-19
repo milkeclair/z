@@ -1,4 +1,4 @@
-import { TextDocumentSyncKind, InitializeResult } from 'vscode-languageserver';
+import { TextDocumentSyncKind, InitializeResult } from '../vscode_type';
 
 export function serverCapability(): InitializeResult {
   return {
@@ -14,8 +14,8 @@ export function serverCapability(): InitializeResult {
       hoverProvider: true,
       definitionProvider: true,
       diagnosticProvider: {
-        interFileDependencies: false,
-        workspaceDiagnostics: false,
+        interFileDependencies: true,
+        workspaceDiagnostics: true,
       },
     },
   };

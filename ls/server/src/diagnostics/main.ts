@@ -1,5 +1,4 @@
-import { DiagnosticSeverity } from 'vscode-languageserver';
-import { TextDocument } from 'vscode-languageserver-textdocument';
+import { DiagnosticSeverity, TextDocument } from '../vscode_type';
 import { Func } from '../getFunctions/type';
 import { Diagnostics } from './type';
 import { functionCallRegex, functionDefRegex } from './regex';
@@ -16,6 +15,10 @@ export function validateTextDocument({
   const lines = text.split('\n');
 
   lines.forEach((line, lineIndex) => {
+    const trimmedLine = line.trim();
+    if (trimmedLine.startsWith('#')) return;
+    if (line.includes('# zls: ignore')) return;
+
     if (functionDefRegex.test(line)) return;
 
     let match;

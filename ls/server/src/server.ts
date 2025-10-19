@@ -1,13 +1,15 @@
 import {
   createConnection,
   TextDocuments,
+  TextDocument,
   ProposedFeatures,
   DocumentDiagnosticReportKind,
-} from 'vscode-languageserver/node';
-import { TextDocument } from 'vscode-languageserver-textdocument';
+  DidChangeWatchedFilesNotification,
+} from './vscode_type';
 import {
-  getZshFunctions,
+  refreshFunctions,
   validateTextDocument,
+  workspaceDiagnostics,
   zInitialize,
   zCompletion,
   zCompletionResolve,
@@ -15,6 +17,7 @@ import {
   zDefinition,
   Func,
 } from './main';
+import { debounce } from './util/debounce';
 
 const conn = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
@@ -30,21 +33,43 @@ conn.onInitialize((params) => {
   return result.serverCapabilities;
 });
 
-documents.onDidOpen((_change) => {
+conn.onInitialized(() => {
+  conn.client.register(DidChangeWatchedFilesNotification.type, {
+    watchers: [
+      {
+        globPattern: '**/*.zsh',
+      },
+    ],
+  });
+});
+
+conn.onDidChangeWatchedFiles(() => {
+  functions = refreshFunctions({ projectRoot, documents });
   conn.languages.diagnostics.refresh();
 });
 
-documents.onDidChangeContent((_change) => {
+documents.onDidOpen(() => {
+  functions = refreshFunctions({ projectRoot, documents });
   conn.languages.diagnostics.refresh();
 });
 
-documents.onDidSave((change) => {
-  const uri = change.document.uri;
+const debouncedRefresh = debounce(() => {
+  functions = refreshFunctions({ projectRoot, documents });
+  conn.languages.diagnostics.refresh();
+});
 
-  if (uri.endsWith('.zsh')) {
-    functions = getZshFunctions(projectRoot);
-    conn.languages.diagnostics.refresh();
-  }
+documents.onDidChangeContent(() => {
+  debouncedRefresh();
+});
+
+documents.onDidSave(() => {
+  functions = refreshFunctions({ projectRoot, documents });
+  conn.languages.diagnostics.refresh();
+});
+
+documents.onDidClose(() => {
+  functions = refreshFunctions({ projectRoot, documents });
+  conn.languages.diagnostics.refresh();
 });
 
 conn.onCompletion((params) => {
@@ -71,6 +96,10 @@ conn.languages.diagnostics.on((params) => {
     kind: DocumentDiagnosticReportKind.Full,
     items: hasDocument ? validateTextDocument({ functions, textDocument: document }) : [],
   };
+});
+
+conn.languages.diagnostics.onWorkspace(() => {
+  return workspaceDiagnostics({ projectRoot, documents, functions });
 });
 
 documents.listen(conn);

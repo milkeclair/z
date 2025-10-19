@@ -1,6 +1,5 @@
 import path from 'path';
-import { DefinitionParams, TextDocuments, Location } from 'vscode-languageserver';
-import { TextDocument } from 'vscode-languageserver-textdocument';
+import { DefinitionParams, TextDocuments, TextDocument, Location } from '../vscode_type';
 import { Func } from '../getFunctions/type';
 import { extractLineContent } from './hook';
 

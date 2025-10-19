@@ -1,7 +1,7 @@
 import os from 'os';
-import { InitializeParams } from 'vscode-languageserver';
+import { InitializeParams } from '../vscode_type';
 import { Func } from '../getFunctions/type';
-import { getZshFunctions } from '../getFunctions/main';
+import { getAllZFunctions } from '../getFunctions/main';
 import { serverCapability } from '../serverCapability/main';
 
 export function zInitialize(params: InitializeParams): {
@@ -11,7 +11,7 @@ export function zInitialize(params: InitializeParams): {
 } {
   const libPath: string = params.initializationOptions.zPath || '';
   const projectRoot = libPath.replace(/^~/, os.homedir());
-  const functions = getZshFunctions(projectRoot);
+  const functions = getAllZFunctions(projectRoot);
 
   return {
     projectRoot: projectRoot,
