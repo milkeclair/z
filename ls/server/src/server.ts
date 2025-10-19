@@ -6,7 +6,7 @@ import {
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
-  getZshFunctions,
+  refreshFunctions,
   validateTextDocument,
   zInitialize,
   zCompletion,
@@ -30,21 +30,24 @@ conn.onInitialize((params) => {
   return result.serverCapabilities;
 });
 
-documents.onDidOpen((_change) => {
+documents.onDidOpen(() => {
+  functions = refreshFunctions({ projectRoot, documents });
   conn.languages.diagnostics.refresh();
 });
 
-documents.onDidChangeContent((_change) => {
+documents.onDidChangeContent(() => {
+  functions = refreshFunctions({ projectRoot, documents });
   conn.languages.diagnostics.refresh();
 });
 
-documents.onDidSave((change) => {
-  const uri = change.document.uri;
+documents.onDidSave(() => {
+  functions = refreshFunctions({ projectRoot, documents });
+  conn.languages.diagnostics.refresh();
+});
 
-  if (uri.endsWith('.zsh')) {
-    functions = getZshFunctions(projectRoot);
-    conn.languages.diagnostics.refresh();
-  }
+documents.onDidClose(() => {
+  functions = refreshFunctions({ projectRoot, documents });
+  conn.languages.diagnostics.refresh();
 });
 
 conn.onCompletion((params) => {
