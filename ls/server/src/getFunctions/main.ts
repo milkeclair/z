@@ -23,7 +23,7 @@ export function extractZFunctions(content: string): FuncContent[] {
 }
 
 export function getAllZFunctions(projectRoot: string): Func[] {
-  const files = globSync('**/*.zsh', { cwd: projectRoot, ignore: ['ls/**'] });
+  const files = globSync('**/*.zsh', { cwd: projectRoot });
   const functions: Func[] = [];
 
   for (const file of files) {
