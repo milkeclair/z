@@ -1,4 +1,4 @@
-import { CompletionItem } from 'vscode-languageserver';
+import { CompletionItem } from '../vscode_type';
 
 export function zCompletionResolve(result: CompletionItem): CompletionItem {
   if (result.data && result.data.file) {

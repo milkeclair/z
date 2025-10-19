@@ -1,13 +1,15 @@
 import {
   createConnection,
   TextDocuments,
+  TextDocument,
   ProposedFeatures,
   DocumentDiagnosticReportKind,
-} from 'vscode-languageserver/node';
-import { TextDocument } from 'vscode-languageserver-textdocument';
+  DidChangeWatchedFilesNotification,
+} from './vscode_type';
 import {
   refreshFunctions,
   validateTextDocument,
+  workspaceDiagnostics,
   zInitialize,
   zCompletion,
   zCompletionResolve,
@@ -15,6 +17,7 @@ import {
   zDefinition,
   Func,
 } from './main';
+import { debounce } from './util/debounce';
 
 const conn = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
@@ -30,14 +33,33 @@ conn.onInitialize((params) => {
   return result.serverCapabilities;
 });
 
+conn.onInitialized(() => {
+  conn.client.register(DidChangeWatchedFilesNotification.type, {
+    watchers: [
+      {
+        globPattern: '**/*.zsh',
+      },
+    ],
+  });
+});
+
+conn.onDidChangeWatchedFiles(() => {
+  functions = refreshFunctions({ projectRoot, documents });
+  conn.languages.diagnostics.refresh();
+});
+
 documents.onDidOpen(() => {
   functions = refreshFunctions({ projectRoot, documents });
   conn.languages.diagnostics.refresh();
 });
 
-documents.onDidChangeContent(() => {
+const debouncedRefresh = debounce(() => {
   functions = refreshFunctions({ projectRoot, documents });
   conn.languages.diagnostics.refresh();
+});
+
+documents.onDidChangeContent(() => {
+  debouncedRefresh();
 });
 
 documents.onDidSave(() => {
@@ -74,6 +96,10 @@ conn.languages.diagnostics.on((params) => {
     kind: DocumentDiagnosticReportKind.Full,
     items: hasDocument ? validateTextDocument({ functions, textDocument: document }) : [],
   };
+});
+
+conn.languages.diagnostics.onWorkspace(() => {
+  return workspaceDiagnostics({ projectRoot, documents, functions });
 });
 
 documents.listen(conn);

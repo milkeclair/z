@@ -1,7 +1,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { TextDocuments } from 'vscode-languageserver/node';
-import { TextDocument } from 'vscode-languageserver-textdocument';
+import { TextDocuments, TextDocument } from '../vscode_type';
 import { Func } from '../getFunctions/type';
 import { getAllZFunctions, extractZFunctions } from '../getFunctions/main';
 

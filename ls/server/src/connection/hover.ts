@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { HoverParams, TextDocuments, MarkupKind } from 'vscode-languageserver';
-import { TextDocument } from 'vscode-languageserver-textdocument';
+import { HoverParams, TextDocuments, TextDocument, MarkupKind } from '../vscode_type';
 import { Document } from '../document/main';
 import { Func } from '../getFunctions/type';
 import { extractLineContent, extractCommentText, commentToMarkDown } from './hook';

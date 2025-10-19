@@ -1,5 +1,4 @@
-import { DiagnosticSeverity } from 'vscode-languageserver';
-import { TextDocument } from 'vscode-languageserver-textdocument';
+import { DiagnosticSeverity, TextDocument } from '../vscode_type';
 import { Func } from '../getFunctions/type';
 import { Diagnostics } from './type';
 import { functionCallRegex, functionDefRegex } from './regex';

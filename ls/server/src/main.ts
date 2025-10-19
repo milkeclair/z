@@ -2,6 +2,7 @@ import { refreshFunctions } from './refreshFunctions/main';
 import { Document } from './document/main';
 import { getAllZFunctions, extractZFunctions } from './getFunctions/main';
 import { validateTextDocument } from './diagnostics/main';
+import { workspaceDiagnostics } from './diagnostics/workspace';
 import { serverCapability } from './serverCapability/main';
 import {
   zInitialize,
@@ -18,6 +19,7 @@ export {
   extractZFunctions,
   refreshFunctions,
   validateTextDocument,
+  workspaceDiagnostics,
   serverCapability,
   zInitialize,
   zCompletion,

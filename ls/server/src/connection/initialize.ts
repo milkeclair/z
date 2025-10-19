@@ -1,5 +1,5 @@
 import os from 'os';
-import { InitializeParams } from 'vscode-languageserver';
+import { InitializeParams } from '../vscode_type';
 import { Func } from '../getFunctions/type';
 import { getAllZFunctions } from '../getFunctions/main';
 import { serverCapability } from '../serverCapability/main';

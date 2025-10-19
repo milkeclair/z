@@ -1,5 +1,4 @@
-import { HoverParams } from 'vscode-languageserver';
-import { TextDocument } from 'vscode-languageserver-textdocument';
+import { HoverParams, TextDocument } from '../vscode_type';
 import { Result } from '../document/type';
 import { nonEmptyWordRegex } from './regex';
 
