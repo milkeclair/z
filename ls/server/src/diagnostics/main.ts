@@ -2,6 +2,7 @@ import { DiagnosticSeverity, TextDocument } from '../vscode_type';
 import { Func } from '../getFunctions/type';
 import { Diagnostics } from './type';
 import { functionCallRegex, functionDefRegex } from './regex';
+import { findClosestMatch } from '../util/levenshtein';
 
 export function validateTextDocument({
   functions,
@@ -29,13 +30,20 @@ export function validateTextDocument({
       const funcExists = functions.some((f) => f.name === functionName);
 
       if (!funcExists) {
+        const functionNames = functions.map((f) => f.name);
+        const suggestion = findClosestMatch(functionName, functionNames);
+
+        const message = suggestion
+          ? `${functionName} is not defined. Did you mean '${suggestion}'?`
+          : `${functionName} is not defined.`;
+
         diagnostics.push({
           severity: DiagnosticSeverity.Error,
           range: {
             start: { line: lineIndex, character: startChar },
             end: { line: lineIndex, character: endChar },
           },
-          message: `${functionName} is not defined.`,
+          message,
           source: 'z-ls',
         });
       }
