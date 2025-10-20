@@ -1,7 +1,7 @@
 import { DiagnosticSeverity, DocumentDiagnosticReportKind } from '../vscode_type';
 
 export type Diagnostics = {
-  severity: typeof DiagnosticSeverity.Error;
+  severity: DiagnosticSeverity;
   range: {
     start: { line: number; character: number };
     end: { line: number; character: number };
