@@ -34,7 +34,7 @@ export function validateTextDocument({
         const suggestion = findClosestMatch(functionName, functionNames);
 
         const message = suggestion
-          ? `${functionName} is not defined. Did you mean '${suggestion}'?`
+          ? `${functionName} is not defined. > ${suggestion}?`
           : `${functionName} is not defined.`;
 
         diagnostics.push({
