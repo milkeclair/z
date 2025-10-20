@@ -41,7 +41,7 @@ z.install._download_archive() {
   echo "💤 downloading..."
   local archive_url="https://github.com/$github_repo/archive/refs/heads/$github_branch.tar.gz"
 
-  if ! curl -sL $archive_url -o "$temp_dir/z.tar.gz"; then
+  if ! curl -sL $archive_url -o "$temp_dir/z.tar.gz"; then # zls: ignore
     echo "❌ failed to download"
     return 1
   fi
@@ -49,7 +49,7 @@ z.install._download_archive() {
 
 z.install._decompress_archive() {
   echo "📦: decompressing..."
-  if ! tar -xzf "$temp_dir/z.tar.gz" -C $temp_dir; then
+  if ! tar -xzf "$temp_dir/z.tar.gz" -C $temp_dir; then # zls: ignore
     echo "❌ failed to decompress"
     return 1
   fi
