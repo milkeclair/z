@@ -12,7 +12,7 @@ function handleEmptyLine(line: string, lineIndex: number, diagnostics: Diagnosti
         start: { line: lineIndex, character: 0 },
         end: { line: lineIndex, character: line.length },
       },
-      message: 'Empty line detected.',
+      message: 'Line contains only whitespace characters.',
       source: 'z-ls',
     });
   }
