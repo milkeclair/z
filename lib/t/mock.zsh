@@ -1,3 +1,12 @@
+# mock a function
+#
+# $1: function name
+# $2: behavior (call_original|custom code)
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.mock my_func "call_original"
 z.t.mock() {
   local func_name=$1
   local behavior=$2
@@ -22,10 +31,27 @@ z.t.mock() {
   fi
 }
 
+# call the original function within a mock
+#
+# $1: function name
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.mock.call_original my_func
 z.t.mock.call_original() {
   z.t.mock $1 "call_original"
 }
 
+# get the call arguments of the last call to the mocked function
+# function name can be omitted to get the last mocked function
+#
+# $1: function name(optional)
+# REPLY: array of arguments
+# return: null
+#
+# example:
+#  z.t.mock.result my_func
 z.t.mock.result() {
   local func_name=$1
 
@@ -42,6 +68,15 @@ z.t.mock.result() {
   fi
 }
 
+# unmock a function
+# function name can be omitted to unmock the last mocked function
+#
+# $1: function name(optional)
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.mock.unmock my_func
 z.t.mock.unmock() {
   local func_name=$1
 
@@ -69,6 +104,15 @@ z.t.mock.unmock() {
   fi
 }
 
+# unmock all mocked functions
+# skip unmocking if the argument is "skip_unmock"
+#
+# $1: skip unmock(optional)
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.mock.unmock.all
 z.t.mock.unmock.all() {
   local skip_unmock=$1
 
@@ -80,6 +124,14 @@ z.t.mock.unmock.all() {
   fi
 }
 
+# check if unmocking is not skipped
+#
+# $1: skip unmock(optional)
+# REPLY: null
+# return 0|1
+#
+# example:
+#  if z.t.mock.is_not_skippable "skip_unmock"; then ... fi
 z.t.mock.is_not_skippable() {
   local skip_unmock=$1
 

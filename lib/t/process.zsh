@@ -1,3 +1,18 @@
+# run tests
+# options:
+#   -l|--log: show all logs
+#   -f|--failed: show only failed tests
+#   <test_name>: run specific test(s)
+#
+# $@: options and test names
+# REPLY: null
+# return: 0|1
+#
+# example:
+#  z.t
+#  z.t -l
+#  z.t -f
+#  z.t some_test_name
 z.t() {
   z.t._extract_options $@
   local -a z_t_options=($REPLY)
@@ -61,6 +76,15 @@ z.t() {
   z.int.is_not_zero $failed && return 1 || return 0
 }
 
+# extract options from arguments
+#
+# $@: arguments
+# REPLY: "<log> <failed> <test_names...>"
+# return: null
+#
+# example:
+#  z.t._extract_options -l -f some_test_name
+#  REPLY="true true some_test_name"
 z.t._extract_options() {
   z.arr.count $@
   local arg_count=$REPLY
@@ -97,6 +121,13 @@ z.t._extract_options() {
   z.return ${result[@]}
 }
 
+# remove temporary test directory /tmp/z_t
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.remove_tmp_dir
 z.t.remove_tmp_dir() {
   z.dir.is /tmp/z_t && rm -rf /tmp/z_t
 }

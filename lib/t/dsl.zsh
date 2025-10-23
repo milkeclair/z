@@ -3,11 +3,19 @@ z.eq $z_mode "test" && {
 
   command_not_found_handler() {
     local cmd=$1
-    z.t.state.mark_error "command not found: $cmd"
+    z.t.state.mark_not_found_error "command not found: $cmd"
     return 127
   }
 }
 
+# describe a test suite
+#
+# $1: description
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.describe "My Test Suite"; {some tests}
 z.t.describe() {
   local description=$1
 
@@ -16,8 +24,19 @@ z.t.describe() {
 
   z.t.state.logs.add $REPLY
   z.t.state.current_idx.add "describe"
+  z.t.state.skip.describe.set "false"
+  z.t.state.skip.context.set "false"
+  z.t.state.skip.it.set "false"
 }
 
+# xdescribe a test suite (marked as pending)
+#
+# $1: description
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.xdescribe "My Pending Test Suite"; {some tests}
 z.t.xdescribe() {
   local description=$1
 
@@ -26,8 +45,19 @@ z.t.xdescribe() {
 
   z.t.state.logs.add $REPLY
   z.t.state.current_idx.add "describe"
+  z.t.state.skip.describe.set "true"
+  z.t.state.skip.context.set "true"
+  z.t.state.skip.it.set "true"
 }
 
+# context within a test suite
+#
+# $1: context description
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.context "When something happens"; {some tests}
 z.t.context() {
   local context=$1
 
@@ -36,8 +66,26 @@ z.t.context() {
 
   z.t.state.logs.add $REPLY
   z.t.state.current_idx.add "context"
+
+  z.t.state.skip.describe
+  local describe_skip=$REPLY
+  if z.is_true $describe_skip; then
+    z.t.state.skip.context.set "true"
+    z.t.state.skip.it.set "true"
+  else
+    z.t.state.skip.context.set "false"
+    z.t.state.skip.it.set "false"
+  fi
 }
 
+# xcontext within a test suite (marked as pending)
+#
+# $1: context description
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.xcontext "When something happens"; {some tests}
 z.t.xcontext() {
   local context=$1
 
@@ -46,8 +94,19 @@ z.t.xcontext() {
 
   z.t.state.logs.add $REPLY
   z.t.state.current_idx.add "context"
+  z.t.state.skip.describe
+  z.t.state.skip.context.set "true"
+  z.t.state.skip.it.set "true"
 }
 
+# it block within a test suite
+#
+# $1: it description
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.it "should do something"; {test code}
 z.t.it() {
   REPLY=""
 
@@ -59,8 +118,28 @@ z.t.it() {
   z.t.state.logs.add $REPLY
   z.t.state.current_idx.add "it"
   z.t.state.tests.increment
+
+  z.t.state.skip.describe
+  local describe_skip=$REPLY
+  z.t.state.skip.context
+  local context_skip=$REPLY
+
+  if z.is_true $describe_skip || z.is_true $context_skip; then
+    z.t.state.skip.it.set "true"
+    z.t.state.pendings.increment
+  else
+    z.t.state.skip.it.set "false"
+  fi
 }
 
+# xit block within a test suite (marked as pending)
+#
+# $1: it description
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.xit "should do something"; {test code}
 z.t.xit() {
   REPLY=""
 
@@ -72,8 +151,17 @@ z.t.xit() {
   z.t.state.logs.add $REPLY
   z.t.state.current_idx.add "it"
   z.t.state.tests.increment
+  z.t.state.pendings.increment
+  z.t.state.skip.it.set "true"
 }
 
+# teardown function to be called at the end of tests
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.teardown
 z.t.teardown() {
   z.t.mock.unmock.all
   z.t.remove_tmp_dir
