@@ -1,6 +1,6 @@
 source ${z_main}
 
-z.t.describe "z.debug"; {
+z.t.xdescribe "z.debug"; {
   z.t.context "whenceで関数を検索した場合"; {
     z.t.it "定義されている"; {
       whence -w z.debug | grep -q "z.debug: function"

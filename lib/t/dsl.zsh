@@ -24,6 +24,9 @@ z.t.describe() {
 
   z.t.state.logs.add $REPLY
   z.t.state.current_idx.add "describe"
+  z.t.state.skip.describe.set "false"
+  z.t.state.skip.context.set "false"
+  z.t.state.skip.it.set "false"
 }
 
 # xdescribe a test suite (marked as pending)
@@ -42,6 +45,9 @@ z.t.xdescribe() {
 
   z.t.state.logs.add $REPLY
   z.t.state.current_idx.add "describe"
+  z.t.state.skip.describe.set "true"
+  z.t.state.skip.context.set "true"
+  z.t.state.skip.it.set "true"
 }
 
 # context within a test suite
@@ -60,6 +66,16 @@ z.t.context() {
 
   z.t.state.logs.add $REPLY
   z.t.state.current_idx.add "context"
+
+  z.t.state.skip.describe
+  local describe_skip=$REPLY
+  if z.is_true $describe_skip; then
+    z.t.state.skip.context.set "true"
+    z.t.state.skip.it.set "true"
+  else
+    z.t.state.skip.context.set "false"
+    z.t.state.skip.it.set "false"
+  fi
 }
 
 # xcontext within a test suite (marked as pending)
@@ -78,6 +94,9 @@ z.t.xcontext() {
 
   z.t.state.logs.add $REPLY
   z.t.state.current_idx.add "context"
+  z.t.state.skip.describe
+  z.t.state.skip.context.set "true"
+  z.t.state.skip.it.set "true"
 }
 
 # it block within a test suite
@@ -99,6 +118,18 @@ z.t.it() {
   z.t.state.logs.add $REPLY
   z.t.state.current_idx.add "it"
   z.t.state.tests.increment
+
+  z.t.state.skip.describe
+  local describe_skip=$REPLY
+  z.t.state.skip.context
+  local context_skip=$REPLY
+
+  if z.is_true $describe_skip || z.is_true $context_skip; then
+    z.t.state.skip.it.set "true"
+    z.t.state.pendings.increment
+  else
+    z.t.state.skip.it.set "false"
+  fi
 }
 
 # xit block within a test suite (marked as pending)
@@ -120,6 +151,8 @@ z.t.xit() {
   z.t.state.logs.add $REPLY
   z.t.state.current_idx.add "it"
   z.t.state.tests.increment
+  z.t.state.pendings.increment
+  z.t.state.skip.it.set "true"
 }
 
 # teardown function to be called at the end of tests

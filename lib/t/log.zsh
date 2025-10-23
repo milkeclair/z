@@ -166,7 +166,7 @@ z.t.log.show() {
 }
 
 # show summary of logs
-# "<file_path> <num_tests> tests <num_failures> failures"
+# "<file_path> <num_tests> tests <num_failures> failures <num_pendings> pendings"
 #
 # $1: number of failures
 # REPLY: null
@@ -183,9 +183,13 @@ z.t.log.show._summary() {
 
   z.t.state.tests
   local tests=$REPLY
+  z.t.state.pendings
+  local pendings=$REPLY
+
   local padded_tests=$(printf "%3s" $tests)
   local padded_failures=$(printf "%2s" $failures)
-  local message="$padded_path $padded_tests tests $padded_failures failures"
+  local padded_pendings=$(printf "%2s" $pendings)
+  local message="$padded_path $padded_tests tests $padded_failures failures $padded_pendings pendings"
 
   z.int.is_zero $failures &&
     { z.str.color.green $message; } || { z.str.color.red $message; }

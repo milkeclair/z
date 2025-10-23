@@ -13,6 +13,12 @@ z.t.expect() {
   local expect=$2
   local skip_unmock=$3
 
+  z.t.state.skip.it
+  if z.is_true $REPLY; then
+    z.t.mock.unmock.all $skip_unmock
+    return 0
+  fi
+
   if z.not_eq $expect $actual; then
     local expect_display=${(V)expect}
     local actual_display=${(V)actual}
@@ -36,6 +42,12 @@ z.t.expect.not() {
   local actual=$1
   local expect=$2
   local skip_unmock=$3
+
+  z.t.state.skip.it
+  if z.is_true $REPLY; then
+    z.t.mock.unmock.all $skip_unmock
+    return 0
+  fi
 
   if z.eq $expect $actual; then
     local expect_display=${(V)expect}
@@ -61,6 +73,12 @@ z.t.expect.include() {
   local expect=$2
   local skip_unmock=$3
 
+  z.t.state.skip.it
+  if z.is_true $REPLY; then
+    z.t.mock.unmock.all $skip_unmock
+    return 0
+  fi
+
   if z.str.is_not_include $actual $expect; then
     z.t.log.failure.handle "failed: expected [ $expect ] to be included in [ $actual ]"
   fi
@@ -82,6 +100,12 @@ z.t.expect.exclude() {
   local actual=$1
   local expect=$2
   local skip_unmock=$3
+
+  z.t.state.skip.it
+  if z.is_true $REPLY; then
+    z.t.mock.unmock.all $skip_unmock
+    return 0
+  fi
 
   if z.str.is_include $actual $expect; then
     z.t.log.failure.handle "failed: expected [ $expect ] to be excluded from [ $actual ]"

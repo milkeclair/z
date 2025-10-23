@@ -2,9 +2,13 @@ local z_t_file_path=$1
 
 local z_t_tests=0
 local z_t_failures=0
+local z_t_pendings=0
 local z_t_logged="false"
 local z_t_all_log="${Z_TEST_ALL_LOG:-false}"
 local z_t_failed_only="${Z_TEST_FAILED_ONLY:-false}"
+local z_t_skip_describe="false"
+local z_t_skip_context="false"
+local z_t_skip_it="false"
 
 local -a z_t_logs=()
 local -A z_t_current_idx=([describe]=0 [context]=0 [it]=0)
@@ -72,6 +76,28 @@ z.t.state.failures() {
 #  z.t.state.failures.increment
 z.t.state.failures.increment() {
   (( z_t_failures++ ))
+}
+
+# get the number of pending tests
+#
+# REPLY: null
+# return: number of pending tests
+#
+# example:
+#  z.t.state.pendings  #=> 3
+z.t.state.pendings() {
+  z.return $z_t_pendings
+}
+
+# increment the number of pending tests by 1
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.state.pendings.increment
+z.t.state.pendings.increment() {
+  (( z_t_pendings++ ))
 }
 
 # mark the test suite as having command not found error
@@ -159,6 +185,75 @@ z.t.state.failed_only() {
 #  z.t.state.failed_only.set "true"
 z.t.state.failed_only.set() {
   z_t_failed_only=$1
+}
+
+# get the skip state for describe level
+#
+# REPLY: null
+# return: true|false
+#
+# example:
+#  z.t.state.skip.describe  #=> "false"
+z.t.state.skip.describe() {
+  z.return $z_t_skip_describe
+}
+
+# set the skip state for describe level
+#
+# $1: true|false
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.state.skip.describe.set "true"
+z.t.state.skip.describe.set() {
+  z_t_skip_describe=$1
+}
+
+# get the skip state for context level
+#
+# REPLY: null
+# return: true|false
+#
+# example:
+#  z.t.state.skip.context  #=> "false"
+z.t.state.skip.context() {
+  z.return $z_t_skip_context
+}
+
+# set the skip state for context level
+#
+# $1: true|false
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.state.skip.context.set "true"
+z.t.state.skip.context.set() {
+  z_t_skip_context=$1
+}
+
+# get the skip state for it level
+#
+# REPLY: null
+# return: true|false
+#
+# example:
+#  z.t.state.skip.it  #=> "false"
+z.t.state.skip.it() {
+  z.return $z_t_skip_it
+}
+
+# set the skip state for it level
+#
+# $1: true|false
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.state.skip.it.set "true"
+z.t.state.skip.it.set() {
+  z_t_skip_it=$1
 }
 
 # logs array management
