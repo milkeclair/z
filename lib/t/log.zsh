@@ -1,11 +1,32 @@
+# Logging functions for test framework
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.log
 z.t.log() {
   z.t.state.logs
 }
 
+# get failure records
+#
+# REPLY: failure records
+# return: null
+#
+# example:
+#  z.t.log.failure
 z.t.log.failure() {
   z.t.state.failure_records
 }
 
+# remember failure record
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.log.failure.remember
 z.t.log.failure.remember() {
   local error_idx=${#z_t_logs[@]}
 
@@ -19,6 +40,14 @@ z.t.log.failure.remember() {
   z.t.state.failure_records.add "$d_idx:$c_idx:$i_idx:$error_idx"
 }
 
+# add failure log with color
+#
+# $1: color
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.log.failure.add "red"
 z.t.log.failure.add() {
   local color=$1
   z.t.state.current_idx "describe"
@@ -50,6 +79,14 @@ z.t.log.failure.add() {
   fi
 }
 
+# process failure log
+#
+# $1: error message
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.log.failure.handle "error message"
 z.t.log.failure.handle() {
   local error_message=$1
 
@@ -62,6 +99,13 @@ z.t.log.failure.handle() {
   z.t.log.failure.add "red"
 }
 
+# show all logs with summary
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.log.show
 z.t.log.show() {
   z.t.state.failures
   local failures=$REPLY
@@ -79,6 +123,8 @@ z.t.log.show() {
   z.t.log._handle_all_log
 
   z.int.is_zero $failures && return 0
+  z.t.state.all_log
+  z.is_true $REPLY && return 0
 
   local prev_d_idx=""
   local prev_c_idx=""
@@ -119,6 +165,15 @@ z.t.log.show() {
   done
 }
 
+# show summary of logs
+# "<file_path> <num_tests> tests <num_failures> failures"
+#
+# $1: number of failures
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.log.show._summary 3
 z.t.log.show._summary() {
   local failures=$1
 
@@ -137,6 +192,13 @@ z.t.log.show._summary() {
   z.io $REPLY
 }
 
+# handle all logs if all_log is true
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.log._handle_all_log
 z.t.log._handle_all_log() {
   z.t.state.all_log
   if z.is_true $REPLY; then
@@ -148,6 +210,15 @@ z.t.log._handle_all_log() {
   fi
 }
 
+# check if current log is not the same as previous log
+#
+# $1: previous index
+# $2: current index
+# REPLY: null
+# return: 0|1
+#
+# example:
+#  if z.t.log._not_last_log $prev $current; then ... fi
 z.t.log._not_last_log() {
   local prev=$1
   local current=$2

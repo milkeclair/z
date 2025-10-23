@@ -3,11 +3,19 @@ z.eq $z_mode "test" && {
 
   command_not_found_handler() {
     local cmd=$1
-    z.t.state.mark_error "command not found: $cmd"
+    z.t.state.mark_not_found_error "command not found: $cmd"
     return 127
   }
 }
 
+# describe a test suite
+#
+# $1: description
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.describe "My Test Suite"; {some tests}
 z.t.describe() {
   local description=$1
 
@@ -18,6 +26,14 @@ z.t.describe() {
   z.t.state.current_idx.add "describe"
 }
 
+# xdescribe a test suite (marked as pending)
+#
+# $1: description
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.xdescribe "My Pending Test Suite"; {some tests}
 z.t.xdescribe() {
   local description=$1
 
@@ -28,6 +44,14 @@ z.t.xdescribe() {
   z.t.state.current_idx.add "describe"
 }
 
+# context within a test suite
+#
+# $1: context description
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.context "When something happens"; {some tests}
 z.t.context() {
   local context=$1
 
@@ -38,6 +62,14 @@ z.t.context() {
   z.t.state.current_idx.add "context"
 }
 
+# xcontext within a test suite (marked as pending)
+#
+# $1: context description
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.xcontext "When something happens"; {some tests}
 z.t.xcontext() {
   local context=$1
 
@@ -48,6 +80,14 @@ z.t.xcontext() {
   z.t.state.current_idx.add "context"
 }
 
+# it block within a test suite
+#
+# $1: it description
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.it "should do something"; {test code}
 z.t.it() {
   REPLY=""
 
@@ -61,6 +101,14 @@ z.t.it() {
   z.t.state.tests.increment
 }
 
+# xit block within a test suite (marked as pending)
+#
+# $1: it description
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.xit "should do something"; {test code}
 z.t.xit() {
   REPLY=""
 
@@ -74,6 +122,13 @@ z.t.xit() {
   z.t.state.tests.increment
 }
 
+# teardown function to be called at the end of tests
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.teardown
 z.t.teardown() {
   z.t.mock.unmock.all
   z.t.remove_tmp_dir
