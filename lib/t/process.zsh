@@ -94,6 +94,8 @@ z.t() {
   z.t._show_totals $count_dir $files
   local totals_failed=$?
 
+  z.is_not_null $compact_dir && z.dir.is $compact_dir && z.dir.remove $compact_dir
+
   cd $original_dir
   z.int.is_not_zero $failed && return 1
   return $totals_failed
@@ -207,12 +209,11 @@ z.t._show_compact_results() {
     z.file.is $summary_file && cat $summary_file
   done
 
+  setopt local_options null_glob
   local -a failure_files=("$compact_dir"/*_failure.txt)
-  if z.int.gt ${#failure_files[@]} 0; then
-    for failure_file in ${failure_files[@]}; do
-      z.file.is $failure_file && cat $failure_file
-    done
-  fi
+  for failure_file in ${failure_files[@]}; do
+    z.file.is $failure_file && cat $failure_file
+  done
 }
 
 # internal: calculate and display total counts
