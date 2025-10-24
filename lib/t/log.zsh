@@ -107,62 +107,188 @@ z.t.log.failure.handle() {
 # example:
 #  z.t.log.show
 z.t.log.show() {
-  z.t.state.failures
-  local failures=$REPLY
-
-  z.guard; {
-    z.t.state.logged
-    z.is_true $REPLY && return 0
-    z.t.state.failed_only
-    z.is_true $REPLY && z.int.is_zero $failures && return 0
-  }
+  z.t.log.show._should_skip && return 0
 
   z.t.state.logged.set "true"
+
+  z.t.state.failures
+  local failures=$REPLY
 
   z.t.log.show._summary $failures
   z.t.log._handle_all_log
 
-  z.int.is_zero $failures && return 0
   z.t.state.all_log
   z.is_true $REPLY && return 0
+
+  z.t.log.show._failures_and_pendings
+}
+
+# check if log should be skipped
+#
+# REPLY: null
+# return: 0|1
+#
+# example:
+#  z.t.log.show._should_skip && return 0
+z.t.log.show._should_skip() {
+  z.t.state.logged
+  z.is_true $REPLY && return 0
+
+  z.t.state.failed_only
+  if z.is_true $REPLY; then
+    z.t.state.failures
+    z.int.is_zero $REPLY && return 0
+  fi
+
+  return 1
+}
+
+# show failure and pending records in order
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.log.show._failures_and_pendings
+z.t.log.show._failures_and_pendings() {
+  z.t.state.failures
+  local failures=$REPLY
+  z.t.state.pendings
+  local pendings=$REPLY
+
+  z.int.is_zero $failures && z.int.is_zero $pendings && return 0
+
+  z.t.log._collect_records
+  local -a sorted_records=($REPLY)
+
+  z.arr.count $sorted_records
+  z.int.is_zero $REPLY && return 0
+
+  z.t.log._display_records ${sorted_records[@]}
+}
+
+# collect and sort failure and pending records
+#
+# REPLY: sorted records array
+# return: null
+#
+# example:
+#  z.t.log._collect_records
+z.t.log._collect_records() {
+  z.t.state.failed_only
+  local failed_only=$REPLY
+
+  local -a all_records=()
+
+  z.t.state.failure_records
+  local -a failure_records=($REPLY)
+  for record in ${failure_records[@]}; do
+    z.str.split $record ":"
+    local -a parts=($REPLY)
+    local d_idx=$parts[1]
+    local c_idx=$parts[2]
+    local i_idx=$parts[3]
+    local e_idx=$parts[4]
+    local sort_key=$(printf "%03d:%03d:%03d" $d_idx $c_idx $i_idx)
+    local suffix="failure:$d_idx:$c_idx:$i_idx:$e_idx"
+    local full_record="${sort_key}:${suffix}"
+    all_records+=($full_record)
+  done
+
+  if z.is_false $failed_only; then
+    z.t.state.pending_records
+    local -a pending_records=($REPLY)
+    for record in ${pending_records[@]}; do
+      z.str.split $record ":"
+      local -a parts=($REPLY)
+      local d_idx=$parts[1]
+      local c_idx=$parts[2]
+      local i_idx=$parts[3]
+      local sort_key=$(printf "%03d:%03d:%03d" $d_idx $c_idx $i_idx)
+      local suffix="pending:$d_idx:$c_idx:$i_idx"
+      local full_record="${sort_key}:${suffix}"
+      all_records+=($full_record)
+    done
+  fi
+
+  z.arr.count $all_records
+  z.int.is_zero $REPLY && { z.return ""; return 0; }
+
+  local -a sorted_records=(${(o)all_records})
+  z.return ${sorted_records[@]}
+}
+
+# display sorted records
+#
+# $@: sorted records
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.log._display_records ${records[@]}
+z.t.log._display_records() {
+  local -a sorted_records=($@)
 
   local prev_d_idx=""
   local prev_c_idx=""
   local prev_i_idx=""
-  z.t.state.failure_records
-  for record in $REPLY; do
-    z.str.split $record ":"
-    local -a indexes=($REPLY)
-    local d_idx=$indexes[1]
-    local c_idx=$indexes[2]
-    local i_idx=$indexes[3]
-    local e_idx=$indexes[4]
 
-    if z.t.log._not_last_log $prev_d_idx $d_idx; then
-      z.t.state.logs.context $d_idx
-      z.int.is_not_zero $d_idx && z.io $REPLY
+  for record in ${sorted_records[@]}; do
+    z.str.split $record ":"
+    local -a parts=($REPLY)
+    local record_type=$parts[4]
+    local d_idx=$parts[5]
+    local c_idx=$parts[6]
+    local i_idx=$parts[7]
+    local e_idx=$parts[8]
+
+    z.t.log._output_if_changed $d_idx $prev_d_idx
+    if [ $? -eq 0 ]; then
       prev_d_idx=$d_idx
       prev_c_idx=""
       prev_i_idx=""
     fi
 
-    if z.t.log._not_last_log $prev_c_idx $c_idx; then
-      z.t.state.logs.context $c_idx
-      z.int.is_not_zero $c_idx && z.io $REPLY
+    z.t.log._output_if_changed $c_idx $prev_c_idx
+    if [ $? -eq 0 ]; then
       prev_c_idx=$c_idx
       prev_i_idx=""
     fi
 
-    if z.t.log._not_last_log $prev_i_idx $i_idx; then
-      z.t.state.logs.context $i_idx
-      z.int.is_not_zero $i_idx && z.io $REPLY
-      prev_i_idx=$i_idx
-    fi
+    z.t.log._output_if_changed $i_idx $prev_i_idx
+    [ $? -eq 0 ] && prev_i_idx=$i_idx
 
-    z.t.state.logs.context $e_idx
-    local error_log=$REPLY
-    z.int.is_not_zero $e_idx && z.io $error_log
+    if [ "$record_type" = "failure" ] && [ -n "$e_idx" ]; then
+      z.t.state.logs.context $e_idx
+      local error_log=$REPLY
+      z.is_not_null $error_log && z.io $error_log
+    fi
   done
+}
+
+# output log if index has changed
+#
+# $1: current index
+# $2: previous index
+# REPLY: null
+# return: 0|1
+#
+# example:
+#  z.t.log._output_if_changed $curr $prev
+z.t.log._output_if_changed() {
+  local curr_idx=$1
+  local prev_idx=$2
+
+  z.is_null $curr_idx && return 1
+  z.int.is_zero $curr_idx && return 1
+
+  if z.t.log._not_last_log $prev_idx $curr_idx; then
+    z.t.state.logs.context $curr_idx
+    z.is_not_null $REPLY && z.io $REPLY
+    return 0
+  fi
+
+  return 1
 }
 
 # show summary of logs

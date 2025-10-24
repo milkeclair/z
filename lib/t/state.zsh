@@ -13,6 +13,7 @@ local z_t_skip_it="false"
 local -a z_t_logs=()
 local -A z_t_current_idx=([describe]=0 [context]=0 [it]=0)
 local -a z_t_failure_records=()
+local -a z_t_pending_records=()
 
 typeset -gA z_t_mock_calls=()
 typeset -gA z_t_mock_originals=()
@@ -289,7 +290,8 @@ z.t.state.logs.add() {
 #  z.t.state.logs.context "0"  #=> "log entry at index 0"
 z.t.state.logs.context() {
   local context=$1
-  z.return ${z_t_logs[$context]}
+  z.is_null $context && { z.return ""; return 0; }
+  z.return ${z_t_logs[$context]:-""}
 }
 
 # set a log entry by context
@@ -392,6 +394,29 @@ z.t.state.failure_records() {
 #  z.t.state.failure_records.add "This is a failure record"
 z.t.state.failure_records.add() {
   z_t_failure_records+=($1)
+}
+
+# get pending records
+#
+# REPLY: null
+# return: pending records array
+#
+# example:
+#  z.t.state.pending_records  #=> ("record1" "record2" ...)
+z.t.state.pending_records() {
+  z.return ${z_t_pending_records[@]}
+}
+
+# add a pending record
+#
+# $1: pending record
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.state.pending_records.add "This is a pending record"
+z.t.state.pending_records.add() {
+  z_t_pending_records+=($1)
 }
 
 # mock originals management
