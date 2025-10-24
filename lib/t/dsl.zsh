@@ -61,14 +61,19 @@ z.t.xdescribe() {
 z.t.context() {
   local context=$1
 
+  z.t.state.skip.describe
+  local describe_skip=$REPLY
+
   z.str.indent 2 $context
-  z.str.color.green $REPLY
+  if z.is_true $describe_skip; then
+    z.str.color.yellow $REPLY
+  else
+    z.str.color.green $REPLY
+  fi
 
   z.t.state.logs.add $REPLY
   z.t.state.current_idx.add "context"
 
-  z.t.state.skip.describe
-  local describe_skip=$REPLY
   if z.is_true $describe_skip; then
     z.t.state.skip.context.set "true"
     z.t.state.skip.it.set "true"
@@ -112,21 +117,33 @@ z.t.it() {
 
   local it=$1
 
-  z.str.indent 3 $it
-  z.str.color.green $REPLY
-
-  z.t.state.logs.add $REPLY
-  z.t.state.current_idx.add "it"
-  z.t.state.tests.increment
-
   z.t.state.skip.describe
   local describe_skip=$REPLY
   z.t.state.skip.context
   local context_skip=$REPLY
 
+  z.str.indent 3 $it
+  if z.is_true $describe_skip || z.is_true $context_skip; then
+    z.str.color.yellow $REPLY
+  else
+    z.str.color.green $REPLY
+  fi
+
+  z.t.state.logs.add $REPLY
+  z.t.state.current_idx.add "it"
+  z.t.state.tests.increment
+
   if z.is_true $describe_skip || z.is_true $context_skip; then
     z.t.state.skip.it.set "true"
     z.t.state.pendings.increment
+
+    z.t.state.current_idx "describe"
+    local d_idx=$REPLY
+    z.t.state.current_idx "context"
+    local c_idx=$REPLY
+    z.t.state.current_idx "it"
+    local i_idx=$REPLY
+    z.t.state.pending_records.add "$d_idx:$c_idx:$i_idx"
   else
     z.t.state.skip.it.set "false"
   fi
@@ -153,6 +170,14 @@ z.t.xit() {
   z.t.state.tests.increment
   z.t.state.pendings.increment
   z.t.state.skip.it.set "true"
+
+  z.t.state.current_idx "describe"
+  local d_idx=$REPLY
+  z.t.state.current_idx "context"
+  local c_idx=$REPLY
+  z.t.state.current_idx "it"
+  local i_idx=$REPLY
+  z.t.state.pending_records.add "$d_idx:$c_idx:$i_idx"
 }
 
 # teardown function to be called at the end of tests
