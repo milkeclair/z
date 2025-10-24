@@ -122,6 +122,25 @@ z.t.it() {
   z.t.state.skip.context
   local context_skip=$REPLY
 
+  z.t.state.compact
+  local is_compact=$REPLY
+
+  if z.is_true $is_compact; then
+    z.t.state.tests
+    local test_count=$REPLY
+    if z.int.gt $test_count 0; then
+      z.t.state.current_it_failures
+      local failures=$REPLY
+      if z.int.is_zero $failures; then
+        z.t.state.skip.it
+        z.is_false $REPLY && z.t.log.dot.success
+      else
+        z.t.log.dot.failure
+      fi
+    fi
+    z.t.state.current_it_failures.reset
+  fi
+
   z.str.indent 3 $it
   if z.is_true $describe_skip || z.is_true $context_skip; then
     z.str.color.yellow $REPLY
@@ -144,6 +163,10 @@ z.t.it() {
     z.t.state.current_idx "it"
     local i_idx=$REPLY
     z.t.state.pending_records.add "$d_idx:$c_idx:$i_idx"
+
+    if z.is_true $is_compact; then
+      z.t.log.dot.pending
+    fi
   else
     z.t.state.skip.it.set "false"
   fi
@@ -162,10 +185,29 @@ z.t.xit() {
 
   local it=$1
 
+  z.t.state.compact
+  local is_compact=$REPLY
+
+  if z.is_true $is_compact; then
+    z.t.state.tests
+    local test_count=$REPLY
+    if z.int.gt $test_count 0; then
+      z.t.state.current_it_failures
+      local failures=$REPLY
+      if z.int.is_zero $failures; then
+        z.t.state.skip.it
+        z.is_false $REPLY && z.t.log.dot.success
+      else
+        z.t.log.dot.failure
+      fi
+    fi
+    z.t.state.current_it_failures.reset
+  fi
+
   z.str.indent 3 $it
   z.str.color.yellow $REPLY
-
   z.t.state.logs.add $REPLY
+
   z.t.state.current_idx.add "it"
   z.t.state.tests.increment
   z.t.state.pendings.increment
@@ -178,6 +220,10 @@ z.t.xit() {
   z.t.state.current_idx "it"
   local i_idx=$REPLY
   z.t.state.pending_records.add "$d_idx:$c_idx:$i_idx"
+
+  if z.is_true $is_compact; then
+    z.t.log.dot.pending
+  fi
 }
 
 # teardown function to be called at the end of tests
@@ -205,6 +251,22 @@ z.t.teardown() {
     done
 
     z.dir.remove $error_flag_file
+  fi
+
+  z.t.state.compact
+  if z.is_true $REPLY; then
+    z.t.state.tests
+    local test_count=$REPLY
+    if z.int.gt $test_count 0; then
+      z.t.state.current_it_failures
+      local failures=$REPLY
+      if z.int.is_zero $failures; then
+        z.t.state.skip.it
+        z.is_false $REPLY && z.t.log.dot.success
+      else
+        z.t.log.dot.failure
+      fi
+    fi
   fi
 
   z.t.log.show

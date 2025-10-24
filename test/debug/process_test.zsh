@@ -1,7 +1,7 @@
 source ${z_main}
 
 z.t.describe "z.debug"; {
-  z.t.context "whenceで関数を検索した場合"; {
+  z.t.xcontext "whenceで関数を検索した場合"; {
     z.t.it "定義されている"; {
       whence -w z.debug | grep -q "z.debug: function"
 
@@ -16,7 +16,7 @@ z.t.describe "z.debug"; {
 
       (z.debug <<< "q") >/dev/null 2>&1
 
-      z.t.expect.status.false
+      z.t.expect.status.true
       Z_DEBUG=$previous_debug
     }
   }

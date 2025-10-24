@@ -6,9 +6,11 @@ local z_t_pendings=0
 local z_t_logged="false"
 local z_t_all_log="${Z_TEST_ALL_LOG:-false}"
 local z_t_failed_only="${Z_TEST_FAILED_ONLY:-false}"
+local z_t_compact="${Z_TEST_COMPACT:-false}"
 local z_t_skip_describe="false"
 local z_t_skip_context="false"
 local z_t_skip_it="false"
+local z_t_current_it_failures=0
 
 local -a z_t_logs=()
 local -A z_t_current_idx=([describe]=0 [context]=0 [it]=0)
@@ -186,6 +188,29 @@ z.t.state.failed_only() {
 #  z.t.state.failed_only.set "true"
 z.t.state.failed_only.set() {
   z_t_failed_only=$1
+}
+
+# get the compact state
+#
+# REPLY: null
+# return: true|false
+#
+# example:
+#  z.t.state.compact  #=> "false"
+z.t.state.compact() {
+  z.return $z_t_compact
+}
+
+# set the compact state
+#
+# $1: true|false
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.state.compact.set "true"
+z.t.state.compact.set() {
+  z_t_compact=$1
 }
 
 # get the skip state for describe level
@@ -612,4 +637,37 @@ z.t.state.mock_last_func() {
 #  z.t.state.mock_last_func.set "my_mocked_function"
 z.t.state.mock_last_func.set() {
   z_t_mock_last_func=$1
+}
+
+# get the current it failures count
+#
+# REPLY: null
+# return: number of failures in current it
+#
+# example:
+#  z.t.state.current_it_failures  #=> 0
+z.t.state.current_it_failures() {
+  z.return $z_t_current_it_failures
+}
+
+# increment the current it failures count
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.state.current_it_failures.increment
+z.t.state.current_it_failures.increment() {
+  (( z_t_current_it_failures++ ))
+}
+
+# reset the current it failures count
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.state.current_it_failures.reset
+z.t.state.current_it_failures.reset() {
+  z_t_current_it_failures=0
 }

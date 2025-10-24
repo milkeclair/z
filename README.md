@@ -44,10 +44,12 @@ Tests are written in zsh and use a RSpec-like syntax.
 Run `z.t` to run all tests.
 z.t accepts the following options.
 
-- `-l`
+- `-l, --log`
   - Display test details.
-- `-f`
+- `-f, --failed`
   - Display only failed tests.
+- `-c, --compact`
+  - Display compact dot output (`.` for success, `F` for failure, `*` for pending).
 
 Tests are placed in the `test` directory.
 Tests are namespaced with `z.t.` prefix.

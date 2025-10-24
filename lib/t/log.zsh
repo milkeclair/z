@@ -94,6 +94,13 @@ z.t.log.failure.handle() {
   z.str.color.red $REPLY
   z.t.state.logs.add $REPLY
 
+  z.t.state.compact
+  local is_compact=$REPLY
+
+  if z.is_true $is_compact; then
+    z.t.state.current_it_failures.increment
+  fi
+
   z.t.state.failures.increment
   z.t.log.failure.remember
   z.t.log.failure.add "red"
@@ -107,20 +114,77 @@ z.t.log.failure.handle() {
 # example:
 #  z.t.log.show
 z.t.log.show() {
+  z.t.log.show._save_counts
+
   z.t.log.show._should_skip && return 0
 
   z.t.state.logged.set "true"
-
   z.t.state.failures
   local failures=$REPLY
 
-  z.t.log.show._summary $failures
-  z.t.log._handle_all_log
+  z.t.state.compact
+  if z.is_false $REPLY; then
+    z.t.log.show._summary $failures
+    z.t.log._handle_all_log
 
-  z.t.state.all_log
-  z.is_true $REPLY && return 0
+    z.t.state.all_log
+    z.is_true $REPLY && return 0
 
-  z.t.log.show._failures_and_pendings
+    z.t.log.show._failures_and_pendings
+  else
+    z.t.log.show._save_compact_results $failures
+  fi
+}
+
+# internal: save test counts to file
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.log.show._save_counts
+z.t.log.show._save_counts() {
+  local count_dir=${Z_TEST_COUNT_DIR:-}
+  z.dir.is $count_dir || return 0
+
+  z.t.state.tests
+  local tests=$REPLY
+  z.t.state.failures
+  local failures=$REPLY
+  z.t.state.pendings
+  local pendings=$REPLY
+
+  local count_idx=${Z_TEST_COUNT_IDX:-0}
+  local count_file="$count_dir/${count_idx}_count.txt"
+  echo "$tests $failures $pendings" > $count_file
+}
+
+# internal: save compact mode results to files
+#
+# $1: failures count
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.log.show._save_compact_results 2
+z.t.log.show._save_compact_results() {
+  local failures=$1
+  local compact_dir=${Z_TEST_COMPACT_DIR:-}
+  z.dir.is $compact_dir || return 0
+
+  z.t.state.pendings
+  local pendings=$REPLY
+
+  z.int.is_zero $failures && z.int.is_zero $pendings && return 0
+
+  local compact_idx=${Z_TEST_COMPACT_IDX:-0}
+  local summary_file="$compact_dir/${compact_idx}_summary.txt"
+  z.t.log.show._summary $failures > $summary_file
+
+  if z.int.is_not_zero $failures; then
+    local failure_file="$compact_dir/${compact_idx}_failure.txt"
+    z.t.log.show._failures_and_pendings > $failure_file
+  fi
 }
 
 # check if log should be skipped
@@ -355,3 +419,70 @@ z.t.log._not_last_log() {
 
   z.not_eq $prev $current
 }
+
+# output green dot for successful test
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.log.dot.success
+z.t.log.dot.success() {
+  z.t.log.dot._output "."
+}
+
+# output red dot for failed test
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.log.dot.failure
+z.t.log.dot.failure() {
+  z.t.log.dot._output "F"
+}
+
+# output yellow dot for pending test
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.log.dot.pending
+z.t.log.dot.pending() {
+  z.t.log.dot._output "*"
+}
+
+# internal: output colored dot with line wrapping
+#
+# $1: dot character (. F *)
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.log.dot._output "F"
+z.t.log.dot._output() {
+  local char=$1
+  local count_file="${Z_TEST_COMPACT_DIR}/.dot_count"
+  local count=0
+
+  z.file.is $count_file && count=$(cat $count_file)
+
+  local terminal_width=${COLUMNS:-80}
+  local width=80
+  z.int.lt $terminal_width 80 && width=$terminal_width
+
+  if z.int.eq $((count % width)) 0 && z.int.gt $count 0; then
+    z.io.line
+  fi
+
+  case $char in
+    "F") z.str.color.red $char ;;
+    "*") z.str.color.yellow $char ;;
+    *) z.str.color.green $char ;;
+  esac
+
+  printf "%s" $REPLY
+  echo $((count + 1)) > $count_file
+}
+
