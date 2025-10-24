@@ -176,3 +176,4 @@ Download: https://marketplace.visualstudio.com/items?itemName=milkeclair.z-ls
 - Go to definition
 - Diagnostics
   - Function not found
+  - Empty line
