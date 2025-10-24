@@ -57,12 +57,19 @@ The following rules apply under test.
 
 - describe
   - Describe the function or feature being tested.
+- xdescribe
+  - Skip the describe block.
 - context
   - Describe the context in which the tests are run.
+- xcontext
+  - Skip the context block.
 - it
   - Describe the expected behavior of the function or feature.
+- xit
+  - Skip the it block.
 - expect
   - Assert the expected behavior of the function or feature.
+  - The expectation functions are namespaced with `z.t.expect.` prefix.
 - mock
   - Mock a function or command.
   - The mock is automatically restored after the test and assertion.
