@@ -13,7 +13,7 @@ z.t.expect() {
   local expect=$2
   local skip_unmock=$3
 
-  z.t.state.skip.it
+  z.t._state.skip.it
   if z.is_true $REPLY; then
     z.t.mock.unmock.all $skip_unmock
     return 0
@@ -22,7 +22,7 @@ z.t.expect() {
   if z.not_eq $expect $actual; then
     local expect_display=${(V)expect}
     local actual_display=${(V)actual}
-    z.t.log.failure.handle "failed: expected [ $expect_display ] but got [ $actual_display ]"
+    z.t._log.failure.handle "failed: expected [ $expect_display ] but got [ $actual_display ]"
   fi
 
   z.t.mock.unmock.all $skip_unmock
@@ -43,7 +43,7 @@ z.t.expect.not() {
   local expect=$2
   local skip_unmock=$3
 
-  z.t.state.skip.it
+  z.t._state.skip.it
   if z.is_true $REPLY; then
     z.t.mock.unmock.all $skip_unmock
     return 0
@@ -52,7 +52,7 @@ z.t.expect.not() {
   if z.eq $expect $actual; then
     local expect_display=${(V)expect}
     local actual_display=${(V)actual}
-    z.t.log.failure.handle "failed: expected not [ $expect_display ] but got [ $actual_display ]"
+    z.t._log.failure.handle "failed: expected not [ $expect_display ] but got [ $actual_display ]"
   fi
 
   z.t.mock.unmock.all $skip_unmock
@@ -73,14 +73,14 @@ z.t.expect.include() {
   local expect=$2
   local skip_unmock=$3
 
-  z.t.state.skip.it
+  z.t._state.skip.it
   if z.is_true $REPLY; then
     z.t.mock.unmock.all $skip_unmock
     return 0
   fi
 
   if z.str.is_not_include $actual $expect; then
-    z.t.log.failure.handle "failed: expected [ $expect ] to be included in [ $actual ]"
+    z.t._log.failure.handle "failed: expected [ $expect ] to be included in [ $actual ]"
   fi
 
   z.t.mock.unmock.all $skip_unmock
@@ -101,14 +101,14 @@ z.t.expect.exclude() {
   local expect=$2
   local skip_unmock=$3
 
-  z.t.state.skip.it
+  z.t._state.skip.it
   if z.is_true $REPLY; then
     z.t.mock.unmock.all $skip_unmock
     return 0
   fi
 
   if z.str.is_include $actual $expect; then
-    z.t.log.failure.handle "failed: expected [ $expect ] to be excluded from [ $actual ]"
+    z.t._log.failure.handle "failed: expected [ $expect ] to be excluded from [ $actual ]"
   fi
 
   z.t.mock.unmock.all $skip_unmock

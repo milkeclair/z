@@ -4,9 +4,9 @@
 # return: null
 #
 # example:
-#  z.t.log
-z.t.log() {
-  z.t.state.logs
+#  z.t._log
+z.t._log() {
+  z.t._state.logs
 }
 
 # get failure records
@@ -15,9 +15,9 @@ z.t.log() {
 # return: null
 #
 # example:
-#  z.t.log.failure
-z.t.log.failure() {
-  z.t.state.failure_records
+#  z.t._log.failure
+z.t._log.failure() {
+  z.t._state.failure_records
 }
 
 # remember failure record
@@ -26,18 +26,18 @@ z.t.log.failure() {
 # return: null
 #
 # example:
-#  z.t.log.failure.remember
-z.t.log.failure.remember() {
+#  z.t._log.failure.remember
+z.t._log.failure.remember() {
   local error_idx=${#z_t_logs[@]}
 
-  z.t.state.current_idx "describe"
+  z.t._state.current_idx "describe"
   local d_idx=$REPLY
-  z.t.state.current_idx "context"
+  z.t._state.current_idx "context"
   local c_idx=$REPLY
-  z.t.state.current_idx "it"
+  z.t._state.current_idx "it"
   local i_idx=$REPLY
 
-  z.t.state.failure_records.add "$d_idx:$c_idx:$i_idx:$error_idx"
+  z.t._state.failure_records.add "$d_idx:$c_idx:$i_idx:$error_idx"
 }
 
 # add failure log with color
@@ -47,35 +47,35 @@ z.t.log.failure.remember() {
 # return: null
 #
 # example:
-#  z.t.log.failure.add "red"
-z.t.log.failure.add() {
+#  z.t._log.failure.add "red"
+z.t._log.failure.add() {
   local color=$1
-  z.t.state.current_idx "describe"
+  z.t._state.current_idx "describe"
   local d_idx=$REPLY
-  z.t.state.current_idx "context"
+  z.t._state.current_idx "context"
   local c_idx=$REPLY
-  z.t.state.current_idx "it"
+  z.t._state.current_idx "it"
   local i_idx=$REPLY
 
   if z.int.is_not_zero $d_idx; then
-    z.t.state.logs.context $d_idx
+    z.t._state.logs.context $d_idx
     z.str.color.red $REPLY
 
-    z.t.state.logs.context.set $d_idx $REPLY
+    z.t._state.logs.context.set $d_idx $REPLY
   fi
 
   if z.int.is_not_zero $c_idx; then
-    z.t.state.logs.context $c_idx
+    z.t._state.logs.context $c_idx
     z.str.color.red $REPLY
 
-    z.t.state.logs.context.set $c_idx $REPLY
+    z.t._state.logs.context.set $c_idx $REPLY
   fi
 
   if z.int.is_not_zero $i_idx; then
-    z.t.state.logs.context $i_idx
+    z.t._state.logs.context $i_idx
     z.str.color.red $REPLY
 
-    z.t.state.logs.context.set $i_idx $REPLY
+    z.t._state.logs.context.set $i_idx $REPLY
   fi
 }
 
@@ -86,24 +86,24 @@ z.t.log.failure.add() {
 # return: null
 #
 # example:
-#  z.t.log.failure.handle "error message"
-z.t.log.failure.handle() {
+#  z.t._log.failure.handle "error message"
+z.t._log.failure.handle() {
   local error_message=$1
 
   z.str.indent 4 $error_message
   z.str.color.red $REPLY
-  z.t.state.logs.add $REPLY
+  z.t._state.logs.add $REPLY
 
-  z.t.state.compact
+  z.t._state.compact
   local is_compact=$REPLY
 
   if z.is_true $is_compact; then
-    z.t.state.current_it_failures.increment
+    z.t._state.current_it_failures.increment
   fi
 
-  z.t.state.failures.increment
-  z.t.log.failure.remember
-  z.t.log.failure.add "red"
+  z.t._state.failures.increment
+  z.t._log.failure.remember
+  z.t._log.failure.add "red"
 }
 
 # show all logs with summary
@@ -112,27 +112,27 @@ z.t.log.failure.handle() {
 # return: null
 #
 # example:
-#  z.t.log.show
-z.t.log.show() {
-  z.t.log.show._save_counts
+#  z.t._log.show
+z.t._log.show() {
+  z.t._log.show.save_counts
 
-  z.t.log.show._should_skip && return 0
+  z.t._log.show.should_skip && return 0
 
-  z.t.state.logged.set "true"
-  z.t.state.failures
+  z.t._state.logged.set "true"
+  z.t._state.failures
   local failures=$REPLY
 
-  z.t.state.compact
+  z.t._state.compact
   if z.is_false $REPLY; then
-    z.t.log.show._summary $failures
-    z.t.log._handle_all_log
+    z.t._log.show.summary $failures
+    z.t._log.handle_all_log
 
-    z.t.state.all_log
+    z.t._state.all_log
     z.is_true $REPLY && return 0
 
-    z.t.log.show._failures_and_pendings
+    z.t._log.show.failures_and_pendings
   else
-    z.t.log.show._save_compact_results $failures
+    z.t._log.show.save_compact_results $failures
   fi
 }
 
@@ -142,16 +142,16 @@ z.t.log.show() {
 # return: null
 #
 # example:
-#  z.t.log.show._save_counts
-z.t.log.show._save_counts() {
+#  z.t._log.show.save_counts
+z.t._log.show.save_counts() {
   local count_dir=${Z_TEST_COUNT_DIR:-}
   z.dir.is $count_dir || return 0
 
-  z.t.state.tests
+  z.t._state.tests
   local tests=$REPLY
-  z.t.state.failures
+  z.t._state.failures
   local failures=$REPLY
-  z.t.state.pendings
+  z.t._state.pendings
   local pendings=$REPLY
 
   local count_idx=${Z_TEST_COUNT_IDX:-0}
@@ -166,24 +166,24 @@ z.t.log.show._save_counts() {
 # return: null
 #
 # example:
-#  z.t.log.show._save_compact_results 2
-z.t.log.show._save_compact_results() {
+#  z.t._log.show.save_compact_results 2
+z.t._log.show.save_compact_results() {
   local failures=$1
   local compact_dir=${Z_TEST_COMPACT_DIR:-}
   z.dir.is $compact_dir || return 0
 
-  z.t.state.pendings
+  z.t._state.pendings
   local pendings=$REPLY
 
   z.int.is_zero $failures && z.int.is_zero $pendings && return 0
 
   local compact_idx=${Z_TEST_COMPACT_IDX:-0}
   local summary_file="$compact_dir/${compact_idx}_summary.txt"
-  z.t.log.show._summary $failures > $summary_file
+  z.t._log.show.summary $failures > $summary_file
 
   if z.int.is_not_zero $failures; then
     local failure_file="$compact_dir/${compact_idx}_failure.txt"
-    z.t.log.show._failures_and_pendings > $failure_file
+    z.t._log.show.failures_and_pendings > $failure_file
   fi
 }
 
@@ -193,14 +193,14 @@ z.t.log.show._save_compact_results() {
 # return: 0|1
 #
 # example:
-#  z.t.log.show._should_skip && return 0
-z.t.log.show._should_skip() {
-  z.t.state.logged
+#  z.t._log.show.should_skip && return 0
+z.t._log.show.should_skip() {
+  z.t._state.logged
   z.is_true $REPLY && return 0
 
-  z.t.state.failed_only
+  z.t._state.failed_only
   if z.is_true $REPLY; then
-    z.t.state.failures
+    z.t._state.failures
     z.int.is_zero $REPLY && return 0
   fi
 
@@ -213,22 +213,22 @@ z.t.log.show._should_skip() {
 # return: null
 #
 # example:
-#  z.t.log.show._failures_and_pendings
-z.t.log.show._failures_and_pendings() {
-  z.t.state.failures
+#  z.t._log.show.failures_and_pendings
+z.t._log.show.failures_and_pendings() {
+  z.t._state.failures
   local failures=$REPLY
-  z.t.state.pendings
+  z.t._state.pendings
   local pendings=$REPLY
 
   z.int.is_zero $failures && z.int.is_zero $pendings && return 0
 
-  z.t.log._collect_records
+  z.t._log.collect_records
   local -a sorted_records=($REPLY)
 
   z.arr.count $sorted_records
   z.int.is_zero $REPLY && return 0
 
-  z.t.log._display_records ${sorted_records[@]}
+  z.t._log.display_records ${sorted_records[@]}
 }
 
 # collect and sort failure and pending records
@@ -237,14 +237,14 @@ z.t.log.show._failures_and_pendings() {
 # return: null
 #
 # example:
-#  z.t.log._collect_records
-z.t.log._collect_records() {
-  z.t.state.failed_only
+#  z.t._log.collect_records
+z.t._log.collect_records() {
+  z.t._state.failed_only
   local failed_only=$REPLY
 
   local -a all_records=()
 
-  z.t.state.failure_records
+  z.t._state.failure_records
   local -a failure_records=($REPLY)
   for record in ${failure_records[@]}; do
     z.str.split $record ":"
@@ -260,7 +260,7 @@ z.t.log._collect_records() {
   done
 
   if z.is_false $failed_only; then
-    z.t.state.pending_records
+    z.t._state.pending_records
     local -a pending_records=($REPLY)
     for record in ${pending_records[@]}; do
       z.str.split $record ":"
@@ -289,8 +289,8 @@ z.t.log._collect_records() {
 # return: null
 #
 # example:
-#  z.t.log._display_records ${records[@]}
-z.t.log._display_records() {
+#  z.t._log.display_records ${records[@]}
+z.t._log.display_records() {
   local -a sorted_records=($@)
 
   local prev_d_idx=""
@@ -306,24 +306,24 @@ z.t.log._display_records() {
     local i_idx=$parts[7]
     local e_idx=$parts[8]
 
-    z.t.log._output_if_changed $d_idx $prev_d_idx
+    z.t._log.output_if_changed $d_idx $prev_d_idx
     if [ $? -eq 0 ]; then
       prev_d_idx=$d_idx
       prev_c_idx=""
       prev_i_idx=""
     fi
 
-    z.t.log._output_if_changed $c_idx $prev_c_idx
+    z.t._log.output_if_changed $c_idx $prev_c_idx
     if [ $? -eq 0 ]; then
       prev_c_idx=$c_idx
       prev_i_idx=""
     fi
 
-    z.t.log._output_if_changed $i_idx $prev_i_idx
+    z.t._log.output_if_changed $i_idx $prev_i_idx
     [ $? -eq 0 ] && prev_i_idx=$i_idx
 
     if [ "$record_type" = "failure" ] && [ -n "$e_idx" ]; then
-      z.t.state.logs.context $e_idx
+      z.t._state.logs.context $e_idx
       local error_log=$REPLY
       z.is_not_null $error_log && z.io $error_log
     fi
@@ -338,16 +338,16 @@ z.t.log._display_records() {
 # return: 0|1
 #
 # example:
-#  z.t.log._output_if_changed $curr $prev
-z.t.log._output_if_changed() {
+#  z.t._log.output_if_changed $curr $prev
+z.t._log.output_if_changed() {
   local curr_idx=$1
   local prev_idx=$2
 
   z.is_null $curr_idx && return 1
   z.int.is_zero $curr_idx && return 1
 
-  if z.t.log._not_last_log $prev_idx $curr_idx; then
-    z.t.state.logs.context $curr_idx
+  if z.t._log.not_last_log $prev_idx $curr_idx; then
+    z.t._state.logs.context $curr_idx
     z.is_not_null $REPLY && z.io $REPLY
     return 0
   fi
@@ -363,17 +363,17 @@ z.t.log._output_if_changed() {
 # return: null
 #
 # example:
-#  z.t.log.show._summary 3
-z.t.log.show._summary() {
+#  z.t._log.show.summary 3
+z.t._log.show.summary() {
   local failures=$1
 
-  z.t.state.file_path
+  z.t._state.file_path
   local display_path=${REPLY:r}
   local padded_path=$(printf "%-25s" $display_path)
 
-  z.t.state.tests
+  z.t._state.tests
   local tests=$REPLY
-  z.t.state.pendings
+  z.t._state.pendings
   local pendings=$REPLY
 
   local padded_tests=$(printf "%3s" $tests)
@@ -392,11 +392,11 @@ z.t.log.show._summary() {
 # return: null
 #
 # example:
-#  z.t.log._handle_all_log
-z.t.log._handle_all_log() {
-  z.t.state.all_log
+#  z.t._log.handle_all_log
+z.t._log.handle_all_log() {
+  z.t._state.all_log
   if z.is_true $REPLY; then
-    z.t.state.logs
+    z.t._state.logs
 
     for log in $REPLY; do
       z.io $log
@@ -412,8 +412,8 @@ z.t.log._handle_all_log() {
 # return: 0|1
 #
 # example:
-#  if z.t.log._not_last_log $prev $current; then ... fi
-z.t.log._not_last_log() {
+#  if z.t._log.not_last_log $prev $current; then ... fi
+z.t._log.not_last_log() {
   local prev=$1
   local current=$2
 
@@ -426,9 +426,9 @@ z.t.log._not_last_log() {
 # return: null
 #
 # example:
-#  z.t.log.dot.success
-z.t.log.dot.success() {
-  z.t.log.dot._output "."
+#  z.t._log.dot.success
+z.t._log.dot.success() {
+  z.t._log.dot.output "."
 }
 
 # output red dot for failed test
@@ -437,9 +437,9 @@ z.t.log.dot.success() {
 # return: null
 #
 # example:
-#  z.t.log.dot.failure
-z.t.log.dot.failure() {
-  z.t.log.dot._output "F"
+#  z.t._log.dot.failure
+z.t._log.dot.failure() {
+  z.t._log.dot.output "F"
 }
 
 # output yellow dot for pending test
@@ -448,9 +448,9 @@ z.t.log.dot.failure() {
 # return: null
 #
 # example:
-#  z.t.log.dot.pending
-z.t.log.dot.pending() {
-  z.t.log.dot._output "*"
+#  z.t._log.dot.pending
+z.t._log.dot.pending() {
+  z.t._log.dot.output "*"
 }
 
 # internal: output colored dot with line wrapping
@@ -460,8 +460,8 @@ z.t.log.dot.pending() {
 # return: null
 #
 # example:
-#  z.t.log.dot._output "F"
-z.t.log.dot._output() {
+#  z.t._log.dot.output "F"
+z.t._log.dot.output() {
   local char=$1
   local count_file="${Z_TEST_COMPACT_DIR}/.dot_count"
   local count=0

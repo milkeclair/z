@@ -3,9 +3,27 @@ z.eq $z_mode "test" && {
 
   command_not_found_handler() {
     local cmd=$1
-    z.t.state.mark_not_found_error "command not found: $cmd"
+    z.t._mark_not_found_error "command not found: $cmd"
     return 127
   }
+}
+
+# mark the test suite as having command not found error
+#
+# $1: error message
+# REPLY: null
+# return: 127(command not found)
+#
+# example:
+#  z.t.mark_not_found_error "command not found: ls"
+z.t._mark_not_found_error() {
+  local message=$1
+
+  local error_flag_file="/tmp/z_t_error_$$"
+  z.file.make_with_dir $error_flag_file
+  echo $message >> $error_flag_file
+
+  return 127
 }
 
 # describe a test suite
@@ -22,11 +40,11 @@ z.t.describe() {
   z.str.indent 1 $description
   z.str.color.green $REPLY
 
-  z.t.state.logs.add $REPLY
-  z.t.state.current_idx.add "describe"
-  z.t.state.skip.describe.set "false"
-  z.t.state.skip.context.set "false"
-  z.t.state.skip.it.set "false"
+  z.t._state.logs.add $REPLY
+  z.t._state.current_idx.add "describe"
+  z.t._state.skip.describe.set "false"
+  z.t._state.skip.context.set "false"
+  z.t._state.skip.it.set "false"
 }
 
 # xdescribe a test suite (marked as pending)
@@ -43,11 +61,11 @@ z.t.xdescribe() {
   z.str.indent 1 $description
   z.str.color.yellow $REPLY
 
-  z.t.state.logs.add $REPLY
-  z.t.state.current_idx.add "describe"
-  z.t.state.skip.describe.set "true"
-  z.t.state.skip.context.set "true"
-  z.t.state.skip.it.set "true"
+  z.t._state.logs.add $REPLY
+  z.t._state.current_idx.add "describe"
+  z.t._state.skip.describe.set "true"
+  z.t._state.skip.context.set "true"
+  z.t._state.skip.it.set "true"
 }
 
 # context within a test suite
@@ -61,7 +79,7 @@ z.t.xdescribe() {
 z.t.context() {
   local context=$1
 
-  z.t.state.skip.describe
+  z.t._state.skip.describe
   local describe_skip=$REPLY
 
   z.str.indent 2 $context
@@ -71,15 +89,15 @@ z.t.context() {
     z.str.color.green $REPLY
   fi
 
-  z.t.state.logs.add $REPLY
-  z.t.state.current_idx.add "context"
+  z.t._state.logs.add $REPLY
+  z.t._state.current_idx.add "context"
 
   if z.is_true $describe_skip; then
-    z.t.state.skip.context.set "true"
-    z.t.state.skip.it.set "true"
+    z.t._state.skip.context.set "true"
+    z.t._state.skip.it.set "true"
   else
-    z.t.state.skip.context.set "false"
-    z.t.state.skip.it.set "false"
+    z.t._state.skip.context.set "false"
+    z.t._state.skip.it.set "false"
   fi
 }
 
@@ -97,11 +115,11 @@ z.t.xcontext() {
   z.str.indent 2 $context
   z.str.color.yellow $REPLY
 
-  z.t.state.logs.add $REPLY
-  z.t.state.current_idx.add "context"
-  z.t.state.skip.describe
-  z.t.state.skip.context.set "true"
-  z.t.state.skip.it.set "true"
+  z.t._state.logs.add $REPLY
+  z.t._state.current_idx.add "context"
+  z.t._state.skip.describe
+  z.t._state.skip.context.set "true"
+  z.t._state.skip.it.set "true"
 }
 
 # it block within a test suite
@@ -117,28 +135,28 @@ z.t.it() {
 
   local it=$1
 
-  z.t.state.skip.describe
+  z.t._state.skip.describe
   local describe_skip=$REPLY
-  z.t.state.skip.context
+  z.t._state.skip.context
   local context_skip=$REPLY
 
-  z.t.state.compact
+  z.t._state.compact
   local is_compact=$REPLY
 
   if z.is_true $is_compact; then
-    z.t.state.tests
+    z.t._state.tests
     local test_count=$REPLY
     if z.int.gt $test_count 0; then
-      z.t.state.current_it_failures
+      z.t._state.current_it_failures
       local failures=$REPLY
       if z.int.is_zero $failures; then
-        z.t.state.skip.it
-        z.is_false $REPLY && z.t.log.dot.success
+        z.t._state.skip.it
+        z.is_false $REPLY && z.t._log.dot.success
       else
-        z.t.log.dot.failure
+        z.t._log.dot.failure
       fi
     fi
-    z.t.state.current_it_failures.reset
+    z.t._state.current_it_failures.reset
   fi
 
   z.str.indent 3 $it
@@ -148,27 +166,27 @@ z.t.it() {
     z.str.color.green $REPLY
   fi
 
-  z.t.state.logs.add $REPLY
-  z.t.state.current_idx.add "it"
-  z.t.state.tests.increment
+  z.t._state.logs.add $REPLY
+  z.t._state.current_idx.add "it"
+  z.t._state.tests.increment
 
   if z.is_true $describe_skip || z.is_true $context_skip; then
-    z.t.state.skip.it.set "true"
-    z.t.state.pendings.increment
+    z.t._state.skip.it.set "true"
+    z.t._state.pendings.increment
 
-    z.t.state.current_idx "describe"
+    z.t._state.current_idx "describe"
     local d_idx=$REPLY
-    z.t.state.current_idx "context"
+    z.t._state.current_idx "context"
     local c_idx=$REPLY
-    z.t.state.current_idx "it"
+    z.t._state.current_idx "it"
     local i_idx=$REPLY
-    z.t.state.pending_records.add "$d_idx:$c_idx:$i_idx"
+    z.t._state.pending_records.add "$d_idx:$c_idx:$i_idx"
 
     if z.is_true $is_compact; then
-      z.t.log.dot.pending
+      z.t._log.dot.pending
     fi
   else
-    z.t.state.skip.it.set "false"
+    z.t._state.skip.it.set "false"
   fi
 }
 
@@ -185,44 +203,44 @@ z.t.xit() {
 
   local it=$1
 
-  z.t.state.compact
+  z.t._state.compact
   local is_compact=$REPLY
 
   if z.is_true $is_compact; then
-    z.t.state.tests
+    z.t._state.tests
     local test_count=$REPLY
     if z.int.gt $test_count 0; then
-      z.t.state.current_it_failures
+      z.t._state.current_it_failures
       local failures=$REPLY
       if z.int.is_zero $failures; then
-        z.t.state.skip.it
-        z.is_false $REPLY && z.t.log.dot.success
+        z.t._state.skip.it
+        z.is_false $REPLY && z.t._log.dot.success
       else
-        z.t.log.dot.failure
+        z.t._log.dot.failure
       fi
     fi
-    z.t.state.current_it_failures.reset
+    z.t._state.current_it_failures.reset
   fi
 
   z.str.indent 3 $it
   z.str.color.yellow $REPLY
-  z.t.state.logs.add $REPLY
+  z.t._state.logs.add $REPLY
 
-  z.t.state.current_idx.add "it"
-  z.t.state.tests.increment
-  z.t.state.pendings.increment
-  z.t.state.skip.it.set "true"
+  z.t._state.current_idx.add "it"
+  z.t._state.tests.increment
+  z.t._state.pendings.increment
+  z.t._state.skip.it.set "true"
 
-  z.t.state.current_idx "describe"
+  z.t._state.current_idx "describe"
   local d_idx=$REPLY
-  z.t.state.current_idx "context"
+  z.t._state.current_idx "context"
   local c_idx=$REPLY
-  z.t.state.current_idx "it"
+  z.t._state.current_idx "it"
   local i_idx=$REPLY
-  z.t.state.pending_records.add "$d_idx:$c_idx:$i_idx"
+  z.t._state.pending_records.add "$d_idx:$c_idx:$i_idx"
 
   if z.is_true $is_compact; then
-    z.t.log.dot.pending
+    z.t._log.dot.pending
   fi
 }
 
@@ -235,7 +253,7 @@ z.t.xit() {
 #  z.t.teardown
 z.t.teardown() {
   z.t.mock.unmock.all
-  z.t.remove_tmp_dir
+  z.t._remove_tmp_dir
 
   local error_flag_file="/tmp/z_t_error_$$"
   if z.file.is $error_flag_file; then
@@ -247,30 +265,30 @@ z.t.teardown() {
     local i
     for ((i=1; i<=error_count; i++)); do
       local error_message=${error_lines[$i]}
-      z.t.log.failure.handle $error_message
+      z.t._log.failure.handle $error_message
     done
 
     z.dir.remove $error_flag_file
   fi
 
-  z.t.state.compact
+  z.t._state.compact
   if z.is_true $REPLY; then
-    z.t.state.tests
+    z.t._state.tests
     local test_count=$REPLY
     if z.int.gt $test_count 0; then
-      z.t.state.current_it_failures
+      z.t._state.current_it_failures
       local failures=$REPLY
       if z.int.is_zero $failures; then
-        z.t.state.skip.it
-        z.is_false $REPLY && z.t.log.dot.success
+        z.t._state.skip.it
+        z.is_false $REPLY && z.t._log.dot.success
       else
-        z.t.log.dot.failure
+        z.t._log.dot.failure
       fi
     fi
   fi
 
-  z.t.log.show
+  z.t._log.show
 
-  z.t.state.failures
+  z.t._state.failures
   z.int.is_not_zero $REPLY && exit 1
 }
