@@ -56,20 +56,21 @@ z.arr.not_eq() {
 
 # check if array includes element
 #
-# $1: element
+# $target: element to find
 # $@: array elements
 # REPLY: null
 # return 0|1
 #
 # example:
-#  z.arr.is_include "apple" "banana" "apple" "cherry"  #=> 0 (true)
-#  z.arr.is_include "grape" "banana" "apple" "cherry"  #=> 1 (false)
+#  z.arr.is_include target=apple "banana" "apple" "cherry"  #=> 0 (true)
+#  z.arr.is_include target=grape "banana" "apple" "cherry"  #=> 1 (false)
 z.arr.is_include() {
-  local element=$1 && shift
-  local -a list=($@)
+  z.arg.named target $@ && local target=$REPLY
+  z.arg.named.shift target $@
+  local -a list=($REPLY)
 
   for item in ${list[@]}; do
-    [[ $item == $element ]] && return 0
+    z.eq $item $target && return 0
   done
 
   return 1

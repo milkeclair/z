@@ -16,7 +16,7 @@ typeset -gA z_color_palette=(
 # return: null
 #
 # example:
-#  z.str.color "red" #=> "\033[31m"
+#  z.str.color red #=> "\033[31m"
 z.str.color() {
   local selected=$1
 
@@ -44,16 +44,16 @@ z.str.color.strip() {
 
 # decorate a string with color codes
 #
-# $1: color name
-# $2: string to decorate
+# $color: color name
+# $message: string to decorate
 # REPLY: decorated string
 # return: null
 #
 # example:
-#  z.str.color.decorate "red" "Hello" #=> $'\033[31mHello\033[0m'
+#  z.str.color.decorate color=red message="Hello" #=> $'\033[31mHello\033[0m'
 z.str.color.decorate() {
-  local color=$1
-  local message=$2
+  z.arg.named color $@ && local color=$REPLY
+  z.arg.named message $@ && local message=$REPLY
 
   z.str.color.strip $message
   local plain=$REPLY
@@ -81,7 +81,7 @@ z.str.color.decorate() {
 z.str.color.red() {
   local message=$1
 
-  z.str.color.decorate "red" $message
+  z.str.color.decorate color=red message=$message
 }
 
 # decorate a string with green color
@@ -95,7 +95,7 @@ z.str.color.red() {
 z.str.color.green() {
   local message=$1
 
-  z.str.color.decorate "green" $message
+  z.str.color.decorate color=green message=$message
 }
 
 # decorate a string with yellow color
@@ -109,7 +109,7 @@ z.str.color.green() {
 z.str.color.yellow() {
   local message=$1
 
-  z.str.color.decorate "yellow" $message
+  z.str.color.decorate color=yellow message=$message
 }
 
 # decorate a string with blue color
@@ -123,7 +123,7 @@ z.str.color.yellow() {
 z.str.color.blue() {
   local message=$1
 
-  z.str.color.decorate "blue" $message
+  z.str.color.decorate color=blue message=$message
 }
 
 # decorate a string with magenta color
@@ -137,7 +137,7 @@ z.str.color.blue() {
 z.str.color.magenta() {
   local message=$1
 
-  z.str.color.decorate "magenta" $message
+  z.str.color.decorate color=magenta message=$message
 }
 
 # decorate a string with cyan color
@@ -151,7 +151,7 @@ z.str.color.magenta() {
 z.str.color.cyan() {
   local message=$1
 
-  z.str.color.decorate "cyan" $message
+  z.str.color.decorate color=cyan message=$message
 }
 
 # decorate a string with white color
@@ -165,5 +165,5 @@ z.str.color.cyan() {
 z.str.color.white() {
   local message=$1
 
-  z.str.color.decorate "white" $message
+  z.str.color.decorate color=white message=$message
 }

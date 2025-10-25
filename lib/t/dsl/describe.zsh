@@ -9,7 +9,7 @@
 z.t.describe() {
   local description=$1
 
-  z.str.indent 1 $description
+  z.str.indent level=1 message=$description
   z.str.color.green $REPLY
 
   z.t._state.logs.add $REPLY
@@ -30,7 +30,7 @@ z.t.describe() {
 z.t.xdescribe() {
   local description=$1
 
-  z.str.indent 1 $description
+  z.str.indent level=1 message=$description
   z.str.color.yellow $REPLY
 
   z.t._state.logs.add $REPLY

@@ -105,7 +105,7 @@ z.t.describe "z.io.line"; {
 z.t.describe "z.io.indent"; {
   z.t.context "引数が渡された場合"; {
     z.t.it "指定されたインデントレベルで引数をインデントして出力する"; {
-      local output=$(z.io.indent 4 "hello" "world")
+      local output=$(z.io.indent level=4 "hello" "world")
 
       z.t.expect $output "        hello world"
     }
@@ -113,7 +113,7 @@ z.t.describe "z.io.indent"; {
 
   z.t.context "引数が渡されなかった場合"; {
     z.t.it "インデントのみを出力する"; {
-      local output=$(z.io.indent 4 "hello")
+      local output=$(z.io.indent level=4 "hello")
 
       z.t.expect $output "        hello"
     }
@@ -159,7 +159,7 @@ z.t.describe "z.io.error.line"; {
 z.t.describe "z.io.error.indent"; {
   z.t.context "引数が渡された場合"; {
     z.t.it "指定されたインデントレベルで引数をインデントして標準エラー出力に出力する"; {
-      local output=$(z.io.error.indent 3 "error message" 2>&1 1>/dev/null)
+      local output=$(z.io.error.indent level=3 "error message" 2>&1 1>/dev/null)
 
       z.t.expect $output "      error message"
     }
@@ -167,7 +167,7 @@ z.t.describe "z.io.error.indent"; {
 
   z.t.context "引数が渡されなかった場合"; {
     z.t.it "インデントのみを標準エラー出力に出力する"; {
-      local output=$(z.io.error.indent 3 "error" 2>&1 1>/dev/null)
+      local output=$(z.io.error.indent level=3 "error" 2>&1 1>/dev/null)
 
       z.t.expect $output "      error"
     }

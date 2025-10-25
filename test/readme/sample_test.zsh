@@ -12,7 +12,7 @@ my.argument_check() {
 z.t.describe "my.argument_check"; {
   z.t.context "when more than 2 args"; {
     z.t.it "prints 'more than 2 args'"; {
-      z.t.mock.call_original "z.io"
+      z.t.mock.call_original name=z.io
 
       local output=$(my.argument_check "1" "2" "3")
 
@@ -24,16 +24,16 @@ z.t.describe "my.argument_check"; {
 
   z.t.context "when 2 or less args"; {
     z.t.it "prints '2 or less args' to stderr"; {
-      z.t.mock "z.int.gt" "return 1"
-      z.t.mock "z.io"
-      z.t.mock "z.io.error"
+      z.t.mock name=z.int.gt "behavior=return 1"
+      z.t.mock name=z.io
+      z.t.mock name=z.io.error
 
       my.argument_check "1" "2" "3"
 
-      z.t.mock.result "z.io"
-      z.t.expect.reply.null "skip_unmock"
+      z.t.mock.result name=z.io
+      z.t.expect.reply.null skip_unmock=true
 
-      z.t.mock.result "z.io.error"
+      z.t.mock.result name=z.io.error
       z.t.expect.reply.include "2 or less args"
     }
   }

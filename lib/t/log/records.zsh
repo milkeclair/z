@@ -14,7 +14,7 @@ z.t._log.records.collect() {
   z.t._state.failure_records
   local -a failure_records=($REPLY)
   for record in ${failure_records[@]}; do
-    z.str.split $record ":"
+    z.str.split str=$record delimiter=:
     local -a parts=($REPLY)
     local d_idx=$parts[1]
     local c_idx=$parts[2]
@@ -30,7 +30,7 @@ z.t._log.records.collect() {
     z.t._state.pending_records
     local -a pending_records=($REPLY)
     for record in ${pending_records[@]}; do
-      z.str.split $record ":"
+      z.str.split str=$record delimiter=:
       local -a parts=($REPLY)
       local d_idx=$parts[1]
       local c_idx=$parts[2]
@@ -65,7 +65,7 @@ z.t._log.records.display() {
   local prev_i_idx=""
 
   for record in ${sorted_records[@]}; do
-    z.str.split $record ":"
+    z.str.split str=$record delimiter=:
     local -a parts=($REPLY)
     local record_type=$parts[4]
     local d_idx=$parts[5]

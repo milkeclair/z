@@ -39,7 +39,7 @@ z.t.describe "z.arg.has_not_any"; {
 z.t.describe "z.arg.validate"; {
   z.t.context "引数の数が指定した数以上の場合"; {
     z.t.it "trueを返す"; {
-      z.arg.validate 2 "a" "b" "c"
+      z.arg.validate length=2 "a" "b" "c"
 
       z.t.expect.status.true
     }
@@ -47,7 +47,7 @@ z.t.describe "z.arg.validate"; {
 
   z.t.context "引数の数が指定した数より少ない場合"; {
     z.t.it "falseを返す"; {
-      z.arg.validate 4 "a" "b" "c"
+      z.arg.validate length=4 "a" "b" "c"
 
       z.t.expect.status.false
     }
@@ -55,7 +55,7 @@ z.t.describe "z.arg.validate"; {
 
   z.t.context "引数の数が指定した数と同じ場合"; {
     z.t.it "trueを返す"; {
-      z.arg.validate 3 "a" "b" "c"
+      z.arg.validate length=3 "a" "b" "c"
 
       z.t.expect.status.true
     }
@@ -63,7 +63,7 @@ z.t.describe "z.arg.validate"; {
 
   z.t.context "引数を指定しなかった場合"; {
     z.t.it "falseを返す"; {
-      z.arg.validate 1
+      z.arg.validate length=1
 
       z.t.expect.status.false
     }

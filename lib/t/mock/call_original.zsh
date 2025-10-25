@@ -1,11 +1,13 @@
 # call the original function within a mock
 #
-# $1: function name
+# $name: function name
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t.mock.call_original my_func
+#  z.t.mock.call_original name=my_func
 z.t.mock.call_original() {
-  z.t.mock $1 "call_original"
+  z.arg.named name $@ && local name=$REPLY
+
+  z.t.mock name=$name behavior=call_original
 }

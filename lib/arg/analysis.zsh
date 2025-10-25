@@ -1,17 +1,19 @@
 # get the argument at the specified index (1-based)
 #
-# $1: index (1-based)
+# $index: 1-based index
 # $@: arguments
 # REPLY: specified argument|null
 # return: null
 #
 # example:
-#  z.arg.get 2 "a" "b" "c" #=> "b"
+#  z.arg.get index=2 "a" "b" "c" #=> "b"
 z.arg.get() {
-  local -i index=$1 && shift
-  z.arr.count $@
+  z.arg.named index $@ && local -i index=$REPLY
+  z.arg.named.shift index $@
+  local -a args=($REPLY)
+  z.arr.count $args
 
-  z.int.lteq $index $REPLY && z.return $@[$index] || z.return
+  z.int.lteq $index $REPLY && z.return $args[$index] || z.return
 }
 
 # get the first argument
@@ -23,7 +25,7 @@ z.arg.get() {
 # example:
 #  z.arg.first "a" "b" "c" #=> "a"
 z.arg.first() {
-  z.arg.get 1 $@
+  z.arg.get index=1 $@
 }
 
 # get the second argument
@@ -35,7 +37,7 @@ z.arg.first() {
 # example:
 #  z.arg.second "a" "b" "c" #=> "b"
 z.arg.second() {
-  z.arg.get 2 $@
+  z.arg.get index=2 $@
 }
 
 # get the third argument
@@ -47,7 +49,7 @@ z.arg.second() {
 # example:
 #  z.arg.third "a" "b" "c" #=> "c"
 z.arg.third() {
-  z.arg.get 3 $@
+  z.arg.get index=3 $@
 }
 
 # get the last argument
@@ -61,5 +63,5 @@ z.arg.third() {
 z.arg.last() {
   z.arr.count $@
 
-  z.arg.get $REPLY $@
+  z.arg.get index=$REPLY $@
 }

@@ -3,7 +3,7 @@ source ${z_main}
 z.t.describe "z.dir.is"; {
   z.t.context "ディレクトリが存在する場合"; {
     z.t.it "0を返す"; {
-      z.dir.make /tmp/z_t/dir_is
+      z.dir.make path=/tmp/z_t/dir_is
 
       z.dir.is /tmp/z_t/dir_is
 
@@ -31,7 +31,7 @@ z.t.describe "z.dir.is_not"; {
 
   z.t.context "ディレクトリが存在する場合"; {
     z.t.it "1を返す"; {
-      z.dir.make /tmp/z_t/dir_is_not
+      z.dir.make path=/tmp/z_t/dir_is_not
 
       z.dir.is_not /tmp/z_t/dir_is_not
 

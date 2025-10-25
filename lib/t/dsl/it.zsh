@@ -35,7 +35,7 @@ z.t.it() {
     z.t._state.current_it_failures.reset
   fi
 
-  z.str.indent 3 $it
+  z.str.indent level=3 message=$it
   if z.is_true $describe_skip || z.is_true $context_skip; then
     z.str.color.yellow $REPLY
   else
@@ -98,7 +98,7 @@ z.t.xit() {
     z.t._state.current_it_failures.reset
   fi
 
-  z.str.indent 3 $it
+  z.str.indent level=3 message=$it
   z.str.color.yellow $REPLY
   z.t._state.logs.add $REPLY
 

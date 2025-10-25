@@ -6,7 +6,7 @@
 # example:
 #  z.t._log.dot.success
 z.t._log.dot.success() {
-  z.t._log.dot.output "."
+  z.t._log.dot.output char=.
 }
 
 # output red dot for failed test
@@ -17,7 +17,7 @@ z.t._log.dot.success() {
 # example:
 #  z.t._log.dot.failure
 z.t._log.dot.failure() {
-  z.t._log.dot.output "F"
+  z.t._log.dot.output char=F
 }
 
 # output yellow dot for pending test
@@ -28,19 +28,19 @@ z.t._log.dot.failure() {
 # example:
 #  z.t._log.dot.pending
 z.t._log.dot.pending() {
-  z.t._log.dot.output "*"
+  z.t._log.dot.output "char=*"
 }
 
 # internal: output colored dot with line wrapping
 #
-# $1: dot character (. F *)
+# $char: dot character (. F *)
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t._log.dot.output "F"
+#  z.t._log.dot.output char=F
 z.t._log.dot.output() {
-  local char=$1
+  z.arg.named char $@ && local char=$REPLY
   local count_file="${Z_TEST_COMPACT_DIR}/.dot_count"
   local count=0
 

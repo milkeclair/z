@@ -1,6 +1,6 @@
 # join array elements with a space
 #
-# $1: array elements
+# $@: array elements
 # REPLY: joined string
 # return: null
 #

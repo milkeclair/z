@@ -12,7 +12,7 @@ z.t.context() {
   z.t._state.skip.describe
   local describe_skip=$REPLY
 
-  z.str.indent 2 $context
+  z.str.indent level=2 message=$context
   if z.is_true $describe_skip; then
     z.str.color.yellow $REPLY
   else
@@ -42,7 +42,7 @@ z.t.context() {
 z.t.xcontext() {
   local context=$1
 
-  z.str.indent 2 $context
+  z.str.indent level=2 message=$context
   z.str.color.yellow $REPLY
 
   z.t._state.logs.add $REPLY

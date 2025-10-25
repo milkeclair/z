@@ -25,16 +25,16 @@ z.t._state.mock_originals.context() {
 
 # add a mock original
 #
-# $1: function name
+# $name: function name
 # $2: original function definition
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t._state.mock_originals.add "my_func" "original function definition"
+#  z.t._state.mock_originals.add name=my_func "original function definition"
 z.t._state.mock_originals.add() {
-  local func_name=$1
-  local original_func=$2
+  z.arg.named name $@ && local func_name=$REPLY
+  z.arg.named.shift name $@ && local original_func=$REPLY
 
   z_t_mock_originals[$func_name]=$original_func
 }

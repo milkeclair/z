@@ -15,16 +15,17 @@ z.t._state.current_idx() {
 
 # set the current index for a context
 #
-# $1: context ("describe"|"context"|"it")
-# $2: index value
+# $value: index value
+# $@: context ("describe"|"context"|"it")
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t._state.current_idx.set "describe" 1
+#  z.t._state.current_idx.set "describe" value=1
 z.t._state.current_idx.set() {
-  local context=$1
-  local value=$2
+  z.arg.named value $@ && local value=$REPLY
+  z.arg.named.shift value $@ && local context=$REPLY
+
   z_t_current_idx[$context]=$value
 }
 
@@ -43,16 +44,16 @@ z.t._state.current_idx.add() {
 
   case $context in
   "describe")
-    z.t._state.current_idx.set "describe" $idx
-    z.t._state.current_idx.set "context" 0
-    z.t._state.current_idx.set "it" 0
+    z.t._state.current_idx.set "describe" value=$idx
+    z.t._state.current_idx.set "context" value=0
+    z.t._state.current_idx.set "it" value=0
     ;;
   "context")
-    z.t._state.current_idx.set "context" $idx
-    z.t._state.current_idx.set "it" 0
+    z.t._state.current_idx.set "context" value=$idx
+    z.t._state.current_idx.set "it" value=0
     ;;
   "it")
-    z.t._state.current_idx.set "it" $idx
+    z.t._state.current_idx.set "it" value=$idx
     ;;
   esac
 
