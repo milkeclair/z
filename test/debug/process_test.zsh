@@ -16,7 +16,7 @@ z.t.describe "z.debug"; {
 
       (z.debug <<< "q") >/dev/null 2>&1
 
-      z.t.expect.status.true
+      z.t.expect.status.false
       Z_DEBUG=$previous_debug
     }
   }
