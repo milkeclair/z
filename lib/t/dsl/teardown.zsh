@@ -19,10 +19,10 @@ z.t.teardown() {
     local i
     for ((i=1; i<=error_count; i++)); do
       local error_message=${error_lines[$i]}
-      z.t._log.failure.handle $error_message
+      z.t._log.failure.handle message=$error_message
     done
 
-    z.dir.remove $error_flag_file
+    z.dir.remove path=$error_flag_file
   fi
 
   z.t._state.compact

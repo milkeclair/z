@@ -71,7 +71,7 @@ z.t.describe "z.arr.not_eq"; {
 z.t.describe "z.arr.is_include"; {
   z.t.context "要素が配列に含まれる場合"; {
     z.t.it "trueを返す"; {
-      z.arr.is_include "b" "a" "b" "c"
+      z.arr.is_include target=b "a" "b" "c"
 
       z.t.expect.status.true
     }
@@ -79,7 +79,7 @@ z.t.describe "z.arr.is_include"; {
 
   z.t.context "要素が配列に含まれない場合"; {
     z.t.it "falseを返す"; {
-      z.arr.is_include "d" "a" "b" "c"
+      z.arr.is_include target=d "a" "b" "c"
 
       z.t.expect.status.false
     }

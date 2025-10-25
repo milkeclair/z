@@ -1,14 +1,14 @@
 # unmock a function
 # function name can be omitted to unmock the last mocked function
 #
-# $1: function name(optional)
+# $name: function name(optional)
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t.mock.unmock my_func
+#  z.t.mock.unmock name=my_func
 z.t.mock.unmock() {
-  local func_name=$1
+  z.arg.named name $@ && local func_name=$REPLY
 
   if z.is_null $func_name; then
     z.t._state.mock_last_func
@@ -19,11 +19,6 @@ z.t.mock.unmock() {
   if z.is_not_null $REPLY; then
     eval $REPLY
     z.t._state.mock_originals.unset $func_name
-  fi
-
-  z.t._state.mock_saved_indexes.context $func_name
-  if z.is_not_null $REPLY; then
-    z.t._state.mock_saved_indexes.unset $func_name
   fi
 
   z.t._state.mock_calls.unset $func_name
@@ -37,19 +32,19 @@ z.t.mock.unmock() {
 # unmock all mocked functions
 # skip unmocking if the argument is "skip_unmock"
 #
-# $1: skip unmock(optional)
+# $skip_unmock: skip unmock(optional)
 # REPLY: null
 # return: null
 #
 # example:
 #  z.t.mock.unmock.all
 z.t.mock.unmock.all() {
-  local skip_unmock=$1
+  z.arg.named skip_unmock $@ && local skip_unmock=$REPLY
 
   if z.t.mock.unmock._is_not_skippable $skip_unmock; then
     z.t._state.mock_originals
     for func_name in $REPLY; do
-      z.t.mock.unmock $func_name
+      z.t.mock.unmock name=$func_name
     done
   fi
 }
@@ -61,10 +56,10 @@ z.t.mock.unmock.all() {
 # return 0|1
 #
 # example:
-#  if z.t.mock.unmock._is_not_skippable "skip_unmock"; then ... fi
+#  if z.t.mock.unmock._is_not_skippable true; then ... fi
 z.t.mock.unmock._is_not_skippable() {
   local skip_unmock=$1
 
   z.t._state.mock_originals
-  z.not_eq $skip_unmock "skip_unmock" && z.is_not_null ${REPLY[@]+x}
+  z.not_eq $skip_unmock true && z.is_not_null ${REPLY[@]+x}
 }

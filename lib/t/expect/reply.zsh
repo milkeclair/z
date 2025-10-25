@@ -1,7 +1,7 @@
 # expect that REPLY equals expect
 #
 # $1: expected value
-# $2: skip_unmock (optional)
+# $skip_unmock: skip_unmock (optional)
 # REPLY: null
 # return: null
 #
@@ -10,14 +10,15 @@
 #  z.t.expect.reply "some value"
 z.t.expect.reply() {
   local expect=$1
-  local skip_unmock=$2
+  local reply=$REPLY
+  z.arg.named skip_unmock $@ && local skip_unmock=$REPLY
 
-  z.t.expect "$REPLY" "$expect" "$skip_unmock"
+  z.t.expect "$reply" "$expect" "skip_unmock=$skip_unmock"
 }
 
 # expect that REPLY is null (empty string)
 #
-# $1: skip_unmock (optional)
+# $skip_unmock: skip_unmock (optional)
 # REPLY: null
 # return: null
 #
@@ -26,14 +27,15 @@ z.t.expect.reply() {
 #  z.t.expect.reply.null
 z.t.expect.reply.null() {
   local expect=""
-  local skip_unmock=$1
+  local reply=$REPLY
+  z.arg.named skip_unmock $@ && local skip_unmock=$REPLY
 
-  z.t.expect "$REPLY" "$expect" "$skip_unmock"
+  z.t.expect "$reply" "$expect" "skip_unmock=$skip_unmock"
 }
 
 # expect that REPLY is not null (not empty string)
 #
-# $1: skip_unmock (optional)
+# $skip_unmock: skip_unmock (optional)
 # REPLY: null
 # return: null
 #
@@ -42,14 +44,16 @@ z.t.expect.reply.null() {
 #  z.t.expect.reply.not_null
 z.t.expect.reply.not_null() {
   local expect=""
-  local skip_unmock=$1
+  local reply=$REPLY
+  z.arg.named skip_unmock $@ && local skip_unmock=$REPLY
 
-  z.t.expect.not "$REPLY" "$expect" "$skip_unmock"
+  z.t.expect.not "$reply" "$expect" "skip_unmock=$skip_unmock"
 }
 
 # expect that REPLY array equals expect array
 #
 # $@: expected array elements
+# $skip_unmock: skip_unmock (optional)
 # REPLY: null
 # return: null
 #
@@ -63,8 +67,8 @@ z.t.expect.reply.arr() {
   local skip_unmock=""
   z.arg.last $args
 
-  if z.eq $REPLY "skip_unmock"; then
-    skip_unmock="skip_unmock"
+  if z.str.is_include $REPLY "skip_unmock="; then
+    skip_unmock=true
     args=(${args[1,-2]})
   fi
 
@@ -75,13 +79,13 @@ z.t.expect.reply.arr() {
   z.arr.join ${actual[@]}
   local actual_str=$REPLY
 
-  z.t.expect "$actual_str" "$expect_str" "$skip_unmock"
+  z.t.expect "$actual_str" "$expect_str" "skip_unmock=$skip_unmock"
 }
 
 # expect that REPLY includes expect
 #
 # $1: expected substring
-# $2: skip_unmock (optional)
+# $skip_unmock: skip_unmock (optional)
 # REPLY: null
 # return: null
 #
@@ -90,7 +94,8 @@ z.t.expect.reply.arr() {
 #  z.t.expect.reply.include "long"
 z.t.expect.reply.include() {
   local expect=$1
-  local skip_unmock=$2
+  local reply=$REPLY
+  z.arg.named skip_unmock $@ && local skip_unmock=$REPLY
 
-  z.t.expect.include $REPLY $expect $skip_unmock
+  z.t.expect.include "$reply" "$expect" "skip_unmock=$skip_unmock"
 }

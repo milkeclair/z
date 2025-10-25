@@ -39,16 +39,16 @@ z.t._state.logs.context() {
 
 # set a log entry by context
 #
-# $1: context index
-# $2: log entry
+# $index: context index
+# $@: log entry
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t._state.logs.context.set "0" "Updated log entry"
+#  z.t._state.logs.context.set index=0 "Updated log entry"
 z.t._state.logs.context.set() {
-  local context=$1
-  local value=$2
+  z.arg.named index $@ && local context=$REPLY
+  z.arg.named.shift index $@ && local value=$REPLY
 
   local target_log=${z_t_logs[$context]}
 

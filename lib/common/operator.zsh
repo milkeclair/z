@@ -92,17 +92,17 @@ z.is_falsy() {
 # return: 0|1
 #
 # example:
-#  z.is_true "true" #=> 0
+#  z.is_true true #=> 0
 #  z.is_true 0 #=> 0
 #
-#  z.is_true "false" #=> 1
+#  z.is_true false #=> 1
 #  z.is_true 1 #=> 1
 #  z.is_true "some string" #=> 1
 #  z.is_true "" #=> 1
 z.is_true() {
   local value=$1
 
-  z.eq $value "true" && return 0
+  z.eq $value true && return 0
   z.eq $value 0 && return 0
 
   return 1
@@ -117,17 +117,17 @@ z.is_true() {
 # return: 0|1
 #
 # example:
-#  z.is_false "false" #=> 0
+#  z.is_false false #=> 0
 #  z.is_false 1 #=> 0
 #
-#  z.is_false "true" #=> 1
+#  z.is_false true #=> 1
 #  z.is_false 0 #=> 1
 #  z.is_false "some string" #=> 1
 #  z.is_false "" #=> 1
 z.is_false() {
   local value=$1
 
-  z.eq $value "false" && return 0
+  z.eq $value false && return 0
   z.eq $value 1 && return 0
 
   return 1

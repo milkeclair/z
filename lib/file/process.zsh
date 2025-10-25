@@ -1,28 +1,28 @@
 # create a file if it does not exist
 #
-# $1: file path
+# $path: file path
 # REPLY: null
 # return: null
 #
 # example:
-#  z.file.make "/path/to/file.txt"
+#  z.file.make path="/path/to/file.txt"
 z.file.make() {
-  local file=$1
+  z.arg.named path $@ && local file=$REPLY
 
   z.file.is_not $file && touch $file >/dev/null 2>&1
 }
 
 # create a file if it does not exist, along with its parent directories
 #
-# $1: file path
+# $path: file path
 # REPLY: null
 # return: null
 #
 # example:
-#  z.file.make_with_dir "/path/to/file.txt"
+#  z.file.make_with_dir path="/path/to/file.txt"
 z.file.make_with_dir() {
-  local file=$1
+  z.arg.named path $@ && local file=$REPLY
 
-  z.dir.make $(dirname $file)
-  z.file.make $file
+  z.dir.make path=$(dirname $file)
+  z.file.make path=$file
 }

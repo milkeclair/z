@@ -65,23 +65,23 @@ z.t.describe "z.str.color.strip"; {
 z.t.describe "z.str.color.decorate"; {
   z.t.context "色と文字列が渡された場合"; {
     z.t.it "指定した色で装飾された文字列を返す"; {
-      z.str.color.decorate "red" "Hello"
+      z.str.color.decorate color=red message="Hello"
       z.t.expect.reply $'\033[31mHello\033[0m'
 
-      z.str.color.decorate "green" "World"
+      z.str.color.decorate color=green message="World"
       z.t.expect.reply $'\033[32mWorld\033[0m'
 
-      z.str.color.decorate "blue" "Blue Text"
+      z.str.color.decorate color=blue message="Blue Text"
       z.t.expect.reply $'\033[34mBlue Text\033[0m'
     }
   }
 
   z.t.context "不明な色と文字列が渡された場合"; {
     z.t.it "装飾されていない文字列を返す"; {
-      z.str.color.decorate "unknown_color" "Hello"
+      z.str.color.decorate color=unknown_color message="Hello"
       z.t.expect.reply "Hello"
 
-      z.str.color.decorate "" "World"
+      z.str.color.decorate color="" message="World"
       z.t.expect.reply "World"
     }
   }

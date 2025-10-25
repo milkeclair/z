@@ -25,16 +25,16 @@ z.t._state.mock_calls.context() {
 
 # add a mock call
 #
-# $1: function name
-# $2: arguments
+# $name: function name
+# $@: arguments
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t._state.mock_calls.add "my_func" "arg1" "arg2"
+#  z.t._state.mock_calls.add name=my_func "arg1" "arg2"
 z.t._state.mock_calls.add() {
-  local func_name=$1 && shift
-  local args=$@
+  z.arg.named name $@ && local func_name=$REPLY
+  z.arg.named.shift name $@ && local args=$REPLY
 
   if z.is_not_null ${z_t_mock_calls[$func_name]}; then
     z_t_mock_calls[$func_name]="${z_t_mock_calls[$func_name]}:$args"
@@ -45,16 +45,16 @@ z.t._state.mock_calls.add() {
 
 # set mock calls for a function
 #
-# $1: function name
-# $2: value
+# $name: function name
+# $value: value
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t._state.mock_calls.set "my_func" "new value"
+#  z.t._state.mock_calls.set name=my_func "value=new value"
 z.t._state.mock_calls.set() {
-  local func_name=$1
-  local value=$2
+  z.arg.named name $@ && local func_name=$REPLY
+  z.arg.named value $@ && local value=$REPLY
 
   z_t_mock_calls[$func_name]=$value
 }

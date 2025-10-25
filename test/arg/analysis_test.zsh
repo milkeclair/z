@@ -3,7 +3,7 @@ source ${z_main}
 z.t.describe "z.arg.get"; {
   z.t.context "存在するインデックスを指定した場合"; {
     z.t.it "指定したインデックスの引数を返す"; {
-      z.arg.get 2 "a" "b" "c"
+      z.arg.get index=2 "a" "b" "c"
 
       z.t.expect.reply "b"
     }
@@ -11,7 +11,7 @@ z.t.describe "z.arg.get"; {
 
   z.t.context "インデックスが正の整数の場合"; {
     z.t.it "指定したインデックスの引数を判定して返す"; {
-      z.arg.get 1 "a" "b" "c"
+      z.arg.get index=1 "a" "b" "c"
 
       z.t.expect.reply "a"
     }
@@ -19,7 +19,7 @@ z.t.describe "z.arg.get"; {
 
   z.t.context "インデックスが負の整数の場合"; {
     z.t.it "指定したインデックスの引数を末尾から判定して返す"; {
-      z.arg.get -1 "a" "b" "c"
+      z.arg.get index=-1 "a" "b" "c"
 
       z.t.expect.reply "c"
     }
@@ -27,7 +27,7 @@ z.t.describe "z.arg.get"; {
 
   z.t.context "存在しないインデックスを指定した場合"; {
     z.t.it "nullを返す"; {
-      z.arg.get 4 "a" "b" "c"
+      z.arg.get index=4 "a" "b" "c"
 
       z.t.expect.reply.null
     }
@@ -35,7 +35,7 @@ z.t.describe "z.arg.get"; {
 
   z.t.context "インデックスがnullの場合"; {
     z.t.it "nullを返す"; {
-      z.arg.get "" "a" "b" "c"
+      z.arg.get "a" "b" "c"
 
       z.t.expect.reply.null
     }
@@ -43,7 +43,7 @@ z.t.describe "z.arg.get"; {
 
   z.t.context "インデックスが整数でない場合"; {
     z.t.it "nullを返す"; {
-      z.arg.get "not-integer" "a" "b" "c"
+      z.arg.get index=not-integer "a" "b" "c"
 
       z.t.expect.reply.null
     }
@@ -51,7 +51,7 @@ z.t.describe "z.arg.get"; {
 
   z.t.context "インデックスが0の場合"; {
     z.t.it "nullを返す"; {
-      z.arg.get 0 "a" "b" "c"
+      z.arg.get index=0 "a" "b" "c"
 
       z.t.expect.reply.null
     }
@@ -59,7 +59,7 @@ z.t.describe "z.arg.get"; {
 
   z.t.context "引数を指定しなかった場合"; {
     z.t.it "nullを返す"; {
-      z.arg.get 1
+      z.arg.get index=1
 
       z.t.expect.reply.null
     }

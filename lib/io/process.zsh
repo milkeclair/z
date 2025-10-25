@@ -79,22 +79,24 @@ z.io.line() {
 
 # printing provided arguments with indentation
 #
-# $1: indent level (number of 2-space indents)
+# $level: indent level (number of 2-space indents)
 # $@: arguments
 # REPLY: null
 # return: null
 #
 # example:
-#  z.io.indent 2 "hello" "world" #=> "    hello world"
+#  z.io.indent level=2 "hello" "world" #=> "    hello world"
 z.io.indent() {
-  local indent_level=$1 && shift
+  z.arg.named level $@ && local level=$REPLY
+  z.arg.named.shift level $@
+  local -a args=($REPLY)
   local indent=""
 
-  for ((i=0; i<indent_level; i++)); do
+  for ((i=0; i<level; i++)); do
     indent+="  "
   done
 
-  print -- $indent$*
+  print -- "$indent${args[@]}"
 }
 
 # reading a line from standard input and storing it in REPLY
@@ -138,20 +140,22 @@ z.io.error.line() {
 
 # printing provided arguments with indentation to stderr
 #
-# $1: indent level (number of 2-space indents)
+# $level: indent level (number of 2-space indents)
 # $@: arguments
 # REPLY: null
 # return: null
 #
 # example:
-#  z.io.error.indent 2 "error message" #=> "    error message"
+#  z.io.error.indent level=2 "error message" #=> "    error message"
 z.io.error.indent() {
-  local indent_level=$1 && shift
+  z.arg.named level $@ && local level=$REPLY
+  z.arg.named.shift level $@
+  local -a args=($REPLY)
   local indent=""
 
-  for ((i=0; i<indent_level; i++)); do
+  for ((i=0; i<level; i++)); do
     indent+="  "
   done
 
-  z.io.error $indent$*
+  z.io.error "$indent${args[@]}"
 }

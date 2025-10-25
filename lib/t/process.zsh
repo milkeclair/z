@@ -94,7 +94,7 @@ z.t() {
   z.t._show_totals $count_dir $files
   local totals_failed=$?
 
-  z.is_not_null $compact_dir && z.dir.is $compact_dir && z.dir.remove $compact_dir
+  z.is_not_null $compact_dir && z.dir.is $compact_dir && z.dir.remove path=$compact_dir
 
   cd $original_dir
   z.int.is_not_zero $failed && return 1
@@ -120,22 +120,22 @@ z.t._extract_options() {
 
   if z.int.gteq $arg_count 1; then
     for ((i=1; i<=arg_count; i++)); do
-      z.arg.get $i $@
+      z.arg.get index=$i $@
       local current_arg=$REPLY
 
-      z.arg.as $current_arg "-l|--log" "true"
+      z.arg.as name=$current_arg "as=-l|--log" return=true
       if z.is_true $REPLY; then
         log="true"
         continue
       fi
 
-      z.arg.as $current_arg "-f|--failed" "true"
+      z.arg.as name=$current_arg "as=-f|--failed" return=true
       if z.is_true $REPLY; then
         failed="true"
         continue
       fi
 
-      z.arg.as $current_arg "-c|--compact" "true"
+      z.arg.as name=$current_arg "as=-c|--compact" return=true
       if z.is_true $REPLY; then
         compact="true"
         continue
@@ -176,12 +176,12 @@ z.t._setup_temp_dirs() {
 
   if z.is_true $z_t_compact; then
     compact_dir="/tmp/z_t_compact_$$"
-    z.dir.make $compact_dir
+    z.dir.make path=$compact_dir
     echo "0" > "$compact_dir/.dot_count"
   fi
 
   typeset -g z_t_count_dir="/tmp/z_t_count_$$"
-  z.dir.make $z_t_count_dir
+  z.dir.make path=$z_t_count_dir
 
   z.return $compact_dir
 }
@@ -240,13 +240,14 @@ z.t._show_totals() {
     if z.file.is $count_file; then
       local counts=$(cat $count_file)
       local -a count_array=(${=counts})
+
       ((total_tests += ${count_array[1]:-0}))
       ((total_failures += ${count_array[2]:-0}))
       ((total_pendings += ${count_array[3]:-0}))
     fi
   done
 
-  z.dir.remove $count_dir
+  z.dir.remove path=$count_dir
 
   z.io.empty
   local padded_total_tests=$(printf "%3s" $total_tests)
