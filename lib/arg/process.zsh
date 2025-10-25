@@ -18,7 +18,7 @@ z.arg.as() {
   z.arg.named.shift as $args && args=($REPLY)
   z.arg.named return $args && local return=$REPLY
 
-  z.str.split str=$as delimiter="|"
+  z.str.split str=$as
   local -a split_as=($REPLY[@])
   local matched=false
 
