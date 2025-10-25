@@ -77,7 +77,7 @@ z.t() {
 
     local exit_code=$?
 
-    z.t.state.failures
+    z.t._state.failures
     local test_failures=$REPLY
 
     z.int.is_not_zero $test_failures && failed=1
@@ -159,8 +159,8 @@ z.t._extract_options() {
 # return: null
 #
 # example:
-#  z.t.remove_tmp_dir
-z.t.remove_tmp_dir() {
+#  z.t._remove_tmp_dir
+z.t._remove_tmp_dir() {
   z.dir.is /tmp/z_t && rm -rf /tmp/z_t
 }
 
