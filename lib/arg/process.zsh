@@ -41,7 +41,8 @@ z.arg.as() {
 #  z.arg.named option option=value other_arg
 #  REPLY="value"
 z.arg.named() {
-  local name=$1 && shift
+  local name=$1
+  shift 2>/dev/null
   local -a args=($@)
   local -i arg_count=${#args[@]}
   local -i i=1
@@ -68,7 +69,8 @@ z.arg.named() {
 #  z.arg.named.shift option option=value other_arg
 #  REPLY="other_arg"
 z.arg.named.shift() {
-  local name=$1 && shift
+  local name=$1
+  shift 2>/dev/null
   local -a args=($@)
   local -a result=()
   local -i arg_count=${#args[@]}
