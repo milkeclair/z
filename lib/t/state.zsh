@@ -1,26 +1,26 @@
-local z_t_file_path=$1
+typeset -A z_t_current_idx=([describe]=0 [context]=0 [it]=0)
+typeset -a z_t_logs=()
+typeset -a z_t_failure_records=()
+typeset -a z_t_pending_records=()
+typeset -A z_t_mock_calls=()
+typeset -A z_t_mock_originals=()
+typeset -A z_t_mock_saved_indexes=()
 
-local z_t_tests=0
-local z_t_failures=0
-local z_t_pendings=0
-local z_t_logged="false"
-local z_t_all_log="${Z_TEST_ALL_LOG:-false}"
-local z_t_failed_only="${Z_TEST_FAILED_ONLY:-false}"
-local z_t_compact="${Z_TEST_COMPACT:-false}"
-local z_t_skip_describe="false"
-local z_t_skip_context="false"
-local z_t_skip_it="false"
-local z_t_current_it_failures=0
-
-local -a z_t_logs=()
-local -A z_t_current_idx=([describe]=0 [context]=0 [it]=0)
-local -a z_t_failure_records=()
-local -a z_t_pending_records=()
-
-typeset -gA z_t_mock_calls=()
-typeset -gA z_t_mock_originals=()
-typeset -gA z_t_mock_saved_indexes=()
-typeset -g z_t_mock_last_func=""
+typeset -A z_t_states=(
+  [file_path]=$1
+  [tests]=0
+  [failures]=0
+  [pendings]=0
+  [logged]="false"
+  [all_log]="${Z_TEST_ALL_LOG:-false}"
+  [failed_only]="${Z_TEST_FAILED_ONLY:-false}"
+  [compact]="${Z_TEST_COMPACT:-false}"
+  [skip_describe]="false"
+  [skip_context]="false"
+  [skip_it]="false"
+  [current_it_failures]=0
+  [mock_last_func]=""
+)
 
 # state management module
 z.t.state() {
@@ -34,7 +34,7 @@ z.t.state() {
 # example:
 #  z.t.state.file_path  #=> "/path/to/test_file.zsh"
 z.t.state.file_path() {
-  z.return $z_t_file_path
+  z.return ${z_t_states[file_path]}
 }
 
 # get the number of tests executed
@@ -45,7 +45,7 @@ z.t.state.file_path() {
 # example:
 #  z.t.state.tests  #=> 10
 z.t.state.tests() {
-  z.return $z_t_tests
+  z.return ${z_t_states[tests]}
 }
 
 # increment the number of tests executed by 1
@@ -56,7 +56,7 @@ z.t.state.tests() {
 # example:
 #  z.t.state.tests.increment
 z.t.state.tests.increment() {
-  (( z_t_tests++ ))
+  (( z_t_states[tests]++ ))
 }
 
 # get the number of failed tests
@@ -67,7 +67,7 @@ z.t.state.tests.increment() {
 # example:
 #  z.t.state.failures  #=> 2
 z.t.state.failures() {
-  z.return $z_t_failures
+  z.return ${z_t_states[failures]}
 }
 
 # increment the number of failed tests by 1
@@ -78,7 +78,7 @@ z.t.state.failures() {
 # example:
 #  z.t.state.failures.increment
 z.t.state.failures.increment() {
-  (( z_t_failures++ ))
+  (( z_t_states[failures]++ ))
 }
 
 # get the number of pending tests
@@ -89,7 +89,7 @@ z.t.state.failures.increment() {
 # example:
 #  z.t.state.pendings  #=> 3
 z.t.state.pendings() {
-  z.return $z_t_pendings
+  z.return ${z_t_states[pendings]}
 }
 
 # increment the number of pending tests by 1
@@ -100,7 +100,7 @@ z.t.state.pendings() {
 # example:
 #  z.t.state.pendings.increment
 z.t.state.pendings.increment() {
-  (( z_t_pendings++ ))
+  (( z_t_states[pendings]++ ))
 }
 
 # mark the test suite as having command not found error
@@ -129,7 +129,7 @@ z.t.state.mark_not_found_error() {
 # example:
 #  if z.t.state.logged; then ...; fi
 z.t.state.logged() {
-  z.return $z_t_logged
+  z.return ${z_t_states[logged]}
 }
 
 # set the logged state
@@ -141,7 +141,7 @@ z.t.state.logged() {
 # example:
 #  z.t.state.logged.set "true"
 z.t.state.logged.set() {
-  z_t_logged=$1
+  z_t_states[logged]=$1
 }
 
 # get the all_log state
@@ -152,7 +152,7 @@ z.t.state.logged.set() {
 # example:
 #  z.t.state.all_log  #=> "true"
 z.t.state.all_log() {
-  z.return $z_t_all_log
+  z.return ${z_t_states[all_log]}
 }
 
 # set the all_log state
@@ -164,7 +164,7 @@ z.t.state.all_log() {
 # example:
 #  z.t.state.all_log.set "true"
 z.t.state.all_log.set() {
-  z_t_all_log=$1
+  z_t_states[all_log]=$1
 }
 
 # get the failed_only state
@@ -175,7 +175,7 @@ z.t.state.all_log.set() {
 # example:
 #  z.t.state.failed_only  #=> "false"
 z.t.state.failed_only() {
-  z.return $z_t_failed_only
+  z.return ${z_t_states[failed_only]}
 }
 
 # set the failed_only state
@@ -187,7 +187,7 @@ z.t.state.failed_only() {
 # example:
 #  z.t.state.failed_only.set "true"
 z.t.state.failed_only.set() {
-  z_t_failed_only=$1
+  z_t_states[failed_only]=$1
 }
 
 # get the compact state
@@ -198,7 +198,7 @@ z.t.state.failed_only.set() {
 # example:
 #  z.t.state.compact  #=> "false"
 z.t.state.compact() {
-  z.return $z_t_compact
+  z.return ${z_t_states[compact]}
 }
 
 # set the compact state
@@ -210,7 +210,7 @@ z.t.state.compact() {
 # example:
 #  z.t.state.compact.set "true"
 z.t.state.compact.set() {
-  z_t_compact=$1
+  z_t_states[compact]=$1
 }
 
 # get the skip state for describe level
@@ -221,7 +221,7 @@ z.t.state.compact.set() {
 # example:
 #  z.t.state.skip.describe  #=> "false"
 z.t.state.skip.describe() {
-  z.return $z_t_skip_describe
+  z.return ${z_t_states[skip_describe]}
 }
 
 # set the skip state for describe level
@@ -233,7 +233,7 @@ z.t.state.skip.describe() {
 # example:
 #  z.t.state.skip.describe.set "true"
 z.t.state.skip.describe.set() {
-  z_t_skip_describe=$1
+  z_t_states[skip_describe]=$1
 }
 
 # get the skip state for context level
@@ -244,7 +244,7 @@ z.t.state.skip.describe.set() {
 # example:
 #  z.t.state.skip.context  #=> "false"
 z.t.state.skip.context() {
-  z.return $z_t_skip_context
+  z.return ${z_t_states[skip_context]}
 }
 
 # set the skip state for context level
@@ -256,7 +256,7 @@ z.t.state.skip.context() {
 # example:
 #  z.t.state.skip.context.set "true"
 z.t.state.skip.context.set() {
-  z_t_skip_context=$1
+  z_t_states[skip_context]=$1
 }
 
 # get the skip state for it level
@@ -267,7 +267,7 @@ z.t.state.skip.context.set() {
 # example:
 #  z.t.state.skip.it  #=> "false"
 z.t.state.skip.it() {
-  z.return $z_t_skip_it
+  z.return ${z_t_states[skip_it]}
 }
 
 # set the skip state for it level
@@ -279,7 +279,7 @@ z.t.state.skip.it() {
 # example:
 #  z.t.state.skip.it.set "true"
 z.t.state.skip.it.set() {
-  z_t_skip_it=$1
+  z_t_states[skip_it]=$1
 }
 
 # logs array management
@@ -624,7 +624,7 @@ z.t.state.mock_calls.unset() {
 # example:
 #  z.t.state.mock_last_func  #=> "my_mocked_function"
 z.t.state.mock_last_func() {
-  z.return $z_t_mock_last_func
+  z.return $z_t_states[mock_last_func]
 }
 
 # set the last mocked function name
@@ -636,7 +636,7 @@ z.t.state.mock_last_func() {
 # example:
 #  z.t.state.mock_last_func.set "my_mocked_function"
 z.t.state.mock_last_func.set() {
-  z_t_mock_last_func=$1
+  z_t_states[mock_last_func]=$1
 }
 
 # get the current it failures count
@@ -647,7 +647,7 @@ z.t.state.mock_last_func.set() {
 # example:
 #  z.t.state.current_it_failures  #=> 0
 z.t.state.current_it_failures() {
-  z.return $z_t_current_it_failures
+  z.return $z_t_states[current_it_failures]
 }
 
 # increment the current it failures count
@@ -658,7 +658,7 @@ z.t.state.current_it_failures() {
 # example:
 #  z.t.state.current_it_failures.increment
 z.t.state.current_it_failures.increment() {
-  (( z_t_current_it_failures++ ))
+  (( z_t_states[current_it_failures]++ ))
 }
 
 # reset the current it failures count
@@ -669,5 +669,5 @@ z.t.state.current_it_failures.increment() {
 # example:
 #  z.t.state.current_it_failures.reset
 z.t.state.current_it_failures.reset() {
-  z_t_current_it_failures=0
+  z_t_states[current_it_failures]=0
 }
