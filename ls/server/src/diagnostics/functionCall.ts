@@ -1,34 +1,45 @@
-import { DiagnosticSeverity } from '../vscode_type';
 import { Func } from '../getFunctions/type';
 import { Diagnostics } from './type';
-import { findClosestMatch } from '../util/levenshtein';
+import { shouldSkipArgumentCheck, hasAllRequiredPositionalArgs } from './functionCall/matcher';
+import { FunctionDiagnostics } from './functionCall/addition';
+import {
+  definedNamedArgs,
+  isMissingNamedArg,
+  requiredPositionalArgs,
+  requiredNamedArgs,
+  parseArguments,
+} from './argument';
 
-export function handleExistingFunctionCall(
+export function handleFunctionCall(
   functions: Func[],
   functionName: string,
+  argsText: string,
   startChar: number,
   endChar: number,
   lineIndex: number,
   diagnostics: Diagnostics[]
-) {
-  const funcExists = functions.some((f) => f.name === functionName);
+): void {
+  const func = functions.find((f) => f.name === functionName);
+  const funcDiag = FunctionDiagnostics(startChar, endChar, lineIndex, diagnostics);
 
-  if (!funcExists) {
+  if (!func) {
     const functionNames = functions.map((f) => f.name);
-    const suggestion = findClosestMatch(functionName, functionNames);
+    funcDiag.addUndefined(functionName, functionNames);
+    return;
+  }
 
-    const message = suggestion
-      ? `${functionName} is not defined. <${suggestion}>?`
-      : `${functionName} is not defined.`;
+  if (shouldSkipArgumentCheck(func, functionName)) return;
 
-    diagnostics.push({
-      severity: DiagnosticSeverity.Error,
-      range: {
-        start: { line: lineIndex, character: startChar },
-        end: { line: lineIndex, character: endChar },
-      },
-      message,
-      source: 'z-ls',
-    });
+  const { positional, named } = parseArguments(argsText, definedNamedArgs(func));
+
+  if (!hasAllRequiredPositionalArgs(func, positional)) {
+    const missingArgs = requiredPositionalArgs(func).slice(positional.length);
+    funcDiag.addMissingPositionalArgs(missingArgs);
+  }
+
+  for (const arg of requiredNamedArgs(func)) {
+    if (isMissingNamedArg(named, arg)) {
+      funcDiag.addMissingNamedArg(arg.name);
+    }
   }
 }

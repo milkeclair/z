@@ -3,7 +3,14 @@ import { Func } from '../getFunctions/type';
 import { Diagnostics } from './type';
 import { functionCallRegex, functionDefRegex } from './regex';
 import { handleFirstEmptyLine, handleEmptyLine, handleFinalNewLine } from './emptyLine';
-import { handleExistingFunctionCall } from './functionCall';
+import { handleFunctionCall } from './functionCall';
+import { isInsideQuoteFunctionCall } from './functionCall/matcher';
+import { isCommentLine, hasIgnoreComment } from './comment';
+import { ArgsText } from './argument';
+
+function resetRegexLastIndex() {
+  functionCallRegex.lastIndex = 0;
+}
 
 export function validateTextDocument({
   functions,
@@ -20,8 +27,8 @@ export function validateTextDocument({
 
   lines.forEach((line, lineIndex) => {
     const trimmedLine = line.trim();
-    if (trimmedLine.startsWith('#')) return;
-    if (line.includes('# zls: ignore')) return;
+    if (isCommentLine(trimmedLine)) return;
+    if (hasIgnoreComment(trimmedLine)) return;
     if (functionDefRegex.test(line)) return;
 
     if (trimmedLine === '') {
@@ -35,9 +42,12 @@ export function validateTextDocument({
       const startChar = match.index;
       const endChar = startChar + functionName.length;
 
-      handleExistingFunctionCall(
+      if (isInsideQuoteFunctionCall(line, startChar)) continue;
+
+      handleFunctionCall(
         functions,
         functionName,
+        ArgsText(line, endChar),
         startChar,
         endChar,
         lineIndex,
@@ -45,7 +55,7 @@ export function validateTextDocument({
       );
     }
 
-    functionCallRegex.lastIndex = 0;
+    resetRegexLastIndex();
   });
 
   handleFinalNewLine(text, diagnostics, lines.length);

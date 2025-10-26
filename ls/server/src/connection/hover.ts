@@ -34,7 +34,7 @@ export function zHover({
     return {
       contents: {
         kind: MarkupKind.Markdown,
-        value: commentToMarkDown(commentDetail, func.name),
+        value: commentToMarkDown(commentDetail, func.name, func.args),
       },
     };
   }

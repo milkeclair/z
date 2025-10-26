@@ -1,6 +1,11 @@
 import { HoverParams, TextDocument } from '../vscode_type';
 import { Result } from '../document/type';
+import { FuncArg } from '../getFunctions/type';
 import { nonEmptyWordRegex } from './regex';
+
+const COMMENT_CHAR = '#';
+const SPACE_OFFSET = 1;
+const COMMENT_START_OFFSET = 2;
 
 function extractLineContent(params: HoverParams, document: TextDocument): string {
   const line = document.getText({
@@ -24,34 +29,56 @@ function extractLineContent(params: HoverParams, document: TextDocument): string
 }
 
 function extractCommentText(lines: string[], funcLine: number): string {
-  const commentLines = [];
+  const commentLines: string[] = [];
+  let i = funcLine - COMMENT_START_OFFSET;
 
-  const funcDefinitionIndex = 1;
-  const commentStartIndex = funcDefinitionIndex + 1;
-  let i = funcLine - commentStartIndex;
-
-  while (i >= 0 && lines[i].trim().startsWith('#')) {
+  while (i >= 0 && lines[i].trim().startsWith(COMMENT_CHAR)) {
     commentLines.unshift(lines[i]);
     i--;
   }
 
-  const commentText = commentLines
+  return commentLines
     .map((line) => {
       if (line.trim() === '') return '';
 
-      const hashIndex = line.indexOf('#');
-      const spaceOffset = 1;
-      let comment = line.substring(hashIndex + spaceOffset);
-      if (comment.startsWith(' ')) comment = comment.substring(spaceOffset);
+      const hashIndex = line.indexOf(COMMENT_CHAR);
+      let comment = line.substring(hashIndex + SPACE_OFFSET);
+
+      if (comment.startsWith(' ')) {
+        comment = comment.substring(SPACE_OFFSET);
+      }
 
       return comment;
     })
     .join('\n');
-
-  return commentText;
 }
 
-function commentToMarkDown(comment: Result, funcName: string): string {
+function findParameterDescription(
+  parameters: { name: string; description: string }[],
+  argName: string
+): string {
+  const patterns = [
+    `$${argName}`,
+    `$${argName}:`,
+    `$${argName}?:`,
+    argName,
+    `${argName}:`,
+    `${argName}?:`,
+  ];
+
+  const commentParam = parameters.find((p) => patterns.includes(p.name));
+  return commentParam?.description || '';
+}
+
+function formatArgument(arg: FuncArg, parameters: { name: string; description: string }[]): string {
+  const optional = arg.optional ? '?' : '';
+  const argName = arg.isNamed ? arg.name : arg.position.toString();
+  const description = findParameterDescription(parameters, argName);
+
+  return `- \`$${argName}${optional}:\` ${description}`;
+}
+
+function commentToMarkDown(comment: Result, funcName: string, args: FuncArg[] = []): string {
   const md = ['```zsh', `${funcName}()`, '```', '---'];
 
   const handleDescription = (description: string) => {
@@ -61,12 +88,15 @@ function commentToMarkDown(comment: Result, funcName: string): string {
     }
   };
 
-  const handleParameters = (parameters: { name: string; description: string }[]) => {
-    if (parameters.length > 0) {
+  const handleParameters = (
+    parameters: { name: string; description: string }[],
+    funcArgs: FuncArg[]
+  ) => {
+    if (funcArgs.length > 0) {
       md.push('**Parameters:**');
       md.push('');
-      parameters.forEach((param) => {
-        md.push(`- \`${param.name}\`: ${param.description}`);
+      funcArgs.forEach((arg) => {
+        md.push(formatArgument(arg, parameters));
       });
       md.push('');
     }
@@ -94,7 +124,7 @@ function commentToMarkDown(comment: Result, funcName: string): string {
   };
 
   handleDescription(comment.description);
-  handleParameters(comment.parameters);
+  handleParameters(comment.parameters, args);
   handleReturns(comment.reply, comment.return);
   handleExample(comment.example);
 

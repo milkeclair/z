@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { functionRegex } from './regex';
 import { Func, FuncContent } from './type';
+import { extractFunctionArgs } from './argument';
 
 export function extractZFunctions(content: string): FuncContent[] {
   const functions: FuncContent[] = [];
@@ -12,9 +13,12 @@ export function extractZFunctions(content: string): FuncContent[] {
     const match = line.match(functionRegex);
 
     if (match) {
+      const args = extractFunctionArgs(lines, index);
+
       functions.push({
         name: match[1],
         line: index + 1,
+        args,
       });
     }
   });
@@ -36,6 +40,7 @@ export function getAllZFunctions(projectRoot: string): Func[] {
         name: f.name,
         line: f.line,
         file,
+        args: f.args,
       });
     });
   }
