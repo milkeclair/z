@@ -68,10 +68,10 @@ z.t.describe "z.arr.not_eq"; {
   }
 }
 
-z.t.describe "z.arr.is_include"; {
+z.t.describe "z.arr.include"; {
   z.t.context "要素が配列に含まれる場合"; {
     z.t.it "trueを返す"; {
-      z.arr.is_include target=b "a" "b" "c"
+      z.arr.include target=b "a" "b" "c"
 
       z.t.expect.status.true
     }
@@ -79,7 +79,25 @@ z.t.describe "z.arr.is_include"; {
 
   z.t.context "要素が配列に含まれない場合"; {
     z.t.it "falseを返す"; {
-      z.arr.is_include target=d "a" "b" "c"
+      z.arr.include target=d "a" "b" "c"
+
+      z.t.expect.status.false
+    }
+  }
+}
+
+z.t.describe "z.arr.exclude"; {
+  z.t.context "要素が配列に含まれない場合"; {
+    z.t.it "trueを返す"; {
+      z.arr.exclude target=d "a" "b" "c"
+
+      z.t.expect.status.true
+    }
+  }
+
+  z.t.context "要素が配列に含まれる場合"; {
+    z.t.it "falseを返す"; {
+      z.arr.exclude target=b "a" "b" "c"
 
       z.t.expect.status.false
     }

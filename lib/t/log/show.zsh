@@ -37,7 +37,7 @@ z.t._log.show() {
 #  z.t._log.show.save_counts
 z.t._log.show.save_counts() {
   local count_dir=${Z_TEST_COUNT_DIR:-}
-  z.dir.is $count_dir || return 0
+  z.dir.exist $count_dir || return 0
 
   z.t._state.tests
   local tests=$REPLY
@@ -62,7 +62,7 @@ z.t._log.show.save_counts() {
 z.t._log.show.save_compact_results() {
   local failures=$1
   local compact_dir=${Z_TEST_COMPACT_DIR:-}
-  z.dir.is $compact_dir || return 0
+  z.dir.exist $compact_dir || return 0
 
   z.t._state.pendings
   local pendings=$REPLY

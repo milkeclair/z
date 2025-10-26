@@ -9,7 +9,7 @@
 z.file.make() {
   z.arg.named path $@ && local file=$REPLY
 
-  z.file.is_not $file && touch $file >/dev/null 2>&1
+  z.file.not_exist $file && touch $file >/dev/null 2>&1
 }
 
 # create a file if it does not exist, along with its parent directories

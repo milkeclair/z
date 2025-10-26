@@ -48,7 +48,7 @@ z.arg.named() {
   local -i i=1
 
   while ((i <= arg_count)); do
-    if z.is_not_null $args[i] && z.str.is_include $args[i] $name=; then
+    if z.is_not_null $args[i] && z.str.include $args[i] $name=; then
       z.return ${args[i]#${name}=} && return
     fi
 
@@ -77,7 +77,7 @@ z.arg.named.shift() {
   local -i i=1
 
   while ((i <= arg_count)); do
-    if z.is_not_null $args[i] && z.str.is_include $args[i] $name=; then
+    if z.is_not_null $args[i] && z.str.include $args[i] $name=; then
       ((i++)) && continue
     fi
 

@@ -13,7 +13,7 @@ z.str.indent() {
   z.arg.named message $@
   local message=$REPLY
 
-  if z.int.is_not $level || z.int.lt $level 0; then
+  if z.int.not_match $level || z.int.lt $level 0; then
     level=0
   fi
 

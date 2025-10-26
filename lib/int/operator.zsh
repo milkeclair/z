@@ -5,8 +5,8 @@
 # return: 0|1
 #
 # example:
-#  z.int.is "123" && z.io "is integer" || z.io "is not integer"
-z.int.is() {
+#  z.int.match "123" && z.io "is integer" || z.io "is not integer"
+z.int.match() {
   local value=$1
 
   [[ $value == <-> || $value == -<-> || $value == +<-> ]]
@@ -19,8 +19,8 @@ z.int.is() {
 # return: 0|1
 #
 # example:
-#  z.int.is_not "123" && z.io "is not integer" || z.io "is integer"
-z.int.is_not() {
+#  z.int.not_match "123" && z.io "is not integer" || z.io "is integer"
+z.int.not_match() {
   local value=$1
 
   [[ $value != <-> && $value != -<-> && $value != +<-> ]]
@@ -39,8 +39,8 @@ z.int.eq() {
   local a=$1
   local b=$2
 
-  z.int.is $a || return 1
-  z.int.is $b || return 1
+  z.int.match $a || return 1
+  z.int.match $b || return 1
 
   (( a == b ))
 }
@@ -58,8 +58,8 @@ z.int.not_eq() {
   local a=$1
   local b=$2
 
-  z.int.is $a || return 1
-  z.int.is $b || return 1
+  z.int.match $a || return 1
+  z.int.match $b || return 1
 
   (( a != b ))
 }
@@ -75,7 +75,7 @@ z.int.not_eq() {
 z.int.is_zero() {
   local value=$1
 
-  z.int.is $value || return 1
+  z.int.match $value || return 1
 
   z.eq $value 0
 }
@@ -91,7 +91,7 @@ z.int.is_zero() {
 z.int.is_not_zero() {
   local value=$1
 
-  z.int.is $value || return 1
+  z.int.match $value || return 1
 
   z.not_eq $value 0
 }
@@ -107,7 +107,7 @@ z.int.is_not_zero() {
 z.int.is_positive() {
   local value=$1
 
-  z.int.is $value || return 1
+  z.int.match $value || return 1
 
   z.int.gt $value 0
 }
@@ -123,7 +123,7 @@ z.int.is_positive() {
 z.int.is_negative() {
   local value=$1
 
-  z.int.is $value || return 1
+  z.int.match $value || return 1
 
   z.int.lt $value 0
 }
@@ -141,8 +141,8 @@ z.int.gt() {
   local a=$1
   local b=$2
 
-  z.int.is $a || return 1
-  z.int.is $b || return 1
+  z.int.match $a || return 1
+  z.int.match $b || return 1
 
   (( a > b ))
 }
@@ -160,8 +160,8 @@ z.int.gteq() {
   local a=$1
   local b=$2
 
-  z.int.is $a || return 1
-  z.int.is $b || return 1
+  z.int.match $a || return 1
+  z.int.match $b || return 1
 
   (( a >= b ))
 }
@@ -179,8 +179,8 @@ z.int.lt() {
   local a=$1
   local b=$2
 
-  z.int.is $a || return 1
-  z.int.is $b || return 1
+  z.int.match $a || return 1
+  z.int.match $b || return 1
 
   (( a < b ))
 }
@@ -198,8 +198,8 @@ z.int.lteq() {
   local a=$1
   local b=$2
 
-  z.int.is $a || return 1
-  z.int.is $b || return 1
+  z.int.match $a || return 1
+  z.int.match $b || return 1
 
   (( a <= b ))
 }

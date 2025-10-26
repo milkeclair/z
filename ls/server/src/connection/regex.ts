@@ -1,3 +1,3 @@
-export const zFunctionCallRegex = /[\w.]+$/;
+export const zFunctionCallRegex = /[\w.?]+$/;
 
-export const nonEmptyWordRegex = /^[\w.]+/;
+export const nonEmptyWordRegex = /^[\w.?]+/;

@@ -3,7 +3,7 @@
 # $1: first array (as a single string with spaces)
 # $2: second array (as a single string with spaces)
 # REPLY: null
-# return 0|1
+# return: 0|1
 #
 # example:
 #  z.arr.eq "apple banana cherry" "apple banana cherry"  #=> 0 (true)
@@ -31,7 +31,7 @@ z.arr.eq() {
 # $1: first array (as a single string with spaces)
 # $2: second array (as a single string with spaces)
 # REPLY: null
-# return 0|1
+# return: 0|1
 #
 # example:
 #  z.arr.not_eq "apple banana cherry" "apple banana cherry"  #=> 1 (false)
@@ -59,12 +59,12 @@ z.arr.not_eq() {
 # $target: element to find
 # $@: array elements
 # REPLY: null
-# return 0|1
+# return: 0|1
 #
 # example:
-#  z.arr.is_include target=apple "banana" "apple" "cherry"  #=> 0 (true)
-#  z.arr.is_include target=grape "banana" "apple" "cherry"  #=> 1 (false)
-z.arr.is_include() {
+#  z.arr.include target=apple "banana" "apple" "cherry"  #=> 0 (true)
+#  z.arr.include target=grape "banana" "apple" "cherry"  #=> 1 (false)
+z.arr.include() {
   z.arg.named target $@ && local target=$REPLY
   z.arg.named.shift target $@
   local -a list=($REPLY)
@@ -74,4 +74,26 @@ z.arr.is_include() {
   done
 
   return 1
+}
+
+# check if array excludes element
+#
+# $target: element to exclude
+# $@: array elements
+# REPLY: null
+# return: 0|1
+#
+# example:
+#  z.arr.exclude target=apple "banana" "apple" "cherry"  #=> 1 (false)
+#  z.arr.exclude target=grape "banana" "apple" "cherry"  #=> 0 (true)
+z.arr.exclude() {
+  z.arg.named target $@ && local target=$REPLY
+  z.arg.named.shift target $@
+  local -a list=($REPLY)
+
+  for item in ${list[@]}; do
+    z.eq $item $target && return 1
+  done
+
+  return 0
 }

@@ -1,9 +1,9 @@
 source ${z_main}
 
-z.t.describe "z.int.is"; {
+z.t.describe "z.int.match"; {
   z.t.context "整数値が渡された場合"; {
     z.t.it "trueを返す"; {
-      z.int.is 123
+      z.int.match 123
 
       z.t.expect.status.true
     }
@@ -11,7 +11,7 @@ z.t.describe "z.int.is"; {
 
   z.t.context "文字列の整数が渡された場合"; {
     z.t.it "trueを返す"; {
-      z.int.is "123"
+      z.int.match "123"
 
       z.t.expect.status.true
     }
@@ -19,7 +19,7 @@ z.t.describe "z.int.is"; {
 
   z.t.context "正の整数値が渡された場合"; {
     z.t.it "trueを返す"; {
-      z.int.is 123
+      z.int.match 123
 
       z.t.expect.status.true
     }
@@ -27,7 +27,7 @@ z.t.describe "z.int.is"; {
 
   z.t.context "文字列の正の整数が渡された場合"; {
     z.t.it "trueを返す"; {
-      z.int.is "123"
+      z.int.match "123"
 
       z.t.expect.status.true
     }
@@ -35,7 +35,7 @@ z.t.describe "z.int.is"; {
 
   z.t.context "負の整数値が渡された場合"; {
     z.t.it "trueを返す"; {
-      z.int.is -123
+      z.int.match -123
 
       z.t.expect.status.true
     }
@@ -43,7 +43,7 @@ z.t.describe "z.int.is"; {
 
   z.t.context "文字列の負の整数が渡された場合"; {
     z.t.it "trueを返す"; {
-      z.int.is "-123"
+      z.int.match "-123"
 
       z.t.expect.status.true
     }
@@ -51,17 +51,17 @@ z.t.describe "z.int.is"; {
 
   z.t.context "整数値以外が渡された場合"; {
     z.t.it "falseを返す"; {
-      z.int.is "abc"
+      z.int.match "abc"
 
       z.t.expect.status.false
     }
   }
 }
 
-z.t.describe "z.int.is_not"; {
+z.t.describe "z.int.not_match"; {
   z.t.context "整数値が渡された場合"; {
     z.t.it "falseを返す"; {
-      z.int.is_not 123
+      z.int.not_match 123
 
       z.t.expect.status.false
     }
@@ -69,7 +69,7 @@ z.t.describe "z.int.is_not"; {
 
   z.t.context "文字列の整数が渡された場合"; {
     z.t.it "falseを返す"; {
-      z.int.is_not "123"
+      z.int.not_match "123"
 
       z.t.expect.status.false
     }
@@ -77,7 +77,7 @@ z.t.describe "z.int.is_not"; {
 
   z.t.context "正の整数値が渡された場合"; {
     z.t.it "falseを返す"; {
-      z.int.is_not 123
+      z.int.not_match 123
 
       z.t.expect.status.false
     }
@@ -85,7 +85,7 @@ z.t.describe "z.int.is_not"; {
 
   z.t.context "文字列の正の整数が渡された場合"; {
     z.t.it "falseを返す"; {
-      z.int.is_not "123"
+      z.int.not_match "123"
 
       z.t.expect.status.false
     }
@@ -93,7 +93,7 @@ z.t.describe "z.int.is_not"; {
 
   z.t.context "負の整数値が渡された場合"; {
     z.t.it "falseを返す"; {
-      z.int.is_not -123
+      z.int.not_match -123
 
       z.t.expect.status.false
     }
@@ -101,7 +101,7 @@ z.t.describe "z.int.is_not"; {
 
   z.t.context "文字列の負の整数が渡された場合"; {
     z.t.it "falseを返す"; {
-      z.int.is_not "-123"
+      z.int.not_match "-123"
 
       z.t.expect.status.false
     }
@@ -109,7 +109,7 @@ z.t.describe "z.int.is_not"; {
 
   z.t.context "整数値以外が渡された場合"; {
     z.t.it "trueを返す"; {
-      z.int.is_not "abc"
+      z.int.not_match "abc"
 
       z.t.expect.status.true
     }

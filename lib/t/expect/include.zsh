@@ -19,7 +19,7 @@ z.t.expect.include() {
     return 0
   fi
 
-  if z.str.is_not_include $actual $expect; then
+  if z.str.exclude $actual $expect; then
     z.t._log.failure.handle "message=failed: expected [ $expect ] to be included in [ $actual ]"
   fi
 
@@ -47,7 +47,7 @@ z.t.expect.exclude() {
     return 0
   fi
 
-  if z.str.is_include $actual $expect; then
+  if z.str.include $actual $expect; then
     z.t._log.failure.handle "message=failed: expected [ $expect ] to be excluded from [ $actual ]"
   fi
 

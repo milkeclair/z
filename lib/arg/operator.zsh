@@ -5,9 +5,9 @@
 # return: 0|1
 #
 # example:
-#  z.arg.has_any "a" "b" "c" #=> 0
-#  z.arg.has_any             #=> 1
-z.arg.has_any() {
+#  z.arg.present "a" "b" "c" #=> 0
+#  z.arg.present             #=> 1
+z.arg.present() {
   local -a args=($@)
 
   z.int.gt $#args 0
@@ -20,9 +20,9 @@ z.arg.has_any() {
 # return: 0|1
 #
 # example:
-#  z.arg.has_not_any "a" "b" "c" #=> 1
-#  z.arg.has_not_any             #=> 0
-z.arg.has_not_any() {
+#  z.arg.empty "a" "b" "c" #=> 1
+#  z.arg.empty             #=> 0
+z.arg.empty() {
   local -a args=($@)
 
   z.int.eq $#args 0
@@ -36,9 +36,9 @@ z.arg.has_not_any() {
 # return: 0|1
 #
 # example:
-#  z.arg.validate length=2 "a" "b" "c" #=> 0
-#  z.arg.validate length=4 "a" "b" "c" #=> 1
-z.arg.validate() {
+#  z.arg.is_valid length=2 "a" "b" "c" #=> 0
+#  z.arg.is_valid length=4 "a" "b" "c" #=> 1
+z.arg.is_valid() {
   z.arg.named length $@ && local length=$REPLY
   z.arg.named.shift length $@ && local -a args=($REPLY)
   local message="Expected at least $length arguments, but got ${#args}"

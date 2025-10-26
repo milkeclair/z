@@ -33,7 +33,7 @@ function handleExistingFunctionCall(
     const suggestion = findClosestMatch(functionName, functionNames);
 
     const message = suggestion
-      ? `${functionName} is not defined. > ${suggestion}?`
+      ? `${functionName} is not defined. <${suggestion}>?`
       : `${functionName} is not defined.`;
 
     diagnostics.push({
