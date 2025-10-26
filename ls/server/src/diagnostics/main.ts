@@ -7,6 +7,7 @@ import { handleFunctionCall } from './functionCall';
 import { isInsideQuoteFunctionCall } from './functionCall/matcher';
 import { isCommentLine, hasIgnoreComment } from './comment';
 import { ArgsText } from './argument';
+import { checkUnusedArguments } from './unusedArgument';
 
 function resetRegexLastIndex() {
   functionCallRegex.lastIndex = 0;
@@ -24,6 +25,14 @@ export function validateTextDocument({
   const lines = text.split('\n');
 
   handleFirstEmptyLine(lines, diagnostics);
+
+  const currentFileFunctions = functions.filter((func) => {
+    return textDocument.uri.endsWith(func.file);
+  });
+
+  currentFileFunctions.forEach((func) => {
+    checkUnusedArguments(lines, func, diagnostics);
+  });
 
   lines.forEach((line, lineIndex) => {
     const trimmedLine = line.trim();
