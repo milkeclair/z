@@ -1,6 +1,6 @@
 import { FuncArg } from '../getFunctions/type';
 import { NAMED_ARG_POSITION } from '../getFunctions/constant';
-import { positionalArgRegex, namedArgRegex } from './regex';
+import { positionalArgRegex, specialArgRegex, namedArgRegex } from './regex';
 import { COMMENT_CHAR } from './constant';
 
 function parsePositionalArg(line: string): FuncArg | null {
@@ -12,6 +12,20 @@ function parsePositionalArg(line: string): FuncArg | null {
   return {
     position: parseInt(posStr, 10),
     name: name.trim(),
+    optional: optionalMarker === '?',
+    isNamed: false,
+  };
+}
+
+function parseSpecialArg(line: string): FuncArg | null {
+  const match = line.match(specialArgRegex);
+  if (!match) return null;
+
+  const [, argName, optionalMarker, _description] = match;
+
+  return {
+    position: Number.MAX_SAFE_INTEGER,
+    name: argName,
     optional: optionalMarker === '?',
     isNamed: false,
   };
@@ -61,6 +75,12 @@ export function extractFunctionArgs(lines: string[], functionLineIndex: number):
     const positionalArg = parsePositionalArg(line);
     if (positionalArg) {
       args.push(positionalArg);
+      continue;
+    }
+
+    const specialArg = parseSpecialArg(line);
+    if (specialArg) {
+      args.push(specialArg);
       continue;
     }
 

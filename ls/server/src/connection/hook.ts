@@ -72,7 +72,7 @@ function findParameterDescription(
 
 function formatArgument(arg: FuncArg, parameters: { name: string; description: string }[]): string {
   const optional = arg.optional ? '?' : '';
-  const argName = arg.isNamed ? arg.name : arg.position.toString();
+  const argName = arg.isNamed ? arg.name : arg.name === '@' ? '@' : arg.position.toString();
   const description = findParameterDescription(parameters, argName);
 
   return `- \`$${argName}${optional}:\` ${description}`;
@@ -83,7 +83,10 @@ function commentToMarkDown(comment: Result, funcName: string, args: FuncArg[] = 
 
   const handleDescription = (description: string) => {
     if (description) {
-      md.push(description);
+      const mdLineBreak = '  ';
+      const lines = description.split('\n').map((line) => line + mdLineBreak);
+
+      lines.forEach((line) => md.push(line));
       md.push('');
     }
   };
