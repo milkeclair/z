@@ -109,7 +109,7 @@ z.file.read.pick() {
   z.arg.named word $@ && local word=$REPLY
 
   if z.file.exist $file; then
-    REPLY=$(grep -w "$word" "$file" | head -n 1)
+    REPLY=$(grep "$word" "$file" | head -n 1)
   else
     z.return
   fi
