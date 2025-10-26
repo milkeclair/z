@@ -9,7 +9,7 @@
 z.dir.make() {
   z.arg.named path $@ && local dir=$REPLY
 
-  z.dir.is_not $dir && mkdir -p $dir
+  z.dir.not_exist $dir && mkdir -p $dir
 }
 
 # remove a directory if it exists
@@ -23,5 +23,5 @@ z.dir.make() {
 z.dir.remove() {
   z.arg.named path $@ && local dir=$REPLY
 
-  z.dir.is $dir && rm -rf $dir
+  z.dir.exist $dir && rm -rf $dir
 }

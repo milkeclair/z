@@ -67,7 +67,7 @@ z.t.expect.reply.arr() {
   local skip_unmock=""
   z.arg.last $args
 
-  if z.str.is_include $REPLY "skip_unmock="; then
+  if z.str.include $REPLY "skip_unmock="; then
     skip_unmock=true
     args=(${args[1,-2]})
   fi
