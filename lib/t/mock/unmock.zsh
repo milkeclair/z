@@ -1,7 +1,7 @@
 # unmock a function
 # function name can be omitted to unmock the last mocked function
 #
-# $name: function name(optional)
+# $name?: function name
 # REPLY: null
 # return: null
 #
@@ -32,7 +32,7 @@ z.t.mock.unmock() {
 # unmock all mocked functions
 # skip unmocking if the argument is "skip_unmock"
 #
-# $skip_unmock: skip unmock(optional)
+# $skip_unmock?: skip unmock
 # REPLY: null
 # return: null
 #
@@ -51,7 +51,7 @@ z.t.mock.unmock.all() {
 
 # check if unmocking is not skipped
 #
-# $1: skip unmock(optional)
+# $1?: skip unmock
 # REPLY: null
 # return 0|1
 #

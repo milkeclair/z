@@ -1,7 +1,7 @@
 # expect that REPLY equals expect
 #
 # $1: expected value
-# $skip_unmock: skip_unmock (optional)
+# $skip_unmock?: skip_unmock
 # REPLY: null
 # return: null
 #
@@ -18,7 +18,7 @@ z.t.expect.reply() {
 
 # expect that REPLY is null (empty string)
 #
-# $skip_unmock: skip_unmock (optional)
+# $skip_unmock?: skip_unmock
 # REPLY: null
 # return: null
 #
@@ -35,7 +35,7 @@ z.t.expect.reply.null() {
 
 # expect that REPLY is not null (not empty string)
 #
-# $skip_unmock: skip_unmock (optional)
+# $skip_unmock?: skip_unmock
 # REPLY: null
 # return: null
 #
@@ -53,7 +53,7 @@ z.t.expect.reply.not_null() {
 # expect that REPLY array equals expect array
 #
 # $@: expected array elements
-# $skip_unmock: skip_unmock (optional)
+# $skip_unmock?: skip_unmock
 # REPLY: null
 # return: null
 #
@@ -85,7 +85,7 @@ z.t.expect.reply.arr() {
 # expect that REPLY includes expect
 #
 # $1: expected substring
-# $skip_unmock: skip_unmock (optional)
+# $skip_unmock?: skip_unmock
 # REPLY: null
 # return: null
 #

@@ -5,7 +5,7 @@ done
 # mock a function
 #
 # $name: function name
-# $behavior: behavior (call_original|custom code)
+# $behavior?: behavior (call_original|custom code)
 # REPLY: null
 # return: null
 #

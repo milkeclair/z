@@ -166,7 +166,7 @@ z.install._add_to_zshrc() {
 
 # install z
 #
-# $1: install dir (default: $HOME/.z)
+# $1?: install dir (default: $HOME/.z)
 # REPLY: null
 # return: null
 #

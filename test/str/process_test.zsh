@@ -16,7 +16,7 @@ z.t.describe "z.str.indent"; {
 
   z.t.context "インデントレベルが渡されなかった場合"; {
     z.t.it "インデントなしの文字列を返す"; {
-      z.str.indent message="No Indent"
+      z.str.indent message="No Indent" # zls: ignore
       z.t.expect.reply "No Indent"
     }
   }
@@ -46,23 +46,23 @@ z.t.describe "z.str.indent"; {
 z.t.describe "z.str.split"; {
   z.t.context "区切り文字で分割された文字列が渡された場合"; {
     z.t.it "分割された文字列の配列を返す"; {
-      z.str.split str="apple|banana|cherry" delimiter="|"
+      z.str.split "str=apple|banana|cherry" delimiter="|"
       z.t.expect.reply.arr "apple" "banana" "cherry"
 
-      z.str.split str="one,two,three" delimiter=","
+      z.str.split "str=one,two,three" delimiter=","
       z.t.expect.reply.arr "one" "two" "three"
 
-      z.str.split str="a b c" delimiter=" "
+      z.str.split "str=a b c" delimiter=" "
       z.t.expect.reply.arr "a" "b" "c"
     }
   }
 
   z.t.context "区切り文字が指定されなかった場合"; {
     z.t.it "デフォルトの区切り文字'|'で分割された文字列の配列を返す"; {
-      z.str.split str="apple|banana|cherry"
+      z.str.split "str=apple|banana|cherry"
       z.t.expect.reply.arr "apple" "banana" "cherry"
 
-      z.str.split str="one|two|three"
+      z.str.split "str=one|two|three"
       z.t.expect.reply.arr "one" "two" "three"
     }
   }

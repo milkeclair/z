@@ -93,5 +93,5 @@ z.t._log.failure.handle() {
 
   z.t._state.failures.increment
   z.t._log.failure.remember
-  z.t._log.failure.add "red"
+  z.t._log.failure.add color=red
 }

@@ -35,7 +35,7 @@ z.t.describe "z.arg.get"; {
 
   z.t.context "インデックスがnullの場合"; {
     z.t.it "nullを返す"; {
-      z.arg.get "a" "b" "c"
+      z.arg.get "a" "b" "c" # zls: ignore
 
       z.t.expect.reply.null
     }
