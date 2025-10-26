@@ -12,7 +12,9 @@ export function definedNamedArgs(func: Func): string[] {
 }
 
 export function requiredPositionalArgs(func: Func): Func['args'] {
-  return func.args.filter((arg) => !arg.isNamed && !arg.optional);
+  return func.args.filter(
+    (arg) => !arg.isNamed && !arg.optional && arg.position !== Number.MAX_SAFE_INTEGER
+  );
 }
 
 export function requiredNamedArgs(func: Func): Func['args'] {
