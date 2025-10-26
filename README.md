@@ -177,5 +177,12 @@ Download: https://marketplace.visualstudio.com/items?itemName=milkeclair.z-ls
   - example
 - Go to definition
 - Diagnostics
-  - Function not found
+  - Function not found with suggestion
   - Empty line
+    - Start of file
+    - Whitespace only line
+    - Final newline
+  - Unused function arguments
+  - Missing required positional arguments
+  - Missing required named arguments
+  - Suppression comment (`# zls: ignore`)
