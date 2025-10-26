@@ -1,80 +1,9 @@
-import { DiagnosticSeverity, TextDocument } from '../vscode_type';
+import { TextDocument } from '../vscode_type';
 import { Func } from '../getFunctions/type';
 import { Diagnostics } from './type';
 import { functionCallRegex, functionDefRegex } from './regex';
-import { findClosestMatch } from '../util/levenshtein';
-
-function handleFirstEmptyLine(lines: string[], diagnostics: Diagnostics[]) {
-  if (lines.length > 0 && lines[0].trim() === '') {
-    diagnostics.push({
-      severity: DiagnosticSeverity.Warning,
-      range: {
-        start: { line: 0, character: 0 },
-        end: { line: 0, character: lines[0].length },
-      },
-      message: 'File starts with an empty line.',
-      source: 'z-ls',
-    });
-  }
-}
-
-function handleEmptyLine(line: string, lineIndex: number, diagnostics: Diagnostics[]) {
-  if (line.trim() === '' && line.length > 0) {
-    diagnostics.push({
-      severity: DiagnosticSeverity.Warning,
-      range: {
-        start: { line: lineIndex, character: 0 },
-        end: { line: lineIndex, character: line.length },
-      },
-      message: 'Line contains only whitespace characters.',
-      source: 'z-ls',
-    });
-  }
-}
-
-function handleFinalNewLine(text: string, diagnostics: Diagnostics[], totalLines: number) {
-  if (!text.endsWith('\n')) {
-    diagnostics.push({
-      severity: DiagnosticSeverity.Warning,
-      range: {
-        start: { line: totalLines - 1, character: text.length },
-        end: { line: totalLines - 1, character: text.length },
-      },
-      message: 'File does not end with a newline.',
-      source: 'z-ls',
-    });
-  }
-}
-
-function handleExistingFunctionCall(
-  functions: Func[],
-  functionName: string,
-  startChar: number,
-  endChar: number,
-  lineIndex: number,
-  diagnostics: Diagnostics[]
-) {
-  const funcExists = functions.some((f) => f.name === functionName);
-
-  if (!funcExists) {
-    const functionNames = functions.map((f) => f.name);
-    const suggestion = findClosestMatch(functionName, functionNames);
-
-    const message = suggestion
-      ? `${functionName} is not defined. <${suggestion}>?`
-      : `${functionName} is not defined.`;
-
-    diagnostics.push({
-      severity: DiagnosticSeverity.Error,
-      range: {
-        start: { line: lineIndex, character: startChar },
-        end: { line: lineIndex, character: endChar },
-      },
-      message,
-      source: 'z-ls',
-    });
-  }
-}
+import { handleFirstEmptyLine, handleEmptyLine, handleFinalNewLine } from './emptyLine';
+import { handleExistingFunctionCall } from './functionCall';
 
 export function validateTextDocument({
   functions,
