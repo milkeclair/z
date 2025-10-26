@@ -1,7 +1,7 @@
 # get the call arguments of the last call to the mocked function
 # function name can be omitted to get the last mocked function
 #
-# $name: function name(optional)
+# $name?: function name
 # REPLY: array of arguments
 # return: null
 #

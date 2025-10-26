@@ -2,7 +2,7 @@
 #
 # $name: target argument
 # $as: aliases (| separated)
-# $return: return value when matched (optional)
+# $return?: return value when matched
 # REPLY: $return|null
 # return: null
 #

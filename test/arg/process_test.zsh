@@ -35,7 +35,7 @@ z.t.describe "z.arg.as"; {
 
   z.t.context "nameがnullの場合"; {
     z.t.it "nullを返す"; {
-      z.arg.as "as=-h|--help" return=0
+      z.arg.as "as=-h|--help" return=0 # zls: ignore
 
       z.t.expect.reply.null
     }
@@ -53,7 +53,7 @@ z.t.describe "z.arg.named"; {
 
   z.t.context "nameが指定されていない場合"; {
     z.t.it "nullを返す"; {
-      z.arg.named
+      z.arg.named # zls: ignore
 
       z.t.expect.reply.null
     }

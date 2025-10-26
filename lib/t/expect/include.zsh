@@ -2,7 +2,7 @@
 #
 # $1: actual value
 # $2: expected substring
-# $skip_unmock: skip_unmock (optional)
+# $skip_unmock?: skip_unmock
 # REPLY: null
 # return: null
 #
@@ -30,7 +30,7 @@ z.t.expect.include() {
 #
 # $1: actual value
 # $2: expected substring
-# $skip_unmock: skip_unmock (optional)
+# $skip_unmock?: skip_unmock
 # REPLY: null
 # return: null
 #

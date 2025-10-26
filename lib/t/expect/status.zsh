@@ -1,7 +1,7 @@
 # expect that last command's exit status equals expect
 #
 # $1: expected status (0 for true, 1 for false, "true" for 0, "false" for 1)
-# $skip_unmock: skip_unmock (optional)
+# $skip_unmock?: skip_unmock
 # REPLY: null
 # return: null
 #
@@ -21,7 +21,7 @@ z.t.expect.status() {
 
 # expect that last command's exit status is true (0)
 #
-# $skip_unmock: skip_unmock (optional)
+# $1?: skip_unmock
 # REPLY: null
 # return: null
 #
@@ -34,7 +34,7 @@ z.t.expect.status.true() {
 
 # expect that last command's exit status is false (1)
 #
-# $skip_unmock: skip_unmock (optional)
+# $1?: skip_unmock
 # REPLY: null
 # return: null
 #

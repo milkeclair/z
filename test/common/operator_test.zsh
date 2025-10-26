@@ -43,7 +43,7 @@ z.t.describe "z.is_truthy"; {
 
   z.t.context "何も指定しなかった場合"; {
     z.t.it "falseを返す"; {
-      z.is_truthy
+      z.is_truthy # zls: ignore
 
       z.t.expect.status.false
     }
@@ -147,7 +147,7 @@ z.t.describe "z.is_falsy"; {
 
   z.t.context "何も指定しなかった場合"; {
     z.t.it "trueを返す"; {
-      z.is_falsy
+      z.is_falsy # zls: ignore
 
       z.t.expect.status.true
     }
@@ -369,7 +369,7 @@ z.t.describe "z.is_null"; {
 
   z.t.context "何も指定しなかった場合"; {
     z.t.it "trueを返す"; {
-      z.is_null
+      z.is_null # zls: ignore
 
       z.t.expect.status.true
     }
@@ -419,7 +419,7 @@ z.t.describe "z.is_not_null"; {
 
   z.t.context "何も指定しなかった場合"; {
     z.t.it "falseを返す"; {
-      z.is_not_null
+      z.is_not_null # zls: ignore
 
       z.t.expect.status.false
     }

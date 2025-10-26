@@ -28,6 +28,7 @@ export const refreshFunctions = ({
       name: f.name,
       line: f.line,
       file: relativePath,
+      args: f.args,
     }));
 
     overrideFiles.add(relativePath);

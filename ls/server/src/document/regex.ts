@@ -2,7 +2,7 @@ import { Section } from './type';
 
 export const sectionRegexes: Record<Section, RegExp> = {
   description: /.*?/,
-  parameters: /^\$(\w+|@):/, // $1, $2..., $@, $arg:
+  parameters: /^\$(?:\w+|@)\??:/, // $1, $2..., $@, $arg:, $arg?:
   reply: /^REPLY:/,
   return: /^return:/,
   example: /^example:/,
@@ -10,7 +10,7 @@ export const sectionRegexes: Record<Section, RegExp> = {
 
 export const sectionExtractRegexes: Record<Section, RegExp> = {
   description: /(.*)/,
-  parameters: /^(\$(?:\w+|@)):\s*(.*)$/, // $1, $2..., $@, $arg:
+  parameters: /^(\$(?:\w+|@))\??:\s*(.*)$/, // $1, $2..., $@, $arg:, $arg?:
   reply: /^REPLY:\s*(.*)$/,
   return: /^return:\s*(.*)$/,
   example: /(.*)/,

@@ -28,7 +28,7 @@ z.str.indent() {
 # split a string by a delimiter
 #
 # $str: string to split
-# $delimiter: delimiter (default: "|")
+# $delimiter?: delimiter (default: "|")
 # REPLY: array of split strings
 # return: null
 #
