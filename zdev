@@ -5,7 +5,18 @@ source main.zsh
 z.io.clear
 z.io "File watching..."
 
-fswatch -r lib test | while read file; do
+local fswatch_opts=(-r lib test)
+
+# fsevents_monitor is not supported in WSL, so poll_monitor will be used instead.
+# Using the default monitor (inotify) will detect file access events. 
+# However, all event names will be PlatformSpecific, making it impossible to sort events.
+if z.str.include $(uname -r) "WSL"; then
+  fswatch_opts+=(-m poll_monitor)
+else
+  fswatch_opts+=(-m fsevents_monitor)
+fi
+
+fswatch ${fswatch_opts[@]} | while read file; do
   z.io.clear
   local relative_path=${file#$PWD/}
   z.io "File changed: $relative_path"
