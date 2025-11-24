@@ -152,3 +152,47 @@ z.arr.intersect() {
 
   z.return ${result[@]}
 }
+
+# find union of two arrays
+#
+# $base: base array (as a single string with spaces)
+# $other: other array (as a single string with spaces)
+# REPLY: array of union elements
+# return: null
+#
+# example:
+#  z.arr.union base="a b c" other="b c d e" #=> REPLY=("a" "b" "c" "d" "e")
+z.arr.union() {
+  z.arg.named base $@ && local base=$REPLY
+  z.arg.named other $@ && local other=$REPLY
+
+  local base_arr=(${=base})
+  local other_arr=(${=other})
+  local -A base_set
+  local -A other_set
+  local result
+
+  z.group "filling sets"; {
+    for item in ${base_arr[@]}; do
+      base_set[$item]=true
+    done
+
+    for item in ${other_arr[@]}; do
+      other_set[$item]=true
+    done
+  }
+
+  z.group "finding union"; {
+    for item in ${base_arr[@]}; do
+      result+=($item)
+    done
+
+    for item in ${other_arr[@]}; do
+      if z.is_falsy ${base_set[$item]}; then
+        result+=($item)
+      fi
+    done
+  }
+
+  z.return ${result[@]}
+}

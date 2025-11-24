@@ -152,3 +152,25 @@ z.t.describe "z.arr.intersect"; {
     }
   }
 }
+
+z.t.describe "z.arr.union"; {
+  z.t.context "重複する要素を持つ配列が渡された場合"; {
+    z.t.it "重複要素が削除された結合配列を返す"; {
+      local base=("a" "b" "c")
+      local other=("b" "c" "d" "e")
+      z.arr.union base="$base" other="$other"
+
+      z.t.expect.reply.arr "a" "b" "c" "d" "e"
+    }
+  }
+
+  z.t.context "重複する要素を持たない配列が渡された場合"; {
+    z.t.it "結合配列を返す"; {
+      local base=("a" "b")
+      local other=("c" "d")
+      z.arr.union base="$base" other="$other"
+
+      z.t.expect.reply.arr "a" "b" "c" "d"
+    }
+  }
+}
