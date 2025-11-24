@@ -21,7 +21,7 @@ z.t.describe "z.status.is_true"; {
 
   z.t.context "前回のコマンドの終了ステータスが0の場合"; {
     z.t.it "trueを返す"; {
-      exit 0
+      (exit 0)
       z.status.is_true
 
       z.t.expect.status.true
@@ -30,7 +30,7 @@ z.t.describe "z.status.is_true"; {
 
   z.t.context "前回のコマンドの終了ステータスが0以外の場合"; {
     z.t.it "falseを返す"; {
-      exit 1
+      (exit 1)
       z.status.is_true
 
       z.t.expect.status.false
@@ -59,7 +59,7 @@ z.t.describe "z.status.is_false"; {
 
   z.t.context "前回のコマンドの終了ステータスが0以外の場合"; {
     z.t.it "trueを返す"; {
-      exit 1
+      (exit 1)
       z.status.is_false
 
       z.t.expect.status.true
@@ -68,7 +68,7 @@ z.t.describe "z.status.is_false"; {
 
   z.t.context "前回のコマンドの終了ステータスが0の場合"; {
     z.t.it "falseを返す"; {
-      exit 0
+      (exit 0)
       z.status.is_false
 
       z.t.expect.status.false
