@@ -112,3 +112,43 @@ z.arr.diff() {
 
   z.return ${result[@]}
 }
+
+# find intersection between two arrays
+#
+# $base: base array (as a single string with spaces)
+# $other: other array (as a single string with spaces)
+# REPLY: array of intersection elements
+# return: null
+#
+# example:
+#  z.arr.intersect base="a b c" other="b c d" #=> REPLY=("b" "c")
+z.arr.intersect() {
+  z.arg.named base $@ && local base=$REPLY
+  z.arg.named other $@ && local other=$REPLY
+
+  local base_arr=(${=base})
+  local other_arr=(${=other})
+  local -A base_set
+  local -A other_set
+  local result
+
+  z.group "filling sets"; {
+    for item in ${base_arr[@]}; do
+      base_set[$item]=true
+    done
+
+    for item in ${other_arr[@]}; do
+      other_set[$item]=true
+    done
+  }
+
+  z.group "finding intersections"; {
+    for item in ${base_arr[@]}; do
+      if z.is_truthy ${other_set[$item]}; then
+        result+=($item)
+      fi
+    done
+  }
+
+  z.return ${result[@]}
+}

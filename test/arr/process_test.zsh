@@ -130,3 +130,25 @@ z.t.describe "z.arr.diff"; {
     }
   }
 }
+
+z.t.describe "z.arr.intersect"; {
+  z.t.context "共通の要素を持つ配列が渡された場合"; {
+    z.t.it "共通要素を返す"; {
+      local base=("a" "b" "c" "d")
+      local other=("b" "c" "e" "f")
+      z.arr.intersect base="$base" other="$other"
+
+      z.t.expect.reply.arr "b" "c"
+    }
+  }
+
+  z.t.context "共通の要素を持たない配列が渡された場合"; {
+    z.t.it "空配列を返す"; {
+      local base=("a" "b" "c")
+      local other=("d" "e" "f")
+      z.arr.intersect base="$base" other="$other"
+
+      z.t.expect.reply.null
+    }
+  }
+}
