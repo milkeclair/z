@@ -110,7 +110,8 @@ z.arr.exclude() {
 #  z.arr.true_all operation="z.int.is_positive arg" "1" "-2" "3"  #=> 1 (false)
 z.arr.true_all() {
   z.arg.named operation $@
-  local operation=${REPLY//arg/\$item}
+  z.arr.gsub search="arg" replace="\$item" $REPLY
+  local operation=$REPLY
   z.arg.named.shift operation $@
 
   local list=($REPLY)
@@ -134,7 +135,8 @@ z.arr.true_all() {
 #  z.arr.false_all operation="z.int.is_positive arg" "-1" "2" "-3"  #=> 1 (false)
 z.arr.false_all() {
   z.arg.named operation $@
-  local operation=${REPLY//arg/\$item}
+  z.arr.gsub search="arg" replace="\$item" $REPLY
+  local operation=$REPLY
   z.arg.named.shift operation $@
 
   local list=($REPLY)
