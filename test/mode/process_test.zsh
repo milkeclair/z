@@ -29,9 +29,9 @@ z.t.describe "z.mode"; {
     }
 
     z.t.it "splitを指定しない場合はスペースを空ける"; {
-      local output=$(z.mode git <<< "status"$'\n'"q")
+      local output=$(z.mode git <<< "version"$'\n'"q")
 
-      z.t.expect.include $output "On branch"
+      z.t.expect.include $output "git version"
     }
   }
 
