@@ -74,22 +74,22 @@ z.t._log.records.display() {
     local e_idx=$parts[8]
 
     z.t._log.records.output_if_changed $d_idx $prev_d_idx
-    if [ $? -eq 0 ]; then
+    if z.status.is_true; then
       prev_d_idx=$d_idx
       prev_c_idx=""
       prev_i_idx=""
     fi
 
     z.t._log.records.output_if_changed $c_idx $prev_c_idx
-    if [ $? -eq 0 ]; then
+    if z.status.is_true; then
       prev_c_idx=$c_idx
       prev_i_idx=""
     fi
 
     z.t._log.records.output_if_changed $i_idx $prev_i_idx
-    [ $? -eq 0 ] && prev_i_idx=$i_idx
+    z.status.is_true && prev_i_idx=$i_idx
 
-    if [ "$record_type" = "failure" ] && [ -n "$e_idx" ]; then
+    if z.eq "$record_type" "failure" && z.is_not_null "$e_idx"; then
       z.t._state.logs.context $e_idx
       local error_log=$REPLY
       z.is_not_null $error_log && z.io $error_log

@@ -149,8 +149,6 @@ z.eq() {
   local other=$2
 
   [[ $base == $other ]]
-
-  return $?
 }
 
 # verifies whether the two values are not equal
@@ -169,8 +167,6 @@ z.not_eq() {
   local other=$2
 
   [[ $base != $other ]]
-
-  return $?
 }
 
 # verifies whether the provided value is null or not
@@ -186,8 +182,6 @@ z.is_null() {
   local value=$1
 
   [[ -z $value ]]
-
-  return $?
 }
 
 # verifies whether the provided value is not null
@@ -203,6 +197,4 @@ z.is_not_null() {
   local value=$1
 
   [[ -n $value ]]
-
-  return $?
 }
