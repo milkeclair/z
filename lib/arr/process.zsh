@@ -35,6 +35,34 @@ z.arr.split() {
   z.return ${arr[@]}
 }
 
+# perform global substitution on array elements
+#
+# $search: search string
+# $replace: replace string
+# $@: array elements
+# REPLY: array elements after substitution
+# return: null
+#
+# example:
+#  z.arr.gsub search=a replace=x "a b a" "c a d" #=> REPLY=("x b x" "c x d")
+z.arr.gsub() {
+  local args=($@)
+
+  z.arg.named search $args && local search=${REPLY}
+  z.arg.named.shift search $args && args=($REPLY)
+
+  z.arg.named replace $args && local replace=${REPLY}
+  z.arg.named.shift replace $args && args=($REPLY)
+
+  local result=()
+
+  for item in ${args[@]}; do
+    result+=(${item//$search/$replace})
+  done
+
+  z.return ${result[@]}
+}
+
 # sort array elements
 #
 # $by?: sort by (asc|desc), default: asc

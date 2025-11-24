@@ -42,6 +42,18 @@ z.t.describe "z.arr.split"; {
   }
 }
 
+z.t.describe "z.arr.gsub"; {
+  z.t.context "検索文字列と置換文字列が指定された場合"; {
+    z.t.it "配列要素内の検索文字列が置換文字列に置き換えられた配列を返す"; {
+      z.arr.gsub search=a replace=x "a b a" "c a d"
+      z.t.expect.reply.arr "x b x" "c x d"
+
+      z.arr.gsub search=one replace=1 "one two one" "three one four"
+      z.t.expect.reply.arr "1 two 1" "three 1 four"
+    }
+  }
+}
+
 z.t.describe "z.arr.sort"; {
   z.t.context "昇順指定で配列要素が渡された場合"; {
     z.t.it "昇順に並べ替えられた要素が返る"; {
