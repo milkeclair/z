@@ -20,6 +20,28 @@ z.t.describe "z.arr.join"; {
   }
 }
 
+z.t.describe "z.arr.split"; {
+  z.t.context "区切り文字が指定された場合"; {
+    z.t.it "指定された区切り文字で分割された配列を返す"; {
+      z.arr.split sep=, "a,b,c"
+      z.t.expect.reply.arr "a" "b" "c"
+
+      z.arr.split sep=: "one:two:three:four"
+      z.t.expect.reply.arr "one" "two" "three" "four"
+    }
+  }
+
+  z.t.context "区切り文字が指定されなかった場合"; {
+    z.t.it "スペースで分割された配列を返す"; {
+      z.arr.split "a b c"
+      z.t.expect.reply.arr "a" "b" "c"
+
+      z.arr.split "one two three four"
+      z.t.expect.reply.arr "one" "two" "three" "four"
+    }
+  }
+}
+
 z.t.describe "z.arr.sort"; {
   z.t.context "昇順指定で配列要素が渡された場合"; {
     z.t.it "昇順に並べ替えられた要素が返る"; {

@@ -12,6 +12,29 @@ z.arr.join() {
   z.return "${(j: :)arr}"
 }
 
+# split a string into an array by a separator
+#
+# $sep?: separator, default: space
+# $@: string to split
+# REPLY: array elements
+# return: null
+#
+# example:
+#  z.arr.split sep="," "a,b,c" #=> REPLY=("a" "b" "c")
+#  z.arr.split "a b c"         #=> REPLY=("a" "b" "c")
+z.arr.split() {
+  z.arg.named sep $@
+  local separator=${REPLY:-" "}
+  z.arg.named.shift sep $@
+
+  local str=$REPLY
+  local -a arr
+
+  IFS=$separator read -rA arr <<<"$str"
+
+  z.return ${arr[@]}
+}
+
 # sort array elements
 #
 # $by?: sort by (asc|desc), default: asc
