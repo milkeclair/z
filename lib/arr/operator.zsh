@@ -98,7 +98,6 @@ z.arr.exclude() {
   return 0
 }
 
-
 # check if all array elements satisfy a condition
 #
 # $operation: operation to evaluate for each element (use 'arg' as placeholder for element)
