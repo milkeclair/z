@@ -97,3 +97,52 @@ z.arr.exclude() {
 
   return 0
 }
+
+
+# check if all array elements satisfy a condition
+#
+# $operation: operation to evaluate for each element (use 'arg' as placeholder for element)
+# $@: array elements
+# REPLY: null
+# return: 0|1
+#
+# example:
+#  z.arr.true_all operation="z.int.is_positive arg" "1" "2" "3"  #=> 0 (true)
+#  z.arr.true_all operation="z.int.is_positive arg" "1" "-2" "3"  #=> 1 (false)
+z.arr.true_all() {
+  z.arg.named operation $@
+  local operation=${REPLY//arg/\$item}
+  z.arg.named.shift operation $@
+
+  local list=($REPLY)
+
+  for item in ${list[@]}; do
+    eval "$operation \"$item\"" || return 1
+  done
+
+  return 0
+}
+
+# check if all array elements do not satisfy a condition
+#
+# $operation: operation to evaluate for each element (use 'arg' as placeholder for element)
+# $@: array elements
+# REPLY: null
+# return: 0|1
+#
+# example:
+#  z.arr.false_all operation="z.int.is_positive arg" "-1" "-2" "-3"  #=> 0 (true)
+#  z.arr.false_all operation="z.int.is_positive arg" "-1" "2" "-3"  #=> 1 (false)
+z.arr.false_all() {
+  z.arg.named operation $@
+  local operation=${REPLY//arg/\$item}
+  z.arg.named.shift operation $@
+
+  local list=($REPLY)
+
+  for item in ${list[@]}; do
+    eval "$operation \"$item\"" && return 1
+  done
+
+  return 0
+}
