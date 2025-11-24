@@ -86,3 +86,25 @@ z.t.describe "z.arr.sort"; {
     }
   }
 }
+
+z.t.describe "z.arr.unique"; {
+  z.t.context "重複する要素を含む配列が渡された場合"; {
+    z.t.it "重複要素が削除された配列を返す"; {
+      z.arr.unique "a" "b" "a" "c" "b"
+      z.t.expect.reply.arr "a" "b" "c"
+
+      z.arr.unique "1" "2" "2" "3" "1" "4"
+      z.t.expect.reply.arr "1" "2" "3" "4"
+    }
+  }
+
+  z.t.context "重複する要素を含まない配列が渡された場合"; {
+    z.t.it "元の配列をそのまま返す"; {
+      z.arr.unique "a" "b" "c"
+      z.t.expect.reply.arr "a" "b" "c"
+
+      z.arr.unique "1" "2" "3" "4"
+      z.t.expect.reply.arr "1" "2" "3" "4"
+    }
+  }
+}

@@ -43,3 +43,26 @@ z.arr.sort() {
     ;;
   esac
 }
+
+# remove duplicate elements from an array
+#
+# $@: array elements
+# REPLY: array elements with duplicates removed
+# return: null
+#
+# example:
+#  z.arr.unique "a" "b" "a" "c" "b" #=> REPLY=("a" "b" "c")
+z.arr.unique() {
+  local arr=($@)
+  local -A seen
+  local result
+
+  for item in ${arr[@]}; do
+    if z.is_falsy ${seen[$item]}; then
+      seen[$item]=true
+      result+=($item)
+    fi
+  done
+
+  z.return ${result[@]}
+}
