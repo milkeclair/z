@@ -9,6 +9,7 @@ local -A z_modules=(
   ["file"]="operator:process"
   ["int"]="operator"
   ["io"]="process"
+  ["mode"]="process"
   ["status"]="analysis:operator"
   ["str"]="color:operator:process"
   ["t"]="dsl:expect:log:mock:process:state"
