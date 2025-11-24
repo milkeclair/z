@@ -66,3 +66,49 @@ z.arr.unique() {
 
   z.return ${result[@]}
 }
+
+# find differences between two arrays
+#
+# $base: base array (as a single string with spaces)
+# $other: other array (as a single string with spaces)
+# REPLY: array of differences
+# return: null
+#
+# example:
+#  z.arr.diff base="a b c" other="b c d" #=> REPLY=("a" "d")
+z.arr.diff() {
+  z.arg.named base $@ && local base=$REPLY
+  z.arg.named other $@ && local other=$REPLY
+
+  local base_arr=(${=base})
+  local other_arr=(${=other})
+  local -A base_set
+  local -A other_set
+  local result
+
+  z.group "filling sets"; {
+    for item in ${base_arr[@]}; do
+      base_set[$item]=true
+    done
+
+    for item in ${other_arr[@]}; do
+      other_set[$item]=true
+    done
+  }
+
+  z.group "finding differences"; {
+    for item in ${base_arr[@]}; do
+      if z.is_falsy ${other_set[$item]}; then
+        result+=($item)
+      fi
+    done
+
+    for item in ${other_arr[@]}; do
+      if z.is_falsy ${base_set[$item]}; then
+        result+=($item)
+      fi
+    done
+  }
+
+  z.return ${result[@]}
+}

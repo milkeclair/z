@@ -108,3 +108,25 @@ z.t.describe "z.arr.unique"; {
     }
   }
 }
+
+z.t.describe "z.arr.diff"; {
+  z.t.context "同じ要素を持つ配列が渡された場合"; {
+    z.t.it "空配列を返す"; {
+      local base=("a" "b" "c")
+      local other=("a" "b" "c")
+      z.arr.diff base="$base" other="$other"
+
+      z.t.expect.reply.null
+    }
+  }
+
+  z.t.context "異なる要素を持つ配列が渡された場合"; {
+    z.t.it "差分要素を返す"; {
+      local base=("a" "b" "c" "d")
+      local other=("b" "c" "e" "f")
+      z.arr.diff base="$base" other="$other"
+
+      z.t.expect.reply.arr "a" "d" "e" "f"
+    }
+  }
+}
