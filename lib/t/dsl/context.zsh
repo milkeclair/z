@@ -7,6 +7,7 @@
 # example:
 #  z.t.context "When something happens"; {some tests}
 z.t.context() {
+  local REPLY
   local context=$1
 
   z.t._state.skip.describe
@@ -40,6 +41,7 @@ z.t.context() {
 # example:
 #  z.t.xcontext "When something happens"; {some tests}
 z.t.xcontext() {
+  local REPLY
   local context=$1
 
   z.str.indent level=2 message=$context

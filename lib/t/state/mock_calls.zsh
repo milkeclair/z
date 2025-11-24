@@ -33,6 +33,7 @@ z.t._state.mock_calls.context() {
 # example:
 #  z.t._state.mock_calls.add name=my_func "arg1" "arg2"
 z.t._state.mock_calls.add() {
+  local REPLY
   z.arg.named name $@ && local func_name=$REPLY
   z.arg.named.shift name $@ && local args=$REPLY
 

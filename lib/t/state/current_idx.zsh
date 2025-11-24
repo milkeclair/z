@@ -23,6 +23,7 @@ z.t._state.current_idx() {
 # example:
 #  z.t._state.current_idx.set "describe" value=1
 z.t._state.current_idx.set() {
+  local REPLY
   z.arg.named value $@ && local value=$REPLY
   z.arg.named.shift value $@ && local context=$REPLY
 

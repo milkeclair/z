@@ -20,7 +20,7 @@ z.t.mock() {
   z.t._state.mock_calls.set name=$func_name value=""
   z.t._state.mock_last_func.set $func_name
 
-  eval "$(functions $func_name | sed "s/^$func_name/$original_func_name/")"
+  functions -c $func_name $original_func_name
 
   if z.eq $behavior "call_original"; then
     eval "$func_name() {

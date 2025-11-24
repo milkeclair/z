@@ -7,6 +7,7 @@
 # example:
 #  z.t.describe "My Test Suite"; {some tests}
 z.t.describe() {
+  local REPLY
   local description=$1
 
   z.str.indent level=1 message=$description
@@ -28,6 +29,7 @@ z.t.describe() {
 # example:
 #  z.t.xdescribe "My Pending Test Suite"; {some tests}
 z.t.xdescribe() {
+  local REPLY
   local description=$1
 
   z.str.indent level=1 message=$description
