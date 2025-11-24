@@ -75,7 +75,8 @@ z.t() {
       Z_TEST_COUNT_IDX=$file_idx \
         zsh $test_file $test_file
 
-    local exit_code=$?
+    z.status
+    local exit_code=$REPLY
 
     z.t._state.failures
     local test_failures=$REPLY
@@ -92,7 +93,8 @@ z.t() {
   z.is_true $z_t_compact && z.t._show_compact_results $compact_dir $files
 
   z.t._show_totals $count_dir $files
-  local totals_failed=$?
+  z.status
+  local totals_failed=$REPLY
 
   z.is_not_null $compact_dir && z.dir.exist $compact_dir && z.dir.remove path=$compact_dir
 

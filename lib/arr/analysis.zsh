@@ -7,7 +7,7 @@
 # example:
 #  z.arr.count "a" "b" "c" #=> REPLY=3
 z.arr.count() {
-  local list=($@)
+  local list=("$@")
 
   z.return ${#list[@]}
 }

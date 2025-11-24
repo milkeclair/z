@@ -23,7 +23,7 @@ z.t.expect() {
     return 0
   fi
 
-  if z.not_eq $expect $actual; then
+  if z.not_eq "$expect" "$actual"; then
     local expect_display=${(V)expect}
     local actual_display=${(V)actual}
     z.t._log.failure.handle "message=failed: expected [ $expect_display ] but got [ $actual_display ]"
@@ -53,7 +53,7 @@ z.t.expect.not() {
     return 0
   fi
 
-  if z.eq $expect $actual; then
+  if z.eq "$expect" "$actual"; then
     local expect_display=${(V)expect}
     local actual_display=${(V)actual}
     z.t._log.failure.handle "message=failed: expected not [ $expect_display ] but got [ $actual_display ]"

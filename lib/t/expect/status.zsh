@@ -9,7 +9,8 @@
 #  some_command
 #  z.t.expect.status 0
 z.t.expect.status() {
-  local actual=$?
+  z.status
+  local actual=$REPLY
   local expect=$1
   z.arg.named skip_unmock $@ && local skip_unmock=$REPLY
 

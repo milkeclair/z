@@ -7,7 +7,7 @@
 # example:
 #  z.t.it "should do something"; {test code}
 z.t.it() {
-  REPLY=""
+  local REPLY=""
 
   local it=$1
 
@@ -75,7 +75,7 @@ z.t.it() {
 # example:
 #  z.t.xit "should do something"; {test code}
 z.t.xit() {
-  REPLY=""
+  local REPLY=""
 
   local it=$1
 

@@ -47,6 +47,7 @@ z.t._state.logs.context() {
 # example:
 #  z.t._state.logs.context.set index=0 "Updated log entry"
 z.t._state.logs.context.set() {
+  local REPLY
   z.arg.named index $@ && local context=$REPLY
   z.arg.named.shift index $@ && local value=$REPLY
 
