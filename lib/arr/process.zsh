@@ -31,10 +31,10 @@ z.arr.sort() {
 
   case $sort_by in
   asc)
-    z.return $(printf "%s\n" "${arr[@]}" | sort)
+    z.return ${(@o)arr}
     ;;
   desc)
-    z.return $(printf "%s\n" "${arr[@]}" | sort -r)
+    z.return ${(@O)arr}
     ;;
   *)
     z.return ${arr[@]}
