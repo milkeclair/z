@@ -33,6 +33,7 @@ z.arg.as() {
 # get named argument value
 #
 # $1: name of the argument (e.g., --option)
+# $default?: default value when the named argument is not found
 # $@: arguments
 # REPLY: value of the named argument|null
 # return: null
@@ -44,18 +45,36 @@ z.arg.named() {
   local name=$1
   shift 2>/dev/null
   local -a args=($@)
-  local -i arg_count=${#args[@]}
+
+  z.group "extract default value and filter arguments"; {
+    local default=""
+    local -a filtered_args=()
+    for arg in $args; do
+      if z.str.include $arg "default="; then
+        default=${arg#"default="}
+      else
+        filtered_args+=($arg)
+      fi
+    done
+
+    args=($filtered_args)
+  }
+
+  z.arr.count $args
+  local -i arg_count=$REPLY
   local -i i=1
 
-  while ((i <= arg_count)); do
+  while z.int.lteq $i $arg_count; do
     if z.is_not_null $args[i] && z.str.include $args[i] $name=; then
-      z.return ${args[i]#${name}=} && return
+      local value=${args[i]#"${name}="}
+
+      z.return ${value:-$default} && return 0
     fi
 
     ((i++))
   done
 
-  z.return
+  z.return $default
 }
 
 # remove named argument from arguments
