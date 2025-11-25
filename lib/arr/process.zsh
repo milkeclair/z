@@ -23,8 +23,7 @@ z.arr.join() {
 #  z.arr.split sep="," "a,b,c" #=> REPLY=("a" "b" "c")
 #  z.arr.split "a b c"         #=> REPLY=("a" "b" "c")
 z.arr.split() {
-  z.arg.named sep $@
-  local separator=${REPLY:-" "}
+  z.arg.named sep default=" " $@ && local separator=$REPLY
   z.arg.named.shift sep $@
 
   local str=$REPLY
@@ -74,11 +73,9 @@ z.arr.gsub() {
 #  z.arr.sort by=asc "b" "c" "a" #=> REPLY=("a" "b" "c")
 #  z.arr.sort by=desc "b" "c" "a" #=> REPLY=("c" "b" "a")
 z.arr.sort() {
-  z.arg.named by $@
-  local sort_by=${REPLY:-asc}
-  z.arg.named.shift by $@
-
-  local arr=($REPLY)
+  z.arg.named by default=asc $@
+  local sort_by=$REPLY
+  z.arg.named.shift by $@ && local arr=($REPLY)
 
   case $sort_by in
   asc)

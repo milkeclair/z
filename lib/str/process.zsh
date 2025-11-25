@@ -36,7 +36,7 @@ z.str.indent() {
 #  z.str.split str="apple|banana|cherry" delimiter=| #=> ("apple" "banana" "cherry")
 z.str.split() {
   z.arg.named str $@ && local str=$REPLY
-  z.arg.named delimiter $@ && local delimiter=${REPLY:-"|"}
+  z.arg.named delimiter default="|" $@ && local delimiter=$REPLY
 
   local IFS=$delimiter
   REPLY=(${=str})
