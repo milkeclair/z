@@ -204,6 +204,14 @@ git> q
 $
 ```
 
+```zsh
+$ z.mode z.io split="."
+z.io> oneline "This.is.a.test"
+z.io> indent level=2 "Indented line"
+z.io> q
+$
+```
+
 ## Language Server
 
 This library provides a language server.
