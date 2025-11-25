@@ -95,7 +95,7 @@ z.arg.named.shift() {
   local -i arg_count=${#args[@]}
   local -i i=1
 
-  while ((i <= arg_count)); do
+  while z.int.lteq $i $arg_count; do
     if z.is_not_null $args[i] && z.str.include $args[i] $name=; then
       ((i++)) && continue
     fi
