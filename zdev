@@ -5,6 +5,9 @@ source main.zsh
 z.io.clear
 z.io "File watching..."
 
+Z_ROOT=$PWD
+Z_TEST_ROOT=$PWD/test
+
 local fswatch_opts=(-r lib test)
 
 # fsevents_monitor is not supported in WSL, so poll_monitor will be used instead.

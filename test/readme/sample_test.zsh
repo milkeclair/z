@@ -1,7 +1,7 @@
 source ${z_main}
 
 my.argument_check() {
-  z.arg.named max $@ && local max=${REPLY:-2}
+  z.arg.named max default=2 $@ && local max=$REPLY
   z.arg.named.shift max $@
   z.arr.count $REPLY
 

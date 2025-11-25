@@ -10,8 +10,8 @@
 z.mode() {
   local REPLY
 
-  z.arg.named split $@
-  local split=${REPLY:-" "}
+  z.arg.named split default=" " $@
+  local split=$REPLY
   z.arg.named.shift split $@
 
   local prefix="$REPLY"

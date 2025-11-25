@@ -58,6 +58,22 @@ z.t.describe "z.arg.named"; {
       z.t.expect.reply.null
     }
   }
+
+  z.t.context "defaultが指定されていて、値がない場合"; {
+    z.t.it "デフォルト値を返す"; {
+      z.arg.named name name="" other=fuga default=default_value
+
+      z.t.expect.reply default_value
+    }
+  }
+
+  z.t.context "defaultが指定されていて、値がある場合"; {
+    z.t.it "指定された値を返す"; {
+      z.arg.named name name=hoge other=fuga default=default_value
+
+      z.t.expect.reply hoge
+    }
+  }
 }
 
 z.t.describe "z.arg.named.shift"; {
