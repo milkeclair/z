@@ -16,73 +16,6 @@ Provide functions with readable names for syntax that is not intuitive for me.
 
 ## Usage
 
-### Library
-
-This library provides a set of utility functions for common tasks.
-
-Functions are namespaced with `z.` prefix.
-And modules are namespaced with `z.<module>.` prefix.
-
-The following rules apply under lib.
-
-- analysis
-  - Analyze without modifying the data.
-  - The return value is placed in `REPLY`, not `return`.
-- operator
-  - Check arguments and `return` true or false.
-  - The return value is placed in the return value, not `REPLY`.
-  - It can be used in if statements.
-- process
-  - Modify the data.
-  - The return value is placed in `REPLY`, not `return`.
-
-### Testing
-
-This library provides a testing framework for writing and running tests.
-Tests are written in zsh and use a RSpec-like syntax.
-
-Run `z.t` to run all tests.
-z.t accepts the following options.
-
-- `-l, --log`
-  - Display test details.
-- `-f, --failed`
-  - Display only failed tests.
-- `-c, --compact`
-  - Display compact dot output (`.` for success, `F` for failure, `*` for pending).
-
-Tests are placed in the `test` directory.
-Tests are namespaced with `z.t.` prefix.
-And modules are namespaced with `z.t.<module>.` prefix.
-
-The following rules apply under test.
-
-- describe
-  - Describe the function or feature being tested.
-- xdescribe
-  - Skip the describe block.
-- context
-  - Describe the context in which the tests are run.
-- xcontext
-  - Skip the context block.
-- it
-  - Describe the expected behavior of the function or feature.
-- xit
-  - Skip the it block.
-- expect
-  - Assert the expected behavior of the function or feature.
-  - The expectation functions are namespaced with `z.t.expect.` prefix.
-- mock
-  - Mock a function or command.
-  - The mock is automatically restored after the test and assertion.
-  - If you want to skip restoring in assertion, use `skip_unmock` option.
-  - The mock result is placed in `REPLY`, not `return`.
-  - Modes:
-    - Default mode: Records function calls without executing original behavior.
-    - `call_original` mode: Executes original function after recording the call.
-      - `z.t.mock.call_original` function: Same as `call_original` mode.
-    - Provide custom behavior: You can provide custom behavior by passing a command as the second argument.
-
 ### Examples
 
 Script to check if the number of arguments is more than 2.
@@ -133,6 +66,102 @@ z.t.describe "my.argument_check"; {
 }
 ```
 
+### Library
+
+This library provides a set of utility functions for common tasks.
+
+Functions are namespaced with `z.` prefix.
+And modules are namespaced with `z.<module>.` prefix.
+
+The following rules apply under lib.
+
+- analysis
+  - Analyze without modifying the data.
+  - If the function has a return value, it is placed in `REPLY` (not `return`).
+- operator
+  - Check arguments and `return` true or false.
+  - If the function has a return value, it is returned (i.e. placed in the function's return value, not in `REPLY`).
+  - It can be used in if statements.
+- process
+  - Modify the data.
+  - If the function has a return value, it is placed in `REPLY` (not `return`).
+
+### Modules
+
+- arg
+  - named and positional argument parsing
+- arr
+  - join, split, unique...
+- common
+  - eq, is_null, guard...
+- debug
+  - interactive debugging
+- dir
+  - make, remove, exists...
+- file
+  - read, write, make_with_dir...
+- fn
+  - list, show, edit...
+- int
+  - gteq, lteq, eq...
+- io
+  - empty, oneline, indent...
+- mode
+  - interactive mode
+- status
+  - abstract exit status handling
+- str
+  - color, is_path_like, gsub...
+- t
+  - testing framework
+
+### Testing
+
+This library provides a testing framework for writing and running tests.
+Tests are written in zsh and use a RSpec-like syntax.
+
+Run `z.t` to run all tests.
+z.t accepts the following options.
+
+- `-l, --log`
+  - Display test details.
+- `-f, --failed`
+  - Display only failed tests.
+- `-c, --compact`
+  - Display compact dot output (`.` for success, `F` for failure, `*` for pending).
+
+Tests are placed in the `test` directory.
+Tests are namespaced with `z.t.` prefix.
+And modules are namespaced with `z.t.<module>.` prefix.
+
+The following rules apply under test.
+
+- describe
+  - Describe the function or feature being tested.
+- xdescribe
+  - Skip the describe block.
+- context
+  - Describe the context in which the tests are run.
+- xcontext
+  - Skip the context block.
+- it
+  - Describe the expected behavior of the function or feature.
+- xit
+  - Skip the it block.
+- expect
+  - Assert the expected behavior of the function or feature.
+  - The expectation functions are namespaced with `z.t.expect.` prefix.
+- mock
+  - Mock a function or command.
+  - The mock is automatically restored after the test and assertion.
+  - If you want to skip restoring in assertion, use `skip_unmock` option.
+  - The mock result is placed in `REPLY`, not `return`.
+  - Modes:
+    - Default mode: Records function calls without executing original behavior.
+    - `call_original` mode: Executes original function after recording the call.
+      - `z.t.mock.call_original` function: Same as `call_original` mode.
+    - Provide custom behavior: You can provide custom behavior by passing a command as the second argument.
+
 ## Debug
 
 This library provides a debug function for interactive debugging.
@@ -151,14 +180,28 @@ Available commands in debug mode:
 - `h` or `help`: Show help.
 - `q` or `quit` or `exit`: Exit the script.
 
-Example:
-
 ```zsh
 my.function() {
   local var="hello"
   z.debug
   z.io $var
 }
+```
+
+## Mode
+
+This library provides an interactive mode.
+It is similar to debug, but with a prefix applied to the functions being executed.
+For example, it is used in operations such as git, where the motivation is to avoid repeatedly typing 'git' as a prefix.
+
+```zsh
+$ z.mode git
+git> status
+git> add file.txt
+git> commit -m "Add file.txt"
+git> push origin branch
+git> q
+$
 ```
 
 ## Language Server
