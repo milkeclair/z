@@ -5,6 +5,8 @@ done
 z.eq $z_mode "test" && {
   trap "z.t.teardown" EXIT
 
+  z.t._state.fn_originals.save
+
   command_not_found_handler() {
     local cmd=$1
     z.t._mark_not_found_error "message=command not found: $cmd"

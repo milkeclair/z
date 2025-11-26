@@ -11,6 +11,8 @@ z.t.it() {
 
   local it=$1
 
+  z.t._state.fn_originals.restore
+
   z.t._state.skip.describe
   local describe_skip=$REPLY
   z.t._state.skip.context
@@ -78,6 +80,8 @@ z.t.xit() {
   local REPLY=""
 
   local it=$1
+
+  z.t._state.fn_originals.restore
 
   z.t._state.compact
   local is_compact=$REPLY
