@@ -68,13 +68,7 @@ z.fn.delete() {
     return 1
   fi
 
-  local key=""
-  for k v in ${(kv)z_fn_set}; do
-    if z.eq $k $name; then
-      key=$v
-      break
-    fi
-  done
+  local key=${z_fn_set[$name]}
 
   unfunction $key
   unset "z_fn_set[$name]"
