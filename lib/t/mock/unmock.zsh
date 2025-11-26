@@ -60,6 +60,8 @@ z.t.mock.unmock.all() {
 z.t.mock.unmock._is_not_skippable() {
   local skip_unmock=$1
 
+  z.is_true $skip_unmock && return 1
+
   z.t._state.mock_originals
-  z.not_eq $skip_unmock true && z.is_not_null ${REPLY[@]+x}
+  z.is_not_null ${REPLY[@]+x}
 }

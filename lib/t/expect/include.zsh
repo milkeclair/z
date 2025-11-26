@@ -24,6 +24,7 @@ z.t.expect.include() {
   fi
 
   z.t.mock.unmock.all skip_unmock=$skip_unmock
+  z.t.fn.unfn.all
 }
 
 # expect that actual excludes expect
@@ -52,4 +53,5 @@ z.t.expect.exclude() {
   fi
 
   z.t.mock.unmock.all skip_unmock=$skip_unmock
+  z.t.fn.unfn.all
 }

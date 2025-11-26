@@ -30,6 +30,7 @@ z.t.expect() {
   fi
 
   z.t.mock.unmock.all skip_unmock=$skip_unmock
+  z.t.fn.unfn.all
 }
 
 # expect that actual does not equal expect
@@ -60,4 +61,5 @@ z.t.expect.not() {
   fi
 
   z.t.mock.unmock.all skip_unmock=$skip_unmock
+  z.t.fn.unfn.all
 }
