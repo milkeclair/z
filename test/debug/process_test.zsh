@@ -120,7 +120,6 @@ z.t.describe "z.debug.enable"; {
   }
 }
 
-
 z.t.describe "z.debug.disable"; {
   z.t.context "Z_DEBUGが1の場合"; {
     z.t.it "Z_DEBUGを1から変更しない"; {

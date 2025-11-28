@@ -3,7 +3,7 @@ source ${z_main}
 z.t.describe "z.file.exist"; {
   z.t.context "ファイルが存在する場合"; {
     z.t.it "0を返す"; {
-      z.file.make_with_dir path=/tmp/z_t/file_has.txt
+      z.file.make.with_dir path=/tmp/z_t/file_has.txt
 
       z.file.exist /tmp/z_t/file_has.txt
 
@@ -31,7 +31,7 @@ z.t.describe "z.file.not_exist"; {
 
   z.t.context "ファイルが存在する場合"; {
     z.t.it "1を返す"; {
-      z.file.make_with_dir path=/tmp/z_t/file_has.txt
+      z.file.make.with_dir path=/tmp/z_t/file_has.txt
 
       z.file.not_exist /tmp/z_t/file_has.txt
 

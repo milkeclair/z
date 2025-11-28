@@ -1,19 +1,19 @@
 export z_root=${Z_ROOT:-${${(%):-%N}:A:h}}
 
 local -A z_modules=(
-  ["arg"]="analysis:operator:process"
-  ["arr"]="analysis:operator:process"
-  ["common"]="dsl:operator:wrap"
-  ["debug"]="process"
-  ["dir"]="operator:process"
-  ["file"]="operator:process"
-  ["fn"]="analysis:operator:process"
-  ["int"]="operator"
-  ["io"]="process"
-  ["mode"]="process"
-  ["status"]="analysis:operator"
-  ["str"]="color:operator:process"
-  ["t"]="state:dsl:expect:log:mock:process"
+  [arg]="analysis:operator:process"
+  [arr]="analysis:operator:process"
+  [common]="dsl:operator:wrap"
+  [debug]="process"
+  [dir]="operator:process"
+  [file]="operator:process"
+  [fn]="analysis:operator:process"
+  [int]="operator"
+  [io]="process"
+  [mode]="process"
+  [status]="analysis:operator"
+  [str]="operator:process"
+  [t]="state:dsl:expect:log:mock:process"
 )
 
 for module in ${(k)z_modules}; do
