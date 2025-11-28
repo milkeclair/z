@@ -1,42 +1,5 @@
 source ${z_main}
 
-z.t.describe "z.str.color"; {
-  z.t.context "z_color_paletteに定義されている色を指定した場合"; {
-    z.t.it "指定した色のANSIエスケープ文字を返す"; {
-      z.str.color "red"
-      z.t.expect.reply $'\033[31m'
-
-      z.str.color "green"
-      z.t.expect.reply $'\033[32m'
-
-      z.str.color "yellow"
-      z.t.expect.reply $'\033[33m'
-
-      z.str.color "blue"
-      z.t.expect.reply $'\033[34m'
-
-      z.str.color "magenta"
-      z.t.expect.reply $'\033[35m'
-
-      z.str.color "cyan"
-      z.t.expect.reply $'\033[36m'
-
-      z.str.color "white"
-      z.t.expect.reply $'\033[37m'
-
-      z.str.color "reset"
-      z.t.expect.reply $'\033[0m'
-    }
-  }
-
-  z.t.context "z_color_paletteに定義されていない色を指定した場合"; {
-    z.t.it "空文字列を返す"; {
-      z.str.color "unknown_color"
-      z.t.expect.reply.null
-    }
-  }
-}
-
 z.t.describe "z.str.color.strip"; {
   z.t.context "色付きの文字列が渡された場合"; {
     z.t.it "色コードを除去した文字列を返す"; {

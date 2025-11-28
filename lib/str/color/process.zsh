@@ -1,28 +1,3 @@
-typeset -gA z_color_palette=(
-  [red]=$'\033[31m'
-  [green]=$'\033[32m'
-  [yellow]=$'\033[33m'
-  [blue]=$'\033[34m'
-  [magenta]=$'\033[35m'
-  [cyan]=$'\033[36m'
-  [white]=$'\033[37m'
-  [reset]=$'\033[0m'
-)
-
-# get color code by name
-#
-# $1: color name
-# REPLY: color code
-# return: null
-#
-# example:
-#  z.str.color red #=> "\033[31m"
-z.str.color() {
-  local selected=$1
-
-  z.return ${z_color_palette[$selected]}
-}
-
 # strip color codes from a string
 #
 # $1: string with color codes
