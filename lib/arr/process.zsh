@@ -11,7 +11,7 @@ done
 # example:
 #  z.arr.join "a" "b" "c" #=> REPLY="a b c"
 z.arr.join() {
-  local -a arr=($@)
+  local arr=($@)
 
   z.return "${(j: :)arr}"
 }
@@ -27,11 +27,11 @@ z.arr.join() {
 #  z.arr.split sep="," "a,b,c" #=> REPLY=("a" "b" "c")
 #  z.arr.split "a b c"         #=> REPLY=("a" "b" "c")
 z.arr.split() {
-  z.arg.named sep default=" " $@ && local separator=$REPLY
+  z.arg.named sep $@ default=" " && local separator=$REPLY
   z.arg.named.shift sep $@
 
   local str=$REPLY
-  local -a arr
+  local arr
 
   IFS=$separator read -rA arr <<<"$str"
 
@@ -77,7 +77,7 @@ z.arr.gsub() {
 #  z.arr.sort by=asc "b" "c" "a" #=> REPLY=("a" "b" "c")
 #  z.arr.sort by=desc "b" "c" "a" #=> REPLY=("c" "b" "a")
 z.arr.sort() {
-  z.arg.named by default=asc $@
+  z.arg.named by $@ default=asc
   local sort_by=$REPLY
   z.arg.named.shift by $@ && local arr=($REPLY)
 

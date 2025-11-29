@@ -11,5 +11,5 @@ z.file.write.last() {
   z.arg.named path $@ && local file=$REPLY
   z.arg.named content $@ && local content=$REPLY
 
-  echo "$content" >> "$file"
+  echo "$content" >> $file
 }

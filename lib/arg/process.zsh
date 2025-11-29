@@ -15,7 +15,7 @@ done
 #  z.arg.as name=$1 as="--version|-v" return=1 #=> REPLY=1
 #  z.arg.as name=$1 as="-h|--help" #=> REPLY=""
 z.arg.as() {
-  local -a args=($@)
+  local args=($@)
   z.arg.named name $args && local name=$REPLY
   z.arg.named.shift name $args && args=($REPLY)
   z.arg.named as $args && local as=$REPLY
@@ -23,7 +23,7 @@ z.arg.as() {
   z.arg.named return $args && local return=$REPLY
 
   z.str.split str=$as
-  local -a split_as=($REPLY[@])
+  local split_as=($REPLY[@])
   local matched=false
 
   for alias in $split_as; do
@@ -48,11 +48,11 @@ z.arg.as() {
 z.arg.named() {
   local name=$1
   shift 2>/dev/null
-  local -a args=($@)
+  local args=($@)
 
   z.group "extract default value and filter arguments"; {
     local default=""
-    local -a filtered_args=()
+    local filtered_args=()
     for arg in $args; do
       if z.str.include $arg "default="; then
         default=${arg#"default="}
@@ -65,8 +65,8 @@ z.arg.named() {
   }
 
   z.arr.count $args
-  local -i arg_count=$REPLY
-  local -i i=1
+  local arg_count=$REPLY
+  local i=1
 
   while z.int.lteq $i $arg_count; do
     if z.is_not_null $args[i] && z.str.include $args[i] $name=; then

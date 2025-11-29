@@ -26,7 +26,7 @@ z.t._mark_not_found_error() {
   z.arg.named message $@ && local message=$REPLY
 
   local error_flag_file="/tmp/z_t_error_$$"
-  z.file.make.with_dir path=$error_flag_file
+  z.file.make path=$error_flag_file with_dir=true
   echo $message >> $error_flag_file
 
   return 127

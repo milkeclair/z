@@ -17,11 +17,11 @@
 #  z.t some_test_name
 z.t() {
   z.t._extract_options $@
-  local -a z_t_options=($REPLY)
+  local z_t_options=($REPLY)
   local z_t_all_log=${z_t_options[1]:-"false"}
   local z_t_failed_only=${z_t_options[2]:-"false"}
   local z_t_compact=${z_t_options[3]:-"false"}
-  local -a test_names=()
+  local test_names=()
   if z.int.gt ${#z_t_options[@]} 3; then
     test_names=(${z_t_options[@]:3})
   fi
@@ -118,11 +118,11 @@ z.t._extract_options() {
   local log="false"
   local failed="false"
   local compact="false"
-  local -a test_names=()
+  local test_names=()
 
   if z.int.gteq $arg_count 1; then
     for ((i=1; i<=arg_count; i++)); do
-      z.arg.get index=$i $@
+      z.arg.get $@ index=$i
       local current_arg=$REPLY
 
       z.arg.as name=$current_arg "as=-l|--log" return=true
@@ -147,7 +147,7 @@ z.t._extract_options() {
     done
   fi
 
-  local -a result=($log $failed $compact)
+  local result=($log $failed $compact)
   if z.int.gt ${#test_names[@]} 0; then
     result+=($test_names)
   fi
@@ -163,7 +163,7 @@ z.t._extract_options() {
 # example:
 #  z.t._remove_tmp_dir
 z.t._remove_tmp_dir() {
-  z.dir.exist /tmp/z_t && rm -rf /tmp/z_t
+  z.dir.remove path="/tmp/z_t"
 }
 
 # internal: setup temporary directories for test execution
@@ -199,7 +199,7 @@ z.t._setup_temp_dirs() {
 #  z.t._show_compact_results $compact_dir $files
 z.t._show_compact_results() {
   local compact_dir=$1 && shift
-  local -a files=($@)
+  local files=($@)
 
   z.io.empty
   z.io.empty
@@ -212,7 +212,7 @@ z.t._show_compact_results() {
   done
 
   setopt local_options null_glob
-  local -a failure_files=("$compact_dir"/*_failure.txt)
+  local failure_files=("$compact_dir"/*_failure.txt)
   for failure_file in ${failure_files[@]}; do
     z.file.exist $failure_file && cat $failure_file
   done
@@ -229,7 +229,7 @@ z.t._show_compact_results() {
 #  z.t._show_totals $count_dir $files
 z.t._show_totals() {
   local count_dir=$1 && shift
-  local -a files=($@)
+  local files=($@)
 
   local total_tests=0
   local total_failures=0
@@ -241,7 +241,7 @@ z.t._show_totals() {
     local count_file="$count_dir/${file_idx}_count.txt"
     if z.file.exist $count_file; then
       local counts=$(cat $count_file)
-      local -a count_array=(${=counts})
+      local count_array=(${=counts})
 
       ((total_tests += ${count_array[1]:-0}))
       ((total_failures += ${count_array[2]:-0}))

@@ -9,8 +9,8 @@
 #  z.arr.eq "apple banana cherry" "apple banana cherry"  #=> 0 (true)
 #  z.arr.eq "apple banana cherry" "apple grape cherry"  #=> 1 (false)
 z.arr.eq() {
-  local -a arr1=($1)
-  local -a arr2=($2)
+  local arr1=($1)
+  local arr2=($2)
 
   z.arr.count $arr1
   local count1=$REPLY
@@ -37,8 +37,8 @@ z.arr.eq() {
 #  z.arr.not_eq "apple banana cherry" "apple banana cherry"  #=> 1 (false)
 #  z.arr.not_eq "apple banana cherry" "apple grape cherry"  #=> 0 (true)
 z.arr.not_eq() {
-  local -a arr1=($1)
-  local -a arr2=($2)
+  local arr1=($1)
+  local arr2=($2)
 
   z.arr.count $arr1
   local count1=$REPLY
@@ -67,7 +67,7 @@ z.arr.not_eq() {
 z.arr.include() {
   z.arg.named target $@ && local target=$REPLY
   z.arg.named.shift target $@
-  local -a list=($REPLY)
+  local list=($REPLY)
 
   for item in ${list[@]}; do
     z.eq $item $target && return 0
@@ -89,7 +89,7 @@ z.arr.include() {
 z.arr.exclude() {
   z.arg.named target $@ && local target=$REPLY
   z.arg.named.shift target $@
-  local -a list=($REPLY)
+  local list=($REPLY)
 
   for item in ${list[@]}; do
     z.eq $item $target && return 1
@@ -106,11 +106,11 @@ z.arr.exclude() {
 # return: 0|1
 #
 # example:
-#  z.arr.true_all operation="z.int.is_positive arg" "1" "2" "3"  #=> 0 (true)
-#  z.arr.true_all operation="z.int.is_positive arg" "1" "-2" "3"  #=> 1 (false)
+#  z.arr.true_all "1" "2" "3" operation="z.int.is_positive arg"  #=> 0 (true)
+#  z.arr.true_all "1" "-2" "3" operation="z.int.is_positive arg"  #=> 1 (false)
 z.arr.true_all() {
   z.arg.named operation $@
-  z.arr.gsub search="arg" replace="\$item" $REPLY
+  z.arr.gsub $REPLY search="arg" replace="\$item"
   local operation=$REPLY
   z.arg.named.shift operation $@
 
@@ -131,11 +131,11 @@ z.arr.true_all() {
 # return: 0|1
 #
 # example:
-#  z.arr.false_all operation="z.int.is_positive arg" "-1" "-2" "-3"  #=> 0 (true)
-#  z.arr.false_all operation="z.int.is_positive arg" "-1" "2" "-3"  #=> 1 (false)
+#  z.arr.false_all "-1" "-2" "-3" operation="z.int.is_positive arg"  #=> 0 (true)
+#  z.arr.false_all "-1" "2" "-3" operation="z.int.is_positive arg"  #=> 1 (false)
 z.arr.false_all() {
   z.arg.named operation $@
-  z.arr.gsub search="arg" replace="\$item" $REPLY
+  z.arr.gsub $REPLY search="arg" replace="\$item"
   local operation=$REPLY
   z.arg.named.shift operation $@
 

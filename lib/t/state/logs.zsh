@@ -1,4 +1,4 @@
-typeset -a z_t_logs=()
+typeset z_t_logs=()
 
 # logs array management
 #

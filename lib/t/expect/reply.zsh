@@ -61,9 +61,9 @@ z.t.expect.reply.not_null() {
 #  REPLY=("a" "b" "c")
 #  z.t.expect.reply.arr "a" "b" "c"
 z.t.expect.reply.arr() {
-  local -a actual=($REPLY)
+  local actual=($REPLY)
 
-  local -a args=($@)
+  local args=($@)
   local skip_unmock=""
   z.arg.last $args
 
@@ -72,7 +72,7 @@ z.t.expect.reply.arr() {
     args=(${args[1,-2]})
   fi
 
-  local -a expect=($args)
+  local expect=($args)
 
   z.arr.join ${expect[@]}
   local expect_str=$REPLY

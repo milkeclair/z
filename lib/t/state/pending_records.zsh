@@ -1,4 +1,4 @@
-typeset -a z_t_pending_records=()
+typeset z_t_pending_records=()
 
 # get pending records
 #
