@@ -18,6 +18,6 @@ z.io.indent.color() {
 
   z.is_null ${args[1]} && return 0
 
-  z.str.color.decorate color=$color message="${args[@]}"
+  z.str.color.decorate color=$color message="${args[*]}"
   z.io.indent level=$level $REPLY
 }

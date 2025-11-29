@@ -47,6 +47,6 @@ z.io.success.indent() {
   z.arg.named.shift level $@
   local -a args=($REPLY)
 
-  z.str.indent level=$level message="${args[@]}"
+  z.str.indent level=$level message="${args[*]}"
   z.io.success $REPLY
 }

@@ -14,6 +14,10 @@ for indent_file in ${z_root}/lib/io/indent/*.zsh; do
   source $indent_file
 done
 
+for oneline_file in ${z_root}/lib/io/oneline/*.zsh; do
+  source $oneline_file
+done
+
 # printing provided arguments
 #
 # $@: arguments
