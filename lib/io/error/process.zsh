@@ -7,9 +7,11 @@
 # example:
 #  z.io.error.line "error1" "error2"
 z.io.error.line() {
-  # $@: print arguments
-  # return: null
-  print -u2 -l -- $@
+  z.is_null $1 && print -u2 -l -- "" && return 0
+
+  z.arr.join.line "$@"
+  z.str.color.red $REPLY
+  print -u2 -l -- $REPLY
 }
 
 # printing provided arguments with indentation to stderr

@@ -123,9 +123,10 @@ z.io.read() {
 # example:
 #  z.io.error "error message"
 z.io.error() {
-  # $@: print arguments
-  # return: null
-  print -u2 -- $@
+  z.is_null $1 && print -u2 -- "" && return 0
+
+  z.str.color.red "$@"
+  print -u2 -- $REPLY
 }
 
 # printing provided arguments with color

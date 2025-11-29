@@ -5,7 +5,7 @@ z.t.describe "z.io.error.line"; {
     z.t.it "引数を改行区切りで標準エラー出力に出力する"; {
       local output=$(z.io.error.line "error" "message" 2>&1 1>/dev/null)
 
-      z.t.expect $output $'error\nmessage'
+      z.t.expect $output $'\033[31merror\nmessage\033[0m'
     }
   }
 
@@ -23,7 +23,7 @@ z.t.describe "z.io.error.indent"; {
     z.t.it "指定されたインデントレベルで引数をインデントして標準エラー出力に出力する"; {
       local output=$(z.io.error.indent level=3 "error message" 2>&1 1>/dev/null)
 
-      z.t.expect $output "      error message"
+      z.t.expect $output $'\033[31m      error message\033[0m'
     }
   }
 
@@ -31,7 +31,7 @@ z.t.describe "z.io.error.indent"; {
     z.t.it "インデントのみを標準エラー出力に出力する"; {
       local output=$(z.io.error.indent level=3 "error" 2>&1 1>/dev/null)
 
-      z.t.expect $output "      error"
+      z.t.expect $output $'\033[31m      error\033[0m'
     }
   }
 }

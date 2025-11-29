@@ -125,7 +125,7 @@ z.t.describe "z.io.error"; {
     z.t.it "引数を標準エラー出力に出力する"; {
       local output=$(z.io.error "error message" 2>&1 1>/dev/null)
 
-      z.t.expect $output "error message"
+      z.t.expect $output $'\033[31merror message\033[0m'
     }
   }
 
