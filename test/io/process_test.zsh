@@ -120,9 +120,45 @@ z.t.describe "z.io.indent"; {
   }
 }
 
+z.t.describe "z.io.success"; {
+  z.t.context "引数が渡された場合"; {
+    z.t.it "引数を緑色で標準出力に出力する"; {
+      local output=$(z.io.success "Operation completed successfully")
+
+      z.t.expect $output $'\033[32mOperation completed successfully\033[0m'
+    }
+  }
+
+  z.t.context "引数が渡されなかった場合"; {
+    z.t.it "何も出力しない"; {
+      local output=$(z.io.success)
+
+      z.t.expect $output ""
+    }
+  }
+}
+
+z.t.describe "z.io.warn"; {
+  z.t.context "引数が渡された場合"; {
+    z.t.it "引数を黄色で標準出力に出力する"; {
+      local output=$(z.io.warn "This is a warning message")
+
+      z.t.expect $output $'\033[33mThis is a warning message\033[0m'
+    }
+  }
+
+  z.t.context "引数が渡されなかった場合"; {
+    z.t.it "何も出力しない"; {
+      local output=$(z.io.warn)
+
+      z.t.expect $output ""
+    }
+  }
+}
+
 z.t.describe "z.io.error"; {
   z.t.context "引数が渡された場合"; {
-    z.t.it "引数を標準エラー出力に出力する"; {
+    z.t.it "引数を赤色で標準エラー出力に出力する"; {
       local output=$(z.io.error "error message" 2>&1 1>/dev/null)
 
       z.t.expect $output $'\033[31merror message\033[0m'

@@ -114,6 +114,30 @@ z.io.read() {
   read -r REPLY
 }
 
+# printing provided arguments with green color
+#
+# $@: arguments
+# REPLY: null
+# return: null
+#
+# example:
+#  z.io.success "Operation completed successfully."
+z.io.success() {
+  z.io.color green "$@"
+}
+
+# printing provided arguments with yellow color
+#
+# $@: arguments
+# REPLY: null
+# return: null
+#
+# example:
+#  z.io.warn "This is a warning message."
+z.io.warn() {
+  z.io.color yellow "$@"
+}
+
 # printing provided arguments to stderr
 #
 # $@: arguments
