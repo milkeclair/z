@@ -127,3 +127,22 @@ z.io.error() {
   # return: null
   print -u2 -- $@
 }
+
+# printing provided arguments with color
+#
+# $1: color name
+# $2: arguments
+# REPLY: null
+# return: null
+#
+# example:
+#  z.io.color red "Hello World" #=> (prints "Hello World" in red color)
+z.io.color() {
+  local color=$1
+  shift
+
+  z.is_null $1 && return 0
+
+  z.str.color.decorate color=$color message="$*"
+  z.io $REPLY
+}

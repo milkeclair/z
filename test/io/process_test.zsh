@@ -137,3 +137,29 @@ z.t.describe "z.io.error"; {
     }
   }
 }
+
+z.t.describe "z.io.color"; {
+  z.t.context "引数が渡された場合"; {
+    z.t.it "引数を指定された色で装飾して出力する"; {
+      local output=$(z.io.color red "Error occurred")
+
+      z.t.expect $output $'\033[31mError occurred\033[0m'
+    }
+  }
+
+  z.t.context "引数が渡されなかった場合"; {
+    z.t.it "何も出力しない"; {
+      local output=$(z.io.color red) # zls: ignore
+
+      z.t.expect $output ""
+    }
+  }
+
+  z.t.context "無効な色が指定された場合"; {
+    z.t.it "装飾せずに引数を出力する"; {
+      local output=$(z.io.color invalid_color "Test message")
+
+      z.t.expect $output "Test message"
+    }
+  }
+}
