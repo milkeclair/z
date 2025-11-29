@@ -91,7 +91,7 @@ z.install._copy_files() {
     return 1
   fi
 
-  local -a files=("main.zsh" "install.zsh" "uninstall.zsh")
+  local files=("main.zsh" "install.zsh" "uninstall.zsh")
 
   for file in $files; do
     if [[ -f "$source_dir/$file" ]]; then

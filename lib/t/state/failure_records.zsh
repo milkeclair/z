@@ -1,4 +1,4 @@
-typeset -a z_t_failure_records=()
+typeset z_t_failure_records=()
 
 # get failure records
 #

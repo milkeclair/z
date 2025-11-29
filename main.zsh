@@ -17,7 +17,7 @@ local -A z_modules=(
 )
 
 for module in ${(k)z_modules}; do
-  local -a parts=(${(s/:/)z_modules[$module]})
+  local parts=(${(s/:/)z_modules[$module]})
 
   for part in $parts; do
     source "${z_root}/lib/${module}/${part}.zsh"

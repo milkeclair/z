@@ -115,7 +115,7 @@ z.t._log.show.failures_and_pendings() {
   z.int.is_zero $failures && z.int.is_zero $pendings && return 0
 
   z.t._log.records.collect
-  local -a sorted_records=($REPLY)
+  local sorted_records=($REPLY)
 
   z.arr.count $sorted_records
   z.int.is_zero $REPLY && return 0

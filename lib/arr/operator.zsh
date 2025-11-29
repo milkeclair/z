@@ -9,8 +9,8 @@
 #  z.arr.eq "apple banana cherry" "apple banana cherry"  #=> 0 (true)
 #  z.arr.eq "apple banana cherry" "apple grape cherry"  #=> 1 (false)
 z.arr.eq() {
-  local -a arr1=($1)
-  local -a arr2=($2)
+  local arr1=($1)
+  local arr2=($2)
 
   z.arr.count $arr1
   local count1=$REPLY
@@ -37,8 +37,8 @@ z.arr.eq() {
 #  z.arr.not_eq "apple banana cherry" "apple banana cherry"  #=> 1 (false)
 #  z.arr.not_eq "apple banana cherry" "apple grape cherry"  #=> 0 (true)
 z.arr.not_eq() {
-  local -a arr1=($1)
-  local -a arr2=($2)
+  local arr1=($1)
+  local arr2=($2)
 
   z.arr.count $arr1
   local count1=$REPLY
@@ -67,7 +67,7 @@ z.arr.not_eq() {
 z.arr.include() {
   z.arg.named target $@ && local target=$REPLY
   z.arg.named.shift target $@
-  local -a list=($REPLY)
+  local list=($REPLY)
 
   for item in ${list[@]}; do
     z.eq $item $target && return 0
@@ -89,7 +89,7 @@ z.arr.include() {
 z.arr.exclude() {
   z.arg.named target $@ && local target=$REPLY
   z.arg.named.shift target $@
-  local -a list=($REPLY)
+  local list=($REPLY)
 
   for item in ${list[@]}; do
     z.eq $item $target && return 1

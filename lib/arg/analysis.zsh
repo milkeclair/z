@@ -8,9 +8,9 @@
 # example:
 #  z.arg.get index=2 "a" "b" "c" #=> "b"
 z.arg.get() {
-  z.arg.named index $@ && local -i index=$REPLY
+  z.arg.named index $@ && local index=$REPLY
   z.arg.named.shift index $@
-  local -a args=($REPLY)
+  local args=($REPLY)
   z.arr.count $args
 
   z.int.lteq $index $REPLY && z.return $args[$index] || z.return

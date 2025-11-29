@@ -33,7 +33,7 @@ z.io.oneline.color() {
 z.io.oneline.indent() {
   z.arg.named level $@ && local level=$REPLY
   z.arg.named.shift level $@
-  local -a args=($REPLY)
+  local args=($REPLY)
 
   z.str.indent level=$level message="${args[*]}"
   z.io.oneline $REPLY

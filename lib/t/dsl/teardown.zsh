@@ -11,7 +11,7 @@ z.t.teardown() {
 
   local error_flag_file="/tmp/z_t_error_$$"
   if z.file.exist $error_flag_file; then
-    local -a error_lines
+    local error_lines
     error_lines=("${(@f)$(<$error_flag_file)}")
     z.arr.count $error_lines
     local error_count=$REPLY

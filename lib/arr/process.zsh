@@ -11,7 +11,7 @@ done
 # example:
 #  z.arr.join "a" "b" "c" #=> REPLY="a b c"
 z.arr.join() {
-  local -a arr=($@)
+  local arr=($@)
 
   z.return "${(j: :)arr}"
 }
@@ -31,7 +31,7 @@ z.arr.split() {
   z.arg.named.shift sep $@
 
   local str=$REPLY
-  local -a arr
+  local arr
 
   IFS=$separator read -rA arr <<<"$str"
 

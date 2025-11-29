@@ -113,7 +113,7 @@ z.io.line() {
 z.io.indent() {
   z.arg.named level $@ && local level=$REPLY
   z.arg.named.shift level $@
-  local -a args=($REPLY)
+  local args=($REPLY)
   local indent=""
 
   for ((i=0; i<level; i++)); do

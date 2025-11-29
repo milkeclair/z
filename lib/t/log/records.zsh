@@ -9,13 +9,13 @@ z.t._log.records.collect() {
   z.t._state.failed_only
   local failed_only=$REPLY
 
-  local -a all_records=()
+  local all_records=()
 
   z.t._state.failure_records
-  local -a failure_records=($REPLY)
+  local failure_records=($REPLY)
   for record in ${failure_records[@]}; do
     z.str.split str=$record delimiter=:
-    local -a parts=($REPLY)
+    local parts=($REPLY)
     local d_idx=$parts[1]
     local c_idx=$parts[2]
     local i_idx=$parts[3]
@@ -28,10 +28,10 @@ z.t._log.records.collect() {
 
   if z.is_false $failed_only; then
     z.t._state.pending_records
-    local -a pending_records=($REPLY)
+    local pending_records=($REPLY)
     for record in ${pending_records[@]}; do
       z.str.split str=$record delimiter=:
-      local -a parts=($REPLY)
+      local parts=($REPLY)
       local d_idx=$parts[1]
       local c_idx=$parts[2]
       local i_idx=$parts[3]
@@ -45,7 +45,7 @@ z.t._log.records.collect() {
   z.arr.count $all_records
   z.int.is_zero $REPLY && { z.return ""; return 0; }
 
-  local -a sorted_records=(${(o)all_records})
+  local sorted_records=(${(o)all_records})
   z.return ${sorted_records[@]}
 }
 
@@ -58,7 +58,7 @@ z.t._log.records.collect() {
 # example:
 #  z.t._log.records.display ${records[@]}
 z.t._log.records.display() {
-  local -a sorted_records=($@)
+  local sorted_records=($@)
 
   local prev_d_idx=""
   local prev_c_idx=""
@@ -66,7 +66,7 @@ z.t._log.records.display() {
 
   for record in ${sorted_records[@]}; do
     z.str.split str=$record delimiter=:
-    local -a parts=($REPLY)
+    local parts=($REPLY)
     local record_type=$parts[4]
     local d_idx=$parts[5]
     local c_idx=$parts[6]
