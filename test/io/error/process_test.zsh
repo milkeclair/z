@@ -13,7 +13,7 @@ z.t.describe "z.io.error.color"; {
     z.t.it "何も出力しない"; {
       local output=$(z.io.error.color red 2>&1 1>/dev/null)
 
-      z.t.expect $output ""
+      z.t.expect.null $output
     }
   }
 }
@@ -31,7 +31,7 @@ z.t.describe "z.io.error.line"; {
     z.t.it "何も出力しない"; {
       local output=$(z.io.error.line 2>&1 1>/dev/null)
 
-      z.t.expect $output ""
+      z.t.expect.null $output
     }
   }
 }

@@ -117,10 +117,10 @@ z.t.describe "z.str.split"; {
   z.t.context "空文字列が渡された場合"; {
     z.t.it "空の配列を返す"; {
       z.str.split str=""
-      z.t.expect.reply.arr
+      z.t.expect.reply.null
 
       z.str.split str="" delimiter=","
-      z.t.expect.reply.arr
+      z.t.expect.reply.null
     }
   }
 }
@@ -152,10 +152,10 @@ z.t.describe "z.str.gsub"; {
   z.t.context "空文字列が渡された場合"; {
     z.t.it "空文字列を返す"; {
       z.str.gsub str="" search="a" replace="b"
-      z.t.expect.reply ""
+      z.t.expect.reply.null
 
       z.str.gsub str="" search="" replace="b"
-      z.t.expect.reply ""
+      z.t.expect.reply.null
     }
   }
 }

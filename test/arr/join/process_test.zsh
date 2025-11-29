@@ -5,7 +5,7 @@ z.t.describe "z.arr.join.line"; {
     z.t.it "引数を改行区切りで連結してREPLYに格納する"; {
       z.arr.join.line "a" "b" "c"
 
-      z.t.expect $REPLY $'a\nb\nc'
+      z.t.expect.reply $'a\nb\nc'
     }
   }
 
@@ -13,7 +13,7 @@ z.t.describe "z.arr.join.line"; {
     z.t.it "REPLYを空文字列に設定する"; {
       z.arr.join.line
 
-      z.t.expect $REPLY ""
+      z.t.expect.reply.null
     }
   }
 }

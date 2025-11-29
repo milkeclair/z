@@ -13,7 +13,7 @@ z.t.describe "z.io"; {
     z.t.it "空行を出力する"; {
       local output=$(z.io)
 
-      z.t.expect $output ""
+      z.t.expect.null $output
     }
   }
 }
@@ -23,7 +23,7 @@ z.t.describe "z.io.empty"; {
     z.t.it "空行を出力する"; {
       local output=$(z.io.empty)
 
-      z.t.expect $output ""
+      z.t.expect.null $output
     }
   }
 }
@@ -51,7 +51,7 @@ z.t.describe "z.io.oneline"; {
     z.t.it "何も出力しない"; {
       local output=$(z.io.oneline)
 
-      z.t.expect $output ""
+      z.t.expect.null $output
     }
   }
 }
@@ -71,7 +71,7 @@ z.t.describe "z.io.null"; {
     z.t.it "コマンドを実行し、標準出力と標準エラー出力を/dev/nullにリダイレクトする"; {
       local output=$(z.io.null ls -la 2>&1)
 
-      z.t.expect $output ""
+      z.t.expect.null $output
     }
   }
 
@@ -79,7 +79,7 @@ z.t.describe "z.io.null"; {
     z.t.it "標準入力を/dev/nullにリダイレクトする"; {
       local output=$(z.io "This will be discarded" | z.io.null)
 
-      z.t.expect $output ""
+      z.t.expect.null $output
     }
   }
 }
@@ -97,7 +97,7 @@ z.t.describe "z.io.line"; {
     z.t.it "何も出力しない"; {
       local output=$(z.io.line)
 
-      z.t.expect $output ""
+      z.t.expect.null $output
     }
   }
 }
@@ -133,7 +133,7 @@ z.t.describe "z.io.success"; {
     z.t.it "何も出力しない"; {
       local output=$(z.io.success)
 
-      z.t.expect $output ""
+      z.t.expect.null $output
     }
   }
 }
@@ -151,7 +151,7 @@ z.t.describe "z.io.warn"; {
     z.t.it "何も出力しない"; {
       local output=$(z.io.warn)
 
-      z.t.expect $output ""
+      z.t.expect.null $output
     }
   }
 }
@@ -169,7 +169,7 @@ z.t.describe "z.io.error"; {
     z.t.it "何も出力しない"; {
       local output=$(z.io.error 2>&1 1>/dev/null)
 
-      z.t.expect $output ""
+      z.t.expect.null $output
     }
   }
 }
@@ -187,7 +187,7 @@ z.t.describe "z.io.color"; {
     z.t.it "何も出力しない"; {
       local output=$(z.io.color red) # zls: ignore
 
-      z.t.expect $output ""
+      z.t.expect.null $output
     }
   }
 
