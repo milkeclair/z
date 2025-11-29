@@ -1,59 +1,56 @@
-for indent_file in ${z_root}/lib/io/warn/indent/*.zsh; do
-  source $indent_file
-done
-
-# printing provided arguments to standard output in provided color
+# printing provided arguments in one line without newline at the end to standard output
 #
-# $color: color name (default: yellow)
 # $@: arguments
+# $color?: color name
+# $indent?: indent level
 # REPLY: null
 # return: null
 #
 # example:
-#  z.io.warn.color color=yellow "warn message"
-z.io.warn.color() {
-  local args=($@)
+#  z.io.warn.oneline "warn message"
+z.io.warn.oneline() {
+  z.arg.named color default=yellow $@ && local color=$REPLY
+  z.arg.named indent $@ && local indent=$REPLY
+  z.arg.named.shift color $@
+  z.arg.named.shift indent $REPLY
 
-  z.arg.named color default=yellow $args && local color=$REPLY
-  z.arg.named.shift color $args && args=($REPLY)
+  z.is_not_null $indent && z.str.indent level=$indent message="$*"
+  z.is_not_null $color && z.str.color.decorate color=$color message="$REPLY"
 
-  z.arr.count $args
-  z.int.eq $REPLY 0 && return 0
-
-  z.str.color.decorate color=$color message="${args[*]}"
-  z.io $REPLY
+  z.io.oneline $REPLY
 }
 
 # printing provided arguments line by line to standard output
 #
 # $@: arguments
+# $color?: color name
+# $indent?: indent level
 # REPLY: null
 # return: null
 #
 # example:
 #  z.io.warn.line "warn1" "warn2"
 z.io.warn.line() {
-  z.is_null $1 && return 0
-
-  z.arr.join.line "$@"
-  z.str.color.yellow $REPLY
-  z.io.line $REPLY
-}
-
-# printing provided arguments with indentation to standard output
-#
-# $level: indent level (number of 2-space indents)
-# $@: arguments
-# REPLY: null
-# return: null
-#
-# example:
-#  z.io.warn.indent level=2 "warn message" #=> "    warn message"
-z.io.warn.indent() {
-  z.arg.named level $@ && local level=$REPLY
-  z.arg.named.shift level $@
+  z.arg.named color default=yellow $@ && local color=$REPLY
+  z.arg.named indent $@ && local indent=$REPLY
+  z.arg.named.shift color $@
+  z.arg.named.shift indent $REPLY
   local args=($REPLY)
 
-  z.str.indent level=$level message="${args[*]}"
-  z.io.warn $REPLY
+  z.guard; {
+    z.is_null $args && return
+  }
+
+  local lines=()
+  for arg in $args; do
+    local line=$arg
+    z.is_not_null $indent && z.str.indent level=$indent message="$line" && line=$REPLY
+    lines+=($line)
+  done
+
+  z.arr.join.line $lines
+  local message=$REPLY
+  z.is_not_null $color && z.str.color.decorate color=$color message="$REPLY" && message=$REPLY
+
+  print -- $message
 }

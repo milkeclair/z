@@ -19,13 +19,13 @@ z.t.describe "z.mode"; {
     }
 
     z.t.it "splitを指定した場合はそれを間に入れる"; {
-      z.t.mock name="z.io.indent"
       z.t.mock name=z.io.oneline
+      z.t.mock name=z.io.line
 
-      z.mode z.io split=. <<< "indent level=1 'Hello'"$'\n'"q"
+      z.mode z.io split=. <<< "line indent=1 'Hello'"$'\n'"q"
 
-      z.t.mock.result name="z.io.indent"
-      z.t.expect.reply "level=1 Hello"
+      z.t.mock.result name=z.io.line
+      z.t.expect.reply "indent=1 Hello"
     }
 
     z.t.it "splitを指定しない場合はスペースを空ける"; {

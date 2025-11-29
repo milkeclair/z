@@ -10,28 +10,31 @@ for error_file in ${z_root}/lib/io/error/*.zsh; do
   source $error_file
 done
 
-for indent_file in ${z_root}/lib/io/indent/*.zsh; do
-  source $indent_file
-done
-
-for oneline_file in ${z_root}/lib/io/oneline/*.zsh; do
-  source $oneline_file
-done
-
-for line_file in ${z_root}/lib/io/line/*.zsh; do
-  source $line_file
-done
-
 # printing provided arguments
 #
 # $@: arguments
+# $color?: color name
+# $indent?: indent level
 # REPLY: null
 # return: null
 #
 # example:
 #  z.io "hello" "world" #=> hello\nworld
 z.io() {
-  print -- $@
+  z.arg.named color $@ && local color=$REPLY
+  z.arg.named indent $@ && local indent=$REPLY
+  z.arg.named.shift color $@
+  z.arg.named.shift indent $REPLY
+  local args=($REPLY)
+
+  z.guard; {
+    z.is_null $args && return
+  }
+
+  z.is_not_null $indent && z.str.indent level=$indent message="$args"
+  z.is_not_null $color && z.str.color.decorate color=$color message="$REPLY"
+
+  print -- $REPLY
 }
 
 # printing empty line
@@ -48,6 +51,8 @@ z.io.empty() {
 # printing provided arguments in one line without newline at the end
 #
 # $@: arguments
+# $color?: color name
+# $indent?: indent level
 # REPLY: null
 # return: null
 #
@@ -56,7 +61,20 @@ z.io.empty() {
 #  z.io.oneline "hello"
 #  z.io.oneline "world"         #=> helloworld
 z.io.oneline() {
-  print -n -- $@
+  z.arg.named color $@ && local color=$REPLY
+  z.arg.named indent $@ && local indent=$REPLY
+  z.arg.named.shift color $@
+  z.arg.named.shift indent $REPLY
+  local args=($REPLY)
+
+  z.guard; {
+    z.is_null $args && return
+  }
+
+  z.is_not_null $indent && z.str.indent level=$indent message="$args"
+  z.is_not_null $color && z.str.color.decorate color=$color message="$REPLY"
+
+  print -n -- $REPLY
 }
 
 # clear the terminal screen
@@ -90,37 +108,34 @@ z.io.null() {
 # printing provided arguments line by line
 #
 # $@: arguments
+# $color?: color name
+# $indent?: indent level
 # REPLY: null
 # return: null
 #
 # example:
 #  z.io.line "hello" "world" #=> hello\nworld
 z.io.line() {
-  # $@: print arguments
-  # return: null
-  print -l -- $@
-}
-
-# printing provided arguments with indentation
-#
-# $level: indent level (number of 2-space indents)
-# $@: arguments
-# REPLY: null
-# return: null
-#
-# example:
-#  z.io.indent level=2 "hello" "world" #=> "    hello world"
-z.io.indent() {
-  z.arg.named level $@ && local level=$REPLY
-  z.arg.named.shift level $@
+  z.arg.named color $@ && local color=$REPLY
+  z.arg.named indent $@ && local indent=$REPLY
+  z.arg.named.shift color $@
+  z.arg.named.shift indent $REPLY
   local args=($REPLY)
-  local indent=""
 
-  for ((i=0; i<level; i++)); do
-    indent+="  "
+  z.guard; {
+    z.is_null $args && return
+  }
+
+  local lines=()
+  for arg in $args; do
+    local line=$arg
+
+    z.is_not_null $indent && z.str.indent level=$indent message="$line" && line=$REPLY
+    z.is_not_null $color && z.str.color.decorate color=$color message="$line" && line=$REPLY
+    lines+=($line)
   done
 
-  z.io "$indent${args[@]}"
+  print -l -- $lines
 }
 
 # reading a line from standard input and storing it in REPLY
@@ -137,54 +152,64 @@ z.io.read() {
 # printing provided arguments with green color
 #
 # $@: arguments
+# $color?: color name
+# $indent?: indent level
 # REPLY: null
 # return: null
 #
 # example:
 #  z.io.success "Operation completed successfully."
 z.io.success() {
-  z.io.color green "$@"
+  z.arg.named color default=green $@ && local color=$REPLY
+  z.arg.named indent $@ && local indent=$REPLY
+  z.arg.named.shift color $@
+  z.arg.named.shift indent $REPLY
+
+  z.io color=$color indent=$indent "$@"
 }
 
 # printing provided arguments with yellow color
 #
 # $@: arguments
+# $color?: color name
+# $indent?: indent level
 # REPLY: null
 # return: null
 #
 # example:
 #  z.io.warn "This is a warning message."
 z.io.warn() {
-  z.io.color yellow "$@"
+  z.arg.named color default=yellow $@ && local color=$REPLY
+  z.arg.named indent $@ && local indent=$REPLY
+  z.arg.named.shift color $@
+  z.arg.named.shift indent $REPLY
+
+  z.io color=$color indent=$indent "$@"
 }
 
 # printing provided arguments to stderr
 #
 # $@: arguments
+# $color?: color name
+# $indent?: indent level
 # REPLY: null
 # return: null
 #
 # example:
 #  z.io.error "error message"
 z.io.error() {
-  z.io.error.color color=red "$@"
-}
+  z.arg.named color default=red $@ && local color=$REPLY
+  z.arg.named indent $@ && local indent=$REPLY
+  z.arg.named.shift color $@
+  z.arg.named.shift indent $REPLY
+  local args=($REPLY)
 
-# printing provided arguments with color
-#
-# $1: color name
-# $@: arguments
-# REPLY: null
-# return: null
-#
-# example:
-#  z.io.color red "Hello World" #=> (prints "Hello World" in red color)
-z.io.color() {
-  local color=$1
-  shift
+  z.guard; {
+    z.is_null $args && return
+  }
 
-  z.is_null $1 && return 0
+  z.is_not_null $indent && z.str.indent level=$indent message="$args"
+  z.is_not_null $color && z.str.color.decorate color=$color message="$REPLY"
 
-  z.str.color.decorate color=$color message="$*"
-  z.io $REPLY
+  print -u2 -- $REPLY
 }
