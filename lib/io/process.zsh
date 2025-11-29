@@ -31,10 +31,10 @@ z.io() {
     z.is_null $args && return
   }
 
-  z.is_not_null $indent && z.str.indent level=$indent message="$args"
-  z.is_not_null $color && z.str.color.decorate color=$color message="$REPLY"
+  z.is_not_null $indent && z.str.indent level=$indent message="$args" && args=($REPLY)
+  z.is_not_null $color && z.str.color.decorate color=$color message="$args" && args=($REPLY)
 
-  print -- $REPLY
+  print -- $args
 }
 
 # printing empty line
@@ -71,10 +71,10 @@ z.io.oneline() {
     z.is_null $args && return
   }
 
-  z.is_not_null $indent && z.str.indent level=$indent message="$args"
-  z.is_not_null $color && z.str.color.decorate color=$color message="$REPLY"
+  z.is_not_null $indent && z.str.indent level=$indent message="$args" && args=($REPLY)
+  z.is_not_null $color && z.str.color.decorate color=$color message="$args" && args=($REPLY)
 
-  print -n -- $REPLY
+  print -n -- $args
 }
 
 # clear the terminal screen
@@ -208,8 +208,8 @@ z.io.error() {
     z.is_null $args && return
   }
 
-  z.is_not_null $indent && z.str.indent level=$indent message="$args"
-  z.is_not_null $color && z.str.color.decorate color=$color message="$REPLY"
+  z.is_not_null $indent && z.str.indent level=$indent message="$args" && args=($REPLY)
+  z.is_not_null $color && z.str.color.decorate color=$color message="$args" && args=($REPLY)
 
-  print -u2 -- $REPLY
+  print -u2 -- $args
 }
