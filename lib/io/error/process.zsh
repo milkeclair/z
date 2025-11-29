@@ -13,11 +13,12 @@ z.io.error.oneline() {
   z.arg.named indent $@ && local indent=$REPLY
   z.arg.named.shift color $@
   z.arg.named.shift indent $REPLY
+  local args=($REPLY)
 
-  z.is_not_null $indent && z.str.indent level=$indent message="$*"
-  z.is_not_null $color && z.str.color.decorate color=$color message="$REPLY"
+  z.is_not_null $indent && z.str.indent level=$indent message="$args" && args=($REPLY)
+  z.is_not_null $color && z.str.color.decorate color=$color message="$args" && args=($REPLY)
 
-  print -u2 -n -- $REPLY
+  print -u2 -n -- $args
 }
 
 # printing provided arguments line by line to stderr
