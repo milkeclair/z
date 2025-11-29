@@ -1,5 +1,25 @@
+for success_file in ${z_root}/lib/io/success/*.zsh; do
+  source $success_file
+done
+
+for warn_file in ${z_root}/lib/io/warn/*.zsh; do
+  source $warn_file
+done
+
 for error_file in ${z_root}/lib/io/error/*.zsh; do
   source $error_file
+done
+
+for indent_file in ${z_root}/lib/io/indent/*.zsh; do
+  source $indent_file
+done
+
+for oneline_file in ${z_root}/lib/io/oneline/*.zsh; do
+  source $oneline_file
+done
+
+for line_file in ${z_root}/lib/io/line/*.zsh; do
+  source $line_file
 done
 
 # printing provided arguments
@@ -100,7 +120,7 @@ z.io.indent() {
     indent+="  "
   done
 
-  print -- "$indent${args[@]}"
+  z.io "$indent${args[@]}"
 }
 
 # reading a line from standard input and storing it in REPLY
@@ -114,6 +134,30 @@ z.io.read() {
   read -r REPLY
 }
 
+# printing provided arguments with green color
+#
+# $@: arguments
+# REPLY: null
+# return: null
+#
+# example:
+#  z.io.success "Operation completed successfully."
+z.io.success() {
+  z.io.color green "$@"
+}
+
+# printing provided arguments with yellow color
+#
+# $@: arguments
+# REPLY: null
+# return: null
+#
+# example:
+#  z.io.warn "This is a warning message."
+z.io.warn() {
+  z.io.color yellow "$@"
+}
+
 # printing provided arguments to stderr
 #
 # $@: arguments
@@ -123,7 +167,24 @@ z.io.read() {
 # example:
 #  z.io.error "error message"
 z.io.error() {
-  # $@: print arguments
-  # return: null
-  print -u2 -- $@
+  z.io.error.color color=red "$@"
+}
+
+# printing provided arguments with color
+#
+# $1: color name
+# $2: arguments
+# REPLY: null
+# return: null
+#
+# example:
+#  z.io.color red "Hello World" #=> (prints "Hello World" in red color)
+z.io.color() {
+  local color=$1
+  shift
+
+  z.is_null $1 && return 0
+
+  z.str.color.decorate color=$color message="$*"
+  z.io $REPLY
 }

@@ -1,3 +1,29 @@
+for indent_file in ${z_root}/lib/io/error/indent/*.zsh; do
+  source $indent_file
+done
+
+# printing provided arguments to stderr in provided color
+#
+# $color: color name (default: red)
+# $@: arguments
+# REPLY: null
+# return: null
+#
+# example:
+#  z.io.error.color color=red "error message"
+z.io.error.color() {
+  local args=($@)
+
+  z.arg.named color default=red $args && local color=$REPLY
+  z.arg.named.shift color $args && args=($REPLY)
+
+  z.arr.count $args
+  z.int.eq $REPLY 0 && return 0
+
+  z.str.color.decorate color=$color message="${args[*]}"
+  print -u2 -- $REPLY
+}
+
 # printing provided arguments line by line to stderr
 #
 # $@: arguments
@@ -7,9 +33,11 @@
 # example:
 #  z.io.error.line "error1" "error2"
 z.io.error.line() {
-  # $@: print arguments
-  # return: null
-  print -u2 -l -- $@
+  z.is_null $1 && return 0
+
+  z.arr.join.line "$@"
+  z.str.color.red $REPLY
+  print -u2 -l -- $REPLY
 }
 
 # printing provided arguments with indentation to stderr
@@ -24,12 +52,8 @@ z.io.error.line() {
 z.io.error.indent() {
   z.arg.named level $@ && local level=$REPLY
   z.arg.named.shift level $@
-  local -a args=($REPLY)
-  local indent=""
+  local args=($REPLY)
 
-  for ((i=0; i<level; i++)); do
-    indent+="  "
-  done
-
-  z.io.error "$indent${args[@]}"
+  z.str.indent level=$level message="${args[*]}"
+  z.io.error $REPLY
 }

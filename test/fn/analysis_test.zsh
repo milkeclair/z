@@ -30,9 +30,9 @@ z.t.describe "z.fn.list"; {
       z.fn.list
 
       z.t.mock.result name="z.io"
-      z.t.expect.reply "" skip_unmock=true
+      z.t.expect.reply.null skip_unmock=true
       z.t.mock.result name="z.io.indent"
-      z.t.expect.reply ""
+      z.t.expect.reply.null
     }
   }
 }

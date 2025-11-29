@@ -61,3 +61,29 @@ z.t.expect.not() {
 
   z.t.mock.unmock.all skip_unmock=$skip_unmock
 }
+
+# expect that actual is null (empty string)
+#
+# $1: actual value
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.expect.null $actual
+z.t.expect.null() {
+  local actual=$1
+  z.t.expect $actual ""
+}
+
+# expect that actual is not null (not empty string)
+#
+# $1: actual value
+# REPLY: null
+# return: null
+#
+# example:
+#  z.t.expect.not.null $actual
+z.t.expect.not.null() {
+  local actual=$1
+  z.t.expect.not $actual ""
+}

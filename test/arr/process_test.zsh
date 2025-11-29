@@ -15,7 +15,7 @@ z.t.describe "z.arr.join"; {
     z.t.it "空文字列を返す"; {
       z.arr.join
 
-      z.t.expect.reply ""
+      z.t.expect.reply.null
     }
   }
 }
