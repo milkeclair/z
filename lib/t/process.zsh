@@ -118,7 +118,7 @@ z.t._extract_options() {
   local log="false"
   local failed="false"
   local compact="false"
-  local  test_names=()
+  local test_names=()
 
   if z.int.gteq $arg_count 1; then
     for ((i=1; i<=arg_count; i++)); do
@@ -241,7 +241,7 @@ z.t._show_totals() {
     local count_file="$count_dir/${file_idx}_count.txt"
     if z.file.exist $count_file; then
       local counts=$(cat $count_file)
-      local  count_array=(${=counts})
+      local count_array=(${=counts})
 
       ((total_tests += ${count_array[1]:-0}))
       ((total_failures += ${count_array[2]:-0}))
