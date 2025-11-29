@@ -165,7 +165,7 @@ z.io.success() {
   z.arg.named.shift color $@
   z.arg.named.shift indent $REPLY
 
-  z.io "$@" color=$color indent=$indent
+  z.io $REPLY color=$color indent=$indent
 }
 
 # printing provided arguments with yellow color
@@ -184,7 +184,7 @@ z.io.warn() {
   z.arg.named.shift color $@
   z.arg.named.shift indent $REPLY
 
-  z.io "$@" color=$color indent=$indent
+  z.io $REPLY color=$color indent=$indent
 }
 
 # printing provided arguments to stderr
