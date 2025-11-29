@@ -36,7 +36,7 @@ z.t.describe "z.io.warn.line"; {
   }
 
   z.t.context "引数が渡されなかった場合"; {
-    z.t.it "空行を出力する"; {
+    z.t.it "何も出力しない"; {
       local output=$(z.io.warn.line 2>/dev/null)
 
       z.t.expect.null $output
@@ -54,10 +54,10 @@ z.t.describe "z.io.warn.indent"; {
   }
 
   z.t.context "引数が渡されなかった場合"; {
-    z.t.it "インデントのみを標準出力に出力する"; {
-      local output=$(z.io.warn.indent level=3 "warn" 2>/dev/null)
+    z.t.it "インデントを標準出力に出力する"; {
+      local output=$(z.io.warn.indent level=3 2>/dev/null)
 
-      z.t.expect $output $'\033[33m      warn\033[0m'
+      z.t.expect $output $'\033[33m      \033[0m'
     }
   }
 }
