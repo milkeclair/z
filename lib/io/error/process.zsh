@@ -46,11 +46,7 @@ z.io.error.indent() {
   z.arg.named level $@ && local level=$REPLY
   z.arg.named.shift level $@
   local -a args=($REPLY)
-  local indent=""
 
-  for ((i=0; i<level; i++)); do
-    indent+="  "
-  done
-
-  z.io.error "$indent${args[@]}"
+  z.str.indent level=$level message="${args[@]}"
+  z.io.error $REPLY
 }
