@@ -1,3 +1,7 @@
+for join_file in ${z_root}/lib/arr/join/*.zsh; do
+  source $join_file
+done
+
 # join array elements with a space
 #
 # $@: array elements
