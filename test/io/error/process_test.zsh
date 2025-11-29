@@ -1,5 +1,23 @@
 source ${z_main}
 
+z.t.describe "z.io.error.color"; {
+  z.t.context "引数が渡された場合"; {
+    z.t.it "引数を指定された色で標準エラー出力に出力する"; {
+      local output=$(z.io.error.color red "error message" 2>&1 1>/dev/null)
+
+      z.t.expect $output $'\033[31merror message\033[0m'
+    }
+  }
+
+  z.t.context "引数が渡されなかった場合"; {
+    z.t.it "何も出力しない"; {
+      local output=$(z.io.error.color red 2>&1 1>/dev/null)
+
+      z.t.expect $output ""
+    }
+  }
+}
+
 z.t.describe "z.io.error.line"; {
   z.t.context "引数が渡された場合"; {
     z.t.it "引数を改行区切りで標準エラー出力に出力する"; {

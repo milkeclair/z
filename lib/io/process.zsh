@@ -147,10 +147,7 @@ z.io.warn() {
 # example:
 #  z.io.error "error message"
 z.io.error() {
-  z.is_null $1 && print -u2 -- "" && return 0
-
-  z.str.color.red "$@"
-  print -u2 -- $REPLY
+  z.io.error.color red "$@"
 }
 
 # printing provided arguments with color

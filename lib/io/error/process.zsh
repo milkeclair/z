@@ -1,3 +1,22 @@
+# printing provided arguments to stderr in provided color
+#
+# $1: color name
+# $2: arguments
+# REPLY: null
+# return: null
+#
+# example:
+#  z.io.error.color red "error message"
+z.io.error.color() {
+  local color=$1
+  shift
+
+  z.is_null $1 && return 0
+
+  z.str.color.red "$@"
+  print -u2 -- $REPLY
+}
+
 # printing provided arguments line by line to stderr
 #
 # $@: arguments
