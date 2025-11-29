@@ -173,7 +173,7 @@ z.io.error() {
 # printing provided arguments with color
 #
 # $1: color name
-# $2: arguments
+# $@: arguments
 # REPLY: null
 # return: null
 #

@@ -11,7 +11,7 @@ z.t.describe "z.io.success.color"; {
 
   z.t.context "色指定が省略された場合"; {
     z.t.it "緑色で出力する"; {
-      local output=$(z.io.success.color "success message" 2>/dev/null)
+      local output=$(z.io.success.color "success message" 2>/dev/null) # zls: ignore
 
       z.t.expect $output $'\033[32msuccess message\033[0m'
     }

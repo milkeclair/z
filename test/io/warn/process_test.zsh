@@ -11,7 +11,7 @@ z.t.describe "z.io.warn.color"; {
 
   z.t.context "色指定が省略された場合"; {
     z.t.it "黄色で出力する"; {
-      local output=$(z.io.warn.color "warn message" 2>/dev/null)
+      local output=$(z.io.warn.color "warn message" 2>/dev/null) # zls: ignore
 
       z.t.expect $output $'\033[33mwarn message\033[0m'
     }
