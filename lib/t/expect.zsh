@@ -69,7 +69,7 @@ z.t.expect.not() {
 # return: null
 #
 # example:
-#  z.expect.null $actual
+#  z.t.expect.null $actual
 z.t.expect.null() {
   local actual=$1
   z.t.expect $actual ""
@@ -82,7 +82,7 @@ z.t.expect.null() {
 # return: null
 #
 # example:
-#  z.expect.not.null $actual
+#  z.t.expect.not.null $actual
 z.t.expect.not.null() {
   local actual=$1
   z.t.expect.not $actual ""
