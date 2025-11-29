@@ -167,7 +167,7 @@ z.io.warn() {
 # example:
 #  z.io.error "error message"
 z.io.error() {
-  z.io.error.color red "$@"
+  z.io.error.color color=red "$@"
 }
 
 # printing provided arguments with color

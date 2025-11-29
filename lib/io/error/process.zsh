@@ -4,20 +4,23 @@ done
 
 # printing provided arguments to stderr in provided color
 #
-# $1: color name
-# $2: arguments
+# $color: color name (default: red)
+# $@: arguments
 # REPLY: null
 # return: null
 #
 # example:
-#  z.io.error.color red "error message"
+#  z.io.error.color color=red "error message"
 z.io.error.color() {
-  local color=$1
-  shift
+  local args=($@)
 
-  z.is_null $1 && return 0
+  z.arg.named color default=red $args && local color=$REPLY
+  z.arg.named.shift color $args && args=($REPLY)
 
-  z.str.color.red "$@"
+  z.arr.count $args
+  z.int.eq $REPLY 0 && return 0
+
+  z.str.color.decorate color=$color message="${args[*]}"
   print -u2 -- $REPLY
 }
 

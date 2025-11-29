@@ -1,19 +1,22 @@
 # printing provided arguments to standard output in provided color
 #
-# $1: color name
-# $2: arguments
+# $color: color name (default: yellow)
+# $@: arguments
 # REPLY: null
 # return: null
 #
 # example:
-#  z.io.warn.color yellow "warn message"
+#  z.io.warn.color color=yellow "warn message"
 z.io.warn.color() {
-  local color=$1
-  shift
+  local args=($@)
 
-  z.is_null $1 && return 0
+  z.arg.named color default=yellow $args && local color=$REPLY
+  z.arg.named.shift color $args && args=($REPLY)
 
-  z.str.color.yellow "$@"
+  z.arr.count $args
+  z.int.eq $REPLY 0 && return 0
+
+  z.str.color.decorate color=$color message="${args[*]}"
   z.io $REPLY
 }
 
