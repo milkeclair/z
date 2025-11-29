@@ -2,6 +2,10 @@ for error_file in ${z_root}/lib/io/error/*.zsh; do
   source $error_file
 done
 
+for indent_file in ${z_root}/lib/io/indent/*.zsh; do
+  source $indent_file
+done
+
 # printing provided arguments
 #
 # $@: arguments
@@ -100,7 +104,7 @@ z.io.indent() {
     indent+="  "
   done
 
-  print -- "$indent${args[@]}"
+  z.io "$indent${args[@]}"
 }
 
 # reading a line from standard input and storing it in REPLY
