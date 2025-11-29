@@ -1,7 +1,3 @@
-for make_file in ${z_root}/lib/file/make/*.zsh; do
-  source ${make_file}
-done
-
 for read_file in ${z_root}/lib/file/read/*.zsh; do
   source ${read_file}
 done
@@ -13,13 +9,19 @@ done
 # create a file if it does not exist
 #
 # $path: file path
+# $with_dir?: create parent directories if not exist(default: false)
 # REPLY: null
 # return: null
 #
 # example:
-#  z.file.make path="/path/to/file.txt"
+#  z.file.make path="/path/to/file.txt" with_dir=true
 z.file.make() {
   z.arg.named path $@ && local file=$REPLY
+  z.arg.named with_dir default=false $@ && local with_dir=$REPLY
+
+  if z.is_true $with_dir; then
+    z.dir.make path=$(dirname $file)
+  fi
 
   z.file.not_exist $file && touch $file >/dev/null 2>&1
 }

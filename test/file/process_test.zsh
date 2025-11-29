@@ -35,6 +35,28 @@ z.t.describe "z.file.make"; {
       z.t.expect.status.true
     }
   }
+
+  z.t.context "with_dirオプションがtrueの場合"; {
+    z.t.it "親ディレクトリも作成する"; {
+      z.file.make path=/tmp/z_t/parent_dir/nested/file_make.txt with_dir=true
+
+      z.file.exist /tmp/z_t/parent_dir/nested/file_make.txt
+      z.dir.exist /tmp/z_t/parent_dir/nested
+
+      z.t.expect.status.true
+    }
+  }
+
+  z.t.context "with_dirオプションがfalseの場合"; {
+    z.t.it "親ディレクトリを作成しない"; {
+      z.file.make path=/tmp/z_t/another_parent_dir/nested/file_make.txt with_dir=false
+
+      z.file.not_exist /tmp/z_t/another_parent_dir/nested/file_make.txt
+      z.dir.not_exist /tmp/z_t/another_parent_dir/nested
+
+      z.t.expect.status.true
+    }
+  }
 }
 
 z.t.describe "z.file.write"; {
