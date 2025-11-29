@@ -36,7 +36,7 @@ z.t.describe "z.io.error.line"; {
   }
 
   z.t.context "引数が渡されなかった場合"; {
-    z.t.it "空行を出力する"; {
+    z.t.it "何も出力しない"; {
       local output=$(z.io.error.line 2>&1 1>/dev/null)
 
       z.t.expect.null $output

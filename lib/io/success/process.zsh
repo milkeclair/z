@@ -33,7 +33,7 @@ z.io.success.color() {
 # example:
 #  z.io.success.line "success1" "success2"
 z.io.success.line() {
-  z.is_null $1 && z.io.line "" && return 0
+  z.is_null $1 && return 0
 
   z.arr.join.line "$@"
   z.str.color.green $REPLY

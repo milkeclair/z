@@ -33,7 +33,7 @@ z.io.error.color() {
 # example:
 #  z.io.error.line "error1" "error2"
 z.io.error.line() {
-  z.is_null $1 && print -u2 -l -- "" && return 0
+  z.is_null $1 && return 0
 
   z.arr.join.line "$@"
   z.str.color.red $REPLY

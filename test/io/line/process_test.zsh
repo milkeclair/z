@@ -10,7 +10,7 @@ z.t.describe "z.io.line.color"; {
   }
 
   z.t.context "引数が渡されなかった場合"; {
-    z.t.it "空行を出力する"; {
+    z.t.it "何も出力しない"; {
       local output=$(z.io.line.color blue)
 
       z.t.expect.null $output

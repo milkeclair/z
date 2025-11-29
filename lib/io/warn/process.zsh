@@ -33,7 +33,7 @@ z.io.warn.color() {
 # example:
 #  z.io.warn.line "warn1" "warn2"
 z.io.warn.line() {
-  z.is_null $1 && z.io.line "" && return 0
+  z.is_null $1 && return 0
 
   z.arr.join.line "$@"
   z.str.color.yellow $REPLY
