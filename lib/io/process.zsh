@@ -1,3 +1,7 @@
+for success_file in ${z_root}/lib/io/success/*.zsh; do
+  source $success_file
+done
+
 for error_file in ${z_root}/lib/io/error/*.zsh; do
   source $error_file
 done
