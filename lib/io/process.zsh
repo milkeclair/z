@@ -18,6 +18,10 @@ for oneline_file in ${z_root}/lib/io/oneline/*.zsh; do
   source $oneline_file
 done
 
+for line_file in ${z_root}/lib/io/line/*.zsh; do
+  source $line_file
+done
+
 # printing provided arguments
 #
 # $@: arguments

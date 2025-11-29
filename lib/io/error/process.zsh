@@ -1,3 +1,7 @@
+for indent_file in ${z_root}/lib/io/error/indent/*.zsh; do
+  source $indent_file
+done
+
 # printing provided arguments to stderr in provided color
 #
 # $1: color name
@@ -45,7 +49,7 @@ z.io.error.line() {
 z.io.error.indent() {
   z.arg.named level $@ && local level=$REPLY
   z.arg.named.shift level $@
-  local -a args=($REPLY)
+  local args=($REPLY)
 
   z.str.indent level=$level message="${args[*]}"
   z.io.error $REPLY
