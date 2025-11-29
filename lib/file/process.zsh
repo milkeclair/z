@@ -17,7 +17,7 @@ done
 #  z.file.make path="/path/to/file.txt" with_dir=true
 z.file.make() {
   z.arg.named path $@ && local file=$REPLY
-  z.arg.named with_dir default=false $@ && local with_dir=$REPLY
+  z.arg.named with_dir $@ default=false && local with_dir=$REPLY
 
   if z.is_true $with_dir; then
     z.dir.make path=$(dirname $file)
@@ -39,7 +39,7 @@ z.file.write() {
   z.arg.named path $@ && local file=$REPLY
   z.arg.named content $@ && local content=$REPLY
 
-  echo -n "$content" > "$file"
+  echo -n "$content" > $file
 }
 
 # read content from a file
@@ -54,7 +54,7 @@ z.file.read() {
   z.arg.named path $@ && local file=$REPLY
 
   if z.file.exist $file; then
-    REPLY=$(cat "$file")
+    REPLY=$(cat $file)
   else
     z.return
   fi

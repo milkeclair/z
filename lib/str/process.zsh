@@ -37,10 +37,8 @@ z.str.color() {
 # example:
 #  z.str.indent level=2 message="Hello" #=> "    Hello"
 z.str.indent() {
-  z.arg.named level $@
-  local level=$REPLY
-  z.arg.named message $@
-  local message=$REPLY
+  z.arg.named level $@ && local level=$REPLY
+  z.arg.named message $@ && local message=$REPLY
 
   if z.int.not_match $level || z.int.lt $level 0; then
     level=0
@@ -65,7 +63,7 @@ z.str.indent() {
 #  z.str.split str="apple|banana|cherry" delimiter=| #=> ("apple" "banana" "cherry")
 z.str.split() {
   z.arg.named str $@ && local str=$REPLY
-  z.arg.named delimiter default="|" $@ && local delimiter=$REPLY
+  z.arg.named delimiter $@ default="|" && local delimiter=$REPLY
 
   local IFS=$delimiter
   REPLY=(${=str})

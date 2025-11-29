@@ -36,8 +36,8 @@ z.arg.empty() {
 # return: 0|1
 #
 # example:
-#  z.arg.is_valid length=2 "a" "b" "c" #=> 0
-#  z.arg.is_valid length=4 "a" "b" "c" #=> 1
+#  z.arg.is_valid "a" "b" "c" length=2 #=> 0
+#  z.arg.is_valid "a" "b" "c" length=4 #=> 1
 z.arg.is_valid() {
   z.arg.named length $@ && local length=$REPLY
   z.arg.named.shift length $@ && local args=($REPLY)

@@ -107,20 +107,20 @@ z.t.describe "z.arr.exclude"; {
 z.t.describe "z.arr.true_all"; {
   z.t.context "すべて条件に一致する配列要素が渡された場合"; {
     z.t.it "trueを返す"; {
-      z.arr.true_all operation="z.str.include arg le" "celebrate" "elegant" "level" "lemon"
+      z.arr.true_all "celebrate" "elegant" "level" "lemon" operation="z.str.include arg le"
       z.t.expect.status.true
 
-      z.arr.true_all operation="z.int.is_positive arg" "1" "2" "3" "4" "5"
+      z.arr.true_all "1" "2" "3" "4" "5" operation="z.int.is_positive arg"
       z.t.expect.status.true
     }
   }
 
   z.t.context "一部条件に一致しない配列要素が渡された場合"; {
     z.t.it "falseを返す"; {
-      z.arr.true_all operation="z.str.include arg le" "celebrate" "elegant" "world" "lemon"
+      z.arr.true_all "celebrate" "elegant" "world" "lemon" operation="z.str.include arg le"
       z.t.expect.status.false
 
-      z.arr.true_all operation="z.int.is_positive arg" "1" "-2" "3" "4" "5"
+      z.arr.true_all "1" "-2" "3" "4" "5" operation="z.int.is_positive arg"
       z.t.expect.status.false
     }
   }
@@ -139,20 +139,20 @@ z.t.describe "z.arr.true_all"; {
 z.t.describe "z.arr.false_all"; {
   z.t.context "すべて条件に一致しない配列要素が渡された場合"; {
     z.t.it "trueを返す"; {
-      z.arr.false_all operation="z.str.include arg le" "world" "python" "bash"
+      z.arr.false_all "world" "python" "bash" operation="z.str.include arg le"
       z.t.expect.status.true
 
-      z.arr.false_all operation="z.int.is_positive arg" "-1" "-2" "-3"
+      z.arr.false_all "-1" "-2" "-3" operation="z.int.is_positive arg"
       z.t.expect.status.true
     }
   }
 
   z.t.context "一部条件に一致する配列要素が渡された場合"; {
     z.t.it "falseを返す"; {
-      z.arr.false_all operation="z.str.include arg le" "celebrate" "world" "python"
+      z.arr.false_all "celebrate" "world" "python" operation="z.str.include arg le"
       z.t.expect.status.false
 
-      z.arr.false_all operation="z.int.is_positive arg" "-1" "2" "-3"
+      z.arr.false_all "-1" "2" "-3" operation="z.int.is_positive arg"
       z.t.expect.status.false
     }
   }

@@ -122,7 +122,7 @@ z.t._extract_options() {
 
   if z.int.gteq $arg_count 1; then
     for ((i=1; i<=arg_count; i++)); do
-      z.arg.get index=$i $@
+      z.arg.get $@ index=$i
       local current_arg=$REPLY
 
       z.arg.as name=$current_arg "as=-l|--log" return=true
@@ -163,7 +163,7 @@ z.t._extract_options() {
 # example:
 #  z.t._remove_tmp_dir
 z.t._remove_tmp_dir() {
-  z.dir.exist /tmp/z_t && rm -rf /tmp/z_t
+  z.dir.remove path="/tmp/z_t"
 }
 
 # internal: setup temporary directories for test execution

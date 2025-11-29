@@ -45,10 +45,10 @@ z.t.describe "z.arr.split"; {
 z.t.describe "z.arr.gsub"; {
   z.t.context "検索文字列と置換文字列が指定された場合"; {
     z.t.it "配列要素内の検索文字列が置換文字列に置き換えられた配列を返す"; {
-      z.arr.gsub search=a replace=x "a b a" "c a d"
+      z.arr.gsub "a b a" "c a d" search=a replace=x
       z.t.expect.reply.arr "x b x" "c x d"
 
-      z.arr.gsub search=one replace=1 "one two one" "three one four"
+      z.arr.gsub "one two one" "three one four" search=one replace=1
       z.t.expect.reply.arr "1 two 1" "three 1 four"
     }
   }

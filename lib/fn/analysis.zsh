@@ -12,7 +12,7 @@ z.fn.list() {
 
   for name in ${(k)z_fn_set}; do
     z.io $name
-    z.io indent=1 "Defined in ${z_fn_source[$name]}"
+    z.io "Defined in ${z_fn_source[$name]}" indent=1
   done
 }
 

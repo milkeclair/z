@@ -9,7 +9,7 @@
 # example:
 #  z.io.warn.oneline "warn message"
 z.io.warn.oneline() {
-  z.arg.named color default=yellow $@ && local color=$REPLY
+  z.arg.named color $@ default=yellow && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
   z.arg.named.shift color $@
   z.arg.named.shift indent $REPLY
@@ -31,7 +31,7 @@ z.io.warn.oneline() {
 # example:
 #  z.io.warn.line "warn1" "warn2"
 z.io.warn.line() {
-  z.arg.named color default=yellow $@ && local color=$REPLY
+  z.arg.named color $@ default=yellow && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
   z.arg.named.shift color $@
   z.arg.named.shift indent $REPLY

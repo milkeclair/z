@@ -160,12 +160,12 @@ z.io.read() {
 # example:
 #  z.io.success "Operation completed successfully."
 z.io.success() {
-  z.arg.named color default=green $@ && local color=$REPLY
+  z.arg.named color $@ default=green && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
   z.arg.named.shift color $@
   z.arg.named.shift indent $REPLY
 
-  z.io color=$color indent=$indent "$@"
+  z.io "$@" color=$color indent=$indent
 }
 
 # printing provided arguments with yellow color
@@ -179,12 +179,12 @@ z.io.success() {
 # example:
 #  z.io.warn "This is a warning message."
 z.io.warn() {
-  z.arg.named color default=yellow $@ && local color=$REPLY
+  z.arg.named color $@ default=yellow && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
   z.arg.named.shift color $@
   z.arg.named.shift indent $REPLY
 
-  z.io color=$color indent=$indent "$@"
+  z.io "$@" color=$color indent=$indent
 }
 
 # printing provided arguments to stderr
@@ -198,7 +198,7 @@ z.io.warn() {
 # example:
 #  z.io.error "error message"
 z.io.error() {
-  z.arg.named color default=red $@ && local color=$REPLY
+  z.arg.named color $@ default=red && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
   z.arg.named.shift color $@
   z.arg.named.shift indent $REPLY

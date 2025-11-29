@@ -9,7 +9,7 @@
 # example:
 #  z.io.error.oneline "error message"
 z.io.error.oneline() {
-  z.arg.named color default=red $@ && local color=$REPLY
+  z.arg.named color $@ default=red && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
   z.arg.named.shift color $@
   z.arg.named.shift indent $REPLY
@@ -31,7 +31,7 @@ z.io.error.oneline() {
 # example:
 #  z.io.error.line "error1" "error2"
 z.io.error.line() {
-  z.arg.named color default=red $@ && local color=$REPLY
+  z.arg.named color $@ default=red && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
   z.arg.named.shift color $@
   z.arg.named.shift indent $REPLY

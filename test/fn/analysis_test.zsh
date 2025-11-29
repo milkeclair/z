@@ -11,7 +11,7 @@ z.t.describe "z.fn.list"; {
       z.fn.list
 
       z.t.mock.result name="z.io"
-      z.t.expect.reply.include "$name indent=1 Defined in $PWD"
+      z.t.expect.reply.include "$name Defined in $PWD indent=1"
     }
   }
 
