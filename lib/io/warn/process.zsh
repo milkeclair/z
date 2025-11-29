@@ -1,3 +1,7 @@
+for indent_file in ${z_root}/lib/io/warn/indent/*.zsh; do
+  source $indent_file
+done
+
 # printing provided arguments to standard output in provided color
 #
 # $color: color name (default: yellow)
