@@ -55,9 +55,9 @@ z.t.describe "z.io.error.indent"; {
 
   z.t.context "引数が渡されなかった場合"; {
     z.t.it "インデントのみを標準エラー出力に出力する"; {
-      local output=$(z.io.error.indent level=3 "error" 2>&1 1>/dev/null)
+      local output=$(z.io.error.indent level=3 2>&1 1>/dev/null)
 
-      z.t.expect $output $'\033[31m      error\033[0m'
+      z.t.expect $output $'\033[31m      \033[0m'
     }
   }
 }
