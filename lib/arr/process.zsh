@@ -2,8 +2,9 @@ for join_file in ${z_root}/lib/arr/join/*.zsh; do
   source $join_file
 done
 
-# join array elements with a space
+# join array elements with a delimiter
 #
+# $delimiter?: delimiter, default: space
 # $@: array elements
 # REPLY: joined string
 # return: null
@@ -11,29 +12,30 @@ done
 # example:
 #  z.arr.join "a" "b" "c" #=> REPLY="a b c"
 z.arr.join() {
-  local arr=($@)
+  z.arg.named delimiter $@ default=" " && local delimiter=$REPLY
+  z.arg.named.shift delimiter $@ && local arr=($REPLY)
 
-  z.return "${(j: :)arr}"
+  local IFS=$delimiter
+  z.return "${arr[*]}"
 }
 
-# split a string into an array by a separator
+# split a string into an array by a delimiter
 #
-# $sep?: separator, default: space
+# $delimiter?: delimiter, default: space
 # $@: string to split
 # REPLY: array elements
 # return: null
 #
 # example:
-#  z.arr.split sep="," "a,b,c" #=> REPLY=("a" "b" "c")
+#  z.arr.split delimiter="," "a,b,c" #=> REPLY=("a" "b" "c")
 #  z.arr.split "a b c"         #=> REPLY=("a" "b" "c")
 z.arr.split() {
-  z.arg.named sep $@ default=" " && local separator=$REPLY
-  z.arg.named.shift sep $@
-
+  z.arg.named delimiter $@ default=" " && local delimiter=$REPLY
+  z.arg.named.shift delimiter $@
   local str=$REPLY
   local arr
 
-  IFS=$separator read -rA arr <<<"$str"
+  IFS=$delimiter read -rA arr <<<"$str"
 
   z.return ${arr[@]}
 }
