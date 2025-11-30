@@ -8,6 +8,7 @@ local -A z_modules=(
   [dir]="operator:process"
   [file]="operator:process"
   [fn]="analysis:operator:process"
+  [hash]="analysis:operator:process"
   [int]="operator"
   [io]="process"
   [mode]="process"
@@ -26,6 +27,7 @@ local z_module_depends_order=(
   file
   var # var are used in fn
   fn
+  hash
   int
   io
   mode
@@ -49,6 +51,7 @@ z.arg() {}
 z.arr() {}
 z.dir() {}
 z.file() {}
+z.hash() {}
 z.int() {}
 z.str() {}
 z.arg() {}
