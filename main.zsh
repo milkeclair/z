@@ -14,6 +14,7 @@ local -A z_modules=(
   [status]="analysis:operator"
   [str]="operator:process"
   [t]="state:dsl:expect:log:mock:process"
+  [var]="analysis"
 )
 
 for module in ${(k)z_modules}; do

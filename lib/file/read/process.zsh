@@ -9,7 +9,7 @@
 z.file.read.lines() {
   z.arg.named path $@ && local file=$REPLY
 
-  if z.file.exist $file; then
+  if z.file.exists $file; then
     REPLY=(${(f)$(cat $file)})
   else
     z.return
@@ -29,7 +29,7 @@ z.file.read.pick() {
   z.arg.named path $@ && local file=$REPLY
   z.arg.named word $@ && local word=$REPLY
 
-  if z.file.exist $file; then
+  if z.file.exists $file; then
     REPLY=$(grep $word $file | head -n 1)
   else
     z.return

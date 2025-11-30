@@ -30,7 +30,7 @@ z.t() {
 
   local z_mode="test"
   local test_root=${Z_TEST_ROOT:-$PWD}
-  z.dir.exist "${test_root}/test" && test_root="${test_root}/test"
+  z.dir.exists "${test_root}/test" && test_root="${test_root}/test"
   local root_dir=${test_root:h}
   local z_main="${root_dir}/main.zsh"
   cd $test_root
@@ -96,7 +96,7 @@ z.t() {
   z.status
   local totals_failed=$REPLY
 
-  z.is_not_null $compact_dir && z.dir.exist $compact_dir && z.dir.remove path=$compact_dir
+  z.is_not_null $compact_dir && z.dir.exists $compact_dir && z.dir.remove path=$compact_dir
 
   cd $original_dir
   z.int.is_not_zero $failed && return 1
@@ -208,13 +208,13 @@ z.t._show_compact_results() {
   for test_file in $files; do
     ((file_idx++))
     local summary_file="$compact_dir/${file_idx}_summary.txt"
-    z.file.exist $summary_file && cat $summary_file
+    z.file.exists $summary_file && cat $summary_file
   done
 
   setopt local_options null_glob
   local failure_files=("$compact_dir"/*_failure.txt)
   for failure_file in ${failure_files[@]}; do
-    z.file.exist $failure_file && cat $failure_file
+    z.file.exists $failure_file && cat $failure_file
   done
 }
 
@@ -239,7 +239,7 @@ z.t._show_totals() {
   for test_file in $files; do
     ((file_idx++))
     local count_file="$count_dir/${file_idx}_count.txt"
-    if z.file.exist $count_file; then
+    if z.file.exists $count_file; then
       local counts=$(cat $count_file)
       local count_array=(${=counts})
 

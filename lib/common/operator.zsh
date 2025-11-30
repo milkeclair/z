@@ -31,8 +31,8 @@ z.is_truthy() {
   }
 
   z.is_true $value && return 0
-  z.dir.exist $value && return 0
-  z.file.exist $value && return 0
+  z.dir.exists $value && return 0
+  z.file.exists $value && return 0
   z.str.is_path_like $value && return 1
 
   z.is_not_null $value && return 0
@@ -76,8 +76,8 @@ z.is_falsy() {
   z.is_null $value && return 0
 
   z.str.is_path_like $value &&
-  z.dir.not_exist $value &&
-  z.file.not_exist $value &&
+  z.dir.not_exists $value &&
+  z.file.not_exists $value &&
     return 0
 
   return 1
