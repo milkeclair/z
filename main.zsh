@@ -56,5 +56,4 @@ z.file() {}
 z.hash() {}
 z.int() {}
 z.str() {}
-z.arg() {}
 z.path() {}
