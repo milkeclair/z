@@ -218,3 +218,23 @@ z.t.describe "z.arr.union"; {
     }
   }
 }
+
+z.t.describe "z.arr.reverse"; {
+  z.t.context "配列要素が渡された場合"; {
+    z.t.it "要素が逆順に並んだ配列を返す"; {
+      z.arr.reverse "a" "b" "c"
+      z.t.expect.reply.arr "c" "b" "a"
+
+      z.arr.reverse "one" "two" "three" "four"
+      z.t.expect.reply.arr "four" "three" "two" "one"
+    }
+  }
+
+  z.t.context "配列要素が渡されなかった場合"; {
+    z.t.it "空配列を返す"; {
+      z.arr.reverse
+
+      z.t.expect.reply.null
+    }
+  }
+}

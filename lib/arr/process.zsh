@@ -250,3 +250,22 @@ z.arr.union() {
 
   z.return ${result[@]}
 }
+
+# reverse the order of array elements
+#
+# $@: array elements
+# REPLY: array elements in reverse order
+# return: null
+#
+# example:
+#  z.arr.reverse "a" "b" "c" #=> REPLY=("c" "b" "a")
+z.arr.reverse() {
+  local arr=($@)
+  local result
+
+  for ((i=${#arr[@]}; i>=0; i--)); do
+    result+=(${arr[i]})
+  done
+
+  z.return ${result[@]}
+}
