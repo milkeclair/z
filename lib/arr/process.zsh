@@ -263,7 +263,7 @@ z.arr.reverse() {
   local arr=($@)
   local result
 
-  for ((i=${#arr[@]}; i>=0; i--)); do
+  for ((i=${#arr[@]}; i>=1; i--)); do
     result+=(${arr[i]})
   done
 
