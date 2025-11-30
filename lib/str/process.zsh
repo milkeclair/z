@@ -323,3 +323,67 @@ z.str.visible() {
 
   z.return ${(V)str}
 }
+
+# left-justify a string with specified width and fill character
+#
+# $width: total width of the resulting string
+# $fill?: fill character (default: space)
+# $1: original string
+# REPLY: left-justified string
+# return: null
+#
+# example:
+#  z.str.ljust width=10 fill="." "Hi" #=> "Hi........"
+z.str.ljust() {
+  z.arg.named width $@ && local width=$REPLY
+  z.arg.named fill $@ default=" " && local fill=$REPLY
+  z.arg.named.shift width $@
+  z.arg.named.shift fill $REPLY
+  local str=$REPLY
+
+  local str_length=${#str}
+  if z.int.gteq $str_length $width; then
+    z.return $str
+    return
+  fi
+
+  local padding_length=$((width - str_length))
+  local padding=""
+  for (( i=0; i<padding_length; i++ )); do
+    padding+=$fill
+  done
+
+  z.return "${str}${padding}"
+}
+
+# right-justify a string with specified width and fill character
+#
+# $width: total width of the resulting string
+# $fill?: fill character (default: space)
+# $1: original string
+# REPLY: right-justified string
+# return: null
+#
+# example:
+#  z.str.rjust width=10 fill="." "Hi" #=> "........Hi"
+z.str.rjust() {
+  z.arg.named width $@ && local width=$REPLY
+  z.arg.named fill $@ default=" " && local fill=$REPLY
+  z.arg.named.shift width $@
+  z.arg.named.shift fill $REPLY
+  local str=$REPLY
+
+  local str_length=${#str}
+  if z.int.gteq $str_length $width; then
+    z.return $str
+    return
+  fi
+
+  local padding_length=$((width - str_length))
+  local padding=""
+  for (( i=0; i<padding_length; i++ )); do
+    padding+=$fill
+  done
+
+  z.return "${padding}${str}"
+}

@@ -542,3 +542,87 @@ z.t.describe "z.str.visible"; {
     }
   }
 }
+
+z.t.describe "z.str.ljust"; {
+  z.t.context "指定された幅より短い文字列が渡された場合"; {
+    z.t.it "右側にスペースを追加して指定された幅に揃えた文字列を返す"; {
+      z.str.ljust "Hello" width=10
+      z.t.expect.reply "Hello     "
+
+      z.str.ljust "Zsh" width=5
+      z.t.expect.reply "Zsh  "
+    }
+  }
+
+  z.t.context "指定された幅と同じ長さの文字列が渡された場合"; {
+    z.t.it "元の文字列をそのまま返す"; {
+      z.str.ljust "Hello" width=5
+      z.t.expect.reply "Hello"
+
+      z.str.ljust "Zsh" width=3
+      z.t.expect.reply "Zsh"
+    }
+  }
+
+  z.t.context "指定された幅より長い文字列が渡された場合"; {
+    z.t.it "元の文字列をそのまま返す"; {
+      z.str.ljust "Hello World" width=5
+      z.t.expect.reply "Hello World"
+
+      z.str.ljust "Zsh Scripting" width=10
+      z.t.expect.reply "Zsh Scripting"
+    }
+  }
+
+  z.t.context "fillが指定された場合"; {
+    z.t.it "指定された文字で埋めて指定された幅に揃えた文字列を返す"; {
+      z.str.ljust "Hello" width=10 fill="*"
+      z.t.expect.reply "Hello*****"
+
+      z.str.ljust "Zsh" width=5 fill="-"
+      z.t.expect.reply "Zsh--"
+    }
+  }
+}
+
+z.t.describe "z.str.rjust"; {
+  z.t.context "指定された幅より短い文字列が渡された場合"; {
+    z.t.it "左側にスペースを追加して指定された幅に揃えた文字列を返す"; {
+      z.str.rjust "Hello" width=10
+      z.t.expect.reply "     Hello"
+
+      z.str.rjust "Zsh" width=5
+      z.t.expect.reply "  Zsh"
+    }
+  }
+
+  z.t.context "指定された幅と同じ長さの文字列が渡された場合"; {
+    z.t.it "元の文字列をそのまま返す"; {
+      z.str.rjust "Hello" width=5
+      z.t.expect.reply "Hello"
+
+      z.str.rjust "Zsh" width=3
+      z.t.expect.reply "Zsh"
+    }
+  }
+
+  z.t.context "指定された幅より長い文字列が渡された場合"; {
+    z.t.it "元の文字列をそのまま返す"; {
+      z.str.rjust "Hello World" width=5
+      z.t.expect.reply "Hello World"
+
+      z.str.rjust "Zsh Scripting" width=10
+      z.t.expect.reply "Zsh Scripting"
+    }
+  }
+
+  z.t.context "fillが指定された場合"; {
+    z.t.it "指定された文字で埋めて指定された幅に揃えた文字列を返す"; {
+      z.str.rjust "Hello" width=10 fill="*"
+      z.t.expect.reply "*****Hello"
+
+      z.str.ljust "Zsh" width=5 fill="-"
+      z.t.expect.reply "Zsh--"
+    }
+  }
+}
