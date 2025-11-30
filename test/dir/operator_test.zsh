@@ -20,7 +20,7 @@ z.t.describe "z.dir.exists"; {
   }
 }
 
-z.t.describe "z.dir.not_exist"; {
+z.t.describe "z.dir.not_exists"; {
   z.t.context "ディレクトリが存在しない場合"; {
     z.t.it "0を返す"; {
       z.dir.not_exists /tmp/not_exists_dir
