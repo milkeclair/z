@@ -158,4 +158,387 @@ z.t.describe "z.str.gsub"; {
       z.t.expect.reply.null
     }
   }
+
+  z.t.context "pattern=trueが指定された場合"; {
+    z.t.it "globパターンでマッチした部分を置換した文字列を返す"; {
+      z.str.gsub str="Hello123World" search="[0-9]" replace="-" pattern=true
+      z.t.expect.reply "Hello---World"
+
+      z.str.gsub str="abcXYZde" search="[A-Z]" replace='_$MATCH' pattern=true
+      z.t.expect.reply "abc_X_Y_Zde"
+    }
+  }
+}
+
+z.t.describe "z.str.upcase"; {
+  z.t.context "小文字を含む文字列が渡された場合"; {
+    z.t.it "すべて大文字に変換した文字列を返す"; {
+      z.str.upcase "hello world"
+      z.t.expect.reply "HELLO WORLD"
+
+      z.str.upcase "Zsh Scripting"
+      z.t.expect.reply "ZSH SCRIPTING"
+    }
+  }
+
+  z.t.context "すでに大文字の文字列が渡された場合"; {
+    z.t.it "元の文字列をそのまま返す"; {
+      z.str.upcase "HELLO WORLD"
+      z.t.expect.reply "HELLO WORLD"
+
+      z.str.upcase "ZSH SCRIPTING"
+      z.t.expect.reply "ZSH SCRIPTING"
+    }
+  }
+}
+
+z.t.describe "z.str.downcase"; {
+  z.t.context "大文字を含む文字列が渡された場合"; {
+    z.t.it "すべて小文字に変換した文字列を返す"; {
+      z.str.downcase "HELLO WORLD"
+      z.t.expect.reply "hello world"
+
+      z.str.downcase "ZSH SCRIPTING"
+      z.t.expect.reply "zsh scripting"
+    }
+  }
+
+  z.t.context "すでに小文字の文字列が渡された場合"; {
+    z.t.it "元の文字列をそのまま返す"; {
+      z.str.downcase "hello world"
+      z.t.expect.reply "hello world"
+
+      z.str.downcase "zsh scripting"
+      z.t.expect.reply "zsh scripting"
+    }
+  }
+}
+
+z.t.describe "z.str.camelize"; {
+  z.t.context "単語がスペース、アンダースコア、またはハイフンで区切られた文字列が渡された場合"; {
+    z.t.it "キャメルケースに変換した文字列を返す"; {
+      z.str.camelize "hello world"
+      z.t.expect.reply "helloWorld"
+
+      z.str.camelize "zsh_scripting"
+      z.t.expect.reply "zshScripting"
+
+      z.str.camelize "my-variable-name"
+      z.t.expect.reply "myVariableName"
+
+      z.str.camelize "ZSH_SCRIPTING_TEST"
+      z.t.expect.reply "zshScriptingTest"
+    }
+  }
+
+  z.t.context "複数の区切り文字が連続している文字列が渡された場合"; {
+    z.t.it "キャメルケースに変換した文字列を返す"; {
+      z.str.camelize "hello   world"
+      z.t.expect.reply "helloWorld"
+
+      z.str.camelize "zsh__scripting"
+      z.t.expect.reply "zshScripting"
+
+      z.str.camelize "my--variable--name"
+      z.t.expect.reply "myVariableName"
+
+      z.str.camelize "ZSH___SCRIPTING---TEST"
+      z.t.expect.reply "zshScriptingTest"
+    }
+  }
+
+  z.t.context "単語が1つだけの文字列が渡された場合"; {
+    z.t.it "元の文字列をそのまま返す"; {
+      z.str.camelize "hello"
+      z.t.expect.reply "hello"
+
+      z.str.camelize "zsh"
+      z.t.expect.reply "zsh"
+    }
+  }
+
+  z.t.context "すでにキャメルケースの文字列が渡された場合"; {
+    z.t.it "元の文字列をそのまま返す"; {
+      z.str.camelize "helloWorld"
+      z.t.expect.reply "helloWorld"
+
+      z.str.camelize "zshScripting"
+      z.t.expect.reply "zshScripting"
+    }
+  }
+}
+
+z.t.describe "z.str.pascalize"; {
+  z.t.context "単語がスペース、アンダースコア、またはハイフンで区切られた文字列が渡された場合"; {
+    z.t.it "パスカルケースに変換した文字列を返す"; {
+      z.str.pascalize "hello world"
+      z.t.expect.reply "HelloWorld"
+
+      z.str.pascalize "zsh_scripting"
+      z.t.expect.reply "ZshScripting"
+
+      z.str.pascalize "my-variable-name"
+      z.t.expect.reply "MyVariableName"
+
+      z.str.pascalize "ZSH_SCRIPTING_TEST"
+      z.t.expect.reply "ZshScriptingTest"
+    }
+  }
+
+  z.t.context "複数の区切り文字が連続している文字列が渡された場合"; {
+    z.t.it "パスカルケースに変換した文字列を返す"; {
+      z.str.pascalize "hello   world"
+      z.t.expect.reply "HelloWorld"
+
+      z.str.pascalize "zsh__scripting"
+      z.t.expect.reply "ZshScripting"
+
+      z.str.pascalize "my--variable--name"
+      z.t.expect.reply "MyVariableName"
+
+      z.str.pascalize "ZSH___SCRIPTING---TEST"
+      z.t.expect.reply "ZshScriptingTest"
+    }
+  }
+
+  z.t.context "単語が1つだけの文字列が渡された場合"; {
+    z.t.it "最初の文字を大文字に変換した文字列を返す"; {
+      z.str.pascalize "hello"
+      z.t.expect.reply "Hello"
+
+      z.str.pascalize "zsh"
+      z.t.expect.reply "Zsh"
+    }
+  }
+
+  z.t.context "すでにパスカルケースの文字列が渡された場合"; {
+    z.t.it "元の文字列をそのまま返す"; {
+      z.str.pascalize "Hello World"
+      z.t.expect.reply "HelloWorld"
+
+      z.str.pascalize "Zsh Scripting"
+      z.t.expect.reply "ZshScripting"
+    }
+  }
+}
+
+z.t.describe "z.str.constantize"; {
+  z.t.context "単語がスペース、アンダースコア、またはハイフンで区切られた文字列が渡された場合"; {
+    z.t.it "定数形式に変換した文字列を返す"; {
+      z.str.constantize "hello world"
+      z.t.expect.reply "HELLO_WORLD"
+
+      z.str.constantize "zsh_scripting"
+      z.t.expect.reply "ZSH_SCRIPTING"
+
+      z.str.constantize "my-variable-name"
+      z.t.expect.reply "MY_VARIABLE_NAME"
+
+      z.str.constantize "Zsh Scripting Test"
+      z.t.expect.reply "ZSH_SCRIPTING_TEST"
+    }
+  }
+
+  z.t.context "複数の区切り文字が連続している文字列が渡された場合"; {
+    z.t.it "定数形式に変換した文字列を返す"; {
+      z.str.constantize "hello   world"
+      z.t.expect.reply "HELLO_WORLD"
+
+      z.str.constantize "zsh__scripting"
+      z.t.expect.reply "ZSH_SCRIPTING"
+
+      z.str.constantize "my--variable--name"
+      z.t.expect.reply "MY_VARIABLE_NAME"
+
+      z.str.constantize "Zsh___Scripting---Test"
+      z.t.expect.reply "ZSH_SCRIPTING_TEST"
+    }
+  }
+
+  z.t.context "単語が1つだけの文字列が渡された場合"; {
+    z.t.it "すべて大文字に変換した文字列を返す"; {
+      z.str.constantize "hello"
+      z.t.expect.reply "HELLO"
+
+      z.str.constantize "zsh"
+      z.t.expect.reply "ZSH"
+    }
+  }
+
+  z.t.context "すでに定数形式の文字列が渡された場合"; {
+    z.t.it "元の文字列をそのまま返す"; {
+      z.str.constantize "HELLO_WORLD"
+      z.t.expect.reply "HELLO_WORLD"
+
+      z.str.constantize "ZSH_SCRIPTING"
+      z.t.expect.reply "ZSH_SCRIPTING"
+    }
+  }
+}
+
+z.t.describe "z.str.underscore"; {
+  z.t.context "単語がスペース、アンダースコア、またはハイフンで区切られた文字列が渡された場合"; {
+    z.t.it "アンダースコア形式に変換した文字列を返す"; {
+      z.str.underscore "Hello World"
+      z.t.expect.reply "hello_world"
+
+      z.str.underscore "Zsh-Scripting"
+      z.t.expect.reply "zsh_scripting"
+
+      z.str.underscore "My Variable Name"
+      z.t.expect.reply "my_variable_name"
+
+      z.str.underscore "ZSH_SCRIPTING_TEST"
+      z.t.expect.reply "zsh_scripting_test"
+    }
+  }
+
+  z.t.context "複数の区切り文字が連続している文字列が渡された場合"; {
+    z.t.it "アンダースコア形式に変換した文字列を返す"; {
+      z.str.underscore "Hello   World"
+      z.t.expect.reply "hello_world"
+
+      z.str.underscore "Zsh--Scripting"
+      z.t.expect.reply "zsh_scripting"
+
+      z.str.underscore "My___Variable---Name"
+      z.t.expect.reply "my_variable_name"
+
+      z.str.underscore "ZSH___SCRIPTING---TEST"
+      z.t.expect.reply "zsh_scripting_test"
+    }
+  }
+
+  z.t.context "単語が1つだけの文字列が渡された場合"; {
+    z.t.it "すべて小文字に変換した文字列を返す"; {
+      z.str.underscore "Hello"
+      z.t.expect.reply "hello"
+
+      z.str.underscore "Zsh"
+      z.t.expect.reply "zsh"
+    }
+  }
+
+  z.t.context "すでにアンダースコア形式の文字列が渡された場合"; {
+    z.t.it "元の文字列をそのまま返す"; {
+      z.str.underscore "hello_world"
+      z.t.expect.reply "hello_world"
+
+      z.str.underscore "zsh_scripting"
+      z.t.expect.reply "zsh_scripting"
+    }
+  }
+}
+
+z.t.describe "z.str.kebabize"; {
+  z.t.context "単語がスペース、アンダースコア、またはハイフンで区切られた文字列が渡された場合"; {
+    z.t.it "ケバブケースに変換した文字列を返す"; {
+      z.str.kebabize "Hello World"
+      z.t.expect.reply "hello-world"
+
+      z.str.kebabize "Zsh_Scripting"
+      z.t.expect.reply "zsh-scripting"
+
+      z.str.kebabize "My Variable Name"
+      z.t.expect.reply "my-variable-name"
+
+      z.str.kebabize "ZSH_SCRIPTING_TEST"
+      z.t.expect.reply "zsh-scripting-test"
+    }
+  }
+
+  z.t.context "複数の区切り文字が連続している文字列が渡された場合"; {
+    z.t.it "ケバブケースに変換した文字列を返す"; {
+      z.str.kebabize "Hello   World"
+      z.t.expect.reply "hello-world"
+
+      z.str.kebabize "Zsh__Scripting"
+      z.t.expect.reply "zsh-scripting"
+
+      z.str.kebabize "My---Variable___Name"
+      z.t.expect.reply "my-variable-name"
+
+      z.str.kebabize "ZSH---SCRIPTING___TEST"
+      z.t.expect.reply "zsh-scripting-test"
+    }
+  }
+
+  z.t.context "単語が1つだけの文字列が渡された場合"; {
+    z.t.it "すべて小文字に変換した文字列を返す"; {
+      z.str.kebabize "Hello"
+      z.t.expect.reply "hello"
+
+      z.str.kebabize "Zsh"
+      z.t.expect.reply "zsh"
+    }
+  }
+
+  z.t.context "すでにケバブケースの文字列が渡された場合"; {
+    z.t.it "元の文字列をそのまま返す"; {
+      z.str.kebabize "hello-world"
+      z.t.expect.reply "hello-world"
+
+      z.str.kebabize "zsh-scripting"
+      z.t.expect.reply "zsh-scripting"
+    }
+  }
+}
+
+z.t.describe "z.str.delimitize"; {
+  z.t.context "単語がスペース、アンダースコア、またはハイフンで区切られた文字列が渡された場合"; {
+    z.t.it "指定した形式に変換した文字列を返す"; {
+      z.str.delimitize "Hello World" delimiter="_" replace_chars="[ ]"
+      z.t.expect.reply "hello_world"
+
+      z.str.delimitize "Zsh-Scripting" delimiter=" " replace_chars="[_]"
+      z.t.expect.reply "zsh-scripting"
+
+      z.str.delimitize "My_Variable_Name" delimiter="-" replace_chars="[_]"
+      z.t.expect.reply "my-variable-name"
+
+      z.str.delimitize "ZSH-SCRIPTING TEST" delimiter="_" replace_chars="[ -]"
+      z.t.expect.reply "zsh_scripting_test"
+    }
+  }
+
+  z.t.context "複数の区切り文字が連続している文字列が渡された場合"; {
+    z.t.it "指定した形式に変換した文字列を返す"; {
+      z.str.delimitize "Hello   World" delimiter="-" replace_chars="[ ]"
+      z.t.expect.reply "hello-world"
+
+      z.str.delimitize "Zsh__Scripting" delimiter=" " replace_chars="[_]"
+      z.t.expect.reply "zsh scripting"
+
+      z.str.delimitize "My---Variable___Name" delimiter="_" replace_chars="[-_]"
+      z.t.expect.reply "my_variable_name"
+
+      z.str.delimitize "ZSH---SCRIPTING___TEST" delimiter="-" replace_chars="[_]"
+      z.t.expect.reply "zsh-scripting-test"
+    }
+  }
+}
+
+z.t.describe "z.str.visible"; {
+  z.t.context "非表示文字を含む文字列が渡された場合"; {
+    z.t.it "非表示文字をエスケープした文字列を返す"; {
+      z.str.visible $'\nHello\tWorld'
+      z.t.expect.reply $'\\nHello\\tWorld'
+
+      z.str.visible $'\rCarriage Return'
+      z.t.expect.reply $'^MCarriage Return'
+
+      z.str.visible $'\aAlert!'
+      z.t.expect.reply $'^GAlert!'
+    }
+  }
+
+  z.t.context "非表示文字を含まない文字列が渡された場合"; {
+    z.t.it "元の文字列をそのまま返す"; {
+      z.str.visible "Hello World"
+      z.t.expect.reply "Hello World"
+
+      z.str.visible "Zsh Scripting"
+      z.t.expect.reply "Zsh Scripting"
+    }
+  }
 }

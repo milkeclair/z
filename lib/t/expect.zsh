@@ -24,8 +24,10 @@ z.t.expect() {
   fi
 
   if z.not_eq "$expect" "$actual"; then
-    local expect_display=${(V)expect}
-    local actual_display=${(V)actual}
+    z.str.visible "$expect"
+    local expect_display=$REPLY
+    z.str.visible "$actual"
+    local actual_display=$REPLY
     z.t._log.failure.handle "message=failed: expected [ $expect_display ] but got [ $actual_display ]"
   fi
 
