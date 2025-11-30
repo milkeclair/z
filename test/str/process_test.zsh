@@ -646,8 +646,8 @@ z.t.describe "z.str.rjust"; {
       z.str.rjust "Hello" width=10 fill="*"
       z.t.expect.reply "*****Hello"
 
-      z.str.ljust "Zsh" width=5 fill="-"
-      z.t.expect.reply "Zsh--"
+      z.str.rjust "Zsh" width=5 fill="-"
+      z.t.expect.reply "--Zsh"
     }
   }
 }
