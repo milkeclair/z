@@ -10,7 +10,8 @@ z.str.color.strip() {
   local message=$1
 
   local stripped=$message
-  for code in ${(v)z_color_palette}; do
+  z.hash.values z_color_palette
+  for code in $REPLY; do
     stripped=${stripped//$code/}
   done
 

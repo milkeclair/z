@@ -85,7 +85,8 @@ z.fn.delete() {
 z.fn.delete_all() {
   z.fn._ensure_store
 
-  for value in ${(v)z_fn_set}; do
+  z.hash.values z_fn_set
+  for value in $REPLY; do
     unfunction $value
   done
 
