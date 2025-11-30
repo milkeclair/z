@@ -13,6 +13,10 @@ for color_file in ${z_root}/lib/str/color/*.zsh; do
   source $color_file
 done
 
+for match_file in ${z_root}/lib/str/match/*.zsh; do
+  source $match_file
+done
+
 # get color code by name
 #
 # $1: color name
@@ -67,6 +71,22 @@ z.str.split() {
 
   local IFS=$delimiter
   REPLY=(${=str})
+}
+
+# match a string against a pattern
+#
+# $1: string
+# $2: pattern (glob pattern)
+# REPLY: matched substrings
+# return: null
+#
+# example:
+#  z.str.match "helloWorld" "[a-z]*" #=> ("hello")
+z.str.match() {
+  local str=$1
+  local pattern=$2
+
+  z.return ${(MS)str##${~pattern}}
 }
 
 # global substitute in a string

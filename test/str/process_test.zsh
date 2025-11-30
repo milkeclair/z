@@ -125,6 +125,31 @@ z.t.describe "z.str.split"; {
   }
 }
 
+z.t.describe "z.str.match"; {
+  z.t.context "文字列がパターンにマッチする場合"; {
+    z.t.it "マッチ部分の文字列を返す"; {
+      z.str.match "hello" "h*o"
+      z.t.expect.reply "hello"
+
+      z.str.match "zsh_scripting" "ing"
+      z.t.expect.reply "ing"
+
+      z.str.match "2024-06-15" "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]"
+      z.t.expect.reply "2024-06-15"
+    }
+  }
+
+  z.t.context "文字列がパターンにマッチしない場合"; {
+    z.t.it "空文字列を返す"; {
+      z.str.match "hello" "H*O"
+      z.t.expect.reply.null
+
+      z.str.match "zsh_scripting" "ZSH"
+      z.t.expect.reply.null
+    }
+  }
+}
+
 z.t.describe "z.str.gsub"; {
   z.t.context "置換対象の文字列が存在する場合"; {
     z.t.it "指定された文字列をすべて置換した文字列を返す"; {
