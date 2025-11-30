@@ -140,7 +140,7 @@ z.str.camelize() {
   local capitalize_next=false
 
   z.group "downcase if delimiters exist"; {
-    if z.str.match "$str" "*[ _-]*"; then
+    if z.str.is_match "$str" "*[ _-]*"; then
       z.str.downcase "$str"
       str=$REPLY
     fi
@@ -149,7 +149,7 @@ z.str.camelize() {
   for (( i=1; i<=${#str}; i++ )); do
     local char=${str[i]}
 
-    if z.str.match $char "[ _-]"; then
+    if z.str.is_match $char "[ _-]"; then
       capitalize_next=true
     elif $capitalize_next; then
       result+=${(U)char}
@@ -176,7 +176,7 @@ z.str.pascalize() {
   local capitalize_next=true
 
   z.group "downcase if delimiters exist"; {
-    if z.str.match "$str" "*[ _-]*"; then
+    if z.str.is_match "$str" "*[ _-]*"; then
       z.str.downcase "$str"
       str=$REPLY
     fi
@@ -185,7 +185,7 @@ z.str.pascalize() {
   for (( i=1; i<=${#str}; i++ )); do
     local char=${str[i]}
 
-    if z.str.match $char "[ _-]"; then
+    if z.str.is_match $char "[ _-]"; then
       capitalize_next=true
     elif $capitalize_next; then
       result+=${(U)char}
@@ -217,7 +217,7 @@ z.str.constantize() {
   for (( i=1; i<=${#str}; i++ )); do
     local char=${str[i]}
 
-    if z.str.match $char "[ _-]"; then
+    if z.str.is_match $char "[ _-]"; then
       if [[ $previous_char != "_" ]]; then
         result+="_"
         previous_char="_"
@@ -280,7 +280,7 @@ z.str.delimitize() {
   local result=""
 
   z.group "downcase if delimiters exist"; {
-    if z.str.match "$str" "*[ _-]*"; then
+    if z.str.is_match "$str" "*[ _-]*"; then
       z.str.downcase "$str"
       str=$REPLY
     fi
@@ -298,7 +298,7 @@ z.str.delimitize() {
 
   # remove consecutive delimiters
   # e.g., "hello__world" -> "hello_world" (if delimiter is "_")
-  while z.str.match "$result" "*${delimiter}${delimiter}*"; do
+  while z.str.is_match "$result" "*${delimiter}${delimiter}*"; do
     z.str.gsub str="$result" search="${delimiter}${delimiter}" replace="${delimiter}"
     result=$REPLY
   done

@@ -36,10 +36,10 @@ z.t.describe "z.str.not_empty"; {
   }
 }
 
-z.t.describe "z.str.match"; {
+z.t.describe "z.str.is_match"; {
   z.t.context "文字列がパターンにマッチする場合"; {
     z.t.it "trueを返す"; {
-      z.str.match "hello" "h*o"
+      z.str.is_match "hello" "h*o"
 
       z.t.expect.status.true
     }
@@ -47,17 +47,17 @@ z.t.describe "z.str.match"; {
 
   z.t.context "文字列がパターンにマッチしない場合"; {
     z.t.it "falseを返す"; {
-      z.str.match "hello" "H*O"
+      z.str.is_match "hello" "H*O"
 
       z.t.expect.status.false
     }
   }
 }
 
-z.t.describe "z.str.not_match"; {
+z.t.describe "z.str.is_not_match"; {
   z.t.context "文字列がパターンにマッチする場合"; {
     z.t.it "falseを返す"; {
-      z.str.not_match "hello" "h*o"
+      z.str.is_not_match "hello" "h*o"
 
       z.t.expect.status.false
     }
@@ -65,7 +65,7 @@ z.t.describe "z.str.not_match"; {
 
   z.t.context "文字列がパターンにマッチしない場合"; {
     z.t.it "trueを返す"; {
-      z.str.not_match "hello" "H*O"
+      z.str.is_not_match "hello" "H*O"
 
       z.t.expect.status.true
     }
