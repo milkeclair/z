@@ -158,6 +158,12 @@ z.t.describe "z.str.is_path_like"; {
 
       z.str.is_path_like "../config"
       z.t.expect.status.true
+
+      z.str.is_path_like "."
+      z.t.expect.status.true
+
+      z.str.is_path_like ".."
+      z.t.expect.status.true
     }
   }
 
@@ -166,6 +172,38 @@ z.t.describe "z.str.is_path_like"; {
       z.str.is_path_like "not/a/path"
 
       z.t.expect.status.false
+    }
+  }
+}
+
+z.t.describe "z.str.is_not_path_like"; {
+  z.t.context "パス形式の文字列が渡された場合"; {
+    z.t.it "falseを返す"; {
+      z.str.is_not_path_like "/usr/local/bin"
+      z.t.expect.status.false
+
+      z.str.is_not_path_like "~/documents"
+      z.t.expect.status.false
+
+      z.str.is_not_path_like "./script.sh"
+      z.t.expect.status.false
+
+      z.str.is_not_path_like "../config"
+      z.t.expect.status.false
+
+      z.str.is_not_path_like "."
+      z.t.expect.status.false
+
+      z.str.is_not_path_like ".."
+      z.t.expect.status.false
+    }
+  }
+
+  z.t.context "パス形式でない文字列が渡された場合"; {
+    z.t.it "trueを返す"; {
+      z.str.is_not_path_like "not/a/path"
+
+      z.t.expect.status.true
     }
   }
 }

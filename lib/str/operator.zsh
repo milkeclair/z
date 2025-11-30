@@ -141,6 +141,8 @@ z.str.end_with() {
 #  z.str.is_path_like "~/documents"     #=> 0 (true)
 #  z.str.is_path_like "./script.sh"     #=> 0 (true)
 #  z.str.is_path_like "../config"       #=> 0 (true)
+#  z.str.is_path_like "."               #=> 0 (true)
+#  z.str.is_path_like ".."              #=> 0 (true)
 #  z.str.is_path_like "not/a/path"      #=> 1 (false)
 z.str.is_path_like() {
   local value=$1
@@ -149,6 +151,8 @@ z.str.is_path_like() {
   z.str.is_match $value "~*" && return 0
   z.str.is_match $value "./*" && return 0
   z.str.is_match $value "../*" && return 0
+  z.eq $value "." && return 0
+  z.eq $value ".." && return 0
 
   return 1
 }
@@ -164,6 +168,8 @@ z.str.is_path_like() {
 #  z.str.is_not_path_like "~/documents"     #=> 1 (false)
 #  z.str.is_not_path_like "./script.sh"     #=> 1 (false)
 #  z.str.is_not_path_like "../config"       #=> 1 (false)
+#  z.str.is_not_path_like "."               #=> 1 (false)
+#  z.str.is_not_path_like ".."              #=> 1 (false)
 #  z.str.is_not_path_like "not/a/path"      #=> 0 (true)
 z.str.is_not_path_like() {
   local value=$1
@@ -172,6 +178,8 @@ z.str.is_not_path_like() {
   z.str.is_match $value "~*" && return 1
   z.str.is_match $value "./*" && return 1
   z.str.is_match $value "../*" && return 1
+  z.eq $value "." && return 1
+  z.eq $value ".." && return 1
 
   return 0
 }

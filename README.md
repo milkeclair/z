@@ -110,6 +110,8 @@ The following rules apply under lib.
   - empty, oneline, indent...
 - mode
   - interactive mode
+- path
+  - dir, base, stem...
 - status
   - abstract exit status handling
 - str

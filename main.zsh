@@ -12,6 +12,7 @@ local -A z_modules=(
   [int]="operator"
   [io]="process"
   [mode]="process"
+  [path]="analysis:process"
   [status]="analysis:operator"
   [str]="operator:process"
   [t]="state:dsl:expect:log:mock:process"
@@ -31,6 +32,7 @@ local z_module_depends_order=(
   int
   io
   mode
+  path
   status
   str
   t
@@ -55,3 +57,4 @@ z.hash() {}
 z.int() {}
 z.str() {}
 z.arg() {}
+z.path() {}
