@@ -41,7 +41,7 @@ z.t._state.fn_originals.restore() {
 
   z.hash.keys z_fn_set
   for key in $REPLY; do
-    if (( ! ${+z_t_fn_set_originals[$key]} )); then
+    if z.hash.has_not_key z_t_fn_set_originals key=$key; then
       local func_key=${z_fn_set[$key]}
       unfunction $func_key 2>/dev/null
     fi
