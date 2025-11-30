@@ -114,6 +114,8 @@ The following rules apply under lib.
   - color, is_path_like, gsub...
 - t
   - testing framework
+- var
+  - exists, sets, get...
 
 ### Testing
 
