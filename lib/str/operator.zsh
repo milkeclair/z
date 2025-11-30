@@ -36,9 +36,9 @@ z.str.not_empty() {
 # return 0|1
 #
 # example:
-#  z.str.match "hello" "h*o"  #=> 0 (true)
-#  z.str.match "hello" "H*O"  #=> 1 (false, case-sensitive)
-z.str.match() {
+#  z.str.is_match "hello" "h*o"  #=> 0 (true)
+#  z.str.is_match "hello" "H*O"  #=> 1 (false, case-sensitive)
+z.str.is_match() {
   local string=$1
   local pattern=$2
 
@@ -53,9 +53,9 @@ z.str.match() {
 # return 0|1
 #
 # example:
-#  z.str.not_match "hello" "h*o"  #=> 1 (false)
-#  z.str.not_match "hello" "H*O"  #=> 0 (true, case-sensitive)
-z.str.not_match() {
+#  z.str.is_not_match "hello" "h*o"  #=> 1 (false)
+#  z.str.is_not_match "hello" "H*O"  #=> 0 (true, case-sensitive)
+z.str.is_not_match() {
   local string=$1
   local pattern=$2
 
@@ -141,14 +141,18 @@ z.str.end_with() {
 #  z.str.is_path_like "~/documents"     #=> 0 (true)
 #  z.str.is_path_like "./script.sh"     #=> 0 (true)
 #  z.str.is_path_like "../config"       #=> 0 (true)
+#  z.str.is_path_like "."               #=> 0 (true)
+#  z.str.is_path_like ".."              #=> 0 (true)
 #  z.str.is_path_like "not/a/path"      #=> 1 (false)
 z.str.is_path_like() {
   local value=$1
 
-  z.str.match $value "/*" && return 0
-  z.str.match $value "~*" && return 0
-  z.str.match $value "./*" && return 0
-  z.str.match $value "../*" && return 0
+  z.str.is_match $value "/*" && return 0
+  z.str.is_match $value "~*" && return 0
+  z.str.is_match $value "./*" && return 0
+  z.str.is_match $value "../*" && return 0
+  z.eq $value "." && return 0
+  z.eq $value ".." && return 0
 
   return 1
 }
@@ -164,14 +168,18 @@ z.str.is_path_like() {
 #  z.str.is_not_path_like "~/documents"     #=> 1 (false)
 #  z.str.is_not_path_like "./script.sh"     #=> 1 (false)
 #  z.str.is_not_path_like "../config"       #=> 1 (false)
+#  z.str.is_not_path_like "."               #=> 1 (false)
+#  z.str.is_not_path_like ".."              #=> 1 (false)
 #  z.str.is_not_path_like "not/a/path"      #=> 0 (true)
 z.str.is_not_path_like() {
   local value=$1
 
-  z.str.match $value "/*" && return 1
-  z.str.match $value "~*" && return 1
-  z.str.match $value "./*" && return 1
-  z.str.match $value "../*" && return 1
+  z.str.is_match $value "/*" && return 1
+  z.str.is_match $value "~*" && return 1
+  z.str.is_match $value "./*" && return 1
+  z.str.is_match $value "../*" && return 1
+  z.eq $value "." && return 1
+  z.eq $value ".." && return 1
 
   return 0
 }

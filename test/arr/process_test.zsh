@@ -18,15 +18,25 @@ z.t.describe "z.arr.join"; {
       z.t.expect.reply.null
     }
   }
+
+  z.t.context "区切り文字が指定された場合"; {
+    z.t.it "指定された区切り文字で結合された文字列を返す"; {
+      z.arr.join delimiter="," "a" "b" "c"
+      z.t.expect.reply "a,b,c"
+
+      z.arr.join delimiter=":" "one" "two" "three" "four"
+      z.t.expect.reply "one:two:three:four"
+    }
+  }
 }
 
 z.t.describe "z.arr.split"; {
   z.t.context "区切り文字が指定された場合"; {
     z.t.it "指定された区切り文字で分割された配列を返す"; {
-      z.arr.split sep=, "a,b,c"
+      z.arr.split delimiter=, "a,b,c"
       z.t.expect.reply.arr "a" "b" "c"
 
-      z.arr.split sep=: "one:two:three:four"
+      z.arr.split delimiter=: "one:two:three:four"
       z.t.expect.reply.arr "one" "two" "three" "four"
     }
   }
@@ -205,6 +215,26 @@ z.t.describe "z.arr.union"; {
       z.arr.union base="$base" other="$other"
 
       z.t.expect.reply.arr "a" "b" "c" "d"
+    }
+  }
+}
+
+z.t.describe "z.arr.reverse"; {
+  z.t.context "配列要素が渡された場合"; {
+    z.t.it "要素が逆順に並んだ配列を返す"; {
+      z.arr.reverse "a" "b" "c"
+      z.t.expect.reply.arr "c" "b" "a"
+
+      z.arr.reverse "one" "two" "three" "four"
+      z.t.expect.reply.arr "four" "three" "two" "one"
+    }
+  }
+
+  z.t.context "配列要素が渡されなかった場合"; {
+    z.t.it "空配列を返す"; {
+      z.arr.reverse
+
+      z.t.expect.reply.null
     }
   }
 }

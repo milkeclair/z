@@ -65,3 +65,29 @@ z.t.describe "z.return"; {
     }
   }
 }
+
+z.t.describe "z.return.hash"; {
+  z.t.context "ハッシュが渡された場合"; {
+    z.t.it "REPLYにキーと値のペアの配列を設定する"; {
+      local -A hash
+      hash[name]="John"
+      hash[age]="30"
+
+      z.return.hash hash
+      local -A result=($REPLY)
+
+      z.t.expect ${result[name]} "John"
+      z.t.expect ${result[age]} "30"
+    }
+  }
+
+  z.t.context "空のハッシュが渡された場合"; {
+    z.t.it "REPLYを空に設定する"; {
+      local -A empty_hash
+
+      z.return.hash empty_hash
+
+      z.t.expect.reply.null
+    }
+  }
+}

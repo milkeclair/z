@@ -8,7 +8,8 @@ typeset -A z_t_mock_originals=()
 # example:
 #  z.t._state.mock_originals  #=> ("func1" "func2" ...)
 z.t._state.mock_originals() {
-  z.return ${(k)z_t_mock_originals[@]}
+  z.hash.keys z_t_mock_originals
+  z.return ${REPLY[@]}
 }
 
 # get a mock original by function name

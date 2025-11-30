@@ -8,15 +8,37 @@ local -A z_modules=(
   [dir]="operator:process"
   [file]="operator:process"
   [fn]="analysis:operator:process"
+  [hash]="analysis:operator:process"
   [int]="operator"
   [io]="process"
   [mode]="process"
+  [path]="analysis:process"
   [status]="analysis:operator"
   [str]="operator:process"
   [t]="state:dsl:expect:log:mock:process"
+  [var]="operator:analysis"
 )
 
-for module in ${(k)z_modules}; do
+local z_module_depends_order=(
+  arg
+  arr
+  common
+  debug
+  dir
+  file
+  var # var are used in fn
+  fn
+  hash
+  int
+  io
+  mode
+  path
+  status
+  str
+  t
+)
+
+for module in $z_module_depends_order; do
   local parts=(${(s/:/)z_modules[$module]})
 
   for part in $parts; do
@@ -31,5 +53,7 @@ z.arg() {}
 z.arr() {}
 z.dir() {}
 z.file() {}
+z.hash() {}
 z.int() {}
 z.str() {}
+z.path() {}

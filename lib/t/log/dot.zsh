@@ -44,7 +44,7 @@ z.t._log.dot.output() {
   local count_file="${Z_TEST_COMPACT_DIR}/.dot_count"
   local count=0
 
-  z.file.exist $count_file && count=$(cat $count_file)
+  z.file.exists $count_file && count=$(cat $count_file)
 
   local terminal_width=${COLUMNS:-80}
   local width=80

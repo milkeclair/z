@@ -85,7 +85,8 @@ z.fn.delete() {
 z.fn.delete_all() {
   z.fn._ensure_store
 
-  for value in ${(v)z_fn_set}; do
+  z.hash.values z_fn_set
+  for value in $REPLY; do
     unfunction $value
   done
 
@@ -131,6 +132,6 @@ z.fn.edit() {
 # example:
 #  z.fn._ensure_store
 z.fn._ensure_store() {
-  (( ${+z_fn_set} )) || typeset -gA z_fn_set
-  (( ${+z_fn_source} )) || typeset -gA z_fn_source
+  z.var.exists z_fn_set || typeset -gA z_fn_set
+  z.var.exists z_fn_source || typeset -gA z_fn_source
 }

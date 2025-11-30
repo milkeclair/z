@@ -5,8 +5,8 @@
 # return: 0|1
 #
 # example:
-#  z.dir.exist "/path/to/dir" #=> return 0 if exists
-z.dir.exist() {
+#  z.dir.exists "/path/to/dir" #=> return 0 if exists
+z.dir.exists() {
   local dir=$1
 
   [[ -d $dir ]]
@@ -19,9 +19,9 @@ z.dir.exist() {
 # return: 0|1
 #
 # example:
-#  z.dir.not_exist "/path/to/dir" #=> return 0 if not exists
-z.dir.not_exist() {
+#  z.dir.not_exists "/path/to/dir" #=> return 0 if not exists
+z.dir.not_exists() {
   local dir=$1
 
-  ! z.dir.exist $dir
+  ! z.dir.exists $dir
 }

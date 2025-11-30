@@ -5,8 +5,8 @@
 # return: 0|1
 #
 # example:
-#  z.file.exist "/path/to/file" #=> 0
-z.file.exist() {
+#  z.file.exists "/path/to/file" #=> 0
+z.file.exists() {
   local file=$1
 
   [[ -f $file ]]
@@ -19,7 +19,7 @@ z.file.exist() {
 # return: 0|1
 #
 # example:
-#  z.file.not_exist "/path/to/file" #=> 1
-z.file.not_exist() {
-  ! z.file.exist $1
+#  z.file.not_exists "/path/to/file" #=> 1
+z.file.not_exists() {
+  ! z.file.exists $1
 }

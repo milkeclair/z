@@ -12,7 +12,8 @@ z.fn.exists() {
   local name=$1
   local key
 
-  for key in ${(k)z_fn_set}; do
+  z.hash.keys z_fn_set
+  for key in $REPLY; do
     z.eq $key $name && return 0
   done
 
