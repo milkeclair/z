@@ -14,7 +14,7 @@ local -A z_modules=(
   [status]="analysis:operator"
   [str]="operator:process"
   [t]="state:dsl:expect:log:mock:process"
-  [var]="analysis"
+  [var]="analysis:operator"
 )
 
 for module in ${(k)z_modules}; do
@@ -34,3 +34,4 @@ z.dir() {}
 z.file() {}
 z.int() {}
 z.str() {}
+z.arg() {}
