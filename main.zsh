@@ -14,10 +14,27 @@ local -A z_modules=(
   [status]="analysis:operator"
   [str]="operator:process"
   [t]="state:dsl:expect:log:mock:process"
-  [var]="analysis:operator"
+  [var]="operator:analysis"
 )
 
-for module in ${(k)z_modules}; do
+local z_module_depends_order=(
+  arg
+  arr
+  common
+  debug
+  dir
+  file
+  var # var are used in fn
+  fn
+  int
+  io
+  mode
+  status
+  str
+  t
+)
+
+for module in $z_module_depends_order; do
   local parts=(${(s/:/)z_modules[$module]})
 
   for part in $parts; do

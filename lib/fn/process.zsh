@@ -131,6 +131,6 @@ z.fn.edit() {
 # example:
 #  z.fn._ensure_store
 z.fn._ensure_store() {
-  (( ${+z_fn_set} )) || typeset -gA z_fn_set
-  (( ${+z_fn_source} )) || typeset -gA z_fn_source
+  z.var.exists z_fn_set || typeset -gA z_fn_set
+  z.var.exists z_fn_source || typeset -gA z_fn_source
 }
