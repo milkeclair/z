@@ -4,7 +4,7 @@ z.git.commit() {
   shift
   z.guard; {
     z.arr.count $@
-    if z.int.lt $REPLY 2; then
+    if z.int.is.lt $REPLY 2; then
       z.io.empty
       z.git.commit._show_help
       return 1
@@ -20,17 +20,17 @@ z.git.commit() {
   for arg in $@; do
     if z.str.match $arg "-*"; then
       opts+=($arg)
-    elif z.is_null $ticket; then
+    elif z.is.null $ticket; then
       ticket=$arg
     fi
   done
 
-  if z.is_null $message; then
+  if z.is.null $message; then
     z.git.commit._show_help && return 1
   fi
 
 
-  if z.is_null $ticket && z.str.not_match " ${opts[*]} " "* -nt *"; then
+  if z.is.null $ticket && z.str.is.not.match " ${opts[*]} " "* -nt *"; then
     current_branch=$(z.git.hp.current_branch)
     last_part=${current_branch##*-}
     if z.str.match $last_part "^[0-9]+$"; then
@@ -39,7 +39,7 @@ z.git.commit() {
   fi
 
   local commit_message="$tag: "
-  z.is_not_null $ticket && commit_message+="#$ticket "
+  z.is.not.null $ticket && commit_message+="#$ticket "
   commit_message+=$message
 
   z.git.commit._with_committer "$commit_message" ${opts[@]}
@@ -52,13 +52,13 @@ z.git.commit.tdd() {
   local tags=("feat" "feature" "fix" "chore" "docs" "style" "refactor" "perf" "test" "build" "ci" "revert")
 
   z.guard; {
-    if z.str.not_match " ${tdd_cycles[@]} " " $cycle "; then
+    if z.str.is.not.match " ${tdd_cycles[@]} " " $cycle "; then
       z.git.commit.tdd._show_help
       return 1
     fi
 
     z.arr.count $@
-    if z.int.lt $REPLY 3; then
+    if z.int.is.lt $REPLY 3; then
       z.git.commit.tdd._show_help
       return 1
     fi
@@ -71,24 +71,24 @@ z.git.commit.tdd() {
   for arg in ${@:4}; do
     if z.str.match $arg "^-"; then
       opts+=($arg)
-    elif z.is_null $ticket; then
+    elif z.is.null $ticket; then
       ticket=$arg
     fi
   done
 
   z.guard; {
-    if z.is_null $tag || z.is_null $message; then
+    if z.is.null $tag || z.is.null $message; then
       z.git.commit.tdd._show_help
       return 1
     fi
 
-    if z.str.not_match " ${tags[*]} " " $tag "; then
+    if z.str.is.not.match " ${tags[*]} " " $tag "; then
       z.git.commit.tdd._show_tag_help ${tags[@]}
       return 1
     fi
   }
 
-  if z.is_null $ticket && z.str.not_match " ${opts[*]} " " -nt "; then
+  if z.is.null $ticket && z.str.is.not.match " ${opts[*]} " " -nt "; then
     current_branch=$(z.git.hp.current_branch)
     after_last_slash=${current_branch##*/}
     first_part=${after_last_slash%%-*}
@@ -102,7 +102,7 @@ z.git.commit.tdd() {
   fi
 
   commit_message="$tag: "
-  z.is_not_null $ticket && commit_message+="#$ticket "
+  z.is.not.null $ticket && commit_message+="#$ticket "
   commit_message+="[$cycle] $message"
 
   z.git.commit._with_committer "$commit_message" ${opts[@]}
@@ -120,9 +120,9 @@ z.git.commit._with_committer() {
   done
 
   for opt in ${opts[@]}; do
-    if z.eq $opt "-ca"; then
+    if z.is.eq $opt "-ca"; then
       extra_opts+=("--amend")
-    elif z.eq $opt "-ae"; then
+    elif z.is.eq $opt "-ae"; then
       extra_opts+=("--allow-empty")
     fi
   done

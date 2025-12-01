@@ -4,18 +4,18 @@ z.git.commit._show_help() {
 
 z.git.commit.tdd._show_help() {
   z.io.empty
-  z.io.indent level=1 "Usage:"
-  z.io.indent level=2 "red:      git red [tag] message ?[ticket] ?[-nt|-ca]"
-  z.io.indent level=2 "green:    git green [tag] message ?[ticket] ?[-nt|-ca]"
-  z.io.indent level=2 "refactor: git green refactor message ?[ticket] ?[-nt|-ca]"
+  z.io indent=1 "Usage:"
+  z.io indent=2 "red:      git red [tag] message ?[ticket] ?[-nt|-ca]"
+  z.io indent=2 "green:    git green [tag] message ?[ticket] ?[-nt|-ca]"
+  z.io indent=2 "refactor: git green refactor message ?[ticket] ?[-nt|-ca]"
 }
 
 z.git.commit.tdd._show_tag_help() {
   local tags=($@)
 
   z.io.empty
-  z.io.indent level=1 "Valid tags are:"
-  z.io.indent level=2 "${tags[*]}"
+  z.io indent=1 "Valid tags are:"
+  z.io indent=2 "${tags[*]}"
 }
 
 z.git.commit._show_committer() {

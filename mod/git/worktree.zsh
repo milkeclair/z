@@ -23,7 +23,7 @@ z.git.worktree.to() {
     esac
   done
 
-  if z.str.empty $branch; then
+  if z.str.is.empty $branch; then
     z.git.worktree.to._print_help >&2
     return 1
   fi
@@ -32,8 +32,8 @@ z.git.worktree.to() {
   local tree_root="$root/../${$(basename "$root")}_worktree"
   local branch_path=${branch//\//_}
 
-  if z.eq $branch "root"; then
-    if z.is_true $open_vscode; then
+  if z.is.eq $branch "root"; then
+    if z.is.true $open_vscode; then
       code $root
     else
       cd $root
@@ -43,9 +43,9 @@ z.git.worktree.to() {
 
   local normalized_path=$(cd "$tree_root/$branch_path" 2>/dev/null && pwd)
 
-  if z.dir.exist $tree_root/$branch_path; then
+  if z.dir.exists $tree_root/$branch_path; then
     if git worktree list --porcelain | grep -qF "worktree $normalized_path"; then
-      if z.is_true $open_vscode; then
+      if z.is.true $open_vscode; then
         code "$tree_root/$branch_path"
       else
         cd "$tree_root/$branch_path"
@@ -65,14 +65,14 @@ z.git.worktree.to() {
   fi
 
   local config_file="$root/.worktreeconfig"
-  if z.file.exist $config_file; then
+  if z.file.exists $config_file; then
     cp "$config_file" "$tree_root/$branch_path/.worktreeconfig"
 
     local section=""
     local script_lines=()
 
     while IFS= read -r line; do
-      z.str.empty $line || [[ "$line" =~ ^[[:space:]]*# ]] && continue
+      z.str.is.empty $line || [[ "$line" =~ ^[[:space:]]*# ]] && continue
 
       if [[ "$line" =~ '^\[([^]]+)\]' ]]; then
         section=${line#\[}
@@ -80,8 +80,8 @@ z.git.worktree.to() {
         continue
       fi
 
-      if z.eq $section "file"; then
-        if z.file.exist "$root/$line"; then
+      if z.is.eq $section "file"; then
+        if z.file.exists "$root/$line"; then
           local dest_dir=$(dirname "$tree_root/$branch_path/$line")
           z.dir.make path="$dest_dir"
           cp "$root/$line" "$tree_root/$branch_path/$line"
@@ -89,12 +89,12 @@ z.git.worktree.to() {
           z.dir.make path="$tree_root/$branch_path/$line"
           cp -a "$root/$line/." "$tree_root/$branch_path/$line/"
         fi
-      elif z.eq $section "script"; then
+      elif z.is.eq $section "script"; then
         script_lines+=("$line")
       fi
     done < "$config_file"
 
-    if z.int.gt ${#script_lines[@]} 0; then
+    if z.int.is.gt ${#script_lines[@]} 0; then
       (
         cd "$tree_root/$branch_path"
         for cmd in "${script_lines[@]}"; do
@@ -104,7 +104,7 @@ z.git.worktree.to() {
     fi
   fi
 
-  if z.is_true $open_vscode; then
+  if z.is.true $open_vscode; then
     code "$tree_root/$branch_path"
   else
     cd "$tree_root/$branch_path"
@@ -121,7 +121,7 @@ z.git.worktree.to._print_help() {
 z.git.worktree.pr() {
   local pr_number=$1
 
-  if z.str.empty $pr_number; then
+  if z.str.is.empty $pr_number; then
     z.io.error "Please specify a PR number"
     return 1
   fi
@@ -149,32 +149,32 @@ z.git.worktree.list() {
 
   while IFS= read -r line; do
     if z.str.start_with $line "worktree "; then
-      z.str.not_empty $worktree && z.git.worktree.list._print_worktree_entry
+      z.str.is.not.empty $worktree && z.git.worktree.list._print_worktree_entry
       worktree=${line#worktree }
       registered_worktrees+=("$worktree")
     elif z.str.start_with $line "HEAD "; then
       head=${line#HEAD }
     elif z.str.start_with $line "branch "; then
       branch=${line#branch refs/heads/}
-    elif z.str.empty $line; then
+    elif z.str.is.empty $line; then
       z.git.worktree.list._print_worktree_entry
       worktree="" branch="" head=""
     fi
   done < <(git worktree list --porcelain)
 
-  z.str.not_empty $worktree && z.git.worktree.list._print_worktree_entry
+  z.str.is.not.empty $worktree && z.git.worktree.list._print_worktree_entry
 
   for dir in $tree_root/*(/N); do
     local normalized_dir=$(cd "$dir" && pwd)
     local is_registered=false
 
     for registered in "${registered_worktrees[@]}"; do
-      if z.eq $normalized_dir $registered; then
+      if z.is.eq $normalized_dir $registered; then
         is_registered=true && break
       fi
     done
 
-    if z.eq $is_registered false; then
+    if z.is.eq $is_registered false; then
       local dir_name=$(basename "$dir")
       z.str.color.red "$dir_name [unregistered]"
       z.io $REPLY
@@ -185,7 +185,7 @@ z.git.worktree.list() {
 z.git.worktree.list._print_worktree_entry() {
   local short_hash=${head:0:7}
 
-  if z.eq $worktree $root; then
+  if z.is.eq $worktree $root; then
     z.str.color.magenta "root $short_hash [$branch]"
     z.io $REPLY
   else
@@ -201,12 +201,12 @@ z.git.worktree.pt() {
 }
 
 z.git.worktree.bk() {
-  if z.str.empty $CURRENT_WORKTREE; then
+  if z.str.is.empty $CURRENT_WORKTREE; then
     z.io.error "No current worktree saved. Use 'git pt' to save the current worktree first."
     return 1
   fi
 
-  if z.dir.not_exist $CURRENT_WORKTREE; then
+  if z.dir.not.exists $CURRENT_WORKTREE; then
     z.io.error "Saved worktree no longer exists: $CURRENT_WORKTREE"
     return 1
   fi
@@ -230,9 +230,9 @@ z.git.worktree.cb() {
         is_protected=true
       fi
 
-      z.eq $worktree_path $current_worktree && continue
+      z.is.eq $worktree_path $current_worktree && continue
 
-      if z.eq $is_protected false && [[ " ${merged_branches[*]} " == *" $branch_name "* ]]; then
+      if z.is.eq $is_protected false && [[ " ${merged_branches[*]} " == *" $branch_name "* ]]; then
         z.git.worktree.rm $branch_name
       else
         z.io "Skipping branch: $branch_name"
@@ -264,13 +264,13 @@ z.git.worktree.rm() {
     esac
   done
 
-  if z.is_true $unregistered; then
+  if z.is.true $unregistered; then
     z.git.worktree.rm._remove_unregistered
     z.status
     return $REPLY
   fi
 
-  if z.str.empty $branch; then
+  if z.str.is.empty $branch; then
     z.io.error "Please specify a branch name"
     return 1
   fi
@@ -286,23 +286,23 @@ z.git.worktree.rm() {
   while IFS= read -r line; do
     if z.str.start_with $line "worktree "; then
       local current_worktree=${line#worktree }
-      if z.eq $current_worktree $normalized_path; then
+      if z.is.eq $current_worktree $normalized_path; then
         worktree_dir=$current_worktree
       fi
-    elif z.str.start_with $line "branch " && z.str.not_empty $worktree_dir; then
+    elif z.str.start_with $line "branch " && z.str.is.not.empty $worktree_dir; then
       local branch_ref=${line#branch }
       actual_branch=${branch_ref#refs/heads/}
       break
     fi
   done < <(git worktree list --porcelain)
 
-  if z.str.empty $worktree_dir; then
+  if z.str.is.empty $worktree_dir; then
     z.io.error "Worktree not found for the specified branch: $branch"
     git worktree list
     return 1
   fi
 
-  if z.str.empty $actual_branch; then
+  if z.str.is.empty $actual_branch; then
     z.io.error "Failed to retrieve branch information for the worktree"
     return 1
   fi
@@ -334,7 +334,7 @@ z.git.worktree.rm() {
         return 1
       fi
 
-      if z.dir.exist $worktree_dir; then
+      if z.dir.exists $worktree_dir; then
         if sudo rm -rf "$worktree_dir"; then
           removal_completed=true
         else
@@ -352,7 +352,7 @@ z.git.worktree.rm() {
     fi
   fi
 
-  if ! z.is_true $removal_completed; then
+  if ! z.is.true $removal_completed; then
     return 1
   fi
 
@@ -366,14 +366,14 @@ z.git.worktree.rm() {
 z.git.worktree.rm._is_registered() {
   local target=$1
 
-  if z.str.empty $target; then
+  if z.str.is.empty $target; then
     return 1
   fi
 
   while IFS= read -r line; do
     if z.str.start_with $line "worktree "; then
       local current=${line#worktree }
-      if z.eq $current $target; then
+      if z.is.eq $current $target; then
         return 0
       fi
     fi
@@ -386,7 +386,7 @@ z.git.worktree.rm._remove_unregistered() {
   local root=$(git worktree list --porcelain | grep '^worktree ' | head -1 | cut -d' ' -f2)
   local tree_root="$root/../${$(basename "$root")}_worktree"
 
-  if z.dir.not_exist $tree_root; then
+  if z.dir.not.exists $tree_root; then
     z.io.error "Worktree directory does not exist: $tree_root"
     return 1
   fi
@@ -407,12 +407,12 @@ z.git.worktree.rm._remove_unregistered() {
     local is_registered=false
 
     for registered in "${registered_worktrees[@]}"; do
-      if z.eq $normalized_dir $registered; then
+      if z.is.eq $normalized_dir $registered; then
         is_registered=true && break
       fi
     done
 
-    if z.eq $is_registered false; then
+    if z.is.eq $is_registered false; then
       local dir_name=$(basename "$dir")
       chmod -R u+w "$dir" 2>/dev/null || true
 
@@ -420,7 +420,7 @@ z.git.worktree.rm._remove_unregistered() {
         z.io.error "  Regular removal failed, trying with sudo..."
         if command -v sudo >/dev/null 2>&1; then
           sudo rm -rf $dir
-          if z.status.is_true; then
+          if z.status.is.true; then
             removed_count=$((removed_count + 1))
           else
             z.io.error "  Failed to remove: $dir"
@@ -436,7 +436,7 @@ z.git.worktree.rm._remove_unregistered() {
     fi
   done
 
-  if z.int.eq $removed_count 0; then
+  if z.int.is.eq $removed_count 0; then
     z.io "No unregistered worktree directories were removed."
   else
     z.io "Successfully removed $removed_count unregistered worktree directories."
@@ -459,13 +459,13 @@ _z.git.worktree() {
   local subcommand=""
   local i
   for ((i=2; i<=${#words[@]}; i++)); do
-    if z.not_eq ${words[i]} -* ]]; then
+    if z.is.not.eq ${words[i]} -* ]]; then
       subcommand=${words[i]}
       break
     fi
   done
 
-  if z.is_null $subcommand; then
+  if z.is.null $subcommand; then
     _describe "git worktree commands" subcommands
     return
   fi
@@ -476,7 +476,7 @@ _z.git.worktree() {
         '-o[Open in VS Code]' \
         '*:branch:->branches'
 
-      if z.eq $state "branches"; then
+      if z.is.eq $state "branches"; then
         local -a branches
         branches=(${(f)"$(git branch --format='%(refname:short)')"})
         _describe "branches" branches
