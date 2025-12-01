@@ -10,7 +10,8 @@ z.str.color.strip() {
   local message=$1
 
   local stripped=$message
-  for code in ${(v)z_color_palette}; do
+  z.hash.values z_color_palette
+  for code in $REPLY; do
     stripped=${stripped//$code/}
   done
 
@@ -36,7 +37,7 @@ z.str.color.decorate() {
   z.str.color $color
   local color_prefix=$REPLY
 
-  if z.is_not_null $color_prefix; then
+  if z.is.not.null $color_prefix; then
     z.str.color reset
     local reset=$REPLY
     z.return "${color_prefix}${plain}${reset}"

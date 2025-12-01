@@ -19,11 +19,11 @@ z.file.make() {
   z.arg.named path $@ && local file=$REPLY
   z.arg.named with_dir $@ default=false && local with_dir=$REPLY
 
-  if z.is_true $with_dir; then
+  if z.is.true $with_dir; then
     z.dir.make path=$(dirname $file)
   fi
 
-  z.file.not_exist $file && touch $file >/dev/null 2>&1
+  z.file.not.exists $file && touch $file >/dev/null 2>&1
 }
 
 # write content to a file (overwrite)
@@ -53,7 +53,7 @@ z.file.write() {
 z.file.read() {
   z.arg.named path $@ && local file=$REPLY
 
-  if z.file.exist $file; then
+  if z.file.exists $file; then
     REPLY=$(cat $file)
   else
     z.return

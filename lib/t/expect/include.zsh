@@ -1,3 +1,11 @@
+for is_file in ${z_root}/lib/t/expect/is/*.zsh; do
+  source $is_file
+done
+
+for is_not_file in ${z_root}/lib/t/expect/is/not/*.zsh; do
+  source $is_not_file
+done
+
 # expect that actual includes expect
 #
 # $1: actual value
@@ -7,19 +15,19 @@
 # return: null
 #
 # example:
-#  z.t.expect.include $actual $expect
-z.t.expect.include() {
+#  z.t.expect.includes $actual $expect
+z.t.expect.includes() {
   local actual=$1
   local expect=$2
   z.arg.named skip_unmock $@ && local skip_unmock=$REPLY
 
   z.t._state.skip.it
-  if z.is_true $REPLY; then
+  if z.is.true $REPLY; then
     z.t.mock.unmock.all skip_unmock=$skip_unmock
     return 0
   fi
 
-  if z.str.exclude "$actual" "$expect"; then
+  if z.str.excludes "$actual" "$expect"; then
     z.t._log.failure.handle "message=failed: expected [ $expect ] to be included in [ $actual ]"
   fi
 
@@ -35,19 +43,19 @@ z.t.expect.include() {
 # return: null
 #
 # example:
-#  z.t.expect.exclude $actual $expect
-z.t.expect.exclude() {
+#  z.t.expect.excludes $actual $expect
+z.t.expect.excludes() {
   local actual=$1
   local expect=$2
   z.arg.named skip_unmock $@ && local skip_unmock=$REPLY
 
   z.t._state.skip.it
-  if z.is_true $REPLY; then
+  if z.is.true $REPLY; then
     z.t.mock.unmock.all skip_unmock=$skip_unmock
     return 0
   fi
 
-  if z.str.include "$actual" "$expect"; then
+  if z.str.includes "$actual" "$expect"; then
     z.t._log.failure.handle "message=failed: expected [ $expect ] to be excluded from [ $actual ]"
   fi
 

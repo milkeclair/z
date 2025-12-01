@@ -47,21 +47,21 @@ z.t._log.failure.add() {
   z.t._state.current_idx "it"
   local i_idx=$REPLY
 
-  if z.int.is_not_zero $d_idx; then
+  if z.int.is.not.zero $d_idx; then
     z.t._state.logs.context $d_idx
     z.str.color.red $REPLY
 
     z.t._state.logs.context.set index=$d_idx $REPLY
   fi
 
-  if z.int.is_not_zero $c_idx; then
+  if z.int.is.not.zero $c_idx; then
     z.t._state.logs.context $c_idx
     z.str.color.red $REPLY
 
     z.t._state.logs.context.set index=$c_idx $REPLY
   fi
 
-  if z.int.is_not_zero $i_idx; then
+  if z.int.is.not.zero $i_idx; then
     z.t._state.logs.context $i_idx
     z.str.color.red $REPLY
 
@@ -87,7 +87,7 @@ z.t._log.failure.handle() {
   z.t._state.compact
   local is_compact=$REPLY
 
-  if z.is_true $is_compact; then
+  if z.is.true $is_compact; then
     z.t._state.current_it_failures.increment
   fi
 

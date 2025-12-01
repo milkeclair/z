@@ -10,13 +10,13 @@
 z.t.mock.result() {
   z.arg.named name $@ && local func_name=$REPLY
 
-  if z.is_null $func_name; then
+  if z.is.null $func_name; then
     z.t._state.mock_last_func
     func_name=$REPLY
   fi
 
   z.t._state.mock_calls.context $func_name
-  if z.is_null $REPLY; then
+  if z.is.null $REPLY; then
     REPLY=()
   else
     z.str.split str=$REPLY delimiter=:

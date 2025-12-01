@@ -11,7 +11,7 @@ z.t.describe "z.fn.list"; {
       z.fn.list
 
       z.t.mock.result name="z.io"
-      z.t.expect.reply.include "$name Defined in $PWD indent=1"
+      z.t.expect.reply.includes "$name Defined in $PWD indent=1"
     }
   }
 
@@ -23,7 +23,7 @@ z.t.describe "z.fn.list"; {
       z.fn.list
 
       z.t.mock.result name="z.io"
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }
@@ -40,9 +40,9 @@ z.t.describe "z.fn.show"; {
 
       z.t.mock.result name="z.io"
       local result=$REPLY
-      z.t.expect.include "$result" "Defined in"
-      z.t.expect.include "$result" $PWD
-      z.t.expect.include "$result" 'Hello, World!'
+      z.t.expect.includes "$result" "Defined in"
+      z.t.expect.includes "$result" $PWD
+      z.t.expect.includes "$result" 'Hello, World!'
     }
   }
 

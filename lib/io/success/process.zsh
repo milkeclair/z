@@ -15,8 +15,8 @@ z.io.success.oneline() {
   z.arg.named.shift indent $REPLY
   local args=($REPLY)
 
-  z.is_not_null $indent && z.str.indent level=$indent message="$args" && args=($REPLY)
-  z.is_not_null $color && z.str.color.decorate color=$color message="$args" && args=($REPLY)
+  z.is.not.null $indent && z.str.indent level=$indent message="$args" && args=($REPLY)
+  z.is.not.null $color && z.str.color.decorate color=$color message="$args" && args=($REPLY)
 
   z.io.oneline $args
 }
@@ -39,19 +39,19 @@ z.io.success.line() {
   local args=($REPLY)
 
   z.guard; {
-    z.is_null $args && return
+    z.is.null $args && return
   }
 
   local lines=()
   for arg in $args; do
     local line=$arg
-    z.is_not_null $indent && z.str.indent level=$indent message="$line" && line=$REPLY
+    z.is.not.null $indent && z.str.indent level=$indent message="$line" && line=$REPLY
     lines+=($line)
   done
 
   z.arr.join.line $lines
   local message=$REPLY
-  z.is_not_null $color && z.str.color.decorate color=$color message="$message" && message=$REPLY
+  z.is.not.null $color && z.str.color.decorate color=$color message="$message" && message=$REPLY
 
   print -- $message
 }

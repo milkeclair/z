@@ -1,3 +1,15 @@
+for reply_file in ${z_root}/lib/t/expect/reply/*.zsh; do
+  source $reply_file
+done
+
+for reply_is_file in ${z_root}/lib/t/expect/reply/is/*.zsh; do
+  source $reply_is_file
+done
+
+for reply_is_not_file in ${z_root}/lib/t/expect/reply/is/not/*.zsh; do
+  source $reply_is_not_file
+done
+
 # expect that REPLY equals expect
 #
 # $1: expected value
@@ -14,88 +26,4 @@ z.t.expect.reply() {
   z.arg.named skip_unmock $@ && local skip_unmock=$REPLY
 
   z.t.expect "$reply" "$expect" "skip_unmock=$skip_unmock"
-}
-
-# expect that REPLY is null (empty string)
-#
-# $skip_unmock?: skip_unmock
-# REPLY: null
-# return: null
-#
-# example:
-#  REPLY=""
-#  z.t.expect.reply.null
-z.t.expect.reply.null() {
-  local expect=""
-  local reply=$REPLY
-  z.arg.named skip_unmock $@ && local skip_unmock=$REPLY
-
-  z.t.expect "$reply" "$expect" "skip_unmock=$skip_unmock"
-}
-
-# expect that REPLY is not null (not empty string)
-#
-# $skip_unmock?: skip_unmock
-# REPLY: null
-# return: null
-#
-# example:
-#  REPLY="some value"
-#  z.t.expect.reply.not_null
-z.t.expect.reply.not_null() {
-  local expect=""
-  local reply=$REPLY
-  z.arg.named skip_unmock $@ && local skip_unmock=$REPLY
-
-  z.t.expect.not "$reply" "$expect" "skip_unmock=$skip_unmock"
-}
-
-# expect that REPLY array equals expect array
-#
-# $@: expected array elements
-# $skip_unmock?: skip_unmock
-# REPLY: null
-# return: null
-#
-# example:
-#  REPLY=("a" "b" "c")
-#  z.t.expect.reply.arr "a" "b" "c"
-z.t.expect.reply.arr() {
-  local actual=($REPLY)
-
-  local args=($@)
-  local skip_unmock=""
-  z.arg.last $args
-
-  if z.str.include $REPLY "skip_unmock="; then
-    skip_unmock=true
-    args=(${args[1,-2]})
-  fi
-
-  local expect=($args)
-
-  z.arr.join ${expect[@]}
-  local expect_str=$REPLY
-  z.arr.join ${actual[@]}
-  local actual_str=$REPLY
-
-  z.t.expect "$actual_str" "$expect_str" "skip_unmock=$skip_unmock"
-}
-
-# expect that REPLY includes expect
-#
-# $1: expected substring
-# $skip_unmock?: skip_unmock
-# REPLY: null
-# return: null
-#
-# example:
-#  REPLY="some long string"
-#  z.t.expect.reply.include "long"
-z.t.expect.reply.include() {
-  local expect=$1
-  local reply=$REPLY
-  z.arg.named skip_unmock $@ && local skip_unmock=$REPLY
-
-  z.t.expect.include "$reply" "$expect" "skip_unmock=$skip_unmock"
 }

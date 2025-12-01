@@ -1,3 +1,7 @@
+for not_file in ${z_root}/lib/fn/not/*.zsh; do
+  source ${not_file}
+done
+
 # check if a function exists
 #
 # $1: function name
@@ -12,27 +16,10 @@ z.fn.exists() {
   local name=$1
   local key
 
-  for key in ${(k)z_fn_set}; do
-    z.eq $key $name && return 0
+  z.hash.keys z_fn_set
+  for key in $REPLY; do
+    z.is.eq $key $name && return 0
   done
 
   return 1
-}
-
-# check if a function does not exist
-#
-# $1: function name
-# REPLY: null
-# return 0|1
-#
-# example:
-#  if z.fn.not_exists my_func
-z.fn.not_exists() {
-  z.fn._ensure_store
-
-  local name=$1
-
-  z.fn.exists $name && return 1
-
-  return 0
 }

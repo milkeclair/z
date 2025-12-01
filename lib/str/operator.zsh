@@ -1,66 +1,6 @@
-# check if string is empty
-#
-# $1: string
-# REPLY: null
-# return 0|1
-#
-# example:
-#  z.str.empty ""
-#  z.str.empty "hello"
-z.str.empty() {
-  local value=$1
-
-  [[ -z $value ]]
-}
-
-# check if string is not empty
-#
-# $1: string
-# REPLY: null
-# return 0|1
-#
-# example:
-#  z.str.not_empty ""
-#  z.str.not_empty "hello"
-z.str.not_empty() {
-  local value=$1
-
-  [[ -n $value ]]
-}
-
-# check if string matches pattern
-#
-# $1: string
-# $2: pattern (glob pattern)
-# REPLY: null
-# return 0|1
-#
-# example:
-#  z.str.match "hello" "h*o"  #=> 0 (true)
-#  z.str.match "hello" "H*O"  #=> 1 (false, case-sensitive)
-z.str.match() {
-  local string=$1
-  local pattern=$2
-
-  [[ $string == ${~pattern} ]]
-}
-
-# check if string does not match pattern
-#
-# $1: string
-# $2: pattern (glob pattern)
-# REPLY: null
-# return 0|1
-#
-# example:
-#  z.str.not_match "hello" "h*o"  #=> 1 (false)
-#  z.str.not_match "hello" "H*O"  #=> 0 (true, case-sensitive)
-z.str.not_match() {
-  local string=$1
-  local pattern=$2
-
-  [[ $string != ${~pattern} ]]
-}
+for is_file in ${z_root}/lib/str/is/*.zsh; do
+  source ${is_file}
+done
 
 # check if string contains substring
 #
@@ -70,9 +10,9 @@ z.str.not_match() {
 # return 0|1
 #
 # example:
-#  z.str.include "hello world" "lo wo"  #=> 0 (true)
-#  z.str.include "hello world" "LO WO"  #=> 1 (false, case-sensitive)
-z.str.include() {
+#  z.str.includes "hello world" "lo wo"  #=> 0 (true)
+#  z.str.includes "hello world" "LO WO"  #=> 1 (false, case-sensitive)
+z.str.includes() {
   local string=$1
   local substring=$2
 
@@ -87,9 +27,9 @@ z.str.include() {
 # return 0|1
 #
 # example:
-#  z.str.exclude "hello world" "lo wo"  #=> 1 (false)
-#  z.str.exclude "hello world" "LO WO"  #=> 0 (true, case-sensitive)
-z.str.exclude() {
+#  z.str.excludes "hello world" "lo wo"  #=> 1 (false)
+#  z.str.excludes "hello world" "LO WO"  #=> 0 (true, case-sensitive)
+z.str.excludes() {
   local string=$1
   local substring=$2
 
@@ -128,50 +68,4 @@ z.str.end_with() {
   local suffix=$2
 
   [[ $string == *$suffix ]]
-}
-
-# check if string is path-like
-#
-# $1: string
-# REPLY: null
-# return 0|1
-#
-# example:
-#  z.str.is_path_like "/usr/local/bin"  #=> 0 (true)
-#  z.str.is_path_like "~/documents"     #=> 0 (true)
-#  z.str.is_path_like "./script.sh"     #=> 0 (true)
-#  z.str.is_path_like "../config"       #=> 0 (true)
-#  z.str.is_path_like "not/a/path"      #=> 1 (false)
-z.str.is_path_like() {
-  local value=$1
-
-  z.str.match $value "/*" && return 0
-  z.str.match $value "~*" && return 0
-  z.str.match $value "./*" && return 0
-  z.str.match $value "../*" && return 0
-
-  return 1
-}
-
-# check if string is not path-like
-#
-# $1: string
-# REPLY: null
-# return 0|1
-#
-# example:
-#  z.str.is_not_path_like "/usr/local/bin"  #=> 1 (false)
-#  z.str.is_not_path_like "~/documents"     #=> 1 (false)
-#  z.str.is_not_path_like "./script.sh"     #=> 1 (false)
-#  z.str.is_not_path_like "../config"       #=> 1 (false)
-#  z.str.is_not_path_like "not/a/path"      #=> 0 (true)
-z.str.is_not_path_like() {
-  local value=$1
-
-  z.str.match $value "/*" && return 1
-  z.str.match $value "~*" && return 1
-  z.str.match $value "./*" && return 1
-  z.str.match $value "../*" && return 1
-
-  return 0
 }

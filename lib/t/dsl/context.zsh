@@ -14,7 +14,7 @@ z.t.context() {
   local describe_skip=$REPLY
 
   z.str.indent level=2 message=$context
-  if z.is_true $describe_skip; then
+  if z.is.true $describe_skip; then
     z.str.color.yellow $REPLY
   else
     z.str.color.green $REPLY
@@ -23,7 +23,7 @@ z.t.context() {
   z.t._state.logs.add $REPLY
   z.t._state.current_idx.add "context"
 
-  if z.is_true $describe_skip; then
+  if z.is.true $describe_skip; then
     z.t._state.skip.context.set "true"
     z.t._state.skip.it.set "true"
   else

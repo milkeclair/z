@@ -9,7 +9,7 @@ z.t.describe "z.file.read.lines"; {
 
       z.file.read.lines path=/tmp/z_t/file_read_lines.txt
 
-      z.t.expect.reply.include "line1 line2 line3"
+      z.t.expect.reply.includes "line1 line2 line3"
     }
   }
 
@@ -18,7 +18,7 @@ z.t.describe "z.file.read.lines"; {
       z.dir.make path=/tmp/z_t
       z.file.read.lines path=/tmp/z_t/non_existent_file_lines.txt
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }
@@ -32,7 +32,7 @@ z.t.describe "z.file.read.pick"; {
 
       z.file.read.pick path=/tmp/z_t/file_read_pick.txt word="banana"
 
-      z.t.expect.reply.include "apple banana"
+      z.t.expect.reply.includes "apple banana"
     }
   }
 
@@ -41,7 +41,7 @@ z.t.describe "z.file.read.pick"; {
       z.dir.make path=/tmp/z_t
       z.file.read.pick path=/tmp/z_t/non_existent_file_pick.txt word="banana"
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }

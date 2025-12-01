@@ -10,7 +10,8 @@ z.fn.list() {
 
   local name
 
-  for name in ${(k)z_fn_set}; do
+  z.hash.keys z_fn_set
+  for name in $REPLY; do
     z.io $name
     z.io "Defined in ${z_fn_source[$name]}" indent=1
   done
@@ -29,7 +30,7 @@ z.fn.show() {
 
   local name=$1
 
-  if z.fn.not_exists $name; then
+  if z.fn.not.exists $name; then
     z.io.error "Function $name does not exist."
     return 1
   fi

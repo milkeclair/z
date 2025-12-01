@@ -5,9 +5,9 @@ z.t.describe "z.dir.make"; {
     z.t.it "ディレクトリを作成する"; {
       z.dir.make path=/tmp/z_t/dir_make
 
-      z.dir.exist /tmp/z_t/dir_make
+      z.dir.exists /tmp/z_t/dir_make
 
-      z.t.expect.status.true
+      z.t.expect.status.is.true
     }
   }
 
@@ -15,9 +15,9 @@ z.t.describe "z.dir.make"; {
     z.t.it "親ディレクトリごと作成する"; {
       z.dir.make path=/tmp/z_t/dir_make/sub_dir
 
-      z.dir.exist /tmp/z_t/dir_make/sub_dir
+      z.dir.exists /tmp/z_t/dir_make/sub_dir
 
-      z.t.expect.status.true
+      z.t.expect.status.is.true
     }
   }
 
@@ -25,9 +25,9 @@ z.t.describe "z.dir.make"; {
     z.t.it "何もしない"; {
       z.dir.make path=/tmp/z_t/dir_make
 
-      z.dir.exist /tmp/z_t/dir_make
+      z.dir.exists /tmp/z_t/dir_make
 
-      z.t.expect.status.true
+      z.t.expect.status.is.true
     }
   }
 }
@@ -38,9 +38,9 @@ z.t.describe "z.dir.remove"; {
       z.dir.make path=/tmp/z_t/dir_make
       z.dir.remove path=/tmp/z_t/dir_make
 
-      z.dir.not_exist /tmp/z_t/dir_make
+      z.dir.not.exists /tmp/z_t/dir_make
 
-      z.t.expect.status.true
+      z.t.expect.status.is.true
     }
   }
 
@@ -50,9 +50,9 @@ z.t.describe "z.dir.remove"; {
       z.file.make path=/tmp/z_t/dir_make/file.txt
       z.dir.remove path=/tmp/z_t/dir_make
 
-      z.dir.not_exist /tmp/z_t/dir_make
+      z.dir.not.exists /tmp/z_t/dir_make
 
-      z.t.expect.status.true
+      z.t.expect.status.is.true
     }
   }
 
@@ -62,9 +62,9 @@ z.t.describe "z.dir.remove"; {
       z.file.make path=/tmp/z_t/dir_make/sub_dir/file.txt
       z.dir.remove path=/tmp/z_t/dir_make
 
-      z.dir.not_exist /tmp/z_t/dir_make
+      z.dir.not.exists /tmp/z_t/dir_make
 
-      z.t.expect.status.true
+      z.t.expect.status.is.true
     }
   }
 
@@ -73,9 +73,9 @@ z.t.describe "z.dir.remove"; {
       z.dir.make path=/tmp/z_t/dir_make
       z.dir.remove path=/tmp/z_t/dir_make
 
-      z.dir.not_exist /tmp/z_t/dir_make
+      z.dir.not.exists /tmp/z_t/dir_make
 
-      z.t.expect.status.true
+      z.t.expect.status.is.true
     }
   }
 }

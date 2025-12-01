@@ -20,7 +20,7 @@ z.t.describe "z.str.color.strip"; {
       z.t.expect.reply "Plain Text"
 
       z.str.color.strip ""
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }

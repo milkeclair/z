@@ -10,13 +10,13 @@
 z.t.mock.unmock() {
   z.arg.named name $@ && local func_name=$REPLY
 
-  if z.is_null $func_name; then
+  if z.is.null $func_name; then
     z.t._state.mock_last_func
     func_name=$REPLY
   fi
 
   z.t._state.mock_originals.context $func_name
-  if z.is_not_null $REPLY; then
+  if z.is.not.null $REPLY; then
     eval $REPLY
     z.t._state.mock_originals.unset $func_name
   fi
@@ -24,7 +24,7 @@ z.t.mock.unmock() {
   z.t._state.mock_calls.unset $func_name
 
   z.t._state.mock_last_func
-  if z.eq $func_name $REPLY; then
+  if z.is.eq $func_name $REPLY; then
     z.t._state.mock_last_func.set ""
   fi
 }
@@ -60,8 +60,8 @@ z.t.mock.unmock.all() {
 z.t.mock.unmock._is_not_skippable() {
   local skip_unmock=$1
 
-  z.is_true $skip_unmock && return 1
+  z.is.true $skip_unmock && return 1
 
   z.t._state.mock_originals
-  z.is_not_null ${REPLY[@]+x}
+  z.is.not.null ${REPLY[@]+x}
 }

@@ -5,7 +5,7 @@ z.t.describe "z.mode"; {
     z.t.it "モードに入る"; {
       (z.io.null z.mode git <<< "q")
 
-      z.t.expect.status.false
+      z.t.expect.status.is.false
     }
 
     z.t.it "引数を接頭辞としてコマンドを実行する"; {
@@ -31,7 +31,7 @@ z.t.describe "z.mode"; {
     z.t.it "splitを指定しない場合はスペースを空ける"; {
       local output=$(z.mode git <<< "version"$'\n'"q")
 
-      z.t.expect.include $output "git version"
+      z.t.expect.includes $output "git version"
     }
   }
 

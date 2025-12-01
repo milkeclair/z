@@ -13,7 +13,7 @@ z.t.describe "z.arr.join.line"; {
     z.t.it "REPLYを空文字列に設定する"; {
       z.arr.join.line
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }

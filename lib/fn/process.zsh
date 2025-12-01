@@ -42,7 +42,7 @@ z.fn.call() {
   local name=$1
   shift
 
-  if z.fn.not_exists $name; then
+  if z.fn.not.exists $name; then
     z.io.error "Function $name does not exist."
     return 1
   fi
@@ -63,7 +63,7 @@ z.fn.delete() {
 
   local name=$1
 
-  if z.fn.not_exists $name; then
+  if z.fn.not.exists $name; then
     z.io.error "Function $name does not exist."
     return 1
   fi
@@ -85,7 +85,8 @@ z.fn.delete() {
 z.fn.delete_all() {
   z.fn._ensure_store
 
-  for value in ${(v)z_fn_set}; do
+  z.hash.values z_fn_set
+  for value in $REPLY; do
     unfunction $value
   done
 
@@ -111,7 +112,7 @@ z.fn.edit() {
   z.str.gsub str=$hash search="-" replace=""
   local key="z_fn_${REPLY}"
 
-  if z.fn.not_exists $name; then
+  if z.fn.not.exists $name; then
     z.io.error "Function $name does not exist."
     return 1
   fi
@@ -131,6 +132,6 @@ z.fn.edit() {
 # example:
 #  z.fn._ensure_store
 z.fn._ensure_store() {
-  (( ${+z_fn_set} )) || typeset -gA z_fn_set
-  (( ${+z_fn_source} )) || typeset -gA z_fn_source
+  z.var.exists z_fn_set || typeset -gA z_fn_set
+  z.var.exists z_fn_source || typeset -gA z_fn_source
 }

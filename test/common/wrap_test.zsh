@@ -37,7 +37,7 @@ z.t.describe "z.return"; {
     z.t.it "REPLYに空文字を設定する"; {
       z.return
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 
@@ -45,7 +45,7 @@ z.t.describe "z.return"; {
     z.t.it "REPLYに空文字を設定する"; {
       z.return "void"
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 
@@ -61,7 +61,33 @@ z.t.describe "z.return"; {
     z.t.it "REPLYに配列として設定する"; {
       z.return "value1" "value2" "value3"
 
-      z.t.expect.reply.arr "value1" "value2" "value3"
+      z.t.expect.reply.is.arr "value1" "value2" "value3"
+    }
+  }
+}
+
+z.t.describe "z.return.hash"; {
+  z.t.context "ハッシュが渡された場合"; {
+    z.t.it "REPLYにキーと値のペアの配列を設定する"; {
+      local -A hash
+      hash[name]="John"
+      hash[age]="30"
+
+      z.return.hash hash
+      local -A result=($REPLY)
+
+      z.t.expect ${result[name]} "John"
+      z.t.expect ${result[age]} "30"
+    }
+  }
+
+  z.t.context "空のハッシュが渡された場合"; {
+    z.t.it "REPLYを空に設定する"; {
+      local -A empty_hash
+
+      z.return.hash empty_hash
+
+      z.t.expect.reply.is.null
     }
   }
 }

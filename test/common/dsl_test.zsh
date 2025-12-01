@@ -5,7 +5,7 @@ z.t.describe "z.group"; {
     z.t.it "trueを返す"; {
       z.group "name"
 
-      z.t.expect.status.true
+      z.t.expect.status.is.true
     }
 
     z.t.it "REPLYを変更しない"; {
@@ -21,7 +21,7 @@ z.t.describe "z.group"; {
     z.t.it "trueを返す"; {
       z.group
 
-      z.t.expect.status.true
+      z.t.expect.status.is.true
     }
 
     z.t.it "REPLYを変更しない"; {
@@ -37,7 +37,7 @@ z.t.describe "z.guard"; {
     z.t.it "trueを返す"; {
       z.guard "guard_name"
 
-      z.t.expect.status.true
+      z.t.expect.status.is.true
     }
 
     z.t.it "REPLYを変更しない"; {
@@ -53,7 +53,7 @@ z.t.describe "z.guard"; {
     z.t.it "trueを返す"; {
       z.guard
 
-      z.t.expect.status.true
+      z.t.expect.status.is.true
     }
 
     z.t.it "REPLYを変更しない"; {

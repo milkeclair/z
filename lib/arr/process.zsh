@@ -2,8 +2,9 @@ for join_file in ${z_root}/lib/arr/join/*.zsh; do
   source $join_file
 done
 
-# join array elements with a space
+# join array elements with a delimiter
 #
+# $delimiter?: delimiter, default: space
 # $@: array elements
 # REPLY: joined string
 # return: null
@@ -11,29 +12,30 @@ done
 # example:
 #  z.arr.join "a" "b" "c" #=> REPLY="a b c"
 z.arr.join() {
-  local arr=($@)
+  z.arg.named delimiter $@ default=" " && local delimiter=$REPLY
+  z.arg.named.shift delimiter $@ && local arr=($REPLY)
 
-  z.return "${(j: :)arr}"
+  local IFS=$delimiter
+  z.return "${arr[*]}"
 }
 
-# split a string into an array by a separator
+# split a string into an array by a delimiter
 #
-# $sep?: separator, default: space
+# $delimiter?: delimiter, default: space
 # $@: string to split
 # REPLY: array elements
 # return: null
 #
 # example:
-#  z.arr.split sep="," "a,b,c" #=> REPLY=("a" "b" "c")
+#  z.arr.split delimiter="," "a,b,c" #=> REPLY=("a" "b" "c")
 #  z.arr.split "a b c"         #=> REPLY=("a" "b" "c")
 z.arr.split() {
-  z.arg.named sep $@ default=" " && local separator=$REPLY
-  z.arg.named.shift sep $@
-
+  z.arg.named delimiter $@ default=" " && local delimiter=$REPLY
+  z.arg.named.shift delimiter $@
   local str=$REPLY
   local arr
 
-  IFS=$separator read -rA arr <<<"$str"
+  IFS=$delimiter read -rA arr <<<"$str"
 
   z.return ${arr[@]}
 }
@@ -110,7 +112,7 @@ z.arr.unique() {
   local result
 
   for item in ${arr[@]}; do
-    if z.is_falsy ${seen[$item]}; then
+    if z.is.falsy ${seen[$item]}; then
       seen[$item]=true
       result+=($item)
     fi
@@ -150,13 +152,13 @@ z.arr.diff() {
 
   z.group "finding differences"; {
     for item in ${base_arr[@]}; do
-      if z.is_falsy ${other_set[$item]}; then
+      if z.is.falsy ${other_set[$item]}; then
         result+=($item)
       fi
     done
 
     for item in ${other_arr[@]}; do
-      if z.is_falsy ${base_set[$item]}; then
+      if z.is.falsy ${base_set[$item]}; then
         result+=($item)
       fi
     done
@@ -196,7 +198,7 @@ z.arr.intersect() {
 
   z.group "finding intersections"; {
     for item in ${base_arr[@]}; do
-      if z.is_truthy ${other_set[$item]}; then
+      if z.is.truthy ${other_set[$item]}; then
         result+=($item)
       fi
     done
@@ -240,11 +242,30 @@ z.arr.union() {
     done
 
     for item in ${other_arr[@]}; do
-      if z.is_falsy ${base_set[$item]}; then
+      if z.is.falsy ${base_set[$item]}; then
         result+=($item)
       fi
     done
   }
+
+  z.return ${result[@]}
+}
+
+# reverse the order of array elements
+#
+# $@: array elements
+# REPLY: array elements in reverse order
+# return: null
+#
+# example:
+#  z.arr.reverse "a" "b" "c" #=> REPLY=("c" "b" "a")
+z.arr.reverse() {
+  local arr=($@)
+  local result
+
+  for ((i=${#arr[@]}; i>=1; i--)); do
+    result+=(${arr[i]})
+  done
 
   z.return ${result[@]}
 }

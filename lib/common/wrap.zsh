@@ -19,7 +19,7 @@
 #  z.return "some string" #=> REPLY="some string"
 #  z.return "a" "b" "c"   #=> REPLY=("a" "b" "c")
 z.return() {
-  if z.int.gt $# 1; then
+  if z.int.is.gt $# 1; then
     REPLY=($@)
     return
   fi
@@ -40,4 +40,23 @@ z.return() {
     REPLY=$value
     ;;
   esac
+}
+
+# return a hash by its name
+#
+# $1: name of the hash
+# REPLY: array of key-value pairs (key1 value1 key2 value2 ...)
+# return: null
+#
+# example:
+#   local -A hash
+#   hash[name]="John"
+#   hash[age]="30"
+#
+#   z.return.hash hash
+#   local -A result=($REPLY)
+#   echo ${result[name]}  # outputs "John"
+z.return.hash() {
+  local hash_name=$1
+  REPLY=(${(Pkv)hash_name})
 }
