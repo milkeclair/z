@@ -27,10 +27,10 @@ z.arg.as() {
   local matched=false
 
   for alias in $split_as; do
-    z.eq $name $alias && matched=true
+    z.is.eq $name $alias && matched=true
   done
 
-  z.eq $matched true &&
+  z.is.eq $matched true &&
     z.return $return || z.return
 }
 
@@ -54,7 +54,7 @@ z.arg.named() {
     local default=""
     local filtered_args=()
     for arg in $args; do
-      if z.str.include $arg "default="; then
+      if z.str.includes $arg "default="; then
         default=${arg#"default="}
       else
         filtered_args+=($arg)
@@ -68,8 +68,8 @@ z.arg.named() {
   local arg_count=$REPLY
   local i=1
 
-  while z.int.lteq $i $arg_count; do
-    if z.is_not_null $args[i] && z.str.include $args[i] $name=; then
+  while z.int.is.lteq $i $arg_count; do
+    if z.is.not.null $args[i] && z.str.includes $args[i] $name=; then
       local value=${args[i]#"${name}="}
 
       z.return ${value:-$default} && return 0

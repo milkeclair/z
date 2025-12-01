@@ -9,8 +9,8 @@ z.t.describe "z.file.write.last"; {
 
       local content=$(cat /tmp/z_t/file_write_last.txt)
 
-      z.t.expect.include $content "line1"
-      z.t.expect.include $content "line2"
+      z.t.expect.includes $content "line1"
+      z.t.expect.includes $content "line2"
     }
   }
 
@@ -21,7 +21,7 @@ z.t.describe "z.file.write.last"; {
 
       local content=$(cat /tmp/z_t/file_write_last_new.txt)
 
-      z.t.expect.include $content "only line"
+      z.t.expect.includes $content "only line"
     }
   }
 }

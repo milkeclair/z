@@ -44,7 +44,7 @@ z.str.indent() {
   z.arg.named level $@ && local level=$REPLY
   z.arg.named message $@ && local message=$REPLY
 
-  if z.int.not_match $level || z.int.lt $level 0; then
+  if z.int.is.not.match $level || z.int.is.lt $level 0; then
     level=0
   fi
 
@@ -108,9 +108,9 @@ z.str.gsub() {
   z.arg.named replace $@ && local replace=$REPLY
   z.arg.named pattern $@ default=false && local pattern=$REPLY
 
-  if z.is_null $str || z.is_null $search; then
+  if z.is.null $str || z.is.null $search; then
     z.return $str
-  elif z.is_true $pattern; then
+  elif z.is.true $pattern; then
     setopt local_options EXTENDED_GLOB
     z.return ${str//(#m)${~search}/${(e)replace}}
   else
@@ -160,7 +160,7 @@ z.str.camelize() {
   local capitalize_next=false
 
   z.group "downcase if delimiters exist"; {
-    if z.str.is_match "$str" "*[ _-]*"; then
+    if z.str.is.match "$str" "*[ _-]*"; then
       z.str.downcase "$str"
       str=$REPLY
     fi
@@ -169,7 +169,7 @@ z.str.camelize() {
   for (( i=1; i<=${#str}; i++ )); do
     local char=${str[i]}
 
-    if z.str.is_match $char "[ _-]"; then
+    if z.str.is.match $char "[ _-]"; then
       capitalize_next=true
     elif $capitalize_next; then
       result+=${(U)char}
@@ -196,7 +196,7 @@ z.str.pascalize() {
   local capitalize_next=true
 
   z.group "downcase if delimiters exist"; {
-    if z.str.is_match "$str" "*[ _-]*"; then
+    if z.str.is.match "$str" "*[ _-]*"; then
       z.str.downcase "$str"
       str=$REPLY
     fi
@@ -205,7 +205,7 @@ z.str.pascalize() {
   for (( i=1; i<=${#str}; i++ )); do
     local char=${str[i]}
 
-    if z.str.is_match $char "[ _-]"; then
+    if z.str.is.match $char "[ _-]"; then
       capitalize_next=true
     elif $capitalize_next; then
       result+=${(U)char}
@@ -237,7 +237,7 @@ z.str.constantize() {
   for (( i=1; i<=${#str}; i++ )); do
     local char=${str[i]}
 
-    if z.str.is_match $char "[ _-]"; then
+    if z.str.is.match $char "[ _-]"; then
       if [[ $previous_char != "_" ]]; then
         result+="_"
         previous_char="_"
@@ -300,7 +300,7 @@ z.str.delimitize() {
   local result=""
 
   z.group "downcase if delimiters exist"; {
-    if z.str.is_match "$str" "*[ _-]*"; then
+    if z.str.is.match "$str" "*[ _-]*"; then
       z.str.downcase "$str"
       str=$REPLY
     fi
@@ -318,7 +318,7 @@ z.str.delimitize() {
 
   # remove consecutive delimiters
   # e.g., "hello__world" -> "hello_world" (if delimiter is "_")
-  while z.str.is_match "$result" "*${delimiter}${delimiter}*"; do
+  while z.str.is.match "$result" "*${delimiter}${delimiter}*"; do
     z.str.gsub str="$result" search="${delimiter}${delimiter}" replace="${delimiter}"
     result=$REPLY
   done
@@ -362,7 +362,7 @@ z.str.ljust() {
   local str=$REPLY
 
   local str_length=${#str}
-  if z.int.gteq $str_length $width; then
+  if z.int.is.gteq $str_length $width; then
     z.return $str
     return
   fi
@@ -394,7 +394,7 @@ z.str.rjust() {
   local str=$REPLY
 
   local str_length=${#str}
-  if z.int.gteq $str_length $width; then
+  if z.int.is.gteq $str_length $width; then
     z.return $str
     return
   fi

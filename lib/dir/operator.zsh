@@ -1,3 +1,7 @@
+for not_file in ${z_root}/lib/dir/not/*.zsh; do
+  source ${not_file}
+done
+
 # check if a directory exists
 #
 # $1: directory path
@@ -10,18 +14,4 @@ z.dir.exists() {
   local dir=$1
 
   [[ -d $dir ]]
-}
-
-# check if a directory does not exist
-#
-# $1: directory path
-# REPLY: null
-# return: 0|1
-#
-# example:
-#  z.dir.not_exists "/path/to/dir" #=> return 0 if not exists
-z.dir.not_exists() {
-  local dir=$1
-
-  ! z.dir.exists $dir
 }

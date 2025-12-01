@@ -21,15 +21,15 @@ z.t.it() {
   z.t._state.compact
   local is_compact=$REPLY
 
-  if z.is_true $is_compact; then
+  if z.is.true $is_compact; then
     z.t._state.tests
     local test_count=$REPLY
-    if z.int.gt $test_count 0; then
+    if z.int.is.gt $test_count 0; then
       z.t._state.current_it_failures
       local failures=$REPLY
-      if z.int.is_zero $failures; then
+      if z.int.is.zero $failures; then
         z.t._state.skip.it
-        z.is_false $REPLY && z.t._log.dot.success
+        z.is.false $REPLY && z.t._log.dot.success
       else
         z.t._log.dot.failure
       fi
@@ -38,7 +38,7 @@ z.t.it() {
   fi
 
   z.str.indent level=3 message=$it
-  if z.is_true $describe_skip || z.is_true $context_skip; then
+  if z.is.true $describe_skip || z.is.true $context_skip; then
     z.str.color.yellow $REPLY
   else
     z.str.color.green $REPLY
@@ -48,7 +48,7 @@ z.t.it() {
   z.t._state.current_idx.add "it"
   z.t._state.tests.increment
 
-  if z.is_true $describe_skip || z.is_true $context_skip; then
+  if z.is.true $describe_skip || z.is.true $context_skip; then
     z.t._state.skip.it.set "true"
     z.t._state.pendings.increment
 
@@ -60,7 +60,7 @@ z.t.it() {
     local i_idx=$REPLY
     z.t._state.pending_records.add "$d_idx:$c_idx:$i_idx"
 
-    if z.is_true $is_compact; then
+    if z.is.true $is_compact; then
       z.t._log.dot.pending
     fi
   else
@@ -86,15 +86,15 @@ z.t.xit() {
   z.t._state.compact
   local is_compact=$REPLY
 
-  if z.is_true $is_compact; then
+  if z.is.true $is_compact; then
     z.t._state.tests
     local test_count=$REPLY
-    if z.int.gt $test_count 0; then
+    if z.int.is.gt $test_count 0; then
       z.t._state.current_it_failures
       local failures=$REPLY
-      if z.int.is_zero $failures; then
+      if z.int.is.zero $failures; then
         z.t._state.skip.it
-        z.is_false $REPLY && z.t._log.dot.success
+        z.is.false $REPLY && z.t._log.dot.success
       else
         z.t._log.dot.failure
       fi
@@ -119,7 +119,7 @@ z.t.xit() {
   local i_idx=$REPLY
   z.t._state.pending_records.add "$d_idx:$c_idx:$i_idx"
 
-  if z.is_true $is_compact; then
+  if z.is.true $is_compact; then
     z.t._log.dot.pending
   fi
 }

@@ -9,7 +9,7 @@
 z.dir.make() {
   z.arg.named path $@ && local dir=$REPLY
 
-  z.dir.not_exists $dir && mkdir -p $dir
+  z.dir.not.exists $dir && mkdir -p $dir
 }
 
 # remove a directory if it exists

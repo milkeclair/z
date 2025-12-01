@@ -48,9 +48,9 @@ z.t._log.dot.output() {
 
   local terminal_width=${COLUMNS:-80}
   local width=80
-  z.int.lt $terminal_width 80 && width=$terminal_width
+  z.int.is.lt $terminal_width 80 && width=$terminal_width
 
-  if z.int.eq $((count % width)) 0 && z.int.gt $count 0; then
+  if z.int.is.eq $((count % width)) 0 && z.int.is.gt $count 0; then
     z.io.line
   fi
 

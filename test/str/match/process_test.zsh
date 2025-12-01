@@ -14,10 +14,10 @@ z.t.describe "z.str.match.rest"; {
   z.t.context "文字列がパターンにマッチしない場合"; {
     z.t.it "空文字列を返す"; {
       z.str.match.rest "hello_world" "world"
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
 
       z.str.match.rest "foo-bar-baz" "baz"
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }
@@ -36,10 +36,10 @@ z.t.describe "z.str.match.nth"; {
   z.t.context "文字列がパターンにマッチしない場合"; {
     z.t.it "空文字列を返す"; {
       z.str.match.nth "one two three" "four" index=1
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
 
       z.str.match.nth "apple banana cherry" "date" index=2
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }

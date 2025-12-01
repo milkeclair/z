@@ -29,7 +29,7 @@ z.t.describe "z.arg.get"; {
     z.t.it "nullを返す"; {
       z.arg.get "a" "b" "c" index=4
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 
@@ -37,7 +37,7 @@ z.t.describe "z.arg.get"; {
     z.t.it "nullを返す"; {
       z.arg.get "a" "b" "c" # zls: ignore
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 
@@ -45,7 +45,7 @@ z.t.describe "z.arg.get"; {
     z.t.it "nullを返す"; {
       z.arg.get "a" "b" "c" index=not-integer
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 
@@ -53,7 +53,7 @@ z.t.describe "z.arg.get"; {
     z.t.it "nullを返す"; {
       z.arg.get "a" "b" "c" index=0
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 
@@ -61,7 +61,7 @@ z.t.describe "z.arg.get"; {
     z.t.it "nullを返す"; {
       z.arg.get index=1
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }
@@ -79,7 +79,7 @@ z.t.describe "z.arg.first"; {
     z.t.it "nullを返す"; {
       z.arg.first
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }
@@ -97,7 +97,7 @@ z.t.describe "z.arg.second"; {
     z.t.it "nullを返す"; {
       z.arg.second "a"
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 
@@ -105,7 +105,7 @@ z.t.describe "z.arg.second"; {
     z.t.it "nullを返す"; {
       z.arg.second
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }
@@ -123,7 +123,7 @@ z.t.describe "z.arg.third"; {
     z.t.it "nullを返す"; {
       z.arg.third "a" "b"
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 
@@ -131,7 +131,7 @@ z.t.describe "z.arg.third"; {
     z.t.it "nullを返す"; {
       z.arg.third
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }
@@ -149,7 +149,7 @@ z.t.describe "z.arg.last"; {
     z.t.it "nullを返す"; {
       z.arg.last
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }

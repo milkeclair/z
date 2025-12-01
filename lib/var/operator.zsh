@@ -23,5 +23,5 @@ z.var.exists() {
 #   z.var.sets TEST_VAR
 #   echo $?  # outputs 0
 z.var.sets() {
-  z.var.exists $1 && z.is_not_null ${(P)1}
+  z.var.exists $1 && z.is.not.null ${(P)1}
 }

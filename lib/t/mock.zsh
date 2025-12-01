@@ -22,7 +22,7 @@ z.t.mock() {
 
   functions -c $func_name $original_func_name
 
-  if z.eq $behavior "call_original"; then
+  if z.is.eq $behavior "call_original"; then
     eval "$func_name() {
       $original_func_name \"\$@\"
       z.t._state.mock_calls.add name=\"$func_name\" \"\$@\"

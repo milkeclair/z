@@ -112,7 +112,7 @@ z.arr.unique() {
   local result
 
   for item in ${arr[@]}; do
-    if z.is_falsy ${seen[$item]}; then
+    if z.is.falsy ${seen[$item]}; then
       seen[$item]=true
       result+=($item)
     fi
@@ -152,13 +152,13 @@ z.arr.diff() {
 
   z.group "finding differences"; {
     for item in ${base_arr[@]}; do
-      if z.is_falsy ${other_set[$item]}; then
+      if z.is.falsy ${other_set[$item]}; then
         result+=($item)
       fi
     done
 
     for item in ${other_arr[@]}; do
-      if z.is_falsy ${base_set[$item]}; then
+      if z.is.falsy ${base_set[$item]}; then
         result+=($item)
       fi
     done
@@ -198,7 +198,7 @@ z.arr.intersect() {
 
   z.group "finding intersections"; {
     for item in ${base_arr[@]}; do
-      if z.is_truthy ${other_set[$item]}; then
+      if z.is.truthy ${other_set[$item]}; then
         result+=($item)
       fi
     done
@@ -242,7 +242,7 @@ z.arr.union() {
     done
 
     for item in ${other_arr[@]}; do
-      if z.is_falsy ${base_set[$item]}; then
+      if z.is.falsy ${base_set[$item]}; then
         result+=($item)
       fi
     done

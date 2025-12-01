@@ -42,7 +42,7 @@ z.fn.call() {
   local name=$1
   shift
 
-  if z.fn.not_exists $name; then
+  if z.fn.not.exists $name; then
     z.io.error "Function $name does not exist."
     return 1
   fi
@@ -63,7 +63,7 @@ z.fn.delete() {
 
   local name=$1
 
-  if z.fn.not_exists $name; then
+  if z.fn.not.exists $name; then
     z.io.error "Function $name does not exist."
     return 1
   fi
@@ -112,7 +112,7 @@ z.fn.edit() {
   z.str.gsub str=$hash search="-" replace=""
   local key="z_fn_${REPLY}"
 
-  if z.fn.not_exists $name; then
+  if z.fn.not.exists $name; then
     z.io.error "Function $name does not exist."
     return 1
   fi

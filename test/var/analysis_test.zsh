@@ -7,7 +7,7 @@ z.t.describe "z.var.get"; {
 
       z.var.get TEST_VAR_NON_EXISTENT
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 

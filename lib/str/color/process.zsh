@@ -37,7 +37,7 @@ z.str.color.decorate() {
   z.str.color $color
   local color_prefix=$REPLY
 
-  if z.is_not_null $color_prefix; then
+  if z.is.not.null $color_prefix; then
     z.str.color reset
     local reset=$REPLY
     z.return "${color_prefix}${plain}${reset}"

@@ -33,7 +33,7 @@ z.t._state.logs.add() {
 #  z.t._state.logs.context "0"  #=> "log entry at index 0"
 z.t._state.logs.context() {
   local context=$1
-  z.is_null $context && { z.return ""; return 0; }
+  z.is.null $context && { z.return ""; return 0; }
   z.return ${z_t_logs[$context]:-""}
 }
 
@@ -53,7 +53,7 @@ z.t._state.logs.context.set() {
 
   local target_log=${z_t_logs[$context]}
 
-  if z.is_not_null $target_log; then
+  if z.is.not.null $target_log; then
     z_t_logs[$context]=$value
   fi
 }

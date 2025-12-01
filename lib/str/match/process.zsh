@@ -12,7 +12,7 @@ z.str.match.rest() {
   local str=$1
   local pattern=$2
 
-  if z.str.is_match "$str" "${pattern}*"; then
+  if z.str.is.match "$str" "${pattern}*"; then
     z.return ${str#${~pattern}}
   else
     z.return
@@ -40,9 +40,9 @@ z.str.match.nth() {
   local count=0
 
   for word in $words; do
-    if z.str.is_match "$word" "$pattern"; then
+    if z.str.is.match "$word" "$pattern"; then
       ((count++))
-      if z.int.eq $count $index; then
+      if z.int.is.eq $count $index; then
         z.return $word
         return
       fi

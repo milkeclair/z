@@ -10,7 +10,7 @@
 z.path.dir() {
   local filepath=$1
 
-  z.str.is_not_path_like $filepath && z.return "" && return
+  z.str.is.not.path_like $filepath && z.return "" && return
 
   z.return ${filepath:h}
 }
@@ -27,7 +27,7 @@ z.path.dir() {
 z.path.base() {
   local filepath=$1
 
-  z.str.is_not_path_like $filepath && z.return "" && return
+  z.str.is.not.path_like $filepath && z.return "" && return
 
   z.return ${filepath:t}
 }
@@ -44,7 +44,7 @@ z.path.base() {
 z.path.stem() {
   local filepath=$1
 
-  z.str.is_not_path_like $filepath && z.return "" && return
+  z.str.is.not.path_like $filepath && z.return "" && return
 
   local base=${filepath:t}
   z.return ${base:r}
@@ -62,7 +62,7 @@ z.path.stem() {
 z.path.ext() {
   local filepath=$1
 
-  z.str.is_not_path_like $filepath && z.return "" && return
+  z.str.is.not.path_like $filepath && z.return "" && return
 
   local base=${filepath:t}
   z.return ${base:e}
@@ -80,7 +80,7 @@ z.path.ext() {
 z.path.real() {
   local filepath=$1
 
-  z.str.is_not_path_like $filepath && z.return "" && return
+  z.str.is.not.path_like $filepath && z.return "" && return
 
   z.return ${filepath:A}
 }
@@ -97,7 +97,7 @@ z.path.real() {
 z.path.abs() {
   local filepath=$1
 
-  z.str.is_not_path_like $filepath && z.return "" && return
+  z.str.is.not.path_like $filepath && z.return "" && return
 
   z.return ${filepath:a}
 }
@@ -114,7 +114,7 @@ z.path.abs() {
 z.path.downcase() {
   local filepath=$1
 
-  z.str.is_not_path_like $filepath && z.return "" && return
+  z.str.is.not.path_like $filepath && z.return "" && return
 
   z.return ${filepath:l}
 }
@@ -131,7 +131,7 @@ z.path.downcase() {
 z.path.upcase() {
   local filepath=$1
 
-  z.str.is_not_path_like $filepath && z.return "" && return
+  z.str.is.not.path_like $filepath && z.return "" && return
 
   z.return ${filepath:u}
 }

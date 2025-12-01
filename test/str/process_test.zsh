@@ -32,7 +32,7 @@ z.t.describe "z.str.color"; {
   z.t.context "z_color_paletteに定義されていない色を指定した場合"; {
     z.t.it "空文字列を返す"; {
       z.str.color "unknown_color"
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }
@@ -84,43 +84,43 @@ z.t.describe "z.str.split"; {
   z.t.context "区切り文字で分割された文字列が渡された場合"; {
     z.t.it "分割された文字列の配列を返す"; {
       z.str.split "str=apple|banana|cherry" delimiter="|"
-      z.t.expect.reply.arr "apple" "banana" "cherry"
+      z.t.expect.reply.is.arr "apple" "banana" "cherry"
 
       z.str.split "str=one,two,three" delimiter=","
-      z.t.expect.reply.arr "one" "two" "three"
+      z.t.expect.reply.is.arr "one" "two" "three"
 
       z.str.split "str=a b c" delimiter=" "
-      z.t.expect.reply.arr "a" "b" "c"
+      z.t.expect.reply.is.arr "a" "b" "c"
     }
   }
 
   z.t.context "区切り文字が指定されなかった場合"; {
     z.t.it "デフォルトの区切り文字'|'で分割された文字列の配列を返す"; {
       z.str.split "str=apple|banana|cherry"
-      z.t.expect.reply.arr "apple" "banana" "cherry"
+      z.t.expect.reply.is.arr "apple" "banana" "cherry"
 
       z.str.split "str=one|two|three"
-      z.t.expect.reply.arr "one" "two" "three"
+      z.t.expect.reply.is.arr "one" "two" "three"
     }
   }
 
   z.t.context "区切り文字が存在しない場合"; {
     z.t.it "元の文字列を要素とする配列を返す"; {
       z.str.split str="single" delimiter="|"
-      z.t.expect.reply.arr "single"
+      z.t.expect.reply.is.arr "single"
 
       z.str.split str="another" delimiter=","
-      z.t.expect.reply.arr "another"
+      z.t.expect.reply.is.arr "another"
     }
   }
 
   z.t.context "空文字列が渡された場合"; {
     z.t.it "空の配列を返す"; {
       z.str.split str=""
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
 
       z.str.split str="" delimiter=","
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }
@@ -142,10 +142,10 @@ z.t.describe "z.str.match"; {
   z.t.context "文字列がパターンにマッチしない場合"; {
     z.t.it "空文字列を返す"; {
       z.str.match "hello" "H*O"
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
 
       z.str.match "zsh_scripting" "ZSH"
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }
@@ -177,10 +177,10 @@ z.t.describe "z.str.gsub"; {
   z.t.context "空文字列が渡された場合"; {
     z.t.it "空文字列を返す"; {
       z.str.gsub str="" search="a" replace="b"
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
 
       z.str.gsub str="" search="" replace="b"
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 

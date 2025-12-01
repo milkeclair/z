@@ -10,8 +10,8 @@ z.t.describe "z.hash.keys"; {
       z.hash.keys hash
       local rep=$REPLY
 
-      z.t.expect.include $rep "name"
-      z.t.expect.include $rep "age"
+      z.t.expect.includes $rep "name"
+      z.t.expect.includes $rep "age"
     }
   }
 
@@ -20,7 +20,7 @@ z.t.describe "z.hash.keys"; {
       local -A empty_hash
 
       z.hash.keys empty_hash
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }
@@ -35,8 +35,8 @@ z.t.describe "z.hash.values"; {
       z.hash.values hash
       local rep=$REPLY
 
-      z.t.expect.include $rep "John"
-      z.t.expect.include $rep "30"
+      z.t.expect.includes $rep "John"
+      z.t.expect.includes $rep "30"
     }
   }
 
@@ -45,7 +45,7 @@ z.t.describe "z.hash.values"; {
       local -A empty_hash
 
       z.hash.values empty_hash
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }
@@ -60,10 +60,10 @@ z.t.describe "z.hash.entries"; {
       z.hash.entries hash
       local rep=$REPLY
 
-      z.t.expect.include $rep "name"
-      z.t.expect.include $rep "John"
-      z.t.expect.include $rep "age"
-      z.t.expect.include $rep "30"
+      z.t.expect.includes $rep "name"
+      z.t.expect.includes $rep "John"
+      z.t.expect.includes $rep "age"
+      z.t.expect.includes $rep "30"
     }
   }
 
@@ -72,7 +72,7 @@ z.t.describe "z.hash.entries"; {
       local -A empty_hash
 
       z.hash.entries empty_hash
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }

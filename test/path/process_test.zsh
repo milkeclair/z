@@ -14,10 +14,10 @@ z.t.describe "z.path.dir"; {
   z.t.context "無効なパス文字列が渡された場合"; {
     z.t.it "空文字列を返す"; {
       z.path.dir ""
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
 
       z.path.dir ":::"
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }
@@ -36,10 +36,10 @@ z.t.describe "z.path.base"; {
   z.t.context "無効なパス文字列が渡された場合"; {
     z.t.it "空文字列を返す"; {
       z.path.base ""
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
 
       z.path.base ":::"
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }
@@ -58,10 +58,10 @@ z.t.describe "z.path.stem"; {
   z.t.context "無効なパス文字列が渡された場合"; {
     z.t.it "空文字列を返す"; {
       z.path.stem ""
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
 
       z.path.stem ":::"
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }
@@ -80,10 +80,10 @@ z.t.describe "z.path.ext"; {
   z.t.context "無効なパス文字列が渡された場合"; {
     z.t.it "空文字列を返す"; {
       z.path.ext ""
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
 
       z.path.ext ":::"
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }
@@ -116,10 +116,10 @@ z.t.describe "z.path.real"; {
   z.t.context "無効なパス文字列が渡された場合"; {
     z.t.it "空文字列を返す"; {
       z.path.real ""
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
 
       z.path.real ":::"
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }
@@ -152,10 +152,10 @@ z.t.describe "z.path.abs"; {
   z.t.context "無効なパス文字列が渡された場合"; {
     z.t.it "空文字列を返す"; {
       z.path.abs ""
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
 
       z.path.abs ":::"
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }

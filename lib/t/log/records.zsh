@@ -26,7 +26,7 @@ z.t._log.records.collect() {
     all_records+=($full_record)
   done
 
-  if z.is_false $failed_only; then
+  if z.is.false $failed_only; then
     z.t._state.pending_records
     local pending_records=($REPLY)
     for record in ${pending_records[@]}; do
@@ -43,7 +43,7 @@ z.t._log.records.collect() {
   fi
 
   z.arr.count $all_records
-  z.int.is_zero $REPLY && { z.return ""; return 0; }
+  z.int.is.zero $REPLY && { z.return ""; return 0; }
 
   local sorted_records=(${(o)all_records})
   z.return ${sorted_records[@]}
@@ -74,25 +74,25 @@ z.t._log.records.display() {
     local e_idx=$parts[8]
 
     z.t._log.records.output_if_changed $d_idx $prev_d_idx
-    if z.status.is_true; then
+    if z.status.is.true; then
       prev_d_idx=$d_idx
       prev_c_idx=""
       prev_i_idx=""
     fi
 
     z.t._log.records.output_if_changed $c_idx $prev_c_idx
-    if z.status.is_true; then
+    if z.status.is.true; then
       prev_c_idx=$c_idx
       prev_i_idx=""
     fi
 
     z.t._log.records.output_if_changed $i_idx $prev_i_idx
-    z.status.is_true && prev_i_idx=$i_idx
+    z.status.is.true && prev_i_idx=$i_idx
 
-    if z.eq "$record_type" "failure" && z.is_not_null "$e_idx"; then
+    if z.is.eq "$record_type" "failure" && z.is.not.null "$e_idx"; then
       z.t._state.logs.context $e_idx
       local error_log=$REPLY
-      z.is_not_null $error_log && z.io $error_log
+      z.is.not.null $error_log && z.io $error_log
     fi
   done
 }
@@ -110,12 +110,12 @@ z.t._log.records.output_if_changed() {
   local curr_idx=$1
   local prev_idx=$2
 
-  z.is_null $curr_idx && return 1
-  z.int.is_zero $curr_idx && return 1
+  z.is.null $curr_idx && return 1
+  z.int.is.zero $curr_idx && return 1
 
   if z.t._log.records.not_last_log $prev_idx $curr_idx; then
     z.t._state.logs.context $curr_idx
-    z.is_not_null $REPLY && z.io $REPLY
+    z.is.not.null $REPLY && z.io $REPLY
     return 0
   fi
 
@@ -135,5 +135,5 @@ z.t._log.records.not_last_log() {
   local prev=$1
   local current=$2
 
-  z.not_eq $prev $current
+  z.is.not.eq $prev $current
 }

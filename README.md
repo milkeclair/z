@@ -26,7 +26,7 @@ my.argument_check() {
   z.arg.named.shift max $@
   z.arr.count $REPLY
 
-  if z.int.gt $REPLY $max; then
+  if z.int.is.gt $REPLY $max; then
     z.io "more than $max args"
   else
     z.io.error "$max or less args"
@@ -44,23 +44,23 @@ z.t.describe "my.argument_check"; {
       z.io.null my.argument_check max=3 "1" "2" "3" "4"
 
       z.t.mock.result
-      z.t.expect.reply.include "more than 3 args"
+      z.t.expect.reply.includes "more than 3 args"
     }
   }
 
   z.t.context "when 2 or less args"; {
     z.t.it "prints '2 or less args' to stderr"; {
-      z.t.mock name="z.int.gt" behavior="return 1"
+      z.t.mock name="z.int.is.gt" behavior="return 1"
       z.t.mock name="z.io"
       z.t.mock name="z.io.error"
 
       z.io.null my.argument_check "1" "2" "3"
 
       z.t.mock.result name="z.io"
-      z.t.expect.reply.null skip_unmock=true
+      z.t.expect.reply.is.null skip_unmock=true
 
       z.t.mock.result name="z.io.error"
-      z.t.expect.reply.include "2 or less args"
+      z.t.expect.reply.includes "2 or less args"
     }
   }
 }
@@ -93,7 +93,7 @@ The following rules apply under lib.
 - arr
   - join, split, unique...
 - common
-  - eq, is_null, guard...
+  - eq, is.null, guard...
 - debug
   - interactive debugging
 - dir
@@ -105,9 +105,9 @@ The following rules apply under lib.
 - hash
   - keys, values, merge...
 - int
-  - gteq, lteq, eq...
+  - is.gteq, is.lteq, is.eq...
 - io
-  - empty, oneline, indent...
+  - is.empty, oneline, indent...
 - mode
   - interactive mode
 - path
@@ -115,7 +115,7 @@ The following rules apply under lib.
 - status
   - abstract exit status handling
 - str
-  - color, is_path_like, gsub...
+  - color, is.path_like, gsub...
 - t
   - testing framework
 - var

@@ -19,7 +19,7 @@
 #  z.return "some string" #=> REPLY="some string"
 #  z.return "a" "b" "c"   #=> REPLY=("a" "b" "c")
 z.return() {
-  if z.int.gt $# 1; then
+  if z.int.is.gt $# 1; then
     REPLY=($@)
     return
   fi

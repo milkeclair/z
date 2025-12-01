@@ -13,7 +13,7 @@ z.arg.get() {
   local args=($REPLY)
   z.arr.count $args
 
-  z.int.lteq $index $REPLY && z.return $args[$index] || z.return
+  z.int.is.lteq $index $REPLY && z.return $args[$index] || z.return
 }
 
 # get the first argument

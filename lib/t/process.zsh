@@ -22,7 +22,7 @@ z.t() {
   local z_t_failed_only=${z_t_options[2]:-"false"}
   local z_t_compact=${z_t_options[3]:-"false"}
   local test_names=()
-  if z.int.gt ${#z_t_options[@]} 3; then
+  if z.int.is.gt ${#z_t_options[@]} 3; then
     test_names=(${z_t_options[@]:3})
   fi
 
@@ -43,7 +43,7 @@ z.t() {
   local name_count=$REPLY
   local files=()
 
-  if z.int.gt $name_count 0; then
+  if z.int.is.gt $name_count 0; then
     for name in $test_names; do
       files+=(**/*${name}_test.zsh)
     done
@@ -81,25 +81,25 @@ z.t() {
     z.t._state.failures
     local test_failures=$REPLY
 
-    z.int.is_not_zero $test_failures && failed=1
-    z.int.is_not_zero $exit_code && failed=1
+    z.int.is.not.zero $test_failures && failed=1
+    z.int.is.not.zero $exit_code && failed=1
 
     ((file_count--))
-    if z.is_true $z_t_all_log && z.int.gt $file_count 0; then
-      z.is_false $z_t_compact && z.io.empty
+    if z.is.true $z_t_all_log && z.int.is.gt $file_count 0; then
+      z.is.false $z_t_compact && z.io.empty
     fi
   done
 
-  z.is_true $z_t_compact && z.t._show_compact_results $compact_dir $files
+  z.is.true $z_t_compact && z.t._show_compact_results $compact_dir $files
 
   z.t._show_totals $count_dir $files
   z.status
   local totals_failed=$REPLY
 
-  z.is_not_null $compact_dir && z.dir.exists $compact_dir && z.dir.remove path=$compact_dir
+  z.is.not.null $compact_dir && z.dir.exists $compact_dir && z.dir.remove path=$compact_dir
 
   cd $original_dir
-  z.int.is_not_zero $failed && return 1
+  z.int.is.not.zero $failed && return 1
   return $totals_failed
 }
 
@@ -120,25 +120,25 @@ z.t._extract_options() {
   local compact="false"
   local test_names=()
 
-  if z.int.gteq $arg_count 1; then
+  if z.int.is.gteq $arg_count 1; then
     for ((i=1; i<=arg_count; i++)); do
       z.arg.get $@ index=$i
       local current_arg=$REPLY
 
       z.arg.as name=$current_arg "as=-l|--log" return=true
-      if z.is_true $REPLY; then
+      if z.is.true $REPLY; then
         log="true"
         continue
       fi
 
       z.arg.as name=$current_arg "as=-f|--failed" return=true
-      if z.is_true $REPLY; then
+      if z.is.true $REPLY; then
         failed="true"
         continue
       fi
 
       z.arg.as name=$current_arg "as=-c|--compact" return=true
-      if z.is_true $REPLY; then
+      if z.is.true $REPLY; then
         compact="true"
         continue
       fi
@@ -148,7 +148,7 @@ z.t._extract_options() {
   fi
 
   local result=($log $failed $compact)
-  if z.int.gt ${#test_names[@]} 0; then
+  if z.int.is.gt ${#test_names[@]} 0; then
     result+=($test_names)
   fi
 
@@ -176,7 +176,7 @@ z.t._remove_tmp_dir() {
 z.t._setup_temp_dirs() {
   local compact_dir=""
 
-  if z.is_true $z_t_compact; then
+  if z.is.true $z_t_compact; then
     compact_dir="/tmp/z_t_compact_$$"
     z.dir.make path=$compact_dir
     echo "0" > "$compact_dir/.dot_count"
@@ -257,7 +257,7 @@ z.t._show_totals() {
   local padded_total_pendings=$(printf "%2s" $total_pendings)
   local total_message="total: $padded_total_tests tests $padded_total_failures failures $padded_total_pendings pendings"
 
-  if z.int.is_zero $total_failures; then
+  if z.int.is.zero $total_failures; then
     z.str.color.green "$total_message"
   else
     z.str.color.red "$total_message"
@@ -265,5 +265,5 @@ z.t._show_totals() {
 
   z.io $REPLY
 
-  z.int.is_not_zero $total_failures && return 1 || return 0
+  z.int.is.not.zero $total_failures && return 1 || return 0
 }

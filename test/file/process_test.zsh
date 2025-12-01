@@ -8,7 +8,7 @@ z.t.describe "z.file.make"; {
 
       z.file.exists /tmp/z_t/file_make.txt
 
-      z.t.expect.status.true
+      z.t.expect.status.is.true
     }
   }
 
@@ -17,10 +17,10 @@ z.t.describe "z.file.make"; {
       z.dir.make path=/tmp/z_t
       z.file.make path=/tmp/z_t/non_existent_dir/file_make.txt
 
-      z.file.not_exists /tmp/z_t/non_existent_dir/file_make.txt
-      z.dir.not_exists /tmp/z_t/non_existent_dir
+      z.file.not.exists /tmp/z_t/non_existent_dir/file_make.txt
+      z.dir.not.exists /tmp/z_t/non_existent_dir
 
-      z.t.expect.status.true
+      z.t.expect.status.is.true
     }
   }
 
@@ -32,7 +32,7 @@ z.t.describe "z.file.make"; {
 
       z.file.exists /tmp/z_t/file_make.txt
 
-      z.t.expect.status.true
+      z.t.expect.status.is.true
     }
   }
 
@@ -43,7 +43,7 @@ z.t.describe "z.file.make"; {
       z.file.exists /tmp/z_t/parent_dir/nested/file_make.txt
       z.dir.exists /tmp/z_t/parent_dir/nested
 
-      z.t.expect.status.true
+      z.t.expect.status.is.true
     }
   }
 
@@ -51,10 +51,10 @@ z.t.describe "z.file.make"; {
     z.t.it "親ディレクトリを作成しない"; {
       z.file.make path=/tmp/z_t/another_parent_dir/nested/file_make.txt with_dir=false
 
-      z.file.not_exists /tmp/z_t/another_parent_dir/nested/file_make.txt
-      z.dir.not_exists /tmp/z_t/another_parent_dir/nested
+      z.file.not.exists /tmp/z_t/another_parent_dir/nested/file_make.txt
+      z.dir.not.exists /tmp/z_t/another_parent_dir/nested
 
-      z.t.expect.status.true
+      z.t.expect.status.is.true
     }
   }
 }
@@ -67,8 +67,8 @@ z.t.describe "z.file.write"; {
 
       local content=$(cat /tmp/z_t/file_write.txt)
 
-      z.t.expect.include $content "new content"
-      z.t.expect.exclude $content "initial content"
+      z.t.expect.includes $content "new content"
+      z.t.expect.excludes $content "initial content"
     }
   }
 
@@ -79,7 +79,7 @@ z.t.describe "z.file.write"; {
 
       local content=$(cat /tmp/z_t/file_write_new.txt)
 
-      z.t.expect.include $content "fresh content"
+      z.t.expect.includes $content "fresh content"
     }
   }
 }
@@ -93,7 +93,7 @@ z.t.describe "z.file.read"; {
 
       z.file.read path=/tmp/z_t/file_read.txt
 
-      z.t.expect.reply.include "file content"
+      z.t.expect.reply.includes "file content"
     }
   }
 
@@ -102,7 +102,7 @@ z.t.describe "z.file.read"; {
       z.dir.make path=/tmp/z_t
       z.file.read path=/tmp/z_t/non_existent_file.txt
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }

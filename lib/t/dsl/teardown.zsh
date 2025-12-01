@@ -26,15 +26,15 @@ z.t.teardown() {
   fi
 
   z.t._state.compact
-  if z.is_true $REPLY; then
+  if z.is.true $REPLY; then
     z.t._state.tests
     local test_count=$REPLY
-    if z.int.gt $test_count 0; then
+    if z.int.is.gt $test_count 0; then
       z.t._state.current_it_failures
       local failures=$REPLY
-      if z.int.is_zero $failures; then
+      if z.int.is.zero $failures; then
         z.t._state.skip.it
-        z.is_false $REPLY && z.t._log.dot.success
+        z.is.false $REPLY && z.t._log.dot.success
       else
         z.t._log.dot.failure
       fi
@@ -44,5 +44,5 @@ z.t.teardown() {
   z.t._log.show
 
   z.t._state.failures
-  z.int.is_not_zero $REPLY && exit 1
+  z.int.is.not.zero $REPLY && exit 1
 }

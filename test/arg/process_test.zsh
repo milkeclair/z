@@ -13,7 +13,7 @@ z.t.describe "z.arg.as"; {
     z.t.it "nullを返す"; {
       z.arg.as name=--help "as=-h|--help"
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 
@@ -21,7 +21,7 @@ z.t.describe "z.arg.as"; {
     z.t.it "nullを返す"; {
       z.arg.as name=--version "as=-h|--help" return=0
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 
@@ -29,7 +29,7 @@ z.t.describe "z.arg.as"; {
     z.t.it "nullを返す"; {
       z.arg.as name=--help "as=-v|--version"
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 
@@ -37,7 +37,7 @@ z.t.describe "z.arg.as"; {
     z.t.it "nullを返す"; {
       z.arg.as "as=-h|--help" return=0 # zls: ignore
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }
@@ -55,7 +55,7 @@ z.t.describe "z.arg.named"; {
     z.t.it "nullを返す"; {
       z.arg.named # zls: ignore
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 

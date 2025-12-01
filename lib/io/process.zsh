@@ -28,12 +28,11 @@ z.io() {
   local args=($REPLY)
 
   z.guard; {
-    z.is_null $args && return
+    z.is.null $args && return
   }
 
-  z.is_not_null $indent && z.str.indent level=$indent message="$args" && args=($REPLY)
-  z.is_not_null $color && z.str.color.decorate color=$color message="$args" && args=($REPLY)
-
+  z.is.not.null $indent && z.str.indent level=$indent message="$args" && args=($REPLY)
+  z.is.not.null $color && z.str.color.decorate color=$color message="$args" && args=($REPLY)
   print -- $args
 }
 
@@ -68,12 +67,11 @@ z.io.oneline() {
   local args=($REPLY)
 
   z.guard; {
-    z.is_null $args && return
+    z.is.null $args && return
   }
 
-  z.is_not_null $indent && z.str.indent level=$indent message="$args" && args=($REPLY)
-  z.is_not_null $color && z.str.color.decorate color=$color message="$args" && args=($REPLY)
-
+  z.is.not.null $indent && z.str.indent level=$indent message="$args" && args=($REPLY)
+  z.is.not.null $color && z.str.color.decorate color=$color message="$args" && args=($REPLY)
   print -n -- $args
 }
 
@@ -98,7 +96,7 @@ z.io.clear() {
 #  z.io.null ls -la
 z.io.null() {
   z.arr.count $@
-  if z.int.eq $REPLY 0; then
+  if z.int.is.eq $REPLY 0; then
     cat >/dev/null 2>&1
   else
     "$@" >/dev/null 2>&1
@@ -115,6 +113,7 @@ z.io.null() {
 #
 # example:
 #  z.io.line "hello" "world" #=> hello\nworld
+#  z.io.line #=> (empty line)
 z.io.line() {
   z.arg.named color $@ && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
@@ -123,15 +122,15 @@ z.io.line() {
   local args=($REPLY)
 
   z.guard; {
-    z.is_null $args && return
+    z.is.null $args && { z.io.empty; return; }
   }
 
   local lines=()
   for arg in $args; do
     local line=$arg
 
-    z.is_not_null $indent && z.str.indent level=$indent message="$line" && line=$REPLY
-    z.is_not_null $color && z.str.color.decorate color=$color message="$line" && line=$REPLY
+    z.is.not.null $indent && z.str.indent level=$indent message="$line" && line=$REPLY
+    z.is.not.null $color && z.str.color.decorate color=$color message="$line" && line=$REPLY
     lines+=($line)
   done
 
@@ -205,11 +204,11 @@ z.io.error() {
   local args=($REPLY)
 
   z.guard; {
-    z.is_null $args && return
+    z.is.null $args && return
   }
 
-  z.is_not_null $indent && z.str.indent level=$indent message="$args" && args=($REPLY)
-  z.is_not_null $color && z.str.color.decorate color=$color message="$args" && args=($REPLY)
+  z.is.not.null $indent && z.str.indent level=$indent message="$args" && args=($REPLY)
+  z.is.not.null $color && z.str.color.decorate color=$color message="$args" && args=($REPLY)
 
   print -u2 -- $args
 }

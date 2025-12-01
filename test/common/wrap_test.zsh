@@ -37,7 +37,7 @@ z.t.describe "z.return"; {
     z.t.it "REPLYに空文字を設定する"; {
       z.return
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 
@@ -45,7 +45,7 @@ z.t.describe "z.return"; {
     z.t.it "REPLYに空文字を設定する"; {
       z.return "void"
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 
@@ -61,7 +61,7 @@ z.t.describe "z.return"; {
     z.t.it "REPLYに配列として設定する"; {
       z.return "value1" "value2" "value3"
 
-      z.t.expect.reply.arr "value1" "value2" "value3"
+      z.t.expect.reply.is.arr "value1" "value2" "value3"
     }
   }
 }
@@ -87,7 +87,7 @@ z.t.describe "z.return.hash"; {
 
       z.return.hash empty_hash
 
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }

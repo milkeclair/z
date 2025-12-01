@@ -10,8 +10,8 @@ z.t.describe "z.hash.to_arr"; {
       z.hash.to_arr hash
       local rep=$REPLY
 
-      z.t.expect.include $rep "name:John"
-      z.t.expect.include $rep "age:30"
+      z.t.expect.includes $rep "name:John"
+      z.t.expect.includes $rep "age:30"
     }
   }
 
@@ -20,7 +20,7 @@ z.t.describe "z.hash.to_arr"; {
       local -A empty_hash
 
       z.hash.to_arr empty_hash
-      z.t.expect.reply.null
+      z.t.expect.reply.is.null
     }
   }
 }

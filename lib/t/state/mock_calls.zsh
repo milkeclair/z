@@ -37,7 +37,7 @@ z.t._state.mock_calls.add() {
   z.arg.named name $@ && local func_name=$REPLY
   z.arg.named.shift name $@ && local args=$REPLY
 
-  if z.is_not_null ${z_t_mock_calls[$func_name]}; then
+  if z.is.not.null ${z_t_mock_calls[$func_name]}; then
     z_t_mock_calls[$func_name]="${z_t_mock_calls[$func_name]}:$args"
   else
     z_t_mock_calls[$func_name]=$args

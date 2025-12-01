@@ -30,7 +30,7 @@ z.fn.show() {
 
   local name=$1
 
-  if z.fn.not_exists $name; then
+  if z.fn.not.exists $name; then
     z.io.error "Function $name does not exist."
     return 1
   fi
