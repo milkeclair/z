@@ -82,7 +82,20 @@ z.path.real() {
 
   z.str.is.not.path_like $filepath && z.return "" && return
 
-  z.return ${filepath:A}
+  z.path.abs $filepath
+  local absolute=$REPLY
+
+  while [[ -L $absolute ]]; do
+    local target=$(readlink $absolute)
+    if z.str.is.not.match $target "/*"; then
+      z.path.dir $absolute
+      target=$REPLY/$target
+    fi
+    z.path.abs $target
+    absolute=$REPLY
+  done
+
+  z.return $absolute
 }
 
 # get the absolute path
