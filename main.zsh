@@ -3,6 +3,7 @@ export z_root=${Z_ROOT:-${${(%):-%N}:A:h}}
 local -A z_modules=(
   [arg]="analysis:operator:process"
   [arr]="analysis:operator:process"
+  [cls]="process"
   [common]="dsl:operator:wrap"
   [debug]="process"
   [dir]="operator:process"
@@ -22,6 +23,7 @@ local -A z_modules=(
 local z_module_depends_order=(
   arg
   arr
+  cls
   common
   debug
   dir
@@ -51,6 +53,7 @@ source "${z_root}/uninstall.zsh"
 
 z.arg() {}
 z.arr() {}
+z.cls() {}
 z.dir() {}
 z.file() {}
 z.hash() {}
