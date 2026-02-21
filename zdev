@@ -13,7 +13,7 @@ local fswatch_opts=(-r lib test mod)
 # fsevents_monitor is not supported in WSL, so poll_monitor will be used instead.
 # Using the default monitor (inotify) will detect file access events. 
 # However, all event names will be PlatformSpecific, making it impossible to sort events.
-if z.str.include $(uname -r) "WSL"; then
+if z.str.includes $(uname -r) "WSL"; then
   fswatch_opts+=(-m poll_monitor)
 else
   fswatch_opts+=(-m fsevents_monitor)
