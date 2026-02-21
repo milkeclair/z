@@ -64,6 +64,22 @@ z.t.describe "z.return"; {
       z.t.expect.reply.is.arr "value1" "value2" "value3"
     }
   }
+
+  z.t.context "keep_empty=trueを指定して複数の値を渡した場合"; {
+    z.t.it "空要素を保持してREPLYに配列を設定する"; {
+      z.return keep_empty=true "value1" "" "value3"
+
+      z.t.expect.reply.is.arr "value1" "" "value3"
+    }
+  }
+
+  z.t.context "keep_emptyを指定せず空要素を含む複数の値を渡した場合"; {
+    z.t.it "空要素は除外される"; {
+      z.return "value1" "" "value3"
+
+      z.t.expect.reply.is.arr "value1" "value3"
+    }
+  }
 }
 
 z.t.describe "z.return.hash"; {
