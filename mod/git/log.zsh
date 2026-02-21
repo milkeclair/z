@@ -1,5 +1,5 @@
 z.git.log() {
-  z.git.user._show
+  z.git.user.show
 
   echo ""
   echo "--- commits ---"
