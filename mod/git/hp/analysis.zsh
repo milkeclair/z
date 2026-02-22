@@ -1,8 +1,8 @@
 z.git.hp.ticket() {
-  local branch=$(z.git.b.current)
+  z.git.branch.current && local branch=$REPLY
 
   # e.g. feature/some-description-123 => some-description-123
-  z.str.split str="$current_branch" delimiter="/"
+  z.str.split str="$branch" delimiter="/"
   local branch_parts=(${(@)REPLY})
   local after_last_slash=$branch_parts[-1]
 
