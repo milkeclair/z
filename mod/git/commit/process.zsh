@@ -64,11 +64,11 @@ z.git.commit.help() {
   z.io indent=2 "green:    git green [tag] message ?[ticket] ?[-nt|-ca|-ae]"
   z.io indent=2 "refactor: git green refactor message ?[ticket] ?[-nt|-ca|-ae]"
   z.io.line
-  z.io indent=2 "Valid tags are:"
-  z.io indent=3 "${tags[*]}"
+  z.io indent=1 "Valid tags are:"
+  z.io indent=2 "${tags[*]}"
   z.io.line
-  z.io indent=2 "Options:"
-  z.io indent=3 "-nt: no ticket"
-  z.io indent=3 "-ca: amend"
-  z.io indent=3 "-ae: allow empty"
+  z.io indent=1 "Options:"
+  z.io indent=2 "-nt: no ticket"
+  z.io indent=2 "-ca: amend"
+  z.io indent=2 "-ae: allow empty"
 }
