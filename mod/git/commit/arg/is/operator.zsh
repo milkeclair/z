@@ -8,9 +8,3 @@ z.git.commit.arg.is.enough() {
     return 1
   fi
 }
-
-z.git.commit.arg.is.no_ticket() {
-  z.arg.named opts $@ && local opts=$REPLY
-
-  z.str.is.not.match " ${opts[*]} " " -nt "
-}

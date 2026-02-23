@@ -12,7 +12,7 @@ z.git.commit() {
 
   z.git.commit.tag.is.valid $tag || return 1
 
-  if z.is.null $ticket && z.git.commit.arg.is.no_ticket ${opts[@]}; then
+  if z.is.null $ticket && z.git.commit.arg.is.not.no_ticket ${opts[@]}; then
     z.git.hp.ticket && ticket=$REPLY
   fi
 
@@ -36,7 +36,7 @@ z.git.commit.tdd() {
 
   z.git.commit.tag.is.valid $tag || return 1
 
-  if z.is.null $ticket && z.git.commit.arg.is.no_ticket ${opts[@]}; then
+  if z.is.null $ticket && z.git.commit.arg.is.not.no_ticket ${opts[@]}; then
     z.git.hp.ticket && ticket=$REPLY
   fi
 
