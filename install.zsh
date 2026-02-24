@@ -118,7 +118,6 @@ z.install._show_completion() {
   echo "   add the following lines to your ~/.zshrc:"
   echo ""
   echo "   export Z_ROOT=\"$install_dir\""
-  echo "   export Z_TEST_ROOT=\"$install_dir/test\""
   echo "   source \"\$Z_ROOT/main.zsh\""
   echo ""
 }
@@ -158,7 +157,6 @@ z.install._add_to_zshrc() {
   echo "" >> "$HOME/.zshrc"
   echo "# z configuration" >> "$HOME/.zshrc"
   echo "export Z_ROOT=\"$install_dir\"" >> "$HOME/.zshrc"
-  echo "export Z_TEST_ROOT=\"\$Z_ROOT/test\"" >> "$HOME/.zshrc"
   echo "source \"\$Z_ROOT/main.zsh\"" >> "$HOME/.zshrc"
   echo "✅ added to .zshrc"
   echo "   to apply changes: source ~/.zshrc"

@@ -1,7 +1,6 @@
 #!/bin/zsh
 
 Z_ROOT=$PWD
-Z_TEST_ROOT=$PWD/test
 
 source main.zsh
 
@@ -23,5 +22,6 @@ fswatch ${fswatch_opts[@]} | while read file; do
   z.io.clear
   local relative_path=${file#$PWD/}
   z.io "File changed: $relative_path"
+  cd test
   z.t -f
 done

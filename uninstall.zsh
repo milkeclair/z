@@ -65,7 +65,6 @@ z.uninstall._question_remove_source_line() {
   echo "📝 following lines remain in .zshrc:"
   echo "   # z configuration"
   echo "   export Z_ROOT=\"$install_dir\""
-  echo "   export Z_TEST_ROOT=\"\$Z_ROOT/test\""
   echo "   source \"\$Z_ROOT/main.zsh\""
   echo ""
   echo -n "remove from .zshrc? (y/n): "
