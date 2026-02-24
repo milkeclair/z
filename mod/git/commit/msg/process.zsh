@@ -9,5 +9,5 @@ z.git.commit.msg.build() {
   z.is.not.null $cycle && commit_message+="[$cycle] "
   commit_message+=$message
 
-  z.return "$commit_message"
+  z.return $commit_message
 }

@@ -6,7 +6,7 @@ z.git.commit.arg.extract() {
   shift 2
 
   for arg in $@; do
-    if z.str.is.match $arg "-*"; then
+    if z.str.is.match $arg -*; then
       opts+=($arg)
     elif z.is.null $ticket; then
       ticket=$arg
@@ -26,5 +26,5 @@ z.git.commit.arg.extract() {
     ((idx++))
   done
 
-  z.return keep_empty=true ${result[@]}
+  z.return keep_empty=true $result
 }

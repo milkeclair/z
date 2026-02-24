@@ -9,5 +9,5 @@ z.git.commit.tag.list() {
     test
   )
 
-  z.return ${tags[@]}
+  z.return $tags
 }

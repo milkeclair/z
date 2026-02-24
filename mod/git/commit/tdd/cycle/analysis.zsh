@@ -5,5 +5,5 @@ z.git.commit.tdd.cycle.list() {
     refactor
   )
 
-  z.return ${tdd_cycles[@]}
+  z.return $tdd_cycles
 }

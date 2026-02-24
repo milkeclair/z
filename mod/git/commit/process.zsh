@@ -16,8 +16,8 @@ z.git.commit() {
     z.git.hp.ticket && ticket=$REPLY
   fi
 
-  z.git.commit.msg.build tag=$tag "message=$message" ticket=$ticket
-  z.git.commit.with_committer "$REPLY" ${opts[@]}
+  z.git.commit.msg.build tag=$tag message=$message ticket=$ticket
+  z.git.commit.with_committer $REPLY ${opts[@]}
 }
 
 z.git.commit.tdd() {
@@ -40,8 +40,8 @@ z.git.commit.tdd() {
     z.git.hp.ticket && ticket=$REPLY
   fi
 
-  z.git.commit.msg.build tag=$tag "message=$message" ticket=$ticket cycle=$cycle
-  z.git.commit.with_committer "$REPLY" ${opts[@]}
+  z.git.commit.msg.build tag=$tag message=$message ticket=$ticket cycle=$cycle
+  z.git.commit.with_committer $REPLY ${opts[@]}
 }
 
 z.git.commit.with_committer() {
@@ -50,7 +50,7 @@ z.git.commit.with_committer() {
   z.git.commit.opts.extract $@
   local opts=(${(@)REPLY})
 
-  command git commit -m "$message" ${opts[@]}
+  command git commit -m $message ${opts[@]}
   z.git.commit.help.committer
 }
 

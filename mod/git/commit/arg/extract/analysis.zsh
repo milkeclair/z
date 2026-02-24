@@ -8,5 +8,5 @@ z.git.commit.arg.extract.opts() {
     ((idx++))
   done
 
-  z.return ${opts[@]}
+  z.return $opts
 }
