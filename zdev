@@ -18,10 +18,12 @@ else
   fswatch_opts+=(-m fsevents_monitor)
 fi
 
+local moved=false
+
 fswatch ${fswatch_opts[@]} | while read file; do
   z.io.clear
   local relative_path=${file#$PWD/}
   z.io "File changed: $relative_path"
-  cd test
+  z.is.false $moved && cd test && moved=true
   z.t -f
 done
