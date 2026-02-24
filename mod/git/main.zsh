@@ -1,12 +1,34 @@
-source ./helper.zsh
-source ./commit.zsh
-source ./push.zsh
-source ./pull.zsh
-source ./protect.zsh
-source ./user.zsh
-source ./log.zsh
-source ./stat.zsh
-source ./worktree.zsh
+export z_root=${Z_ROOT:-${${(%):-%N}:A:h}}
+
+local -A z_git_modules=(
+  [branch]="analysis:operator:process"
+  [commit]="process"
+  [hp]="analysis:operator"
+  [log]="process"
+  [pull]="process"
+  [push]="process"
+  [stats]="analysis:process"
+  [user]="operator:process"
+)
+
+local z_git_module_depends_order=(
+  hp
+  branch
+  commit
+  log
+  pull
+  push
+  stats
+  user
+)
+
+for module in $z_git_module_depends_order; do
+  local parts=(${(s/:/)z_git_modules[$module]})
+
+  for part in $parts; do
+    source "${z_root}/mod/git/${module}/${part}.zsh"
+  done
+done
 
 z.git() {
   case $1 in

@@ -1,3 +1,11 @@
+for set_file in ${z_root}/mod/git/user/set/*.zsh; do
+  source $set_file
+done
+
+for show_file in ${z_root}/mod/git/user/show/*.zsh; do
+  source $show_file
+done
+
 z.git.user() {
   z.arg.first $@ && local first_arg=$REPLY
   z.is.eq $first_arg "user" && shift
