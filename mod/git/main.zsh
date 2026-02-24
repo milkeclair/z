@@ -36,21 +36,21 @@ z.git() {
     z.git.commit "$@"
     ;;
   "tdd")
-    z.git.commit.tdd
+    z.git.commit.tdd "$@"
     ;;
   "red")
     z.git.commit.tdd "$@"
     ;;
   "1")
     shift
-    z.git.commit.tdd "red" "$@"
+    z.git.commit.tdd red "$@"
     ;;
   "green")
     z.git.commit.tdd "$@"
     ;;
   "2")
     shift
-    z.git.commit.tdd "green" "$@"
+    z.git.commit.tdd green "$@"
     ;;
   "push")
     z.git.push "$@"
@@ -59,19 +59,16 @@ z.git() {
     z.git.pull "$@"
     ;;
   "current")
-    z.git.hp.show_current
+    z.git.branch.current.show
     ;;
   "user")
     z.git.user "$@"
-    ;;
-  "logs")
-    z.git.log "$@"
     ;;
   "l")
     z.git.log "$@"
     ;;
   "stats")
-    z.git.stat
+    z.git.stats "$@"
     ;;
   "fetch")
     command git fetch --prune
@@ -79,28 +76,28 @@ z.git() {
     ;;
   "to")
     shift
-    z.git.worktree.to "$@"
+    z.git.wt.to "$@"
     ;;
   "pr")
-    z.git.worktree.pr "$2"
+    z.git.wt.pr "$2"
     ;;
   "dev")
-    z.git.worktree.dev
+    z.git.wt.dev
     ;;
   "list")
-    z.git.worktree.list
+    z.git.wt.list
     ;;
   "pt")
-    z.git.worktree.pt "$2"
+    z.git.wt.pt "$2"
     ;;
   "bk")
-    z.git.worktree.bk "$2"
+    z.git.wt.bk "$2"
     ;;
   "cb")
-    z.git.worktree.cb
+    z.git.wt.cb
     ;;
   "rm")
-    z.git.worktree.rm "$@"
+    z.git.wt.rm "$@"
     ;;
   *)
     command git "$@"
@@ -108,7 +105,7 @@ z.git() {
   esac
 }
 
-_
+_z.git() {
   local -a subcommands
   subcommands=(
     "commit:create a commit"
@@ -120,13 +117,9 @@ _
     "2:GREEN (test success) commit"
     "push:push"
     "pull:pull"
-    "protect:protect branch"
-    "unprotect:remove branch protection"
-    "protected:list protected branches"
     "current:show current branch"
     "user:user settings"
-    "logs:show logs"
-    "l:show logs (short form)"
+    "l:show logs"
     "stats:show statistics"
     "fetch:fetch remote branches and tags"
     "to:create and move to a worktree for the specified branch"
@@ -135,7 +128,7 @@ _
     "list:list worktrees"
     "pt:save the current branch to an environment variable"
     "bk:switch back to the saved branch in the environment variable"
-    "cb:remove merged and unprotected branch worktrees"
+    "cb:remove merged branch worktrees"
     "rm:remove the worktree for the specified branch"
   )
 
@@ -144,7 +137,7 @@ _
   elif ((CURRENT >= 3)); then
     case "$words[2]" in
       "to"|"pr"|"dev"|"list"|"pt"|"bk"|"cb"|"rm")
-        _z.git.worktree
+        _z.git.wt
         ;;
       *)
         _default
