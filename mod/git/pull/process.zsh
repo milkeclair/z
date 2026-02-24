@@ -4,12 +4,12 @@ z.git.pull() {
 
   if z.git.hp.arg.has.origin "$@"; then
     command git pull "$@"
-    return
+    return 0
   fi
 
   if z.git.hp.arg.has.develop "$@"; then
     z.git.pull.develop
-    return
+    return 0
   fi
 
   z.git.pull.pr || z.git.pull.current
@@ -32,6 +32,7 @@ z.git.pull.pr() {
     z.io "Pulling latest changes for PR #${pr_number}"
     z.io.empty
     command git pull origin pull/"$pr_number"/head:"$current_branch"
+    return 0
   else
     return 1
   fi

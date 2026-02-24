@@ -1,4 +1,6 @@
 z.git.commit() {
+  z.arg.first $@ && local first_arg=$REPLY
+  z.is.eq $first_arg "commit" && shift
   z.git.commit.arg.is.enough $@ || return 1
 
   z.group "extract arguments"; {
@@ -21,7 +23,10 @@ z.git.commit() {
 }
 
 z.git.commit.tdd() {
+  z.arg.first $@ && local first_arg=$REPLY
+  z.is.eq $first_arg "tdd" && shift
   local cycle=$1 && shift
+
   z.git.commit.tdd.cycle.is.valid $cycle || return 1
   z.git.commit.arg.is.enough $@ || return 1
 

@@ -1,4 +1,7 @@
 z.git.user() {
+  z.arg.first $@ && local first_arg=$REPLY
+  z.is.eq $first_arg "user" && shift
+
   if z.git.user.opt.is.set "$1"; then
     z.git.user.set "$2"
   else
