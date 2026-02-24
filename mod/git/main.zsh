@@ -1,6 +1,7 @@
 export z_root=${Z_ROOT:-${${(%):-%N}:A:h}}
 
 local -A z_git_modules=(
+  [add]="process"
   [branch]="analysis:operator:process"
   [commit]="process"
   [hp]="analysis:operator"
@@ -13,6 +14,7 @@ local -A z_git_modules=(
 
 local z_git_module_depends_order=(
   hp
+  add
   branch
   commit
   log
@@ -32,6 +34,12 @@ done
 
 z.git() {
   case $1 in
+  "add")
+    z.git.add "$@"
+    ;;
+  "a")
+    z.git.add "$@"
+    ;;
   "c")
     z.git.commit "$@"
     ;;
