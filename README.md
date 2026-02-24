@@ -129,6 +129,13 @@ Tests are written in zsh and use a RSpec-like syntax.
 Run `z.t` to run all tests.
 z.t accepts the following options.
 
+`z.t` searches tests from the current directory.
+Run it from a directory whose path ends with `/test`.
+If the current directory is not `/test`, `z.t` returns an error.
+
+`z_main` is the main test file that sets up the test environment and runs the tests.
+`z.t` looks for `main.zsh` in the test directory and sources it before running the tests.
+
 - `-l, --log`
   - Display test details.
 - `-f, --failed`

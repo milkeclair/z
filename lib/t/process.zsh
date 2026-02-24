@@ -29,8 +29,8 @@ z.t() {
   local original_dir=$PWD
 
   local z_mode="test"
-  local test_root=${Z_TEST_ROOT:-$PWD}
-  z.dir.exists "${test_root}/test" && test_root="${test_root}/test"
+  z.t._test_root_from_pwd || return 1
+  local test_root=$REPLY
   local root_dir=${test_root:h}
   local z_main="${root_dir}/main.zsh"
   cd $test_root
@@ -101,6 +101,25 @@ z.t() {
   cd $original_dir
   z.int.is.not.zero $failed && return 1
   return $totals_failed
+}
+
+# resolve test root from current working directory
+#
+# REPLY: absolute test directory path
+# return: 0|1
+#
+# example:
+#  z.t._test_root_from_pwd
+z.t._test_root_from_pwd() {
+  local current_dir=$PWD
+  local abs_current_dir=${current_dir:A}
+
+  if ! z.str.end_with "$abs_current_dir" "/test"; then
+    z.io.error "z.t must be run from a /test directory: $abs_current_dir"
+    return 1
+  fi
+
+  z.return "$abs_current_dir"
 }
 
 # extract options from arguments
