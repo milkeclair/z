@@ -8,8 +8,8 @@ z.git.branch.current() {
 
 z.git.branch.merged() {
   local result=$(command git branch --merged)
-  local no_checkout=$(echo "$result" | grep -v '^[*+]')
-  local trimmed=$(echo "$no_checkout" | sed 's/^[[:space:]]*//')
+  local no_checkout=$(z.io $result | command grep -v '^[*+]')
+  local trimmed=$(z.io $no_checkout | command sed 's/^[[:space:]]*//')
 
   z.return $trimmed
 }
