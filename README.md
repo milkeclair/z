@@ -6,12 +6,15 @@ Provide functions with readable names for syntax that is not intuitive for me.
 ## Installation
 
 ### First time
+
 `curl -sL https://raw.githubusercontent.com/milkeclair/z/main/install.zsh | zsh`
 
 ### Reinstall or Update
+
 `z.install`
 
 ### Uninstall
+
 `z.uninstall`
 
 ## Usage
@@ -224,6 +227,23 @@ z.io> line "Indented" "line" indent=2
 z.io> q
 $
 ```
+
+## Modifier
+
+This library provides modifiers that enhance the execution of your specific tasks.
+You will individually install the ones you wish to use.
+
+### Install or Update
+
+`z.install.mod <mod_name>`
+
+### Uninstall
+
+`z.uninstall.mod <mod_name>`
+
+### List of Mods
+
+- `z.mod.git`
 
 ## Language Server
 
