@@ -1,7 +1,3 @@
-for not_file in ${z_root}/lib/file/not/*.zsh; do
-  source ${not_file}
-done
-
 # check if a file exists
 #
 # $1: file path

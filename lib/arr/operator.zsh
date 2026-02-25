@@ -1,7 +1,3 @@
-for is_file in ${z_root}/lib/arr/is/*.zsh; do
-  source ${is_file}
-done
-
 # check if array includes element
 #
 # $target: element to find

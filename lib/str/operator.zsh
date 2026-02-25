@@ -1,7 +1,3 @@
-for is_file in ${z_root}/lib/str/is/*.zsh; do
-  source ${is_file}
-done
-
 # check if string contains substring
 #
 # $1: string

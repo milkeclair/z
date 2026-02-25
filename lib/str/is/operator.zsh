@@ -1,7 +1,3 @@
-for not_file in ${z_root}/lib/str/is/not/*.zsh; do
-  source ${not_file}
-done
-
 # check if string is empty
 #
 # $1: string

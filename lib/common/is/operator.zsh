@@ -1,7 +1,3 @@
-for not_file in ${z_root}/lib/common/is/not/*.zsh; do
-  source ${not_file}
-done
-
 # verifies whether the provided value is truthy or not
 # truthy values:
 #   - true or 0

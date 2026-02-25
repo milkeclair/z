@@ -9,14 +9,6 @@ typeset -gA z_color_palette=(
   [reset]=$'\033[0m'
 )
 
-for color_file in ${z_root}/lib/str/color/*.zsh; do
-  source $color_file
-done
-
-for match_file in ${z_root}/lib/str/match/*.zsh; do
-  source $match_file
-done
-
 # get color code by name
 #
 # $1: color name

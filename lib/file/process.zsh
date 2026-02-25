@@ -1,11 +1,3 @@
-for read_file in ${z_root}/lib/file/read/*.zsh; do
-  source ${read_file}
-done
-
-for write_file in ${z_root}/lib/file/write/*.zsh; do
-  source ${write_file}
-done
-
 # create a file if it does not exist
 #
 # $path: file path

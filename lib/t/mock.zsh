@@ -1,7 +1,3 @@
-for mock_file in ${z_root}/lib/t/mock/*.zsh; do
-  source ${mock_file} $1
-done
-
 # mock a function
 #
 # $name: function name

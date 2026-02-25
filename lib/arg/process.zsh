@@ -1,7 +1,3 @@
-for named_file in ${z_root}/lib/arg/named/*.zsh; do
-  source ${named_file}
-done
-
 # argument value as one of the aliases
 #
 # $name: target argument
