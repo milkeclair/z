@@ -1,27 +1,3 @@
-for arg_file in ${z_root}/mod/git/commit/arg/*.zsh; do
-  source $arg_file
-done
-
-for help_file in ${z_root}/mod/git/commit/help/*.zsh; do
-  source $help_file
-done
-
-for msg_file in ${z_root}/mod/git/commit/msg/*.zsh; do
-  source $msg_file
-done
-
-for opts_file in ${z_root}/mod/git/commit/opts/*.zsh; do
-  source $opts_file
-done
-
-for tag_file in ${z_root}/mod/git/commit/tag/*.zsh; do
-  source $tag_file
-done
-
-for tdd_file in ${z_root}/mod/git/commit/tdd/*.zsh; do
-  source $tdd_file
-done
-
 z.git.commit() {
   z.arg.first $@ && local first_arg=$REPLY
   z.is.eq $first_arg "commit" && shift

@@ -1,7 +1,3 @@
-for map_file in ${z_root}/mod/git/stats/commit/map/*.zsh; do
-  source $map_file
-done
-
 z.git.stats.commit.count() {
   local author=$1
 

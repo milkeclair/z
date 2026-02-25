@@ -69,6 +69,19 @@ for module in $z_module_depends_order; do
   done
 done
 
+if [[ -d "${z_root}/mod" ]]; then
+  local mod_dirs=("${z_root}/mod"/*(/))
+  for mod_dir in $mod_dirs; do
+    local mod_files=("${mod_dir}"/**/*.zsh(N))
+    for mod_file in $mod_files; do
+      if [[ -f $mod_file && ${loaded_files[$mod_file]} != true ]]; then
+        source "$mod_file" "$@"
+        loaded_files[$mod_file]=true
+      fi
+    done
+  done
+fi
+
 source "${z_root}/install.zsh"
 source "${z_root}/uninstall.zsh"
 

@@ -1,37 +1,3 @@
-export z_root=${Z_ROOT:-${${(%):-%N}:A:h}}
-
-local -A z_git_modules=(
-  [add]="process"
-  [branch]="analysis:operator:process"
-  [commit]="process"
-  [hp]="analysis:operator"
-  [log]="process"
-  [pull]="process"
-  [push]="process"
-  [stats]="analysis:process"
-  [user]="operator:process"
-)
-
-local z_git_module_depends_order=(
-  hp
-  add
-  branch
-  commit
-  log
-  pull
-  push
-  stats
-  user
-)
-
-for module in $z_git_module_depends_order; do
-  local parts=(${(s/:/)z_git_modules[$module]})
-
-  for part in $parts; do
-    source "${z_root}/mod/git/${module}/${part}.zsh"
-  done
-done
-
 z.git() {
   case $1 in
   "add")

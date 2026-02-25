@@ -1,7 +1,3 @@
-for not_file in ${z_root}/mod/git/commit/arg/is/not/*.zsh; do
-  source $not_file
-done
-
 z.git.commit.arg.is.enough() {
   local tag_and_message=2
 

@@ -1,7 +1,3 @@
-for extract_file in ${z_root}/mod/git/commit/arg/extract/*.zsh; do
-  source $extract_file
-done
-
 z.git.commit.arg.extract() {
   local tag=$1
   local message=$2
