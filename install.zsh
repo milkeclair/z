@@ -61,6 +61,17 @@ z.install._decompress_archive() {
   fi
 }
 
+z.install._remove_existing_install_dir() {
+  if [[ ! -d $install_dir ]]; then
+    return 0
+  fi
+
+  if ! rm -rf "$install_dir"; then
+    echo "❌ failed to remove: $install_dir"
+    return 1
+  fi
+}
+
 z.install._copy_files() {
   if ! mkdir -p $install_dir; then
     echo "❌ failed to create install dir: $install_dir"
@@ -102,12 +113,6 @@ z.install._copy_files() {
       fi
     fi
   done
-}
-
-z.install.cleanup() {
-  if [[ -n $temp_dir && -d $temp_dir ]]; then
-    rm -rf $temp_dir
-  fi
 }
 
 z.install._show_completion() {
@@ -187,6 +192,7 @@ z.install() {
 
   z.install._download_archive || return 1
   z.install._decompress_archive || return 1
+  z.install._remove_existing_install_dir || return 1
   z.install._copy_files || return 1
   z.install._show_completion
 
