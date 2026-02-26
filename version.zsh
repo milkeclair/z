@@ -1,7 +1,21 @@
+# echo the current version
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.version #=> v0.1.0
 z.version() {
   z.io "v0.1.0"
 }
 
+# echo the latest version from GitHub
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.version.latest #=> v0.1.0
 z.version.latest() {
   local api_url="https://api.github.com/repos/milkeclair/z/releases/latest"
   local response
@@ -15,6 +29,13 @@ z.version.latest() {
   z.io $tag_name
 }
 
+# echo the release note of the current version
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.version.note #=> "release note for v0.1.0"
 z.version.latest.note() {
   local api_url="https://api.github.com/repos/milkeclair/z/releases/latest"
   local response
@@ -28,6 +49,13 @@ z.version.latest.note() {
   z.io "$body"
 }
 
+# echo the release note of the current version
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.version.note #=> "release note for v0.1.0"
 z.version.note() {
   local current_version=$(z.version)
   local api_url="https://api.github.com/repos/milkeclair/z/releases/tags/${current_version}"
