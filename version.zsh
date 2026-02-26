@@ -8,14 +8,8 @@ z.version.latest() {
   response=$(command curl -fsSL $api_url)
   z.status.is.false && z.io.error "failed to fetch latest version" && return 1
 
-  # { "tag_name": "v1.2.3" } => {"tag_name":"v1.2.3"}
-  z.str.gsub str="$response" search="[[:space:]]" replace="" pattern=true
-  # {"tag_name":"v1.2.3"} => v1.2.3"}
-  z.str.is.match "$REPLY" '*"tag_name":"*"*' || return 1
-  z.str.gsub str="$REPLY" search='*"tag_name":"' replace="" pattern=true
-  # v1.2.3"} => v1.2.3
-  z.str.gsub str="$REPLY" search='"*' replace="" pattern=true
-  local tag_name=$REPLY
+  local tag_name
+  tag_name=$(command jq -r '.tag_name // empty' <<< "$response")
   z.is.null $tag_name && return 1
 
   z.io $tag_name
@@ -27,20 +21,11 @@ z.version.latest.note() {
   response=$(command curl -fsSL $api_url)
   z.status.is.false && z.io.error "failed to fetch latest release note" && return 1
 
-  z.str.is.match "$response" '*"body"*' || return 1
-  # { "tag_name": "v1.2.3", "body": "release note" } => : "release note" }
-  z.str.gsub str="$response" search='*"body"' replace="" pattern=true
-  # : "release note" } => :"release note" }
-  z.str.gsub str="$REPLY" search=':[[:space:]]*"' replace=':"' pattern=true
-  # :"release note" } => release note" }
-  z.str.match.rest "$REPLY" ':"'
-  # release note" } => release note
-  z.str.gsub str="$REPLY" search='"*' replace="" pattern=true
-  z.is.null $REPLY && return 1
+  local body
+  body=$(command jq -r '.body // empty' <<< "$response")
+  z.is.null $body && return 1
 
-  z.str.gsub str="$REPLY" search='\"' replace='"'
-
-  z.io "$REPLY"
+  z.io "$body"
 }
 
 z.version.note() {
@@ -50,18 +35,9 @@ z.version.note() {
   response=$(command curl -fsSL $api_url)
   z.status.is.false && z.io.error "failed to fetch release note" && return 1
 
-  z.str.is.match "$response" '*"body"*' || return 1
-  # { "tag_name": "v1.2.3", "body": "release note" } => : "release note" }
-  z.str.gsub str="$response" search='*"body"' replace="" pattern=true
-  # : "release note" } => :"release note" }
-  z.str.gsub str="$REPLY" search=':[[:space:]]*"' replace=':"' pattern=true
-  # :"release note" } => release note" }
-  z.str.match.rest "$REPLY" ':"'
-  # release note" } => release note
-  z.str.gsub str="$REPLY" search='"*' replace="" pattern=true
-  z.is.null $REPLY && return 1
+  local body
+  body=$(command jq -r '.body // empty' <<< "$response")
+  z.is.null $body && return 1
 
-  z.str.gsub str="$REPLY" search='\"' replace='"'
-
-  z.io "$REPLY"
+  z.io "$body"
 }
