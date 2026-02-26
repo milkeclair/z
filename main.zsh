@@ -48,6 +48,7 @@ done
 
 source "${z_root}/install.zsh"
 source "${z_root}/uninstall.zsh"
+source "${z_root}/version.zsh"
 
 z.arg() {}
 z.arr() {}
