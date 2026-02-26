@@ -6,7 +6,7 @@ z.version.latest() {
   local api_url="https://api.github.com/repos/milkeclair/z/releases/latest"
   local response
   response=$(command curl -fsSL $api_url)
-  z.status.is.false && z.io "failed to fetch latest version" && return 1
+  z.status.is.false && z.io.error "failed to fetch latest version" && return 1
 
   # { "tag_name": "v1.2.3" } => {"tag_name":"v1.2.3"}
   z.str.gsub str="$response" search="[[:space:]]" replace="" pattern=true
@@ -25,7 +25,7 @@ z.version.latest.note() {
   local api_url="https://api.github.com/repos/milkeclair/z/releases/latest"
   local response
   response=$(command curl -fsSL $api_url)
-  z.status.is.false && z.io "failed to fetch latest release note" && return 1
+  z.status.is.false && z.io.error "failed to fetch latest release note" && return 1
 
   z.str.is.match "$response" '*"body"*' || return 1
   # { "tag_name": "v1.2.3", "body": "release note" } => : "release note" }
@@ -48,7 +48,7 @@ z.version.note() {
   local api_url="https://api.github.com/repos/milkeclair/z/releases/tags/${current_version}"
   local response
   response=$(command curl -fsSL $api_url)
-  z.status.is.false && z.io "failed to fetch release note" && return 1
+  z.status.is.false && z.io.error "failed to fetch release note" && return 1
 
   z.str.is.match "$response" '*"body"*' || return 1
   # { "tag_name": "v1.2.3", "body": "release note" } => : "release note" }
