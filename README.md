@@ -14,7 +14,24 @@ Provide functions with readable names for syntax that is not intuitive for me.
 ### Uninstall
 `z.uninstall`
 
+### Version
+
+- `z.version`
+  - echo the current version
+- `z.version.latest`
+  - echo the latest version from GitHub
+- `z.version.note`
+  - echo the release note of the current version
+- `z.version.latest.note`
+  - echo the release note of the latest version from GitHub
+
 ## Usage
+
+### Help
+
+`z.help` displays this README.
+
+`z.help <function_name>` displays the function docs. If no doc block is found, it displays `Document not found`.
 
 ### Examples
 
