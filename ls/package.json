@@ -11,7 +11,7 @@
     "url": "https://github.com/milkeclair/z"
   },
   "engines": {
-    "vscode": "^1.105.0"
+    "vscode": "^1.109.0"
   },
   "categories": [
     "Programming Languages"
