@@ -5,7 +5,7 @@
   "publisher": "milkeclair",
   "description": "Language Server for z",
   "license": "MIT",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/milkeclair/z"
