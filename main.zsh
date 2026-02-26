@@ -83,7 +83,6 @@ if [[ -d "${z_root}/mod" ]]; then
 fi
 
 source "${z_root}/install.zsh"
-source "${z_root}/install/mod.zsh"
 source "${z_root}/uninstall.zsh"
 source "${z_root}/version.zsh"
 source "${z_root}/help.zsh"
