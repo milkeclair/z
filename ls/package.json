@@ -5,13 +5,13 @@
   "publisher": "milkeclair",
   "description": "Language Server for z",
   "license": "MIT",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/milkeclair/z"
   },
   "engines": {
-    "vscode": "^1.105.0"
+    "vscode": "^1.109.0"
   },
   "categories": [
     "Programming Languages"
@@ -53,15 +53,15 @@
     "package": "rm -f bun.lock && bun install && npm run clean && npm run vscode:prepublish && vsce package"
   },
   "dependencies": {
-    "glob": "^11.0.3",
+    "glob": "^13.0.6",
     "vscode-languageclient": "^9.0.1",
     "vscode-languageserver": "^9.0.1",
     "vscode-languageserver-textdocument": "^1.0.12"
   },
   "devDependencies": {
-    "@vscode/vsce": "^3.6.2",
-    "typescript": "^5.7.3",
-    "@types/node": "^22.10.2",
-    "@types/vscode": "^1.105.0"
+    "@vscode/vsce": "^3.7.1",
+    "typescript": "^5.9.3",
+    "@types/node": "^25.3.1",
+    "@types/vscode": "^1.109.0"
   }
 }
