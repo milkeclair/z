@@ -1,3 +1,14 @@
+# process commit stats for a list of authors
+#
+# $authors: an array of author names
+# $exclude_exts: array of file extensions to exclude (e.g. "md" "txt")
+# $exclude_dirs: array of directories to exclude (e.g. "docs" "tests")
+# REPLY: an array of commit map entries (strings in the format "author:details:commit_count")
+# return: null
+#
+# example:
+#   z.git.stats.commit.map authors=("Alice" "Bob") exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
+#   #=> REPLY=("Alice:1000 500:50" "Bob:800 300:40")
 z.git.stats.commit.map() {
   z.arg.named authors $@ && local authors=($REPLY)
   z.arg.named exclude_exts $@ && local exclude_exts=($REPLY)
@@ -17,6 +28,16 @@ z.git.stats.commit.map() {
   z.return $commit_map
 }
 
+# sum inserted and deleted lines to get total lines changed
+#
+# $author: author name
+# $exclude_exts: array of file extensions to exclude (e.g. "md" "txt")
+# $exclude_dirs: array of directories to exclude (e.g. "docs" "tests")
+# REPLY: total number of lines changed by the author
+# return: null
+#
+# example:
+#   z.git.stats.commit.details author="Alice" exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
 z.git.stats.commit.details() {
   z.arg.named author $@ && local author=$REPLY
   z.arg.named exclude_exts $@ && local exclude_exts=($REPLY)
@@ -35,6 +56,16 @@ z.git.stats.commit.details() {
   z.return $result
 }
 
+# count the number of lines changed
+#
+# $inserted: number of lines inserted
+# $deleted: number of lines deleted
+# REPLY: total number of lines changed
+# return: null
+#
+# example:
+#   z.git.stats.commit.sum_lines inserted=1000 deleted=500
+#   #=> 1500
 z.git.stats.commit.sum_lines() {
   z.arg.named inserted $@ && local inserted=$REPLY
   z.arg.named deleted $@ && local deleted=$REPLY
@@ -42,5 +73,6 @@ z.git.stats.commit.sum_lines() {
   local result=$(
     command awk -v inserted=$inserted -v deleted=$deleted "BEGIN {print inserted + deleted}"
   )
+
   z.return $result
 }

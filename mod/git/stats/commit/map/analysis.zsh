@@ -1,3 +1,11 @@
+# split a commit map entry into its components
+#
+# $entry: a string in the format "author:details:commit_count"
+# REPLY: an associative array with keys "author", "commit_count", "inserted", "deleted", "total"
+# return: null
+#
+# example:
+#   z.git.stats.commit.map.split entry="Alice:1000 500:50"
 z.git.stats.commit.map.split() {
   z.arg.named entry $@ && local entry=$REPLY
   z.str.split str=$entry delimiter=:
@@ -23,6 +31,16 @@ z.git.stats.commit.map.split() {
   z.return.hash result
 }
 
+# remove duplicate entries from a commit map
+# based on their commit count, inserted, and deleted lines
+#
+# $@: an array of commit map entries (strings in the format "author:details:commit_count")
+# REPLY: an array of unique commit map entries
+# return: null
+#
+# example:
+#   z.git.stats.commit.map.distinct commit_map=("Alice:1000 500:50" "Bob:800 300:40" "Alice:1000 500:50")
+#   #=> REPLY=("Alice:1000 500:50" "Bob:800 300:40")
 z.git.stats.commit.map.distinct() {
   local commit_map=($@)
   local filtered_entries=()

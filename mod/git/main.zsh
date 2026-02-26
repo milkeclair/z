@@ -10,21 +10,21 @@ z.git() {
     z.git.commit "$@"
     ;;
   "tdd")
-    z.git.commit.tdd "$@"
+    z.git.commit.tdd "$@" # zls: ignore
     ;;
   "red")
-    z.git.commit.tdd "$@"
+    z.git.commit.tdd "$@" # zls: ignore
     ;;
   "1")
     shift
-    z.git.commit.tdd red "$@"
+    z.git.commit.tdd red "$@" # zls: ignore
     ;;
   "green")
-    z.git.commit.tdd "$@"
+    z.git.commit.tdd "$@" # zls: ignore
     ;;
   "2")
     shift
-    z.git.commit.tdd green "$@"
+    z.git.commit.tdd green "$@" # zls: ignore
     ;;
   "push")
     z.git.push "$@"

@@ -1,3 +1,12 @@
+# extract commit options
+#
+# $@: commit args
+# REPLY: array of valid commit options
+# return: null
+#
+# example:
+#   z.git.commit.opts.extract -m "commit message" --amend --allow-empty
+#   #=> ("--amend" "--allow-empty")
 z.git.commit.opts.extract() {
   local args=($@)
   local opts=()

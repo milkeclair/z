@@ -1,3 +1,14 @@
+# check if the required arguments for setting git user config are provided
+#
+# $1: user.name value
+# $2: user.email value
+# REPLY: null
+# return: 0|1
+#
+# example:
+#   z.git.user.set.required "Alice" "alice@example.com" #=> 0 (valid)
+#   z.git.user.set.required "" "alice@example.com" #=> 1 (invalid)
+#   z.git.user.set.required "Alice" "" #=> 1 (invalid)
 z.git.user.set.required() {
   if z.is.null $1 && z.is.null $2; then
     z.io "require user.name"

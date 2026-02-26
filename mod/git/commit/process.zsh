@@ -1,6 +1,26 @@
+# git commit
+# if "tdd" as the first arg, it's a tdd commit, otherwise it's a normal commit
+#
+# $1?: "tdd" for tdd commit, tag for normal commit
+# $2?: commit cycle for tdd commit, commit message for normal commit
+# $3?: commit message for tdd commit, ticket for normal commit
+# $@: commit options (e.g. -nt, -ca, -ae)
+#
+# REPLY: null
+# return: null
+#
+# example:
+#   z.git.commit feat "add new feature" TICKET-123 -ca
+#   z.git.commit tdd red feat "add new feature" TICKET-123 -ca -ae
 z.git.commit() {
   z.arg.first $@ && local first_arg=$REPLY
   z.is.eq $first_arg "commit" && shift
+  if z.is.eq $first_arg "tdd"; then
+    shift
+    z.git.commit.tdd $1 $2 $3 ${@:4}
+    return
+  fi
+
   z.git.commit.arg.is.enough $@ || return 1
 
   z.group "extract arguments"; {
@@ -22,6 +42,19 @@ z.git.commit() {
   z.git.commit.with_committer $REPLY ${opts[@]}
 }
 
+# tdd commit
+#
+# $1: commit cycle (red, green, refactor)
+# $2: commit tag
+# $3: commit message
+# $4?: ticket number (optional)
+# $@: commit options (e.g. -nt, -ca, -ae)
+#
+# REPLY: null
+# return: null
+#
+# example:
+#   z.git.commit.tdd red feat "add new feature" TICKET-123 -ca -ae
 z.git.commit.tdd() {
   z.arg.first $@ && local first_arg=$REPLY
   z.is.eq $first_arg "tdd" && shift
@@ -49,6 +82,16 @@ z.git.commit.tdd() {
   z.git.commit.with_committer $REPLY ${opts[@]}
 }
 
+# commit with committer info
+#
+# $1: commit message
+# $@: commit options (e.g. -nt, -ca, -ae)
+#
+# REPLY: null
+# return: null
+#
+# example:
+#   z.git.commit.with_committer "feat: add new feature" -ca
 z.git.commit.with_committer() {
   local message=$1 && shift
 
@@ -59,6 +102,13 @@ z.git.commit.with_committer() {
   z.git.commit.help.committer
 }
 
+# show help for git commit
+#
+# REPLY: null
+# return: null
+#
+# example:
+#   z.git.commit.help
 z.git.commit.help() {
   z.git.commit.tag.list && local tags=$REPLY
 

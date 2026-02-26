@@ -1,3 +1,12 @@
+# git add
+# prevent "git add ." to encourage users to specify files explicitly
+#
+# $@: files
+# REPLY: null
+# return: null
+#
+# example:
+#   z.git.add file1.txt file2.txt
 z.git.add() {
   z.arg.first $@ && local first_arg=$REPLY
   z.is.eq $first_arg "add" && shift

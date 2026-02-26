@@ -1,8 +1,18 @@
+# count the number of commits for a given author
+#
+# $1: author name
+# REPLY: number of commits by the author
+# return: null
+#
+# example:
+#   z.git.stats.commit.count "Alice"
 z.git.stats.commit.count() {
   local author=$1
 
   # wc -l: count lines
-  command git log --oneline --author=$author |
+  local result=$(command git log --oneline --author=$author |
     command grep -v "Merge branch\|Merge pull request" | \
-    command wc -l
+    command wc -l)
+
+  z.return $result
 }

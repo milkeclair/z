@@ -1,3 +1,11 @@
+# extract ticket number from current branch name
+#
+# REPLY: ticket number or empty string if not found
+# return: null
+#
+# example:
+#   # if current branch is feature/some-description-123
+#   z.git.hp.ticket #=> "123"
 z.git.hp.ticket() {
   z.git.branch.current && local branch=$REPLY
 

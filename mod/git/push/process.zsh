@@ -1,3 +1,12 @@
+# push latest changes for current branch
+# if current branch is pr/123, push latest changes for that PR
+# if arguments contain "origin", push with those arguments
+#
+# REPLY: null
+# return: null
+#
+# example:
+#   z.git.push #=> push latest changes for current branch
 z.git.push() {
   z.arg.first $@ && local first_arg=$REPLY
   z.is.eq $first_arg "push" && shift
@@ -10,6 +19,14 @@ z.git.push() {
   z.git.push.pr || z.git.push.current
 }
 
+# push latest changes for PR branch
+#
+# REPLY: null
+# return: null
+#
+# example:
+#   # if current branch is pr/123
+#   z.git.push.pr #=> push latest changes for PR #123
 z.git.push.pr() {
   z.git.branch.current
   local current_branch=$REPLY
@@ -27,6 +44,13 @@ z.git.push.pr() {
   fi
 }
 
+# push latest changes for current branch
+#
+# REPLY: null
+# return: null
+#
+# example:
+#   z.git.push.current #=> push latest changes for current branch
 z.git.push.current() {
   z.git.branch.current
   local current_branch=$REPLY

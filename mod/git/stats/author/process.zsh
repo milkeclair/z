@@ -1,3 +1,10 @@
+# display commit stats header
+#
+# REPLY: null
+# return: null
+#
+# example:
+#   z.git.stats.author.header #=> display header for commit stats table
 z.git.stats.author.header() {
   # 22, 12, 12, 12, 12
   z.io "┌──────────────────────┬────────────┬────────────┬────────────┬────────────┐"
@@ -5,6 +12,15 @@ z.git.stats.author.header() {
   z.io "├──────────────────────┼────────────┼────────────┼────────────┼────────────┤"
 }
 
+# display commit stats for each author in a table format
+#
+# $exclude_exts: array of file extensions to exclude (e.g. "md" "txt")
+# $exclude_dirs: array of directories to exclude (e.g. "docs" "tests")
+# REPLY: null
+# return: null
+#
+# example:
+#   z.git.stats.author.body exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
 z.git.stats.author.body() {
   z.arg.named exclude_exts $@ && local exclude_exts=($REPLY)
   z.arg.named exclude_dirs $@ && local exclude_dirs=($REPLY)
@@ -22,7 +38,7 @@ z.git.stats.author.body() {
     local deleted=$REPLY[deleted]
     local total=$REPLY[total]
 
-    # example: author_name commit: 100 add: 1000 delete: 1000 total: 2000
+    # e.g. author_name commit: 100 add: 1000 delete: 1000 total: 2000
     z.git.stats.author.show \
       author="$author" \
       commit_count="$commit_count" \
@@ -36,6 +52,20 @@ z.git.stats.author.body() {
   done
 }
 
+# display author stats in a table row
+#
+# $author: author name
+# $commit_count: number of commits by the author
+# $inserted: number of lines inserted by the author
+# $deleted: number of lines deleted by the author
+# $total: total number of lines changed by the author
+#
+# REPLY: null
+# return: null
+#
+# example:
+#   z.git.stats.author.show author="Alice" commit_count=100 inserted=1000 deleted=1000 total=2000
+#   #=> display a table row for Alice with her commit stats
 z.git.stats.author.show() {
   z.arg.named author $@ && local author=$REPLY
   z.arg.named commit_count $@ && local commit_count=$REPLY
@@ -57,11 +87,25 @@ z.git.stats.author.show() {
   printf "│ %-20s │ ${yellow}%-10d${reset} │ ${green}%-10d${reset} │ ${red}%-10d${reset} │ ${magenta}%-10d${reset} │\n" "$author" "$commit_count" "$inserted" "$deleted" "$total"
 }
 
+# display commit stats table border
+#
+# REPLY: null
+# return: null
+#
+# example:
+#   z.git.stats.author.border #=> display border for commit stats table
 z.git.stats.author.border() {
   # 22, 12, 12, 12, 12
   z.io "├──────────────────────┼────────────┼────────────┼────────────┼────────────┤"
 }
 
+# display commit stats table footer
+#
+# REPLY: null
+# return: null
+#
+# example:
+#   z.git.stats.author.footer #=> display footer for commit stats table
 z.git.stats.author.footer() {
   # 22, 12, 12, 12, 12
   z.io "└──────────────────────┴────────────┴────────────┴────────────┴────────────┘"

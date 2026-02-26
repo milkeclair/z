@@ -1,3 +1,10 @@
+# get current branch name
+#
+# REPLY: current branch name
+# return: null
+#
+# example:
+#   z.git.branch.current #=> "main"
 z.git.branch.current() {
   if command git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     z.return $(command git branch --show-current)
@@ -6,6 +13,13 @@ z.git.branch.current() {
   fi
 }
 
+# get merged branches
+#
+# REPLY: merged branch names (one per line)
+# return: null
+#
+# example:
+#   z.git.branch.merged #=> "main\nfeature-branch"
 z.git.branch.merged() {
   local result=$(command git branch --merged)
   local no_checkout=$(z.io $result | command grep -v '^[*+]')
