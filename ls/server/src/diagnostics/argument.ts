@@ -3,8 +3,38 @@ import { OPERATORS } from './functionCall/constant';
 import { namedArgRegex } from './functionCall/regex';
 import { initQuoteState } from './functionCall/state';
 
-export function ArgsText(line: string, endChar: number): string {
-  return line.substring(endChar).trim();
+function hasLineContinuation(line: string): boolean {
+  const trimmed = line.replace(/[ \t]+$/, '');
+  let backslashCount = 0;
+
+  for (let i = trimmed.length - 1; i >= 0; i--) {
+    if (trimmed[i] !== '\\') break;
+    backslashCount++;
+  }
+
+  return backslashCount % 2 === 1;
+}
+
+function stripTrailingContinuation(line: string): string {
+  return line.replace(/[ \t]+$/, '').replace(/\\$/, '');
+}
+
+export function MultiLineArgsText(
+  lines: string[],
+  startLineIndex: number,
+  endChar: number,
+): string {
+  let currentLineIndex = startLineIndex;
+  let combined = lines[currentLineIndex].substring(endChar);
+
+  while (hasLineContinuation(combined) && currentLineIndex + 1 < lines.length) {
+    const current = stripTrailingContinuation(combined);
+    currentLineIndex += 1;
+    const nextLine = lines[currentLineIndex].trim();
+    combined = `${current} ${nextLine}`;
+  }
+
+  return combined.trim();
 }
 
 export function definedNamedArgs(func: Func): string[] {
@@ -13,7 +43,7 @@ export function definedNamedArgs(func: Func): string[] {
 
 export function requiredPositionalArgs(func: Func): Func['args'] {
   return func.args.filter(
-    (arg) => !arg.isNamed && !arg.optional && arg.position !== Number.MAX_SAFE_INTEGER
+    (arg) => !arg.isNamed && !arg.optional && arg.position !== Number.MAX_SAFE_INTEGER,
   );
 }
 
@@ -23,7 +53,7 @@ export function requiredNamedArgs(func: Func): Func['args'] {
 
 export function isMissingNamedArg(
   namedArgs: Map<string, string>,
-  requiredNamedArg: FuncArg
+  requiredNamedArg: FuncArg,
 ): boolean {
   return !namedArgs.has(requiredNamedArg.name);
 }
@@ -49,7 +79,7 @@ function pushArgumentFromType(
   positional: string[],
   named: Map<string, string>,
   hadQuotedValue: boolean,
-  definedNamedArgs: string[]
+  definedNamedArgs: string[],
 ): void {
   const namedMatch = arg.match(namedArgRegex);
 
@@ -76,7 +106,7 @@ function pushArgumentFromType(
 
 export function parseArguments(
   argsText: string,
-  definedNamedArgs: string[]
+  definedNamedArgs: string[],
 ): { positional: string[]; named: Map<string, string> } {
   if (!argsText.trim()) {
     return { positional: [], named: new Map() };

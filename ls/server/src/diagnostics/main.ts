@@ -6,7 +6,7 @@ import { handleFirstEmptyLine, handleEmptyLine, handleFinalNewLine } from './emp
 import { handleFunctionCall } from './functionCall';
 import { isInsideQuoteFunctionCall } from './functionCall/matcher';
 import { isCommentLine, hasIgnoreComment } from './comment';
-import { ArgsText } from './argument';
+import { MultiLineArgsText } from './argument';
 import { checkUnusedArguments } from './unusedArgument';
 
 function resetRegexLastIndex() {
@@ -56,7 +56,7 @@ export function validateTextDocument({
       handleFunctionCall(
         functions,
         functionName,
-        ArgsText(line, endChar),
+        MultiLineArgsText(lines, lineIndex, endChar),
         startChar,
         endChar,
         lineIndex,
