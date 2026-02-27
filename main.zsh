@@ -51,6 +51,10 @@ source "${z_root}/uninstall.zsh"
 source "${z_root}/version.zsh"
 source "${z_root}/help.zsh"
 
+z() {
+  z.help "$@"
+}
+
 z.arg() {}
 z.arr() {}
 z.dir() {}
