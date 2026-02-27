@@ -36,7 +36,7 @@ z.t() {
   cd $test_root
 
   z.io.empty
-  z.io "================ Running tests ================"
+  z.io "=========================== Running tests ==========================="
   z.io.empty
 
   z.arr.count $test_names
