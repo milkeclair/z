@@ -1,24 +1,50 @@
-# check if the required arguments for setting git user config are provided
+# set git user info (name and email) for local
 #
 # $1: user.name value
 # $2: user.email value
 # REPLY: null
-# return: 0|1
+# return: null
 #
 # example:
-#   z.git.user.set.required "Alice" "alice@example.com" #=> 0 (valid)
-#   z.git.user.set.required "" "alice@example.com" #=> 1 (invalid)
-#   z.git.user.set.required "Alice" "" #=> 1 (invalid)
-z.git.user.set.required() {
-  if z.is.null $1 && z.is.null $2; then
-    z.io "require user.name"
-    z.io "require user.email"
-    return 1
-  elif z.is.null $1; then
-    z.io "require user.name"
-    return 1
-  elif z.is.null $2; then
-    z.io "require user.email"
-    return 1
-  fi
+#   z.git.user.set "Alice" "alice@example.com"
+z.git.user.set() {
+  z.git.user.set.local "$1" "$2"
+}
+
+# set git user info (name and email) for local
+#
+# $1: user.name value
+# $2: user.email value
+# REPLY: null
+# return: null
+#
+# example:
+#   z.git.user.set.local "Alice" "alice@example.com"
+z.git.user.set.local() {
+  z.io "--- set local user info ---"
+  z.git.user.set.arg.is.enough "$1" "$2" || return 1
+
+  command git config --local user.name "$1"
+  command git config --local user.email "$2"
+  z.io "set user.name: $1"
+  z.io "set user.email: $2"
+}
+
+# set git user info (name and email) for global
+#
+# $1: user.name value
+# $2: user.email value
+# REPLY: null
+# return: null
+#
+# example:
+#   z.git.user.set.global "Alice" "alice@example.com"
+z.git.user.set.global() {
+  z.io "--- set global user info ---"
+  z.git.user.set.arg.is.enough "$1" "$2" || return 1
+
+  command git config --global user.name "$1"
+  command git config --global user.email "$2"
+  z.io "set user.name: $1"
+  z.io "set user.email: $2"
 }
