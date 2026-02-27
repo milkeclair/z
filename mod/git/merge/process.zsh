@@ -1,3 +1,11 @@
+# safer merge
+#
+# $1: target branch to merge into current branch
+# REPLY: null
+# return: null
+#
+# example:
+#  z.git.merge main
 z.git.merge() {
   local target_branch=$1
 
