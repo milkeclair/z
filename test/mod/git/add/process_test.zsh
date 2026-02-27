@@ -8,7 +8,7 @@ z.t.describe "z.git.add"; {
       z.git.add .
 
       z.t.expect.status.is.false skip_unmock=true
-      z.t.mock.result z.io
+      z.t.mock.result
       z.t.expect.reply 'Rejecting "git add ." command. Please specify the files to add explicitly.'
     }
   }
@@ -20,7 +20,7 @@ z.t.describe "z.git.add"; {
       z.git.add file1.txt file2.txt
 
       z.t.expect.status.is.true skip_unmock=true
-      z.t.mock.result git
+      z.t.mock.result
       z.t.expect.reply "add file1.txt file2.txt"
     }
   }
