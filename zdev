@@ -1,6 +1,7 @@
 #!/bin/zsh
 
 Z_ROOT=$PWD
+local project_root=$PWD
 
 source main.zsh
 
@@ -20,10 +21,25 @@ fi
 
 local moved=false
 
-fswatch ${fswatch_opts[@]} | while read file; do
+fswatch ${fswatch_opts[@]} | while IFS= read -r file; do
   z.io.clear
-  local relative_path=${file#$PWD/}
-  z.io "File changed: $relative_path"
+  if z.str.start_with "$file" "$project_root/"; then
+    file=${file#"$project_root/"}
+  fi
+  z.io "File changed: $file"
   z.is.false $moved && cd test && moved=true
-  z.t -f
+
+  local test_name=$file
+
+  if z.str.start_with "$test_name" "test/"; then
+    test_name=${test_name#test/}
+  fi
+
+  if z.str.end_with "$test_name" "_test.zsh"; then
+    test_name=${test_name%_test.zsh}
+  elif z.str.end_with "$test_name" ".zsh"; then
+    test_name=${test_name%.zsh}
+  fi
+
+  z.t "$test_name"
 done
