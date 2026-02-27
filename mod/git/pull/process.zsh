@@ -9,9 +9,6 @@
 # example:
 #   z.git.pull #=> pull latest changes for current branch
 z.git.pull() {
-  z.arg.first $@ && local first_arg=$REPLY
-  z.is.eq $first_arg "pull" && shift
-
   if z.git.hp.arg.has.origin "$@"; then
     command git pull "$@"
     return 0

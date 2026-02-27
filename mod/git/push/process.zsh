@@ -8,9 +8,6 @@
 # example:
 #   z.git.push #=> push latest changes for current branch
 z.git.push() {
-  z.arg.first $@ && local first_arg=$REPLY
-  z.is.eq $first_arg "push" && shift
-
   if z.git.hp.arg.has.origin "$@"; then
     command git push "$@"
     return 0

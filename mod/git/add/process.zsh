@@ -8,10 +8,7 @@
 # example:
 #   z.git.add file1.txt file2.txt
 z.git.add() {
-  z.arg.first $@ && local first_arg=$REPLY
-  z.is.eq $first_arg "add" && shift
-
-  if z.is.eq $first_arg "."; then
+  if z.is.eq $1 "."; then
     z.io 'Rejecting "git add ." command. Please specify the files to add explicitly.'
     return 1
   fi

@@ -4,12 +4,11 @@
 # return: null
 #
 # example:
-#   z.git.commit.tdd.cycle.list #=> ("red" "green" "refactor")
+#   z.git.commit.tdd.cycle.list #=> ("red" "green")
 z.git.commit.tdd.cycle.list() {
   local tdd_cycles=(
     red
     green
-    refactor
   )
 
   z.return $tdd_cycles

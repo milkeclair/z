@@ -6,7 +6,7 @@
 # example:
 #   z.git.log #=> show git log with pretty format
 z.git.log() {
-  z.git.user.show
+  z.git.user
 
   z.io.empty
   z.io "--- commits ---"
