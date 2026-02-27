@@ -45,10 +45,25 @@ z.t() {
 
   if z.int.is.gt $name_count 0; then
     for name in $test_names; do
-      files+=(**/*${name}_test.zsh)
+      local exact_file="${name}_test.zsh"
+      local matched_files=()
+
+      if z.file.exists "$exact_file"; then
+        matched_files+=("$exact_file")
+      else
+        matched_files=(**/*${name}_test.zsh(N))
+      fi
+
+      z.arr.count $matched_files
+      if z.int.is.zero $REPLY; then
+        z.io.warn "No test matched: $name (skipped)"
+        continue
+      fi
+
+      files+=(${matched_files[@]})
     done
   else
-    files=(**/*_test.zsh)
+    files=(**/*_test.zsh(N))
   fi
 
   local file_count=${#files[@]}
