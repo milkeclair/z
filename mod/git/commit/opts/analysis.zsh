@@ -8,12 +8,11 @@
 #   z.git.commit.opts.extract -m "commit message" --amend --allow-empty
 #   #=> ("--amend" "--allow-empty")
 z.git.commit.opts.extract() {
-  local args=($@)
   local opts=()
   local valid_opts=()
 
-  for arg in $args; do
-    if z.str.is.match $arg ^-; then
+  for arg in "$@"; do
+    if z.str.is.match "$arg" "-*"; then
       opts+=($arg)
     fi
   done

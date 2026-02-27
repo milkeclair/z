@@ -16,8 +16,8 @@ z.git.commit.arg.extract() {
   local opts=()
   shift 2
 
-  for arg in $@; do
-    if z.str.is.match $arg -*; then
+  for arg in "$@"; do
+    if z.str.is.match "$arg" "-*"; then
       opts+=($arg)
     elif z.is.null $ticket; then
       ticket=$arg
