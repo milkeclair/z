@@ -25,17 +25,17 @@ z.git.commit.arg.extract() {
   done
 
   local result=(
-    tag $tag
-    message $message
-    ticket $ticket
-    opts_count ${#opts[@]}
+    tag "$tag"
+    message "$message"
+    ticket "$ticket"
+    opts_count "${#opts[@]}"
   )
 
   local idx=1
   for opt in ${opts[@]}; do
-    result+=(opts_$idx $opt)
+    result+=(opts_$idx "$opt")
     ((idx++))
   done
 
-  z.return keep_empty=true $result
+  z.return keep_empty=true "${result[@]}"
 }

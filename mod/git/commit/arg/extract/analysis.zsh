@@ -8,7 +8,7 @@
 #   z.git.commit.arg.extract.opts -m "commit message" --amend
 #   #=> ("-m" "commit message" "--amend")
 z.git.commit.arg.extract.opts() {
-  local -A args=(${(@)@})
+  local -A args=("${(@)@}")
   local opts=()
 
   local idx=1

@@ -26,7 +26,7 @@ z.return() {
     if z.is.false $keep_empty && z.str.is.match "$arg" "keep_empty=*"; then
       keep_empty=${arg#keep_empty=}
     else
-      filtered_args+=($arg)
+      filtered_args+=("$arg")
     fi
   done
 

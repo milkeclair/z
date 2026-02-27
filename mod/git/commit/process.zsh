@@ -60,10 +60,10 @@ z.git.commit() {
 
   z.group "extract arguments"; {
     z.git.commit.arg.extract $@
-    local -A args=(${(@)REPLY})
+    local -A args=("${(@)REPLY}")
     local tag=$args[tag] && local message=$args[message] && local ticket=$args[ticket]
 
-    z.git.commit.arg.extract.opts ${(@kv)args}
+    z.git.commit.arg.extract.opts "${(@kv)args}"
     local opts=(${(@)REPLY})
   }
 
@@ -98,10 +98,10 @@ z.git.commit.tdd() {
 
   z.group "extract arguments"; {
     z.git.commit.arg.extract $@
-    local -A args=(${(@)REPLY})
+    local -A args=("${(@)REPLY}")
     local tag=$args[tag] && local message=$args[message] && local ticket=$args[ticket]
 
-    z.git.commit.arg.extract.opts ${(@kv)args}
+    z.git.commit.arg.extract.opts "${(@kv)args}"
     local opts=(${(@)REPLY})
   }
 
