@@ -131,7 +131,7 @@ z.git.commit.with_committer() {
   z.git.commit.opts.extract $@
   local opts=(${(@)REPLY})
 
-  command git commit -m $message ${opts[@]}
+  git commit -m $message ${opts[@]}
   z.git.commit.help.committer
 }
 

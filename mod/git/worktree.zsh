@@ -59,9 +59,9 @@ z.git.worktree.to() {
   fi
 
   if git show-ref --verify --quiet "refs/heads/$branch"; then
-    command git worktree add "$tree_root/$branch_path" $branch
+    git worktree add "$tree_root/$branch_path" $branch
   else
-    command git worktree add -b $branch "$tree_root/$branch_path"
+    git worktree add -b $branch "$tree_root/$branch_path"
   fi
 
   local config_file="$root/.worktreeconfig"
@@ -128,7 +128,7 @@ z.git.worktree.pr() {
 
   local branch="pr/$pr_number"
 
-  command git fetch origin pull/"$pr_number"/head:"$branch"
+  git fetch origin pull/"$pr_number"/head:"$branch"
   z.git.worktree.to $branch
 }
 
@@ -136,8 +136,8 @@ z.git.worktree.dev() {
   local branch="develop"
 
   z.git.worktree.to root
-  command git fetch
-  command git pull origin $branch
+  git fetch
+  git pull origin $branch
 }
 
 z.git.worktree.list() {
@@ -240,7 +240,7 @@ z.git.worktree.cb() {
     fi
   done
 
-  command git worktree prune
+  git worktree prune
 }
 
 z.git.worktree.rm() {
@@ -315,14 +315,14 @@ z.git.worktree.rm() {
   local removal_completed=false
   local -a removal_notes
 
-  if command git worktree remove -f $worktree_dir; then
+  if git worktree remove -f $worktree_dir; then
     removal_completed=true
   else
     removal_notes+=("Failed to remove worktree: $worktree_dir")
 
     chmod -R u+w "$worktree_dir" 2>/dev/null || true
 
-  if command git worktree remove -f $worktree_dir 2>/dev/null; then
+  if git worktree remove -f $worktree_dir 2>/dev/null; then
       removal_completed=true
     else
       if z.git.worktree.rm._is_registered $worktree_dir; then
@@ -357,10 +357,10 @@ z.git.worktree.rm() {
   fi
 
   if git show-ref --verify --quiet "refs/heads/$actual_branch"; then
-    command git branch -D $actual_branch
+    git branch -D $actual_branch
   fi
 
-  command git worktree prune
+  git worktree prune
 }
 
 z.git.worktree.rm._is_registered() {

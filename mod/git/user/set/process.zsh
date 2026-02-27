@@ -24,8 +24,8 @@ z.git.user.set.local() {
   z.io "--- set local user info ---"
   z.git.user.set.arg.is.enough "$1" "$2" || return 1
 
-  command git config --local user.name "$1"
-  command git config --local user.email "$2"
+  git config --local user.name "$1"
+  git config --local user.email "$2"
   z.io "set user.name: $1"
   z.io "set user.email: $2"
 }
@@ -43,8 +43,8 @@ z.git.user.set.global() {
   z.io "--- set global user info ---"
   z.git.user.set.arg.is.enough "$1" "$2" || return 1
 
-  command git config --global user.name "$1"
-  command git config --global user.email "$2"
+  git config --global user.name "$1"
+  git config --global user.email "$2"
   z.io "set user.name: $1"
   z.io "set user.email: $2"
 }

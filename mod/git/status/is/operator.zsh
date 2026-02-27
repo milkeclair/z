@@ -6,5 +6,5 @@
 # example:
 #  if z.git.status.is.dirty; then
 z.git.status.is.dirty() {
-  z.is.not.null "$(command git status --porcelain)"
+  z.is.not.null "$(git status --porcelain)"
 }

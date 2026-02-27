@@ -13,5 +13,5 @@ z.git.add() {
     return 1
   fi
 
-  command git add "$@"
+  git add "$@"
 }

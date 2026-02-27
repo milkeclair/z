@@ -49,9 +49,9 @@ z.git.stats.commit.details() {
   # e.g. /(node_modules|dist)/
   local exclude_dirs_pattern="($(IFS=\|; echo ${exclude_dirs[*]}))/"
 
-  local result=$(command git log --pretty=tformat: --numstat --author=$author |
-    command grep -v -E "$exclude_exts_pattern|$exclude_dirs_pattern" |
-    command awk "{inserted+=$1; deleted+=$2} END {print inserted, deleted}")
+  local result=$(git log --pretty=tformat: --numstat --author=$author |
+    grep -v -E "$exclude_exts_pattern|$exclude_dirs_pattern" |
+    awk "{inserted+=$1; deleted+=$2} END {print inserted, deleted}")
 
   z.return $result
 }
@@ -71,7 +71,7 @@ z.git.stats.commit.sum_lines() {
   z.arg.named deleted $@ && local deleted=$REPLY
 
   local result=$(
-    command awk -v inserted=$inserted -v deleted=$deleted "BEGIN {print inserted + deleted}"
+    awk -v inserted=$inserted -v deleted=$deleted "BEGIN {print inserted + deleted}"
   )
 
   z.return $result

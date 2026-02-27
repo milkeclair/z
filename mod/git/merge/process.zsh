@@ -22,5 +22,5 @@ z.git.merge() {
   fi
 
   z.git.fetch
-  command git merge $target_branch
+  git merge $target_branch
 }

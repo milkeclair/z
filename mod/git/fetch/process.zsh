@@ -6,6 +6,6 @@
 # example:
 #   z.git.fetch #=> Fetched all branches and tags from remote.
 z.git.fetch() {
-  command git fetch --prune
-  command echo "Fetched all branches and tags from remote."
+  git fetch --prune
+  z.io "Fetched all branches and tags from remote."
 }

@@ -26,7 +26,7 @@ z.git() {
     z.git.wt.rm "$@"
     ;;
   *)
-    command git "$@"
+    git "$@"
     ;;
   esac
 }

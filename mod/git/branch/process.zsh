@@ -7,7 +7,7 @@
 # example:
 #   z.git.branch -a # show all branches
 z.git.branch() {
-  command git branch "$@"
+  git branch "$@"
 }
 
 # alias for `git branch -a`
