@@ -1,9 +1,5 @@
 z.git() {
   case $1 in
-  "fetch")
-    command git fetch --prune
-    command echo "Fetched all branches and tags from remote."
-    ;;
   "to")
     shift
     z.git.wt.to "$@"
