@@ -238,3 +238,35 @@ z.t.describe "z.arr.reverse"; {
     }
   }
 }
+
+z.t.describe "z.arr.slice"; {
+  z.t.context "offsetとtoが指定された場合"; {
+    z.t.it "offsetからtoまでの要素を返す"; {
+      z.arr.slice offset=2 to=3 "a" "b" "c" "d" "e"
+      z.t.expect.reply.is.arr "c" "d"
+
+      z.arr.slice offset=1 to=4 "one" "two" "three" "four" "five"
+      z.t.expect.reply.is.arr "two" "three" "four"
+    }
+  }
+
+  z.t.context "offsetが指定され、toが指定されなかった場合"; {
+    z.t.it "offsetから最後までの要素を返す"; {
+      z.arr.slice offset=3 "a" "b" "c" "d" "e"
+      z.t.expect.reply.is.arr "d" "e"
+
+      z.arr.slice offset=2 "one" "two" "three" "four" "five"
+      z.t.expect.reply.is.arr "three" "four" "five"
+    }
+  }
+
+  z.t.context "offsetが指定されなかった場合"; {
+    z.t.it "最初からtoまでの要素を返す"; {
+      z.arr.slice to=3 "a" "b" "c" "d" "e"
+      z.t.expect.reply.is.arr "a" "b" "c"
+
+      z.arr.slice to=4 "one" "two" "three" "four" "five"
+      z.t.expect.reply.is.arr "one" "two" "three" "four"
+    }
+  }
+}
