@@ -1,29 +1,39 @@
 source ${z_main}
 
-z.t.describe "z.git.branch.current.show"; {
+z.t.describe "z.git.branch.current.get"; {
   z.t.context "現在のブランチが存在する場合"; {
-    z.t.it "現在のブランチ名を返す"; {
-      z.t.mock name="git" behavior="z.io main"
+    z.t.it "ブランチ名を返す"; {
+      z.t.mock name="git" behavior='
+        if z.str.start_with "$*" "rev-parse --is-inside-work-tree"; then
+          return 0
+        elif z.str.start_with "$*" "branch --show-current"; then
+          z.io "main"
+        else
+          z.io "Unexpected git command: $*"
+          return 1
+        fi
+      '
 
-      local result=$(z.git.branch.current.show)
+      z.git.branch.current.get
 
-      z.t.expect.status.is.true skip_unmock=true
-      z.t.mock.result
-      z.t.expect $result "main"
+      z.t.expect.reply "main"
     }
   }
 
   z.t.context "現在のブランチが存在しない場合"; {
-    z.t.it "空文字を返す"; {
-      z.t.mock \
-        name="git" \
-        behavior="z.io.error fatal: not a git repository (or any of the parent directories): .git"
+    z.t.it "nullを返す"; {
+      z.t.mock name="git" behavior='
+        if z.str.start_with "$*" "rev-parse --is-inside-work-tree"; then
+          return 1
+        else
+          z.io "Unexpected git command: $*"
+          return 1
+        fi
+      '
 
-      local result=$(z.git.branch.current.show)
+      z.git.branch.current.get
 
-      z.t.expect.status.is.true skip_unmock=true
-      z.t.mock.result
-      z.t.expect.is.null $result
+      z.t.expect.reply.is.null
     }
   }
 }
