@@ -74,7 +74,7 @@ z.git.commit() {
   fi
 
   z.git.commit.msg.build tag=$tag message=$message ticket=$ticket
-  z.git.commit.with_committer $REPLY ${opts[@]}
+  z.git.commit.with_committer "$REPLY" ${opts[@]}
 }
 
 # tdd commit
@@ -112,7 +112,7 @@ z.git.commit.tdd() {
   fi
 
   z.git.commit.msg.build tag=$tag message=$message ticket=$ticket cycle=$cycle
-  z.git.commit.with_committer $REPLY ${opts[@]}
+  z.git.commit.with_committer "$REPLY" ${opts[@]}
 }
 
 # commit with committer info

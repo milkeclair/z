@@ -20,9 +20,9 @@ z.git.hp.ticket() {
   local first_part=$parts[1]
   local last_part=$parts[-1]
 
-  if z.str.is.match $last_part "^[0-9]+$"; then
+  if z.int.is.match $last_part; then
     z.return $last_part
-  elif z.str.is.match $first_part "^[0-9]+$"; then
+  elif z.int.is.match $first_part; then
     z.return $first_part
   else
     z.return ""
