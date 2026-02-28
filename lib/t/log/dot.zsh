@@ -46,9 +46,9 @@ z.t._log.dot.output() {
 
   z.file.exists $count_file && count=$(cat $count_file)
 
-  local terminal_width=${COLUMNS:-70}
-  local width=70
-  z.int.is.lt $terminal_width 70 && width=$terminal_width
+  local terminal_width=${COLUMNS:-77}
+  local width=77
+  z.int.is.lt $terminal_width 77 && width=$terminal_width
 
   if z.int.is.eq $((count % width)) 0 && z.int.is.gt $count 0; then
     z.io.line
