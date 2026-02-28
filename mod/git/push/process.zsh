@@ -25,7 +25,7 @@ z.git.push() {
 #   # if current branch is pr/123
 #   z.git.push.pr #=> push latest changes for PR #123
 z.git.push.pr() {
-  z.git.branch.current
+  z.git.branch.current.get
   local current_branch=$REPLY
 
   z.str.match.rest "$current_branch" "pr/"
@@ -49,7 +49,7 @@ z.git.push.pr() {
 # example:
 #   z.git.push.current #=> push latest changes for current branch
 z.git.push.current() {
-  z.git.branch.current
+  z.git.branch.current.get
   local current_branch=$REPLY
 
   z.io "Pushing latest changes for current branch $current_branch"

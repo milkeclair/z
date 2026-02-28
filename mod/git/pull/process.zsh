@@ -44,7 +44,7 @@ z.git.pull.develop() {
 #   # if current branch is pr/123
 #   z.git.pull.pr #=> pull latest changes for PR #123
 z.git.pull.pr() {
-  z.git.branch.current
+  z.git.branch.current.get
   local current_branch=$REPLY
 
   z.str.match.rest "$current_branch" "pr/"
@@ -68,7 +68,7 @@ z.git.pull.pr() {
 # example:
 #   z.git.pull.current #=> pull latest changes for current branch
 z.git.pull.current() {
-  z.git.branch.current
+  z.git.branch.current.get
   local current_branch=$REPLY
 
   z.io "Pulling latest changes for current branch $current_branch"
