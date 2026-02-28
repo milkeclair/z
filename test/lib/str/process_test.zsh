@@ -651,3 +651,19 @@ z.t.describe "z.str.rjust"; {
     }
   }
 }
+
+z.t.describe "z.str.trim"; {
+  z.t.context "文字列の両端に空白がある場合"; {
+    z.t.it "両端の空白を削除した文字列を返す"; {
+      z.str.trim "  Hello World  "
+      z.t.expect.reply "Hello World"
+    }
+  }
+
+  z.t.context "文字列の両端に空白がない場合"; {
+    z.t.it "元の文字列をそのまま返す"; {
+      z.str.trim "Hello World"
+      z.t.expect.reply "Hello World"
+    }
+  }
+}

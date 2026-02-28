@@ -399,3 +399,22 @@ z.str.rjust() {
 
   z.return "${padding}${str}"
 }
+
+# trim leading and trailing whitespace from a string
+#
+# $1: original string
+# REPLY: trimmed string
+# return: null
+#
+# example:
+#  z.str.trim "  Hello World  " #=> "Hello World"
+z.str.trim() {
+  local str=$1
+
+  setopt local_options EXTENDED_GLOB
+  str=${str##[[:space:]]##}
+  str=${str%%[[:space:]]##}
+
+  z.return "$str"
+
+}
