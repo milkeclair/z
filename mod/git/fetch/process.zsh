@@ -4,8 +4,7 @@
 # return: null
 #
 # example:
-#   z.git.fetch #=> Fetched all branches and tags from remote.
+#   z.git.fetch
 z.git.fetch() {
   git fetch --prune
-  z.io "Fetched all branches and tags from remote."
 }
