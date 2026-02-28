@@ -1,4 +1,5 @@
 typeset -A z_t_mock_calls=()
+typeset z_t_mock_call_sep=$'\x1e'
 
 # mock calls management
 #
@@ -38,7 +39,7 @@ z.t._state.mock_calls.add() {
   z.arg.named.shift name $@ && local args=$REPLY
 
   if z.is.not.null ${z_t_mock_calls[$func_name]}; then
-    z_t_mock_calls[$func_name]="${z_t_mock_calls[$func_name]}:$args"
+    z_t_mock_calls[$func_name]="${z_t_mock_calls[$func_name]}${z_t_mock_call_sep}${args}"
   else
     z_t_mock_calls[$func_name]=$args
   fi
