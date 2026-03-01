@@ -7,15 +7,15 @@
 # example:
 #   z.git.stats.commit.map.split entry="milkeclair:1000 500:50"
 z.git.stats.commit.map.split() {
-  z.arg.named entry $@ && local entry=$REPLY
-  z.str.split str=$entry delimiter=:
+  z.arg.named entry "$@" && local entry=$REPLY
+  z.str.split str="$entry" delimiter=:
   local parts=($REPLY)
 
   local author=$parts[1]
   local details=$parts[2]
   local commit_count=$parts[3]
 
-  z.str.split str=$details delimiter=" " && local lines=($REPLY)
+  z.str.split str="$details" delimiter=" " && local lines=($REPLY)
   local inserted=$lines[1]
   local deleted=$lines[2]
   z.git.stats.commit.sum_lines inserted=$inserted deleted=$deleted
@@ -42,22 +42,23 @@ z.git.stats.commit.map.split() {
 #   z.git.stats.commit.map.distinct commit_map=("Alice:1000 500:50" "Bob:800 300:40" "Alice:1000 500:50")
 #   #=> REPLY=("Alice:1000 500:50" "Bob:800 300:40")
 z.git.stats.commit.map.distinct() {
-  local commit_map=($@)
+  local commit_map=("$@")
   local filtered_entries=()
-  local previous_signature=""
+  local -A seen_signatures=()
 
-  for entry in ${commit_map[@]}; do
-    z.git.stats.commit.map.split entry=$entry
-    local commit_count=$REPLY[commit_count]
-    local inserted=$REPLY[inserted]
-    local deleted=$REPLY[deleted]
+  for entry in "${commit_map[@]}"; do
+    z.git.stats.commit.map.split entry="$entry"
+    local -A parsed=($REPLY)
+    local commit_count=$parsed[commit_count]
+    local inserted=$parsed[inserted]
+    local deleted=$parsed[deleted]
     local signature="$commit_count:$inserted:$deleted"
 
-    z.is.eq $signature $previous_signature && continue # duplicate
+    z.is.true "$seen_signatures[$signature]" && continue
 
-    previous_signature=$signature
-    filtered_entries+=($entry)
+    seen_signatures[$signature]=true
+    filtered_entries+=("$entry")
   done
 
-  z.return $filtered_entries
+  z.return "${filtered_entries[@]}" keep_empty=true
 }

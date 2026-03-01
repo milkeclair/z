@@ -14,8 +14,8 @@ z.git.stats.author.header() {
 
 # display commit stats for each author in a table format
 #
-# $exclude_exts: array of file extensions to exclude (e.g. "md" "txt")
-# $exclude_dirs: array of directories to exclude (e.g. "docs" "tests")
+# $exclude_exts?: array of file extensions to exclude (e.g. "md" "txt")
+# $exclude_dirs?: array of directories to exclude (e.g. "docs" "tests")
 # REPLY: null
 # return: null
 #
@@ -27,16 +27,17 @@ z.git.stats.author.body() {
   z.git.stats.author.names && local authors=($REPLY)
 
   local commit_map=()
-  z.git.stats.commit.map authors=$authors exclude_exts=$exclude_exts exclude_dirs=$exclude_dirs
-  z.git.stats.commit.map.distinct $REPLY && commit_map=($REPLY) 
+  z.git.stats.commit.map authors="${authors[*]}" exclude_exts="${exclude_exts[*]}" exclude_dirs="${exclude_dirs[*]}"
+  z.git.stats.commit.map.distinct "${REPLY[@]}" && commit_map=("${REPLY[@]}")
 
-  for entry in ${commit_map[@]}; do
-    z.git.stats.commit.map.split entry=$entry
-    local author=$REPLY[author]
-    local commit_count=$REPLY[commit_count]
-    local inserted=$REPLY[inserted]
-    local deleted=$REPLY[deleted]
-    local total=$REPLY[total]
+  for entry in "${commit_map[@]}"; do
+    z.git.stats.commit.map.split entry="$entry"
+    local -A parsed=($REPLY)
+    local author=$parsed[author]
+    local commit_count=$parsed[commit_count]
+    local inserted=$parsed[inserted]
+    local deleted=$parsed[deleted]
+    local total=$parsed[total]
 
     # e.g. author_name commit: 100 add: 1000 delete: 1000 total: 2000
     z.git.stats.author.show \
@@ -46,7 +47,7 @@ z.git.stats.author.body() {
       deleted="$deleted" \
       total="$total"
 
-    if z.is.not.eq $entry ${commit_map[-1]}; then
+    if z.is.not.eq "$entry" "${commit_map[-1]}"; then
       z.git.stats.author.border
     fi
   done

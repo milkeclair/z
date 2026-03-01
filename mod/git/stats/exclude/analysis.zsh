@@ -1,5 +1,5 @@
 # determine which file extensions and directories to exclude from commit stats analysis
-# if not specified, use default values(html, css)
+# if not specified, use default values(log, lock)
 #
 # $exclude_exts?: array of file extensions to exclude (e.g. "md" "txt")
 # REPLY: array of file extensions to exclude
@@ -11,8 +11,8 @@ z.git.stats.exclude.exts() {
   z.arg.named exclude_exts $@ && local exts=($REPLY)
   if z.is.null $REPLY; then
     exts=(
-      html
-      css
+      log
+      lock
     )
   fi
 
@@ -20,7 +20,7 @@ z.git.stats.exclude.exts() {
 }
 
 # determine which directories to exclude from commit stats analysis
-# if not specified, use default values(node_modules)
+# if not specified, use default values(node_modules, dist)
 #
 # $exclude_dirs?: array of directories to exclude (e.g. "docs" "tests")
 # REPLY: array of directories to exclude
@@ -33,6 +33,7 @@ z.git.stats.exclude.dirs() {
   if z.is.null $REPLY; then
     dirs=(
       node_modules
+      dist
     )
   fi
 
