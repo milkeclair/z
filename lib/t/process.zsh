@@ -45,13 +45,20 @@ z.t() {
 
   if z.int.is.gt $name_count 0; then
     for name in $test_names; do
-      local exact_file="${name}_test.zsh"
       local matched_files=()
 
-      if z.file.exists "$exact_file"; then
-        matched_files+=("$exact_file")
+      if z.dir.exists "$name"; then
+        matched_files=("${name}"/**/*_test.zsh(N))
+      elif z.file.exists "$name"; then
+        matched_files+=("$name")
       else
-        matched_files=(**/*${name}_test.zsh(N))
+        local exact_file="${name}_test.zsh"
+
+        if z.file.exists "$exact_file"; then
+          matched_files+=("$exact_file")
+        else
+          matched_files=(**/*${name}_test.zsh(N))
+        fi
       fi
 
       z.arr.count $matched_files
