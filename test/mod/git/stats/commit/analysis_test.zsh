@@ -42,4 +42,25 @@ z.t.describe "z.git.stats.commit.count"; {
       unset expected
     }
   }
+
+  z.t.context "authorにスペースが含まれる場合"; {
+    z.t.it "正しくスペースを扱う"; {
+      local expected=5
+      z.t.mock name="git" behavior='
+        if z.str.start_with "$*" "log --oneline --author=John Doe"; then
+          for i in {1..5}; do
+            z.io "$i commit message"
+          done
+        else
+          z.io "Unexpected git command: $*"
+          return 1
+        fi
+      '
+
+      z.git.stats.commit.count "John Doe"
+
+      z.t.expect.reply $expected
+      unset expected
+    }
+  }
 }

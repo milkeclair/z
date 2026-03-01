@@ -10,7 +10,7 @@ z.git.stats.commit.count() {
   local author=$1
 
   # wc -l: count lines
-  local result=$(git log --oneline --author=$author |
+  local result=$(git log --oneline --author="$author" |
     grep -v "Merge branch\|Merge pull request" | \
     wc -l)
 
