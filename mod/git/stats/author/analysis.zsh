@@ -15,8 +15,8 @@ z.git.stats.author.names() {
 
   local authors=()
   while IFS= read -r name; do
-    authors+=($name)
-  done <<< $names
+    authors+=("$name")
+  done <<< "$names"
 
-  z.return $authors
+  z.return keep_empty=true "${authors[@]}"
 }
