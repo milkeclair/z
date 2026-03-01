@@ -25,10 +25,10 @@ z.git.user() {
 #   #   user.email: milkeclair@example.com
 z.git.user.local() {
   z.io "--- local user info ---"
-  local_user_name=$(git config --local user.name)
-  local_user_email=$(git config --local user.email)
-  z.io "user.name: $local_user_name"
-  z.io "user.email: $local_user_email"
+  local user_name=$(git config --local user.name)
+  local user_email=$(git config --local user.email)
+  z.io "user.name: $user_name"
+  z.io "user.email: $user_email"
 }
 
 # display global git user info (name and email)
@@ -42,8 +42,8 @@ z.git.user.local() {
 #   #   user.email: milkeclair@example.com
 z.git.user.global() {
   z.io "--- global user info ---"
-  global_user_name=$(git config --global user.name)
-  global_user_email=$(git config --global user.email)
-  z.io "user.name: $global_user_name"
-  z.io "user.email: $global_user_email"
+  local user_name=$(git config --global user.name)
+  local user_email=$(git config --global user.email)
+  z.io "user.name: $user_name"
+  z.io "user.email: $user_email"
 }
