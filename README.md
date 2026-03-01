@@ -162,6 +162,10 @@ If the current directory is not `/test`, `z.t` returns an error.
   - Display only failed tests.
 - `-c, --compact`
   - Display compact dot output (`.` for success, `F` for failure, `*` for pending).
+- `<name|path>`
+  - Run matched tests only.
+  - If a directory path is provided (e.g. `z.t mod`), tests under the directory are collected recursively.
+  - If a test file path is provided (e.g. `z.t arg/process`), only that file is run.
 
 Tests are placed in the `test` directory.
 Tests are namespaced with `z.t.` prefix.
