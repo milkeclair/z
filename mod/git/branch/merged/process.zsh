@@ -6,7 +6,7 @@
 # return: null
 #
 # example:
-#   z.git.branch.merged
+#   z.git.branch.merged.get
 z.git.branch.merged.get() {
   z.git.branch.merged.get.excludes "$@"
   local exclude_branches=($REPLY)
