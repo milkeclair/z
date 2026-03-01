@@ -275,7 +275,7 @@ z.arr.reverse() {
 # return: null
 #
 # example:
-#  z.arr.slice offset=2 to=4 "a" "b" "c" "d" "e" #=> REPLY=("c" "d" "e")
+#  z.arr.slice offset=2 to=5 "a" "b" "c" "d" "e" #=> REPLY=("c" "d" "e")
 z.arr.slice() {
   local args=($@)
   z.arg.named offset $args && local offset=$REPLY
@@ -286,7 +286,7 @@ z.arr.slice() {
 
   if z.is.not.null "$offset"; then
     if z.is.not.null "$to"; then
-      z.return ${arr[@]:$offset:$((to - 1))}
+      z.return ${arr[@]:$offset:$((to - offset))}
     else
       z.return ${arr[@]:$offset}
     fi

@@ -242,7 +242,7 @@ z.t.describe "z.arr.reverse"; {
 z.t.describe "z.arr.slice"; {
   z.t.context "offsetとtoが指定された場合"; {
     z.t.it "offsetからtoまでの要素を返す"; {
-      z.arr.slice offset=2 to=3 "a" "b" "c" "d" "e"
+      z.arr.slice offset=2 to=4 "a" "b" "c" "d" "e"
       z.t.expect.reply.is.arr "c" "d"
 
       z.arr.slice offset=1 to=4 "one" "two" "three" "four" "five"
