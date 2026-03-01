@@ -264,7 +264,8 @@ You will individually install the ones you wish to use.
 
 ### List of Mods
 
-- `z.mod.git`
+- `z.git`
+  - Git command modifier. [README](mod/git/README.md)
 
 ## Language Server
 
