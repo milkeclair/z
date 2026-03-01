@@ -9,14 +9,6 @@ typeset -gA z_color_palette=(
   [reset]=$'\033[0m'
 )
 
-for color_file in ${z_root}/lib/str/color/*.zsh; do
-  source $color_file
-done
-
-for match_file in ${z_root}/lib/str/match/*.zsh; do
-  source $match_file
-done
-
 # get color code by name
 #
 # $1: color name
@@ -406,4 +398,23 @@ z.str.rjust() {
   done
 
   z.return "${padding}${str}"
+}
+
+# trim leading and trailing whitespace from a string
+#
+# $1: original string
+# REPLY: trimmed string
+# return: null
+#
+# example:
+#  z.str.trim "  Hello World  " #=> "Hello World"
+z.str.trim() {
+  local str=$1
+
+  setopt local_options EXTENDED_GLOB
+  str=${str##[[:space:]]##}
+  str=${str%%[[:space:]]##}
+
+  z.return "$str"
+
 }

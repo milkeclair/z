@@ -29,14 +29,14 @@ z.t() {
   local original_dir=$PWD
 
   local z_mode="test"
-  local test_root=${Z_TEST_ROOT:-$PWD}
-  z.dir.exists "${test_root}/test" && test_root="${test_root}/test"
+  z.t._test_root_from_pwd || return 1
+  local test_root=$REPLY
   local root_dir=${test_root:h}
   local z_main="${root_dir}/main.zsh"
   cd $test_root
 
   z.io.empty
-  z.io "================ Running tests ================"
+  z.io "=============================== Running tests ==============================="
   z.io.empty
 
   z.arr.count $test_names
@@ -45,10 +45,32 @@ z.t() {
 
   if z.int.is.gt $name_count 0; then
     for name in $test_names; do
-      files+=(**/*${name}_test.zsh)
+      local matched_files=()
+
+      if z.dir.exists "$name"; then
+        matched_files=("${name}"/**/*_test.zsh(N))
+      elif z.file.exists "$name"; then
+        matched_files+=("$name")
+      else
+        local exact_file="${name}_test.zsh"
+
+        if z.file.exists "$exact_file"; then
+          matched_files+=("$exact_file")
+        else
+          matched_files=(**/*${name}_test.zsh(N))
+        fi
+      fi
+
+      z.arr.count $matched_files
+      if z.int.is.zero $REPLY; then
+        z.io.warn "No test matched: $name (skipped)"
+        continue
+      fi
+
+      files+=(${matched_files[@]})
     done
   else
-    files=(**/*_test.zsh)
+    files=(**/*_test.zsh(N))
   fi
 
   local file_count=${#files[@]}
@@ -101,6 +123,25 @@ z.t() {
   cd $original_dir
   z.int.is.not.zero $failed && return 1
   return $totals_failed
+}
+
+# resolve test root from current working directory
+#
+# REPLY: absolute test directory path
+# return: 0|1
+#
+# example:
+#  z.t._test_root_from_pwd
+z.t._test_root_from_pwd() {
+  local current_dir=$PWD
+  local abs_current_dir=${current_dir:A}
+
+  if ! z.str.end_with "$abs_current_dir" "/test"; then
+    z.io.error "z.t must be run from a /test directory: $abs_current_dir"
+    return 1
+  fi
+
+  z.return "$abs_current_dir"
 }
 
 # extract options from arguments

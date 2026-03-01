@@ -7,13 +7,13 @@ on:
   pull_request:
     branches:
       - main
-      - "feat/**"
+      - 'feat/**'
 
 jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      ZSH_VERSION: "5.9"
+      ZSH_VERSION: '5.9'
     steps:
       - uses: actions/checkout@v4
 
@@ -40,4 +40,4 @@ jobs:
         shell: bash {0}
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          zsh -c "source main.zsh && z.t"
+          zsh -c "source main.zsh && cd test && z.t"

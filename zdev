@@ -1,27 +1,45 @@
 #!/bin/zsh
 
 Z_ROOT=$PWD
-Z_TEST_ROOT=$PWD/test
+local project_root=$PWD
 
 source main.zsh
 
 z.io.clear
 z.io "File watching..."
 
-local fswatch_opts=(-r lib test)
+local fswatch_opts=(-r lib test mod)
 
 # fsevents_monitor is not supported in WSL, so poll_monitor will be used instead.
 # Using the default monitor (inotify) will detect file access events. 
 # However, all event names will be PlatformSpecific, making it impossible to sort events.
-if z.str.include $(uname -r) "WSL"; then
+if z.str.includes $(uname -r) "WSL"; then
   fswatch_opts+=(-m poll_monitor)
 else
   fswatch_opts+=(-m fsevents_monitor)
 fi
 
-fswatch ${fswatch_opts[@]} | while read file; do
+local moved=false
+
+fswatch ${fswatch_opts[@]} | while IFS= read -r file; do
   z.io.clear
-  local relative_path=${file#$PWD/}
-  z.io "File changed: $relative_path"
-  z.t -f
+  if z.str.start_with "$file" "$project_root/"; then
+    file=${file#"$project_root/"}
+  fi
+  z.io "File changed: $file"
+  z.is.false $moved && cd test && moved=true
+
+  local test_name=$file
+
+  if z.str.start_with "$test_name" "test/"; then
+    test_name=${test_name#test/}
+  fi
+
+  if z.str.end_with "$test_name" "_test.zsh"; then
+    test_name=${test_name%_test.zsh}
+  elif z.str.end_with "$test_name" ".zsh"; then
+    test_name=${test_name%.zsh}
+  fi
+
+  z.t "$test_name"
 done

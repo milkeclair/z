@@ -20,8 +20,40 @@ z.help() {
   z.help._show_function_docs $function_name
 }
 
+# display help information for a specific modifier
+#
+# $1: modifier name
+# $2?: function name
+# REPLY: null
+# return: null
+#
+# example:
+#  z.help mod git #=> display README of git mod
+#  z.help mod git z.git.commit #=> display doc comment of z.git.commit
+z.help.mod() {
+  local mod_name=$1
+  local function_name=$2
+
+  if z.is.null $mod_name; then
+    z.io.error "Modifier name is required"
+    return 1
+  fi
+
+  if z.is.null $function_name; then
+    z.help.mod._show_readme $mod_name
+    return
+  fi
+
+  z.help._show_function_docs "$function_name"
+}
+
 z.help._show_readme() {
   z.file.read path="${z_root}/README.md"
+  printf '%s\n' "$REPLY"
+}
+
+z.help.mod._show_readme() {
+  z.file.read path="${z_root}/mod/$1/README.md"
   printf '%s\n' "$REPLY"
 }
 

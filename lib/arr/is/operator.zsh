@@ -1,7 +1,3 @@
-for not_file in ${z_root}/lib/arr/is/not/*.zsh; do
-  source ${not_file}
-done
-
 # check if two arrays are equal
 #
 # $1: first array (as a single string with spaces)

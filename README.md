@@ -6,12 +6,15 @@ Provide functions with readable names for syntax that is not intuitive for me.
 ## Installation
 
 ### First time
+
 `curl -sL https://raw.githubusercontent.com/milkeclair/z/main/install.zsh | zsh`
 
 ### Reinstall or Update
+
 `z.install`
 
 ### Uninstall
+
 `z.uninstall`
 
 ### Version
@@ -146,12 +149,23 @@ Tests are written in zsh and use a RSpec-like syntax.
 Run `z.t` to run all tests.
 z.t accepts the following options.
 
+`z.t` searches tests from the current directory.
+Run it from a directory whose path ends with `/test`.
+If the current directory is not `/test`, `z.t` returns an error.
+
+`z_main` is the main test file that sets up the test environment and runs the tests.
+`z.t` looks for `main.zsh` in the test directory and sources it before running the tests.
+
 - `-l, --log`
   - Display test details.
 - `-f, --failed`
   - Display only failed tests.
 - `-c, --compact`
   - Display compact dot output (`.` for success, `F` for failure, `*` for pending).
+- `<name|path>`
+  - Run matched tests only.
+  - If a directory path is provided (e.g. `z.t mod`), tests under the directory are collected recursively.
+  - If a test file path is provided (e.g. `z.t arg/process`), only that file is run.
 
 Tests are placed in the `test` directory.
 Tests are namespaced with `z.t.` prefix.
@@ -234,6 +248,24 @@ z.io> line "Indented" "line" indent=2
 z.io> q
 $
 ```
+
+## Modifier
+
+This library provides modifiers that enhance the execution of your specific tasks.
+You will individually install the ones you wish to use.
+
+### Install or Update
+
+`z.install.mod <mod_name>`
+
+### Uninstall
+
+`z.uninstall.mod <mod_name>`
+
+### List of Mods
+
+- `z.git`
+  - Git command modifier. [README](mod/git/README.md)
 
 ## Language Server
 

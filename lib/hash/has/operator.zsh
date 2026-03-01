@@ -1,7 +1,3 @@
-for not_file in ${z_root}/lib/hash/has/not/*.zsh; do
-  source ${not_file}
-done
-
 # determine if a hash has a given key
 #
 # $key: key to check

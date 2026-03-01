@@ -61,6 +61,17 @@ z.install._decompress_archive() {
   fi
 }
 
+z.install._remove_existing_install_dir() {
+  if [[ ! -d $install_dir ]]; then
+    return 0
+  fi
+
+  if ! rm -rf "$install_dir"; then
+    echo "❌ failed to remove: $install_dir"
+    return 1
+  fi
+}
+
 z.install._copy_files() {
   if ! mkdir -p $install_dir; then
     echo "❌ failed to create install dir: $install_dir"
@@ -104,12 +115,6 @@ z.install._copy_files() {
   done
 }
 
-z.install.cleanup() {
-  if [[ -n $temp_dir && -d $temp_dir ]]; then
-    rm -rf $temp_dir
-  fi
-}
-
 z.install._show_completion() {
   echo ""
   echo "✅ installation completed!"
@@ -118,7 +123,6 @@ z.install._show_completion() {
   echo "   add the following lines to your ~/.zshrc:"
   echo ""
   echo "   export Z_ROOT=\"$install_dir\""
-  echo "   export Z_TEST_ROOT=\"$install_dir/test\""
   echo "   source \"\$Z_ROOT/main.zsh\""
   echo ""
 }
@@ -158,7 +162,6 @@ z.install._add_to_zshrc() {
   echo "" >> "$HOME/.zshrc"
   echo "# z configuration" >> "$HOME/.zshrc"
   echo "export Z_ROOT=\"$install_dir\"" >> "$HOME/.zshrc"
-  echo "export Z_TEST_ROOT=\"\$Z_ROOT/test\"" >> "$HOME/.zshrc"
   echo "source \"\$Z_ROOT/main.zsh\"" >> "$HOME/.zshrc"
   echo "✅ added to .zshrc"
   echo "   to apply changes: source ~/.zshrc"
@@ -189,6 +192,7 @@ z.install() {
 
   z.install._download_archive || return 1
   z.install._decompress_archive || return 1
+  z.install._remove_existing_install_dir || return 1
   z.install._copy_files || return 1
   z.install._show_completion
 
@@ -201,4 +205,112 @@ z.install() {
 
 if [[ $0 == "zsh" ]]; then
   z.install
+  return
 fi
+
+z.install.mod._validate_name() {
+  if [[ -z $mod_name ]]; then
+    echo "❌ mod name is required"
+    echo "   usage: z.install.mod <mod_name>"
+    return 1
+  fi
+}
+
+z.install.mod._validate_z_root() {
+  if [[ -z $Z_ROOT ]]; then
+    echo "❌ Z_ROOT is not set"
+    echo "   source main.zsh first"
+    return 1
+  fi
+}
+
+z.install.mod._start() {
+  echo "📦 installing mod..."
+  echo "     name: $mod_name"
+  echo "     github: https://github.com/$github_repo"
+  echo "     branch: $github_branch"
+  echo "     install dir: $install_dir"
+  echo ""
+}
+
+z.install.mod._question_overwrite_mod_dir() {
+  if [[ ! -d $mod_target_dir ]]; then
+    return 0
+  fi
+
+  echo "⚠️ mod already exists: $mod_target_dir"
+  echo -n "overwrite? (y/n): "
+  read -r response
+  if [[ ! $response =~ ^[yY]$ ]]; then
+    echo "❌ canceled"
+    return 1
+  fi
+  echo ""
+}
+
+z.install.mod._remove_existing_mod_dir() {
+  if [[ ! -d $mod_target_dir ]]; then
+    return 0
+  fi
+
+  if ! rm -rf "$mod_target_dir"; then
+    echo "❌ failed to remove: $mod_target_dir"
+    return 1
+  fi
+}
+
+z.install.mod._copy_mod_files() {
+  if ! mkdir -p $install_dir; then
+    echo "❌ failed to create mod dir: $install_dir"
+    return 1
+  fi
+
+  if ! cp -r "$mod_source_dir" "$install_dir/"; then
+    echo "❌ failed to copy mod: $mod_name"
+    return 1
+  fi
+}
+
+z.install.mod._show_completion() {
+  echo ""
+  echo "✅ mod installation completed: $mod_name"
+}
+
+# install z modifier
+#
+# $1: mod name
+# REPLY: null
+# return: null
+#
+# example:
+#   z.install.mod git
+z.install.mod() {
+  local mod_name=$1
+  local github_repo="milkeclair/z"
+  local github_branch=${Z_INSTALL_BRANCH:-main}
+  local install_dir="$Z_ROOT/mod"
+  local temp_dir
+  local source_dir
+  local mod_source_dir
+  local mod_target_dir="$install_dir/$mod_name"
+  local z_main_path="$Z_ROOT/main.zsh"
+
+  z.install.mod._validate_name || return 1
+  z.install.mod._validate_z_root || return 1
+
+  z.install.mod._start
+
+  z.install.mod._question_overwrite_mod_dir || return 1
+  z.install._create_temp_dir || return 1
+
+  z.install._download_archive || return 1
+  z.install._decompress_archive || return 1
+  local mod_source_dir="$source_dir/mod/$mod_name"
+  z.install.mod._remove_existing_mod_dir || return 1
+  z.install.mod._copy_mod_files || return 1
+  z.install.mod._show_completion
+
+  if [[ -f $z_main_path ]]; then
+    source "$z_main_path"
+  fi
+}

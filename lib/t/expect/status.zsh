@@ -1,7 +1,3 @@
-for status_is_file in ${z_root}/lib/t/expect/status/is/*.zsh; do
-  source $status_is_file
-done
-
 # expect that last command's exit status equals expect
 #
 # $1: expected status (0 for true, 1 for false, "true" for 0, "false" for 1)

@@ -1,11 +1,3 @@
-for is_file in ${z_root}/lib/t/expect/is/*.zsh; do
-  source $is_file
-done
-
-for is_not_file in ${z_root}/lib/t/expect/is/not/*.zsh; do
-  source $is_not_file
-done
-
 # expect that actual includes expect
 #
 # $1: actual value

@@ -9,15 +9,23 @@
 #  z.t.mock.unmock name=my_func
 z.t.mock.unmock() {
   z.arg.named name $@ && local func_name=$REPLY
+  local nonfunctional="_nonfunctional"
 
   if z.is.null $func_name; then
     z.t._state.mock_last_func
     func_name=$REPLY
   fi
 
+  local original_func_name="original_$func_name"
+
   z.t._state.mock_originals.context $func_name
   if z.is.not.null $REPLY; then
-    eval $REPLY
+    if z.is.eq $REPLY $nonfunctional; then
+      unfunction $func_name 2>/dev/null
+      unfunction $original_func_name 2>/dev/null
+    else
+      eval $REPLY
+    fi
     z.t._state.mock_originals.unset $func_name
   fi
 

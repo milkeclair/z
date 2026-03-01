@@ -19,6 +19,6 @@ z.t.mock.result() {
   if z.is.null $REPLY; then
     REPLY=()
   else
-    z.str.split str=$REPLY delimiter=:
+    z.str.split str=$REPLY delimiter="$z_t_mock_call_sep"
   fi
 }

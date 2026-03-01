@@ -1,15 +1,3 @@
-for reply_file in ${z_root}/lib/t/expect/reply/*.zsh; do
-  source $reply_file
-done
-
-for reply_is_file in ${z_root}/lib/t/expect/reply/is/*.zsh; do
-  source $reply_is_file
-done
-
-for reply_is_not_file in ${z_root}/lib/t/expect/reply/is/not/*.zsh; do
-  source $reply_is_not_file
-done
-
 # expect that REPLY equals expect
 #
 # $1: expected value

@@ -1,7 +1,3 @@
-for expect_file in ${z_root}/lib/t/expect/*.zsh; do
-  source ${expect_file} $1
-done
-
 # expect that actual equals expect
 #
 # $1: actual value

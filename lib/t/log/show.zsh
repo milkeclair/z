@@ -137,7 +137,7 @@ z.t._log.show.summary() {
 
   z.t._state.file_path
   local display_path=${REPLY:r}
-  local padded_path=$(printf "%-25s" $display_path)
+  local padded_path=$(printf "%-42s" $display_path)
 
   z.t._state.tests
   local tests=$REPLY

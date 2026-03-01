@@ -1,7 +1,3 @@
-for dsl_file in ${z_root}/lib/t/dsl/*.zsh; do
-  source ${dsl_file} $1
-done
-
 z.is.eq $z_mode "test" && {
   trap "z.t.teardown" EXIT
 

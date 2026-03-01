@@ -1,7 +1,3 @@
-for join_file in ${z_root}/lib/arr/join/*.zsh; do
-  source $join_file
-done
-
 # join array elements with a delimiter
 #
 # $delimiter?: delimiter, default: space
@@ -268,4 +264,35 @@ z.arr.reverse() {
   done
 
   z.return ${result[@]}
+}
+
+# slice an array
+#
+# $offset?: offset to start slicing (0-based index)
+# $to?: index to end slicing (exclusive, 0-based index)
+# $@: array elements
+# REPLY: sliced array elements
+# return: null
+#
+# example:
+#  z.arr.slice offset=2 to=5 "a" "b" "c" "d" "e" #=> REPLY=("c" "d" "e")
+z.arr.slice() {
+  local args=($@)
+  z.arg.named offset $args && local offset=$REPLY
+  z.arg.named to $args && local to=$REPLY
+  z.arg.named.shift offset $args && args=($REPLY)
+  z.arg.named.shift to $args && args=($REPLY)
+  local arr=($args)
+
+  if z.is.not.null "$offset"; then
+    if z.is.not.null "$to"; then
+      z.return ${arr[@]:$offset:$((to - offset))}
+    else
+      z.return ${arr[@]:$offset}
+    fi
+  elif z.is.not.null "$to"; then
+    z.return ${arr[@]:0:$to}
+  else
+    z.return ${arr[@]}
+  fi
 }

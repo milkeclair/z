@@ -1,7 +1,3 @@
-for not_file in ${z_root}/lib/int/is/not/*.zsh; do
-  source ${not_file}
-done
-
 # check if the value is an integer
 #
 # $1: value

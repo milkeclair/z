@@ -1,7 +1,3 @@
-for not_file in ${z_root}/lib/fn/not/*.zsh; do
-  source ${not_file}
-done
-
 # check if a function exists
 #
 # $1: function name
