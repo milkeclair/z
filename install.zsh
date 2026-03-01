@@ -291,7 +291,7 @@ z.install.mod() {
   local install_dir="$Z_ROOT/mod"
   local temp_dir
   local source_dir
-  local mod_source_dir="$source_dir/mod/$mod_name"
+  local mod_source_dir
   local mod_target_dir="$install_dir/$mod_name"
   local z_main_path="$Z_ROOT/main.zsh"
 
@@ -305,6 +305,7 @@ z.install.mod() {
 
   z.install._download_archive || return 1
   z.install._decompress_archive || return 1
+  local mod_source_dir="$source_dir/mod/$mod_name"
   z.install.mod._remove_existing_mod_dir || return 1
   z.install.mod._copy_mod_files || return 1
   z.install.mod._show_completion
