@@ -5,10 +5,10 @@ z.t.describe "z.git.user.set"; {
     z.t.it "z.git.user.set.localを呼び出す"; {
       z.t.mock name="z.git.user.set.local"
 
-      z.git.user.set "Alice" "alice@example.com"
+      z.git.user.set "milkeclair" "milkeclair@example.com"
 
       z.t.mock.result
-      z.t.expect.reply.is.arr "Alice" "alice@example.com"
+      z.t.expect.reply.is.arr "milkeclair" "milkeclair@example.com"
     }
   }
 }
@@ -19,12 +19,12 @@ z.t.describe "z.git.user.set.local"; {
       z.t.mock name="z.io"
       z.t.mock name="git"
 
-      z.git.user.set.local "Alice" "alice@example.com"
+      z.git.user.set.local "milkeclair" "milkeclair@example.com"
 
       z.t.mock.result name="git"
       z.t.expect.reply.is.arr \
-        "config --local user.name Alice" \
-        "config --local user.email alice@example.com"
+        "config --local user.name milkeclair" \
+        "config --local user.email milkeclair@example.com"
     }
   }
 }
@@ -35,12 +35,12 @@ z.t.describe "z.git.user.set.global"; {
       z.t.mock name="z.io"
       z.t.mock name="git"
 
-      z.git.user.set.global "Alice" "alice@example.com"
+      z.git.user.set.global "milkeclair" "milkeclair@example.com"
 
       z.t.mock.result name="git"
       z.t.expect.reply.is.arr \
-        "config --global user.name Alice" \
-        "config --global user.email alice@example.com"
+        "config --global user.name milkeclair" \
+        "config --global user.email milkeclair@example.com"
     }
   }
 }

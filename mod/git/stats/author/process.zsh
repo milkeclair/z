@@ -64,8 +64,8 @@ z.git.stats.author.body() {
 # return: null
 #
 # example:
-#   z.git.stats.author.show author="Alice" commit_count=100 inserted=1000 deleted=1000 total=2000
-#   #=> display a table row for Alice with her commit stats
+#   z.git.stats.author.show author="milkeclair" commit_count=100 inserted=1000 deleted=1000 total=2000
+#   #=> display a table row for milkeclair with her commit stats
 z.git.stats.author.show() {
   z.arg.named author $@ && local author=$REPLY
   z.arg.named commit_count $@ && local commit_count=$REPLY

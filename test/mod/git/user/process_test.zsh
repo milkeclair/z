@@ -6,9 +6,9 @@ z.t.describe "z.git.user.local"; {
       z.t.mock name="z.io"
       z.t.mock name="git" behavior='
         if z.str.start_with "$*" "config --local user.name"; then
-          echo "Alice"
+          echo "milkeclair"
         elif z.str.start_with "$*" "config --local user.email"; then
-          echo "alice@example.com"
+          echo "milkeclair@example.com"
         else
           return 1
         fi
@@ -19,8 +19,8 @@ z.t.describe "z.git.user.local"; {
       z.t.mock.result name="z.io"
       z.t.expect.reply.is.arr \
         "--- local user info ---" \
-        "user.name: Alice" \
-        "user.email: alice@example.com"
+        "user.name: milkeclair" \
+        "user.email: milkeclair@example.com"
     }
   }
 }
@@ -31,9 +31,9 @@ z.t.describe "z.git.user.global"; {
       z.t.mock name="z.io"
       z.t.mock name="git" behavior='
         if z.str.start_with "$*" "config --global user.name"; then
-          echo "Alice"
+          echo "milkeclair"
         elif z.str.start_with "$*" "config --global user.email"; then
-          echo "alice@example.com"
+          echo "milkeclair@example.com"
         else
           return 1
         fi
@@ -44,8 +44,8 @@ z.t.describe "z.git.user.global"; {
       z.t.mock.result name="z.io"
       z.t.expect.reply.is.arr \
         "--- global user info ---" \
-        "user.name: Alice" \
-        "user.email: alice@example.com"
+        "user.name: milkeclair" \
+        "user.email: milkeclair@example.com"
     }
   }
 }

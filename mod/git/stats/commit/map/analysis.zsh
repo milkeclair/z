@@ -5,7 +5,7 @@
 # return: null
 #
 # example:
-#   z.git.stats.commit.map.split entry="Alice:1000 500:50"
+#   z.git.stats.commit.map.split entry="milkeclair:1000 500:50"
 z.git.stats.commit.map.split() {
   z.arg.named entry $@ && local entry=$REPLY
   z.str.split str=$entry delimiter=:

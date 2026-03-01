@@ -5,7 +5,7 @@
 # return: null
 #
 # example:
-#   z.git.stats.commit.count "Alice"
+#   z.git.stats.commit.count "milkeclair"
 z.git.stats.commit.count() {
   local author=$1
 

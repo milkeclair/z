@@ -5,8 +5,8 @@
 #
 # example:
 #   z.git.commit.help
-#   #=> name: Alice
-#   #   email: alice@example.com
+#   #=> name: milkeclair
+#   #   email: milkeclair@example.com
 z.git.commit.help.committer() {
   z.io.line
   z.io "--- committer ---"

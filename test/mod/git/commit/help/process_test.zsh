@@ -5,9 +5,9 @@ z.t.describe "z.git.commit.help.committer"; {
     z.t.it "コミッターの名前とメールアドレスを表示する"; {
       z.t.mock name="git" behavior='
         if z.str.start_with "$*" "config --local user.name"; then
-          z.io "Alice"
+          z.io "milkeclair"
         elif z.str.start_with "$*" "config --local user.email"; then
-          z.io "alice@example.com"
+          z.io "milkeclair@example.com"
         else
           z.io "Unexpected git command: $*"
           return 1
@@ -16,7 +16,7 @@ z.t.describe "z.git.commit.help.committer"; {
 
       local result=$(z.git.commit.help.committer)
 
-      z.t.expect "$result" $'\n--- committer ---\nname: Alice\nemail: alice@example.com'
+      z.t.expect "$result" $'\n--- committer ---\nname: milkeclair\nemail: milkeclair@example.com'
     }
   }
 }

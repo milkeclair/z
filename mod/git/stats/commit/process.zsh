@@ -37,7 +37,7 @@ z.git.stats.commit.map() {
 # return: null
 #
 # example:
-#   z.git.stats.commit.details author="Alice" exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
+#   z.git.stats.commit.details author="milkeclair" exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
 z.git.stats.commit.details() {
   z.arg.named author $@ && local author=$REPLY
   z.arg.named exclude_exts $@ && local exclude_exts=($REPLY)

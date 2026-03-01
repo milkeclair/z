@@ -6,8 +6,8 @@
 # example:
 #   z.git.user
 #   #=> --- local user info ---
-#   #   user.name: Alice
-#   #   user.email: alice@example.com...
+#   #   user.name: milkeclair
+#   #   user.email: milkeclair@example.com...
 z.git.user() {
   z.git.user.local
   z.io.line
@@ -21,8 +21,8 @@ z.git.user() {
 #
 # example:
 #   z.git.user.local
-#   #=> user.name: Alice
-#   #   user.email: alice@example.com
+#   #=> user.name: milkeclair
+#   #   user.email: milkeclair@example.com
 z.git.user.local() {
   z.io "--- local user info ---"
   local_user_name=$(git config --local user.name)
@@ -38,8 +38,8 @@ z.git.user.local() {
 #
 # example:
 #   z.git.user.global
-#   #=> user.name: Alice
-#   #   user.email: alice@example.com
+#   #=> user.name: milkeclair
+#   #   user.email: milkeclair@example.com
 z.git.user.global() {
   z.io "--- global user info ---"
   global_user_name=$(git config --global user.name)
