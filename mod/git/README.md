@@ -103,6 +103,16 @@ z.git.log
 z.git.merge main
 ```
 
+### mode
+
+- `z.git.mode` / `z.git`
+  - mode for git operations
+
+```zsh
+z.git.mode
+#z.git.> c.g feat "add new feature"
+```
+
 ### pull
 
 - `z.git.pull`
