@@ -29,12 +29,14 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential libncurses-dev yodl
-          wget https://sourceforge.net/projects/zsh/files/zsh/${{ env.ZSH_VERSION }}/zsh-${{ env.ZSH_VERSION }}.tar.xz/download -O zsh.tar.xz
+          wget https://sourceforge.net/projects/zsh/files/zsh/${ZSH_VERSION}/zsh-${ZSH_VERSION}.tar.xz/download -O zsh.tar.xz
           tar xf zsh.tar.xz
-          cd zsh-${{ env.ZSH_VERSION }}
+          cd zsh-${ZSH_VERSION}
           ./configure --prefix=$HOME/.local --with-tcsetpgrp
           make
           make install
+        env:
+          ZSH_VERSION: ${{ env.ZSH_VERSION }}
 
       - name: Run tests
         shell: bash {0}
