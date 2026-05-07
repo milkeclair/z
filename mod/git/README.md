@@ -128,7 +128,7 @@ Behavior:
 
 - If arguments contain `origin`, delegate to `git pull` as-is
 - If arguments contain `dev` or `develop`, run `git pull origin develop`
-- If current branch is `pr/<number>`, run `git pull origin pull/<number>/head:<branch>`
+- If current branch is `pr/<number>`, resolve the PR head branch and run `git pull origin <head-branch>`
 - Otherwise, run `git pull origin <current_branch>`
 
 ### push
@@ -144,7 +144,7 @@ z.git.push origin develop   # delegate to git push as-is
 Behavior:
 
 - If arguments contain `origin`, delegate to `git push` as-is
-- If current branch is `pr/<number>`, run `git push origin HEAD:refs/pull/<number>/head`
+- If current branch is `pr/<number>`, resolve the PR head branch and run `git push --set-upstream origin HEAD:<head-branch>`
 - Otherwise, run `git push --set-upstream origin <current_branch>`
 
 ### stats

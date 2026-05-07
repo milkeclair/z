@@ -44,12 +44,13 @@ z.t.describe "z.git.push.pr"; {
       z.t.mock name="z.git.branch.current.get" behavior='REPLY="pr/123"'
       z.t.mock name="z.io"
       z.t.mock name="z.io.empty"
+      z.t.mock name="gh" behavior='echo feature/register'
       z.t.mock name="git"
 
       z.git.push.pr
 
       z.t.mock.result name="git"
-      z.t.expect.reply "push origin HEAD:refs/pull/123/head"
+      z.t.expect.reply "push --set-upstream origin HEAD:feature/register"
     }
   }
 

@@ -38,7 +38,7 @@ z.t.describe "z.git.pull"; {
 		}
   }
 
-  z.t.context "z.git.pull.prが失敗した場合"; {
+	z.t.context "z.git.pull.prが失敗した場合"; {
 		z.t.it "z.git.pull.currentを呼ぶ"; {
 			z.t.mock name="z.git.hp.arg.has.origin" behavior="return 1"
 			z.t.mock name="z.git.hp.arg.has.develop" behavior="return 1"
@@ -73,12 +73,28 @@ z.t.describe "z.git.pull.pr"; {
 			z.t.mock name="z.git.branch.current.get" behavior='REPLY="pr/123"'
 			z.t.mock name="z.io"
 			z.t.mock name="z.io.empty"
+			z.t.mock name="gh" behavior='echo feature/register'
 			z.t.mock name="git"
 
 			z.git.pull.pr
 
 			z.t.mock.result name="git"
-      z.t.expect.reply "pull origin pull/123/head:pr/123"
+      z.t.expect.reply "pull origin feature/register"
+		}
+
+		z.t.it "head branchを取得できない場合はエラーを返す"; {
+			z.t.mock name="z.git.branch.current.get" behavior='REPLY="pr/123"'
+			z.t.mock name="z.io"
+			z.t.mock name="z.io.empty"
+			z.t.mock name="z.io.error"
+			z.t.mock name="gh" behavior="return 1"
+			z.t.mock name="git"
+
+			z.git.pull.pr
+
+			z.t.expect.status 1
+			z.t.mock.result name="git"
+			z.t.expect.reply.is.null
 		}
 	}
 
