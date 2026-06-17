@@ -11,7 +11,6 @@ z.wt_proxy._state.init() {
   typeset -gA z_wt_proxy_state_branch=()
   typeset -gA z_wt_proxy_state_compose=()
   typeset -gA z_wt_proxy_state_port=()
-  typeset -gA z_wt_proxy_state_updated_at=()
 }
 
 # load wt_proxy state from the state file
@@ -27,7 +26,7 @@ z.wt_proxy._state.load() {
   local state_file=$REPLY
   z.file.not.exists $state_file && return 0
 
-  while IFS= read -r line; do
+  while IFS= read -r line || [[ -n $line ]]; do
     local words=("${(@)${(z)line}}")
     local kind=$words[1]
 
@@ -41,10 +40,9 @@ z.wt_proxy._state.load() {
       z_wt_proxy_state_paths+=($worktree_path)
       z_wt_proxy_state_branch[$worktree_path]=${(Q)words[3]}
       z_wt_proxy_state_compose[$worktree_path]=${(Q)words[4]}
-      z_wt_proxy_state_updated_at[$worktree_path]=${(Q)words[5]}
 
       local word_index
-      for ((word_index=6; word_index<=${#words[@]}; word_index++)); do
+      for ((word_index=5; word_index<=${#words[@]}; word_index++)); do
         local port_entry=$words[$word_index]
         z.str.includes "$port_entry" "=" || continue
 
@@ -87,7 +85,6 @@ z.wt_proxy._state.save() {
         ${(qqq)worktree_path}
         ${(qqq)z_wt_proxy_state_branch[$worktree_path]}
         ${(qqq)z_wt_proxy_state_compose[$worktree_path]}
-        ${(qqq)z_wt_proxy_state_updated_at[$worktree_path]}
       )
       print -r -- ${entry_fields[@]} ${port_entries[@]}
     done

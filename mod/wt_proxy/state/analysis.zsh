@@ -13,7 +13,6 @@ z.wt_proxy._state.entry() {
     path $worktree_path
     branch $z_wt_proxy_state_branch[$worktree_path]
     compose_project_name $z_wt_proxy_state_compose[$worktree_path]
-    updated_at $z_wt_proxy_state_updated_at[$worktree_path]
   )
 
   z.wt_proxy._port.keys
