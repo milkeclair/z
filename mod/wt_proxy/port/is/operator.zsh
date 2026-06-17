@@ -12,14 +12,14 @@ z.wt_proxy._port.is.free() {
   zmodload zsh/net/tcp
   # 一時的にリッスンして確認する
   # 確認が取れたらcloseして準備
-  ztcp -l $port >/dev/null 2>&1
+  ztcp -l "$port" >/dev/null 2>&1
   local exit_status=$?
   local fd=$REPLY
-  if z.status.is.true $exit_status; then
-    ztcp -c $fd >/dev/null 2>&1
+  if z.int.is.zero $exit_status; then
+    ztcp -c "$fd" >/dev/null 2>&1
   fi
 
-  z.status.is.true $exit_status
+  return $exit_status
 }
 
 # check if a port is included in used ports
