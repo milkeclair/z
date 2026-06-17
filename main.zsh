@@ -13,6 +13,7 @@ local -A z_modules=(
   [io]="process"
   [mode]="process"
   [path]="analysis:process"
+  [perm]="process"
   [status]="analysis:operator"
   [str]="operator:process"
   [t]="state:dsl:expect:log:mock:process"
@@ -33,6 +34,7 @@ local z_module_depends_order=(
   io
   mode
   path
+  perm
   status
   str
   t

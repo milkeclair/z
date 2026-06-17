@@ -132,6 +132,8 @@ The following rules apply under lib.
   - interactive mode
 - path
   - dir, base, stem...
+- perm
+  - chmod, chown, chgrp wrapper
 - status
   - abstract exit status handling
 - str

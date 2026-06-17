@@ -51,6 +51,22 @@ z.t.describe "z.arg.named"; {
     }
   }
 
+  z.t.context "nameを含む別の引数が指定されている場合"; {
+    z.t.it "一致したものとして扱わない"; {
+      z.arg.named name user_name=hoge default=default_value
+
+      z.t.expect.reply default_value
+    }
+  }
+
+  z.t.context "defaultを含む別の引数が指定されている場合"; {
+    z.t.it "defaultとして扱わない"; {
+      z.arg.named name name="" my_default=other default=default_value
+
+      z.t.expect.reply default_value
+    }
+  }
+
   z.t.context "nameが指定されていない場合"; {
     z.t.it "nullを返す"; {
       z.arg.named # zls: ignore
