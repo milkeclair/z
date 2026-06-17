@@ -1,4 +1,4 @@
-# get port keys from a configuration hash
+# extract worktree port keys from a configuration hash
 #
 # $1: configuration hash name
 # REPLY: numbered port keys
@@ -12,7 +12,7 @@ z.wt_proxy._port.keys.from_config() {
   local max_index=0
 
   for config_key in ${(Pk)config_name}; do
-    z.wt_proxy._port.public.config.index $config_key || continue
+    z.wt_proxy._port.proxy.index $config_key || continue
     local port_index=$REPLY
 
     local value_ref="${config_name}[$config_key]"
@@ -28,7 +28,7 @@ z.wt_proxy._port.keys.from_config() {
   local keys=()
   for ((port_index=1; port_index<=max_index; port_index++)); do
     z.is.true $seen[$port_index] || continue
-    z.wt_proxy._port.key $port_index
+    z.wt_proxy._port.worktree.key $port_index
     keys+=($REPLY)
   done
 

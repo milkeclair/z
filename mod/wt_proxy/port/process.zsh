@@ -1,22 +1,22 @@
-# allocate a worktree port for a port key
+# allocate a worktree port for a worktree port key
 #
 # $1: worktree path
-# $2: port key
+# $2: worktree port key
 # REPLY: allocated port
 # return: 0 if a port is allocated, otherwise 1
 #
 # example:
-#  z.wt_proxy._port.allocate /path/to/worktree port_1
+#  z.wt_proxy._port.allocate /path/to/worktree worktree_port_1
 z.wt_proxy._port.allocate() {
   local worktree_path=$1
   local port_key=$2
 
-  z.wt_proxy._port.public $port_key || return 1
+  z.wt_proxy._port.proxy $port_key || return 1
   local base_port=$REPLY
 
   z.wt_proxy._port.used
   local used_ports=("${(@)REPLY}")
-  z.wt_proxy._port.publics
+  z.wt_proxy._port.proxies
   used_ports+=("${(@)REPLY}")
 
   for ((step=0; step<z_wt_proxy_port_range; step++)); do
