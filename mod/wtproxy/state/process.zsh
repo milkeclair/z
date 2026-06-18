@@ -41,8 +41,8 @@ z.wtproxy._state.load() {
       z_wtproxy_state_branch[$worktree_path]=${(Q)words[3]}
       z_wtproxy_state_compose[$worktree_path]=${(Q)words[4]}
 
-      local word_index
-      for ((word_index=5; word_index<=${#words[@]}; word_index++)); do
+      local word_index=5
+      for ((; word_index<=${#words[@]}; word_index++)); do
         local port_entry=$words[$word_index]
         z.str.includes "$port_entry" "=" || continue
 

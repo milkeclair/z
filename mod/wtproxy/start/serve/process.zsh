@@ -34,6 +34,7 @@ z.wtproxy.start._serve.accept() {
   fi
 
   z.wtproxy.start._serve.pipe.pair $client_fd $upstream_fd &
+  z_wtproxy_serve_pipe_pids+=($!)
   z.io.null ztcp -c $client_fd
   z.io.null ztcp -c $upstream_fd
 }
@@ -47,6 +48,10 @@ z.wtproxy.start._serve.accept() {
 # example:
 #  z.wtproxy.start._serve.cleanup 11 12 13
 z.wtproxy.start._serve.cleanup() {
+  for pid in $z_wtproxy_serve_pipe_pids; do
+    z.io.null kill -TERM "$pid"
+  done
+
   for fd in "$@"; do
     z.io.null ztcp -c $fd
   done

@@ -46,6 +46,7 @@ z.wtproxy.start._serve() {
 
   local -A listener_keys=()
   local listener_fds=()
+  typeset -ga z_wtproxy_serve_pipe_pids=()
 
   z.wtproxy._port.keys.from_config config
   for port_key in ${(@)REPLY}; do

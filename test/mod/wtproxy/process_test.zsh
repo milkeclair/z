@@ -131,11 +131,32 @@ z.t.describe "z.wtproxy.use"; {
         z.return.hash entry
       '
       z.t.mock name="z.wtproxy._print.entry"
+      z.t.mock name="z.wtproxy._proxy.is.running" behavior="return 1"
 
       z.wtproxy.use
 
       z.t.mock.result name="z.wtproxy._entry.current"
       z.t.expect.reply "activate=true" skip_unmock=true
+      z.t.mock.result name="z.wtproxy._print.entry"
+      z.t.expect.reply.is.arr path /tmp/worktree
+    }
+  }
+
+  z.t.context "proxy daemonが起動している場合"; {
+    z.t.it "daemonを再起動してentryを出力する"; {
+      z.t.mock name="z.wtproxy._entry.current" behavior="local -A entry=(path /tmp/worktree); z.return.hash entry"
+      z.t.mock name="z.wtproxy._proxy.is.running" behavior="return 0"
+      z.t.mock name="z.wtproxy.stop._daemon" behavior="return 0"
+      z.t.mock name="z.wtproxy.start._daemon" behavior="return 0"
+      z.t.mock name="z.wtproxy._print.entry"
+
+      z.wtproxy.use
+
+      z.t.expect.status.is.true skip_unmock=true
+      z.t.mock.result name="z.wtproxy.stop._daemon"
+      z.t.expect.reply.is.arr skip_unmock=true
+      z.t.mock.result name="z.wtproxy.start._daemon"
+      z.t.expect.reply.is.arr skip_unmock=true
       z.t.mock.result name="z.wtproxy._print.entry"
       z.t.expect.reply.is.arr path /tmp/worktree
     }
@@ -159,12 +180,33 @@ z.t.describe "z.wtproxy.start"; {
         local -A entry=(path /tmp/worktree)
         z.return.hash entry
       '
+      z.t.mock name="z.wtproxy._proxy.is.running" behavior="return 1"
       z.t.mock name="z.wtproxy.start._daemon" behavior="return 0"
       z.t.mock name="z.wtproxy._print.entry"
 
       z.wtproxy.start
 
       z.t.expect.status.is.true skip_unmock=true
+      z.t.mock.result name="z.wtproxy._print.entry"
+      z.t.expect.reply.is.arr path /tmp/worktree
+    }
+  }
+
+  z.t.context "proxy daemonが起動している場合"; {
+    z.t.it "daemonを再起動してentryを出力する"; {
+      z.t.mock name="z.wtproxy._entry.current" behavior="local -A entry=(path /tmp/worktree); z.return.hash entry"
+      z.t.mock name="z.wtproxy._proxy.is.running" behavior="return 0"
+      z.t.mock name="z.wtproxy.stop._daemon" behavior="return 0"
+      z.t.mock name="z.wtproxy.start._daemon" behavior="return 0"
+      z.t.mock name="z.wtproxy._print.entry"
+
+      z.wtproxy.start
+
+      z.t.expect.status.is.true skip_unmock=true
+      z.t.mock.result name="z.wtproxy.stop._daemon"
+      z.t.expect.reply.is.arr skip_unmock=true
+      z.t.mock.result name="z.wtproxy.start._daemon"
+      z.t.expect.reply.is.arr skip_unmock=true
       z.t.mock.result name="z.wtproxy._print.entry"
       z.t.expect.reply.is.arr path /tmp/worktree
     }
@@ -186,6 +228,7 @@ z.t.describe "z.wtproxy.start"; {
         local -A entry=(path /tmp/worktree)
         z.return.hash entry
       '
+      z.t.mock name="z.wtproxy._proxy.is.running" behavior="return 1"
       z.t.mock name="z.wtproxy.start._daemon" behavior="return 1"
 
       z.wtproxy.start

@@ -42,6 +42,27 @@ z.t.describe "z.wtproxy._state.load"; {
       z.t.expect.reply 3001
     }
   }
+
+  z.t.context "state fileにentryが複数ある場合"; {
+    z.t.it "loop variableを標準出力に出さない"; {
+      local state_file=/tmp/z_t/wtproxy_state_load_multiple/project.state
+      local worktree_path_a=/tmp/z_t/wtproxy_state_load_multiple/worktree_a
+      local worktree_path_b=/tmp/z_t/wtproxy_state_load_multiple/worktree_b
+      local branch_a=feat/a
+      local branch_b=feat/b
+      local compose_a=project_a
+      local compose_b=project_b
+      z.dir.make path=${state_file:h}
+      print -r -- "active ${(qqq)worktree_path_a}" > $state_file
+      print -r -- "entry ${(qqq)worktree_path_a} ${(qqq)branch_a} ${(qqq)compose_a} worktree_port_1=3001 worktree_port_2=5433 worktree_port_3=5174" >> $state_file
+      print -r -- "entry ${(qqq)worktree_path_b} ${(qqq)branch_b} ${(qqq)compose_b} worktree_port_1=3002 worktree_port_2=5434 worktree_port_3=5175" >> $state_file
+      z.t.mock name="z.wtproxy._config.value" behavior="z.return $state_file"
+
+      local result=$(z.wtproxy._state.load)
+
+      z.t.expect "$result" ""
+    }
+  }
 }
 
 z.t.describe "z.wtproxy._state.save"; {

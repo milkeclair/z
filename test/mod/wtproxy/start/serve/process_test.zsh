@@ -131,15 +131,20 @@ z.t.describe "z.wtproxy.start._serve.cleanup"; {
       local pid_file=/tmp/z_t/wtproxy_cleanup/project.pid
       z.dir.make path=${pid_file:h}
       print -r -- $$ > $pid_file
+      typeset -ga z_wtproxy_serve_pipe_pids=(12345 23456)
+      z.t.mock name="kill" behavior=":"
       z.t.mock name="ztcp" behavior=":"
       z.t.mock name="z.wtproxy._config.value" behavior="z.return $pid_file"
 
       z.wtproxy.start._serve.cleanup 11 12
 
+      z.t.mock.result name="kill"
+      z.t.expect.reply.is.arr "-TERM 12345" "-TERM 23456" skip_unmock=true
       z.t.mock.result name="ztcp"
       z.t.expect.reply.is.arr "-c 11" "-c 12"
       z.file.not.exists $pid_file
       z.t.expect.status.is.true
+      z_wtproxy_serve_pipe_pids=()
     }
   }
 }
