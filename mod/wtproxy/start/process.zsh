@@ -21,6 +21,7 @@ z.wtproxy.start._daemon() {
 
   z.wtproxy._proxy.is.pid "$pid" && return 0
 
+  z.io.null kill -TERM "$pid"
   rm -f "$config[pid_file]"
   z.io.error "Proxy failed to start. See $config[log_file]"
   return 1

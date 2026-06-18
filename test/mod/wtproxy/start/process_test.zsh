@@ -76,6 +76,7 @@ z.t.describe "z.wtproxy.start._daemon"; {
       z.t.mock name="z.wtproxy._proxy.is.running" behavior="return 1"
       z.t.mock name="z.wtproxy._config" behavior="z.return.hash config"
       z.t.mock name="z.wtproxy._proxy.is.pid" behavior="return 1"
+      z.t.mock name="kill" behavior="print -r -- \"$*\" >> /tmp/z_t/wtproxy_daemon_failure/kill_calls"
       z.t.mock name="z.io.error" behavior=":"
 
       PATH=$fake_bin:$PATH z.wtproxy.start._daemon
@@ -83,6 +84,8 @@ z.t.describe "z.wtproxy.start._daemon"; {
       z.t.expect.status.is.false skip_unmock=true
       z.file.not.exists $pid_file
       z.t.expect.status.is.true skip_unmock=true
+      z.t.mock.result name="kill"
+      z.t.expect.reply.includes "-TERM" skip_unmock=true
       z.t.mock.result name="z.io.error"
       z.t.expect.reply "Proxy failed to start. See $log_file"
     }
