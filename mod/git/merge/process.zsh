@@ -15,7 +15,7 @@ z.git.merge() {
     return 1
   fi
 
-  if z.git.status.is.dirty; then
+  if z.git.status._is.dirty; then
     z.io.line
     z.io.error "You have uncommitted changes. Please commit or stash them before merging."
     return 1

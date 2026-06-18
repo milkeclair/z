@@ -4,8 +4,8 @@
 # return: null
 #
 # example:
-#   z.git.commit.tag.list #=> ("feat" "fix" "chore" "docs" "style" "refactor" "test")
-z.git.commit.tag.list() {
+#   z.git.commit._tag.list #=> ("feat" "fix" "chore" "docs" "style" "refactor" "test")
+z.git.commit._tag.list() {
   local tags=(
     feat
     fix

@@ -1,6 +1,6 @@
 source ${z_main}
 
-z.t.describe "z.git.status.is.dirty"; {
+z.t.describe "z.git.status._is.dirty"; {
   z.t.context "git statusがdirtyな場合"; {
     z.t.it "trueを返す"; {
       z.t.mock name="git" behavior='
@@ -13,7 +13,7 @@ z.t.describe "z.git.status.is.dirty"; {
         fi
       '
 
-      z.git.status.is.dirty
+      z.git.status._is.dirty
 
       z.t.expect.status.is.true
     }
@@ -31,7 +31,7 @@ z.t.describe "z.git.status.is.dirty"; {
         fi
       '
 
-      z.git.status.is.dirty
+      z.git.status._is.dirty
 
       z.t.expect.status.is.false
     }

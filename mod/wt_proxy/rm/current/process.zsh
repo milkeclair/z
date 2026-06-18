@@ -6,7 +6,7 @@
 # example:
 #  z.wt_proxy.rm._current.entry
 z.wt_proxy.rm._current.entry() {
-  z.git.wt.root || return 1
+  z.git.wt.current.root || return 1
   local worktree_path=$REPLY
 
   z.wt_proxy._state.with_lock z.wt_proxy.rm._current.entry.locked "$worktree_path"

@@ -9,7 +9,7 @@
 z.wt_proxy._entry.current() {
   z.arg.named activate $@ default=false && local activate=$REPLY
 
-  z.git.wt.root || return 1
+  z.git.wt.current.root || return 1
   local worktree_path=$REPLY
   z.git.branch.label.current || return 1
   local branch=$REPLY

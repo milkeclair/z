@@ -5,9 +5,9 @@
 # return: null
 #
 # example:
-#   z.git.commit.opts.extract -m "commit message" -ca -ae
+#   z.git.commit._opts.extract -m "commit message" -ca -ae
 #   #=> ("--amend" "--allow-empty")
-z.git.commit.opts.extract() {
+z.git.commit._opts.extract() {
   local opts=()
   local valid_opts=()
 

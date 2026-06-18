@@ -105,7 +105,7 @@ z.wt_proxy._config.file.values() {
 # example:
 #  z.wt_proxy._config.file.default_project
 z.wt_proxy._config.file.default_project() {
-  z.git.wt.root >/dev/null 2>&1 || {
+  z.git.wt.current.root >/dev/null 2>&1 || {
     z.return
     return 1
   }

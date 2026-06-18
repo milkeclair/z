@@ -4,8 +4,8 @@
 # return: 0 if root is found, otherwise 1
 #
 # example:
-#  z.git.wt.root #=> "/path/to/worktree"
-z.git.wt.root() {
+#  z.git.wt.current.root #=> "/path/to/worktree"
+z.git.wt.current.root() {
   local worktree_path
   worktree_path=$(git rev-parse --show-toplevel)
   local exit_status=$?

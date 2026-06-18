@@ -1,6 +1,6 @@
 source ${z_main}
 
-z.t.describe "z.git.stats.author.names"; {
+z.t.describe "z.git.stats._author.names"; {
   z.t.context "呼び出した場合"; {
     z.t.it "git logからauthorを取得して返す"; {
       local expected="Alice\nBob\nCharlie"
@@ -13,7 +13,7 @@ z.t.describe "z.git.stats.author.names"; {
         fi
       '
 
-      z.git.stats.author.names
+      z.git.stats._author.names
 
       z.t.expect.reply.is.arr "Alice" "Bob" "Charlie"
     }
@@ -31,7 +31,7 @@ z.t.describe "z.git.stats.author.names"; {
         fi
       '
 
-      z.git.stats.author.names
+      z.git.stats._author.names
 
       z.t.expect.reply.is.arr "Alice" "Bob" "Charlie"
     }
@@ -49,7 +49,7 @@ z.t.describe "z.git.stats.author.names"; {
         fi
       '
 
-      z.git.stats.author.names
+      z.git.stats._author.names
 
       z.t.expect.reply.is.arr "Alice" "Charlie" "John Doe"
     }

@@ -6,7 +6,7 @@
 # example:
 #   z.git.branch.current #=> "main"
 z.git.branch.current() {
-  z.git.branch.current.get && local current=$REPLY
+  z.git.branch.current._get && local current=$REPLY
 
   z.io $current
 }

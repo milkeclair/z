@@ -230,10 +230,10 @@ z.git.user.set.global "milkeclair" "milkeclair@example.com"
 
 ### wt
 
-- `z.git.wt.root`
+- `z.git.wt.current.root`
   - return the current git worktree root
 
 ```zsh
-z.git.wt.root
+z.git.wt.current.root
 echo $REPLY  #=> "/path/to/worktree"
 ```

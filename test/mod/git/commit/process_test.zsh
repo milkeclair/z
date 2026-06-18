@@ -63,8 +63,8 @@ z.t.describe "z.git.commit"; {
   }
 
   z.t.context "引数が有効な場合"; {
-    z.t.it "z.git.commit.with_committerを呼び出す"; {
-      z.t.mock name="z.git.commit.with_committer"
+    z.t.it "z.git.commit._with_committerを呼び出す"; {
+      z.t.mock name="z.git.commit._with_committer"
 
       z.git.commit "feat" "commit message" -ca
 
@@ -75,7 +75,7 @@ z.t.describe "z.git.commit"; {
 
   z.t.context "チケット番号が渡された場合"; {
     z.t.it "コミットメッセージにチケット番号を含める"; {
-      z.t.mock name="z.git.commit.with_committer"
+      z.t.mock name="z.git.commit._with_committer"
 
       z.git.commit "feat" "commit message" "TICKET-123" -ca
 
@@ -86,8 +86,8 @@ z.t.describe "z.git.commit"; {
 
   z.t.context "チケット番号がなく、-ntオプションがない場合"; {
     z.t.it "コミットメッセージに現在のブランチのチケット番号を含める"; {
-      z.t.mock name="z.git.branch.current.get" behavior="z.return branch-456"
-      z.t.mock name="z.git.commit.with_committer"
+      z.t.mock name="z.git.branch.current._get" behavior="z.return branch-456"
+      z.t.mock name="z.git.commit._with_committer"
 
       z.git.commit "feat" "commit message"
 
@@ -132,8 +132,8 @@ z.t.describe "z.git.commit.tdd"; {
   }
 
   z.t.context "引数が有効な場合"; {
-    z.t.it "z.git.commit.with_committerを呼び出す"; {
-      z.t.mock name="z.git.commit.with_committer"
+    z.t.it "z.git.commit._with_committerを呼び出す"; {
+      z.t.mock name="z.git.commit._with_committer"
 
       z.git.commit.tdd "red" "feat" "commit message" -ca
 
@@ -144,7 +144,7 @@ z.t.describe "z.git.commit.tdd"; {
 
   z.t.context "チケット番号が渡された場合"; {
     z.t.it "コミットメッセージにチケット番号を含める"; {
-      z.t.mock name="z.git.commit.with_committer"
+      z.t.mock name="z.git.commit._with_committer"
 
       z.git.commit.tdd "red" "feat" "commit message" "TICKET-123" -ca
 
@@ -155,8 +155,8 @@ z.t.describe "z.git.commit.tdd"; {
 
   z.t.context "チケット番号がなく、-ntオプションがない場合"; {
     z.t.it "コミットメッセージに現在のブランチのチケット番号を含める"; {
-      z.t.mock name="z.git.branch.current.get" behavior="z.return branch-456"
-      z.t.mock name="z.git.commit.with_committer"
+      z.t.mock name="z.git.branch.current._get" behavior="z.return branch-456"
+      z.t.mock name="z.git.commit._with_committer"
 
       z.git.commit.tdd "red" "feat" "commit message"
 
@@ -166,13 +166,13 @@ z.t.describe "z.git.commit.tdd"; {
   }
 }
 
-z.t.describe "z.git.commit.with_committer"; {
+z.t.describe "z.git.commit._with_committer"; {
   z.t.context "呼び出した場合"; {
     z.t.it "git commitコマンドを正しい引数で呼び出す"; {
-      z.t.mock name="z.git.commit.help.committer"
+      z.t.mock name="z.git.commit.help._committer"
       z.t.mock name="git"
 
-      z.git.commit.with_committer "feat: commit message" -ca
+      z.git.commit._with_committer "feat: commit message" -ca
 
       z.t.mock.result
       z.t.expect.reply "commit -m feat: commit message --amend"

@@ -8,12 +8,12 @@
 # example:
 #   z.git.push #=> push latest changes for current branch
 z.git.push() {
-  if z.git.hp.arg.has.origin "$@"; then
+  if z.git._hp.arg.has.origin "$@"; then
     git push "$@"
     return 0
   fi
 
-  z.git.push.pr || z.git.push.current
+  z.git.push._pr || z.git.push._current
 }
 
 # push latest changes for PR branch
@@ -23,9 +23,9 @@ z.git.push() {
 #
 # example:
 #   # if current branch is pr/123
-#   z.git.push.pr #=> push latest changes for PR #123
-z.git.push.pr() {
-  z.git.branch.current.get
+#   z.git.push._pr #=> push latest changes for PR #123
+z.git.push._pr() {
+  z.git.branch.current._get
   local current_branch=$REPLY
 
   z.str.match.rest "$current_branch" "pr/"
@@ -54,9 +54,9 @@ z.git.push.pr() {
 # return: null
 #
 # example:
-#   z.git.push.current #=> push latest changes for current branch
-z.git.push.current() {
-  z.git.branch.current.get
+#   z.git.push._current #=> push latest changes for current branch
+z.git.push._current() {
+  z.git.branch.current._get
   local current_branch=$REPLY
 
   z.io "Pushing latest changes for current branch $current_branch"

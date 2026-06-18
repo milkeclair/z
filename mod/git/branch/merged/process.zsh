@@ -6,9 +6,9 @@
 # return: null
 #
 # example:
-#   z.git.branch.merged.get
-z.git.branch.merged.get() {
-  z.git.branch.merged.get.excludes "$@"
+#   z.git.branch._merged.get
+z.git.branch._merged.get() {
+  z.git.branch._merged.get.excludes "$@"
   local exclude_branches=($REPLY)
 
   local result=$(git branch --merged)
@@ -16,7 +16,7 @@ z.git.branch.merged.get() {
 
   local branches=()
   while IFS= read -r branch; do
-    z.git.branch.merged.get.remove_symbols $branch && branch=$REPLY
+    z.git.branch._merged.get.remove_symbols $branch && branch=$REPLY
     z.str.is.empty "$branch" && continue
 
     z.arr.includes target="$branch" $exclude_branches && continue

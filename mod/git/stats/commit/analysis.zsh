@@ -5,8 +5,8 @@
 # return: null
 #
 # example:
-#   z.git.stats.commit.count "milkeclair"
-z.git.stats.commit.count() {
+#   z.git.stats._commit.count "milkeclair"
+z.git.stats._commit.count() {
   local author=$1
 
   # wc -l: count lines

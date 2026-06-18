@@ -1,6 +1,6 @@
 source ${z_main}
 
-z.t.describe "z.git.branch.merged.get"; {
+z.t.describe "z.git.branch._merged.get"; {
   z.t.context "マージ済みブランチを取得する場合"; {
     z.t.it "スペース区切りで返す"; {
       local merged="  current-branch\n  feature/a\n  feature/b\n  feature/c"
@@ -15,7 +15,7 @@ z.t.describe "z.git.branch.merged.get"; {
         fi
       '
 
-      z.git.branch.merged.get
+      z.git.branch._merged.get
 
       z.t.expect.reply "feature/a feature/b feature/c"
     }
@@ -35,7 +35,7 @@ z.t.describe "z.git.branch.merged.get"; {
         fi
       '
 
-      z.git.branch.merged.get
+      z.git.branch._merged.get
 
       z.t.expect.reply "feature/linked feature/a feature/b"
     }
@@ -55,7 +55,7 @@ z.t.describe "z.git.branch.merged.get"; {
         fi
       '
 
-      z.git.branch.merged.get exclude_branches="main master feature/a"
+      z.git.branch._merged.get exclude_branches="main master feature/a"
 
       z.t.expect.reply "feature/linked develop release feature/b"
     }

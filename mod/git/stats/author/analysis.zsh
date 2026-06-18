@@ -4,8 +4,8 @@
 # return: null
 #
 # example:
-#   z.git.stats.author.names #=> ("Alice" "Bob" "Charlie")
-z.git.stats.author.names() {
+#   z.git.stats._author.names #=> ("Alice" "Bob" "Charlie")
+z.git.stats._author.names() {
   local author_name="%an"
   local strip_regex="^[[:space:]]*//;s/[[:space:]]*$"
   local names=$(git log --format=$author_name |

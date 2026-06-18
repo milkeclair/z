@@ -9,7 +9,7 @@
 z.wt_proxy.rm._current() {
   z.arg.named expected_project $@ default="" && local expected_project=$REPLY
 
-  z.git.wt.root || return 1
+  z.git.wt.current.root || return 1
   local worktree_path=$REPLY
 
   z.wt_proxy._state.with_lock z.wt_proxy.rm._current.locked "$worktree_path" "$expected_project"

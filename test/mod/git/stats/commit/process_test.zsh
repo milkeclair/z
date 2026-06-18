@@ -1,9 +1,9 @@
 source ${z_main}
 
-z.t.describe "z.git.stats.commit.map"; {
+z.t.describe "z.git.stats._commit.map"; {
   z.t.context "authorsを渡した場合"; {
     z.t.it "authorごとのcommit_count, inserted, deletedを含むエントリーの配列を返す"; {
-      z.t.mock name="z.git.stats.commit.details" behavior='
+      z.t.mock name="z.git.stats._commit.details" behavior='
         if z.is.eq "$author" "Alice"; then
           z.return "1000 500"
         elif z.is.eq "$author" "Bob"; then
@@ -13,7 +13,7 @@ z.t.describe "z.git.stats.commit.map"; {
           return 1
         fi
       '
-      z.t.mock name="z.git.stats.commit.count" behavior='
+      z.t.mock name="z.git.stats._commit.count" behavior='
         if z.is.eq "$author" "Alice"; then
           z.return 50
         elif z.is.eq "$author" "Bob"; then
@@ -24,7 +24,7 @@ z.t.describe "z.git.stats.commit.map"; {
         fi
       '
 
-      z.git.stats.commit.map authors="Alice Bob"
+      z.git.stats._commit.map authors="Alice Bob"
 
       z.t.expect.reply.is.arr "Alice:1000 500:50" "Bob:800 300:40"
     }
@@ -32,7 +32,7 @@ z.t.describe "z.git.stats.commit.map"; {
 
   z.t.context "authorのコミット数が0の場合"; {
     z.t.it "そのauthorのエントリーは返さない"; {
-      z.t.mock name="z.git.stats.commit.details" behavior='
+      z.t.mock name="z.git.stats._commit.details" behavior='
         if z.is.eq "$author" "Alice"; then
           z.return "1000 500"
         elif z.is.eq "$author" "Bob"; then
@@ -42,7 +42,7 @@ z.t.describe "z.git.stats.commit.map"; {
           return 1
         fi
       '
-      z.t.mock name="z.git.stats.commit.count" behavior='
+      z.t.mock name="z.git.stats._commit.count" behavior='
         if z.is.eq "$author" "Alice"; then
           z.return 50
         elif z.is.eq "$author" "Bob"; then
@@ -53,7 +53,7 @@ z.t.describe "z.git.stats.commit.map"; {
         fi
       '
 
-      z.git.stats.commit.map authors="Alice Bob"
+      z.git.stats._commit.map authors="Alice Bob"
 
       z.t.expect.reply.is.arr "Alice:1000 500:50"
     }
@@ -61,26 +61,26 @@ z.t.describe "z.git.stats.commit.map"; {
 
   z.t.context "authorsが空の場合"; {
     z.t.it "空の配列を返す"; {
-      z.git.stats.commit.map authors=""
+      z.git.stats._commit.map authors=""
 
       z.t.expect.reply.is.arr
     }
   }
 
   z.t.context "exclude_extsとexclude_dirsを渡した場合"; {
-    z.t.it "z.git.stats.commit.detailsにexclude_extsとexclude_dirsを渡す"; {
-      z.t.mock name="z.git.stats.commit.details"
-      z.t.mock name="z.git.stats.commit.count" behavior="z.return 1"
+    z.t.it "z.git.stats._commit.detailsにexclude_extsとexclude_dirsを渡す"; {
+      z.t.mock name="z.git.stats._commit.details"
+      z.t.mock name="z.git.stats._commit.count" behavior="z.return 1"
 
-      z.git.stats.commit.map authors="Alice" exclude_exts="md txt" exclude_dirs="docs tests"
+      z.git.stats._commit.map authors="Alice" exclude_exts="md txt" exclude_dirs="docs tests"
 
-      z.t.mock.result name="z.git.stats.commit.details"
+      z.t.mock.result name="z.git.stats._commit.details"
       z.t.expect.reply "author=Alice exclude_exts=md txt exclude_dirs=docs tests"
     }
   }
 }
 
-z.t.describe "z.git.stats.commit.details"; {
+z.t.describe "z.git.stats._commit.details"; {
   z.t.context "authorを渡した場合"; {
     z.t.it "そのauthorのinsertedとdeletedを返す"; {
       z.t.mock name="git" behavior='
@@ -92,7 +92,7 @@ z.t.describe "z.git.stats.commit.details"; {
         fi
       '
 
-      z.git.stats.commit.details author="milkeclair"
+      z.git.stats._commit.details author="milkeclair"
 
       z.t.expect.reply "1000 500"
     }
@@ -109,7 +109,7 @@ z.t.describe "z.git.stats.commit.details"; {
         fi
       '
 
-      z.git.stats.commit.details author="unknown"
+      z.git.stats._commit.details author="unknown"
 
       z.t.expect.reply "0 0"
     }
@@ -130,7 +130,7 @@ z.t.describe "z.git.stats.commit.details"; {
         fi
       '
 
-      z.git.stats.commit.details \
+      z.git.stats._commit.details \
         author="milkeclair" \
         exclude_exts="md txt" \
         exclude_dirs="docs test"
@@ -140,10 +140,10 @@ z.t.describe "z.git.stats.commit.details"; {
   }
 }
 
-z.t.describe "z.git.stats.commit.sum_lines"; {
+z.t.describe "z.git.stats._commit.sum_lines"; {
   z.t.context "insertedとdeletedを渡した場合"; {
     z.t.it "insertedとdeletedの合計を返す"; {
-      z.git.stats.commit.sum_lines inserted=1000 deleted=500
+      z.git.stats._commit.sum_lines inserted=1000 deleted=500
 
       z.t.expect.reply 1500
     }

@@ -5,10 +5,10 @@
 # return: 0|1
 #
 # example:
-#   z.git.commit.tdd.cycle.is.valid "red" #=> true
-#   z.git.commit.tdd.cycle.is.valid "invalid_cycle" #=> false
-z.git.commit.tdd.cycle.is.valid() {
-  z.git.commit.tdd.cycle.list && local cycle_list=$REPLY
+#   z.git.commit.tdd._cycle.is.valid "red" #=> true
+#   z.git.commit.tdd._cycle.is.valid "invalid_cycle" #=> false
+z.git.commit.tdd._cycle.is.valid() {
+  z.git.commit.tdd._cycle.list && local cycle_list=$REPLY
   local cycle=$1
 
   if z.str.is.not.match " ${cycle_list[*]} " "* $cycle *"; then
