@@ -28,3 +28,25 @@ z.t.describe "z.git.wt.current.root"; {
     }
   }
 }
+
+z.t.describe "z.git.wt.current.common_dir"; {
+  z.t.context "git worktree内の場合"; {
+    z.t.it "common git directoryを返す"; {
+      z.t.mock name="git" behavior="z.io /repo/project/.git"
+
+      z.git.wt.current.common_dir
+
+      z.t.expect.reply "/repo/project/.git"
+    }
+  }
+
+  z.t.context "git worktree外の場合"; {
+    z.t.it "失敗する"; {
+      z.t.mock name="git" behavior="return 1"
+
+      z.git.wt.current.common_dir
+
+      z.t.expect.status.is.false
+    }
+  }
+}

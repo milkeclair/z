@@ -100,9 +100,9 @@ z.t.describe "z.wtproxy._config.file.values"; {
 }
 
 z.t.describe "z.wtproxy._config.file.default_project"; {
-  z.t.context "通常のworktree rootの場合"; {
-    z.t.it "root名からproject名を返す"; {
-      z.t.mock name="z.git.wt.current.root" behavior="z.return /repo/sample"
+  z.t.context "common git directoryが取得できる場合"; {
+    z.t.it "repository root名からproject名を返す"; {
+      z.t.mock name="z.git.wt.current.common_dir" behavior="z.return /repo/sample/.git"
 
       z.wtproxy._config.file.default_project
 
@@ -110,13 +110,25 @@ z.t.describe "z.wtproxy._config.file.default_project"; {
     }
   }
 
-  z.t.context "親ディレクトリが_worktreeで終わる場合"; {
-    z.t.it "親ディレクトリ名からproject名を返す"; {
-      z.t.mock name="z.git.wt.current.root" behavior="z.return /repo/sample_worktree/feat_branch"
+  z.t.context "兄弟worktreeの場合"; {
+    z.t.it "同じrepository root名からproject名を返す"; {
+      z.t.mock name="z.git.wt.current.common_dir" behavior="z.return /repo/sample/.git"
 
       z.wtproxy._config.file.default_project
 
       z.t.expect.reply sample
+    }
+  }
+
+  z.t.context "common git directoryが取得できない場合"; {
+    z.t.it "失敗してREPLYを空にする"; {
+      z.t.mock name="z.git.wt.current.common_dir" behavior="return 1"
+
+      z.wtproxy._config.file.default_project
+      z.t.expect.status.is.false skip_unmock=true
+
+      z.wtproxy._config.file.default_project
+      z.t.expect.reply.is.null
     }
   }
 }

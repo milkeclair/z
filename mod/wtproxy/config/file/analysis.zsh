@@ -106,21 +106,15 @@ z.wtproxy._config.file.values() {
 # example:
 #  z.wtproxy._config.file.default_project
 z.wtproxy._config.file.default_project() {
-  z.io.null z.git.wt.current.root || {
+  z.git.wt.current.common_dir || {
     z.return
     return 1
   }
-  local root=$REPLY
-  z.path.base "$root"
-  local root_name=$REPLY
-  z.path.dir "$root"
-  z.path.base "$REPLY"
-  local parent_name=$REPLY
-  local project=$root_name
+  local common_dir=$REPLY
 
-  if z.str.end_with "$parent_name" "_worktree"; then
-    project=${parent_name%_worktree}
-  fi
+  z.path.dir "$common_dir"
+  z.path.base "$REPLY"
+  local project=$REPLY
 
   z.wtproxy._slug "$project"
 }
