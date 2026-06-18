@@ -9,7 +9,8 @@
 z.wtproxy._docker.volume.names() {
   local project_name=$1
   local label_filter="label=$z_wtproxy_docker_compose_project_label=$project_name"
-  local output=$(docker volume ls --quiet --filter "$label_filter")
+  local output
+  output=$(docker volume ls --quiet --filter "$label_filter") || return 1
 
   local -a volume_names=("${(@f)output}")
   z.arr.unique ${volume_names[@]}

@@ -14,4 +14,14 @@ z.t.describe "z.wtproxy._docker.image.ids"; {
       z.t.expect.reply.is.arr image_a image_b
     }
   }
+
+  z.t.context "docker image lsに失敗した場合"; {
+    z.t.it "失敗を返す"; {
+      z.t.mock name="docker" behavior="return 1"
+
+      z.wtproxy._docker.image.ids project_feat
+
+      z.t.expect.status.is.false
+    }
+  }
 }

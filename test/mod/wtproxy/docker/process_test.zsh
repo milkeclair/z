@@ -16,5 +16,37 @@ z.t.describe "z.wtproxy._docker.prune"; {
       z.t.mock.result name="z.wtproxy._docker.volume.remove"
       z.t.expect.reply volume_a
     }
+
+    z.t.it "image一覧の取得に失敗した場合は削除しない"; {
+      z.t.mock name="z.wtproxy._docker.image.ids" behavior="return 1"
+      z.t.mock name="z.wtproxy._docker.volume.names" behavior="z.return volume_a"
+      z.t.mock name="z.wtproxy._docker.image.remove" behavior=":"
+      z.t.mock name="z.wtproxy._docker.volume.remove" behavior=":"
+
+      z.wtproxy._docker.prune project_feat
+
+      z.t.expect.status.is.false skip_unmock=true
+      z.t.mock.result name="z.wtproxy._docker.volume.names"
+      z.t.expect.reply.is.arr
+      z.t.mock.result name="z.wtproxy._docker.image.remove"
+      z.t.expect.reply.is.arr
+      z.t.mock.result name="z.wtproxy._docker.volume.remove"
+      z.t.expect.reply.is.arr
+    }
+
+    z.t.it "volume一覧の取得に失敗した場合は削除しない"; {
+      z.t.mock name="z.wtproxy._docker.image.ids" behavior="z.return image_a"
+      z.t.mock name="z.wtproxy._docker.volume.names" behavior="return 1"
+      z.t.mock name="z.wtproxy._docker.image.remove" behavior=":"
+      z.t.mock name="z.wtproxy._docker.volume.remove" behavior=":"
+
+      z.wtproxy._docker.prune project_feat
+
+      z.t.expect.status.is.false skip_unmock=true
+      z.t.mock.result name="z.wtproxy._docker.image.remove"
+      z.t.expect.reply.is.arr
+      z.t.mock.result name="z.wtproxy._docker.volume.remove"
+      z.t.expect.reply.is.arr
+    }
   }
 }
