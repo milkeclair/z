@@ -6,6 +6,8 @@ A modifier for running Docker Compose projects from multiple git worktrees witho
 
 `z.install.mod wt_proxy`
 
+This also installs `git` when it is missing.
+
 ## Overview
 
 Each worktree can run Docker Compose with its own port values.

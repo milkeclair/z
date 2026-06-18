@@ -260,6 +260,8 @@ You will individually install the ones you wish to use.
 
 `z.install.mod <mod_name>`
 
+Mod dependencies are resolved and installed first.
+
 ### Uninstall
 
 `z.uninstall.mod <mod_name>`
@@ -268,6 +270,8 @@ You will individually install the ones you wish to use.
 
 - `z.git`
   - Git command modifier. [README](mod/git/README.md)
+- `z.wt_proxy`
+  - Docker Compose worktree proxy modifier. [README](mod/wt_proxy/README.md)
 
 ## Language Server
 
