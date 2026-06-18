@@ -1,9 +1,9 @@
 source ${z_main}
 
-z.t.describe "z.git.stats.commit.map.split"; {
+z.t.describe "z.git.stats._commit.map.split"; {
   z.t.context "entryを渡した場合"; {
     z.t.it "entryをauthor, details, commit_countに分割して返す"; {
-      z.git.stats.commit.map.split entry="milkeclair:1000 500:50"
+      z.git.stats._commit.map.split entry="milkeclair:1000 500:50"
 
       local -A expected=(
         [author]="milkeclair"
@@ -21,7 +21,7 @@ z.t.describe "z.git.stats.commit.map.split"; {
 
   z.t.context "entryのdetailsが0 0の場合"; {
     z.t.it "totalも0として返す"; {
-      z.git.stats.commit.map.split entry="milkeclair:0 0:10"
+      z.git.stats._commit.map.split entry="milkeclair:0 0:10"
 
       local -A expected=(
         [author]="milkeclair"
@@ -38,7 +38,7 @@ z.t.describe "z.git.stats.commit.map.split"; {
   }
 }
 
-z.t.describe "z.git.stats.commit.map.distinct"; {
+z.t.describe "z.git.stats._commit.map.distinct"; {
   z.t.context "重複するエントリーがある場合"; {
     z.t.it "commit_count, inserted, deletedが同じエントリーを1つだけ返す"; {
       local commit_map=(
@@ -47,7 +47,7 @@ z.t.describe "z.git.stats.commit.map.distinct"; {
         "Alice:1000 500:50" # duplicate
       )
 
-      z.git.stats.commit.map.distinct "${commit_map[@]}"
+      z.git.stats._commit.map.distinct "${commit_map[@]}"
 
       local expected=(
         "Alice:1000 500:50"
@@ -66,7 +66,7 @@ z.t.describe "z.git.stats.commit.map.distinct"; {
         "Charlie:600 200:30"
       )
 
-      z.git.stats.commit.map.distinct "${commit_map[@]}"
+      z.git.stats._commit.map.distinct "${commit_map[@]}"
 
       local expected=(
         "Alice:1000 500:50"

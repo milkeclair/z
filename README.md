@@ -132,6 +132,8 @@ The following rules apply under lib.
   - interactive mode
 - path
   - dir, base, stem...
+- perm
+  - chmod, chown, chgrp wrapper
 - status
   - abstract exit status handling
 - str
@@ -258,6 +260,8 @@ You will individually install the ones you wish to use.
 
 `z.install.mod <mod_name>`
 
+Mod dependencies are resolved and installed first.
+
 ### Uninstall
 
 `z.uninstall.mod <mod_name>`
@@ -266,6 +270,8 @@ You will individually install the ones you wish to use.
 
 - `z.git`
   - Git command modifier. [README](mod/git/README.md)
+- `z.wtproxy`
+  - Docker Compose worktree proxy modifier. [README](mod/wtproxy/README.md)
 
 ## Language Server
 

@@ -5,9 +5,9 @@
 # return: 0|1
 #
 # example:
-#   z.git.commit.arg.is.not.no_ticket -m "commit message" #=> true
-#   z.git.commit.arg.is.not.no_ticket -m "commit message" -nt #=> false
-z.git.commit.arg.is.not.no_ticket() {
+#   z.git.commit._arg.is.not.no_ticket -m "commit message" #=> true
+#   z.git.commit._arg.is.not.no_ticket -m "commit message" -nt #=> false
+z.git.commit._arg.is.not.no_ticket() {
   z.arg.named opts $@ && local opts=$REPLY
 
   z.str.is.not.match " ${opts[*]} " "* -nt *"

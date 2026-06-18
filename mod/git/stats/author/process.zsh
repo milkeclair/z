@@ -4,8 +4,8 @@
 # return: null
 #
 # example:
-#   z.git.stats.author.header #=> display header for commit stats table
-z.git.stats.author.header() {
+#   z.git.stats._author.header #=> display header for commit stats table
+z.git.stats._author.header() {
   # 22, 12, 12, 12, 12
   z.io "┌──────────────────────┬────────────┬────────────┬────────────┬────────────┐"
   z.io "│ author               │ commit     │ add        │ delete     │ total      │"
@@ -20,18 +20,18 @@ z.git.stats.author.header() {
 # return: null
 #
 # example:
-#   z.git.stats.author.body exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
-z.git.stats.author.body() {
+#   z.git.stats._author.body exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
+z.git.stats._author.body() {
   z.arg.named exclude_exts $@ && local exclude_exts=($REPLY)
   z.arg.named exclude_dirs $@ && local exclude_dirs=($REPLY)
-  z.git.stats.author.names && local authors=($REPLY)
+  z.git.stats._author.names && local authors=($REPLY)
 
   local commit_map=()
-  z.git.stats.commit.map authors="${authors[*]}" exclude_exts="${exclude_exts[*]}" exclude_dirs="${exclude_dirs[*]}"
-  z.git.stats.commit.map.distinct "${REPLY[@]}" && commit_map=("${REPLY[@]}")
+  z.git.stats._commit.map authors="${authors[*]}" exclude_exts="${exclude_exts[*]}" exclude_dirs="${exclude_dirs[*]}"
+  z.git.stats._commit.map.distinct "${REPLY[@]}" && commit_map=("${REPLY[@]}")
 
   for entry in "${commit_map[@]}"; do
-    z.git.stats.commit.map.split entry="$entry"
+    z.git.stats._commit.map.split entry="$entry"
     local -A parsed=($REPLY)
     local author=$parsed[author]
     local commit_count=$parsed[commit_count]
@@ -40,7 +40,7 @@ z.git.stats.author.body() {
     local total=$parsed[total]
 
     # e.g. author_name commit: 100 add: 1000 delete: 1000 total: 2000
-    z.git.stats.author.show \
+    z.git.stats._author.show \
       author="$author" \
       commit_count="$commit_count" \
       inserted="$inserted" \
@@ -48,7 +48,7 @@ z.git.stats.author.body() {
       total="$total"
 
     if z.is.not.eq "$entry" "${commit_map[-1]}"; then
-      z.git.stats.author.border
+      z.git.stats._author.border
     fi
   done
 }
@@ -65,9 +65,9 @@ z.git.stats.author.body() {
 # return: null
 #
 # example:
-#   z.git.stats.author.show author="milkeclair" commit_count=100 inserted=1000 deleted=1000 total=2000
+#   z.git.stats._author.show author="milkeclair" commit_count=100 inserted=1000 deleted=1000 total=2000
 #   #=> display a table row for milkeclair with her commit stats
-z.git.stats.author.show() {
+z.git.stats._author.show() {
   z.arg.named author $@ && local author=$REPLY
   z.arg.named commit_count $@ && local commit_count=$REPLY
   z.arg.named inserted $@ && local inserted=$REPLY
@@ -94,8 +94,8 @@ z.git.stats.author.show() {
 # return: null
 #
 # example:
-#   z.git.stats.author.border #=> display border for commit stats table
-z.git.stats.author.border() {
+#   z.git.stats._author.border #=> display border for commit stats table
+z.git.stats._author.border() {
   # 22, 12, 12, 12, 12
   z.io "├──────────────────────┼────────────┼────────────┼────────────┼────────────┤"
 }
@@ -106,8 +106,8 @@ z.git.stats.author.border() {
 # return: null
 #
 # example:
-#   z.git.stats.author.footer #=> display footer for commit stats table
-z.git.stats.author.footer() {
+#   z.git.stats._author.footer #=> display footer for commit stats table
+z.git.stats._author.footer() {
   # 22, 12, 12, 12, 12
   z.io "└──────────────────────┴────────────┴────────────┴────────────┴────────────┘"
 }

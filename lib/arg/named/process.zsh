@@ -17,7 +17,7 @@ z.arg.named.shift() {
   local i=1
 
   while z.int.is.lteq $i $arg_count; do
-    if z.is.not.null $args[i] && z.str.includes $args[i] $name=; then
+    if z.is.not.null $args[i] && z.str.start_with "$args[i]" "${name}="; then
       ((i++)) && continue
     fi
 

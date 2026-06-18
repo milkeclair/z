@@ -7,9 +7,9 @@
 # return: null
 #
 # example:
-#   z.git.stats.commit.map authors=("Alice" "Bob") exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
+#   z.git.stats._commit.map authors=("Alice" "Bob") exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
 #   #=> REPLY=("Alice:1000 500:50" "Bob:800 300:40")
-z.git.stats.commit.map() {
+z.git.stats._commit.map() {
   z.arg.named authors $@ && local authors_raw=$REPLY
   z.arg.named exclude_exts $@ && local exclude_exts=($REPLY)
   z.arg.named exclude_dirs $@ && local exclude_dirs=($REPLY)
@@ -23,10 +23,10 @@ z.git.stats.commit.map() {
   local commit_map=()
 
   for author in ${authors[@]}; do
-    z.git.stats.commit.details author="$author" exclude_exts=$exclude_exts exclude_dirs=$exclude_dirs
+    z.git.stats._commit.details author="$author" exclude_exts=$exclude_exts exclude_dirs=$exclude_dirs
     z.str.split str="$REPLY" delimiter=" "
     local details=($REPLY)
-    z.git.stats.commit.count "$author" && local count=$REPLY
+    z.git.stats._commit.count "$author" && local count=$REPLY
 
     if z.int.is.not.zero $count; then
       local details_str="${details[1]} ${details[2]}"
@@ -46,13 +46,13 @@ z.git.stats.commit.map() {
 # return: null
 #
 # example:
-#   z.git.stats.commit.details author="milkeclair" exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
-z.git.stats.commit.details() {
+#   z.git.stats._commit.details author="milkeclair" exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
+z.git.stats._commit.details() {
   z.arg.named author $@ && local author=$REPLY
   z.arg.named exclude_exts $@ && local exclude_exts_raw=$REPLY
   z.arg.named exclude_dirs $@ && local exclude_dirs_raw=$REPLY
 
-  z.git.stats.commit.details.excludes exclude_exts=$exclude_exts_raw exclude_dirs=$exclude_dirs_raw
+  z.git.stats._commit.details.excludes exclude_exts=$exclude_exts_raw exclude_dirs=$exclude_dirs_raw
   z.arr.split "$REPLY" && local patterns=($REPLY)
   local exclude_exts_pattern=$patterns[1]
   local exclude_dirs_pattern=$patterns[2]
@@ -83,9 +83,9 @@ z.git.stats.commit.details() {
 # return: null
 #
 # example:
-#   z.git.stats.commit.sum_lines inserted=1000 deleted=500
+#   z.git.stats._commit.sum_lines inserted=1000 deleted=500
 #   #=> 1500
-z.git.stats.commit.sum_lines() {
+z.git.stats._commit.sum_lines() {
   z.arg.named inserted $@ && local inserted=$REPLY
   z.arg.named deleted $@ && local deleted=$REPLY
 

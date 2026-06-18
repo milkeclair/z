@@ -56,25 +56,25 @@ z.git.c.g() {
 # example:
 #   z.git.commit feat "add new feature" TICKET-123 -ca
 z.git.commit() {
-  z.git.commit.arg.is.enough $@ || return 1
+  z.git.commit._arg.is.enough $@ || return 1
 
   z.group "extract arguments"; {
-    z.git.commit.arg.extract $@
+    z.git.commit._arg.extract $@
     local -A args=("${(@)REPLY}")
     local tag=$args[tag] && local message=$args[message] && local ticket=$args[ticket]
 
-    z.git.commit.arg.extract.opts "${(@kv)args}"
+    z.git.commit._arg.extract.opts "${(@kv)args}"
     local opts=(${(@)REPLY})
   }
 
-  z.git.commit.tag.is.valid $tag || return 1
+  z.git.commit._tag.is.valid $tag || return 1
 
-  if z.is.null $ticket && z.git.commit.arg.is.not.no_ticket ${opts[@]}; then
-    z.git.hp.ticket && ticket=$REPLY
+  if z.is.null $ticket && z.git.commit._arg.is.not.no_ticket ${opts[@]}; then
+    z.git._hp.ticket && ticket=$REPLY
   fi
 
-  z.git.commit.msg.build tag=$tag message=$message ticket=$ticket
-  z.git.commit.with_committer "$REPLY" ${opts[@]}
+  z.git.commit._msg.build tag=$tag message=$message ticket=$ticket
+  z.git.commit._with_committer "$REPLY" ${opts[@]}
 }
 
 # tdd commit
@@ -93,26 +93,26 @@ z.git.commit() {
 z.git.commit.tdd() {
   local cycle=$1 && shift
 
-  z.git.commit.tdd.cycle.is.valid $cycle || return 1
-  z.git.commit.arg.is.enough $@ || return 1
+  z.git.commit.tdd._cycle.is.valid $cycle || return 1
+  z.git.commit._arg.is.enough $@ || return 1
 
   z.group "extract arguments"; {
-    z.git.commit.arg.extract $@
+    z.git.commit._arg.extract $@
     local -A args=("${(@)REPLY}")
     local tag=$args[tag] && local message=$args[message] && local ticket=$args[ticket]
 
-    z.git.commit.arg.extract.opts "${(@kv)args}"
+    z.git.commit._arg.extract.opts "${(@kv)args}"
     local opts=(${(@)REPLY})
   }
 
-  z.git.commit.tag.is.valid $tag || return 1
+  z.git.commit._tag.is.valid $tag || return 1
 
-  if z.is.null $ticket && z.git.commit.arg.is.not.no_ticket ${opts[@]}; then
-    z.git.hp.ticket && ticket=$REPLY
+  if z.is.null $ticket && z.git.commit._arg.is.not.no_ticket ${opts[@]}; then
+    z.git._hp.ticket && ticket=$REPLY
   fi
 
-  z.git.commit.msg.build tag=$tag message=$message ticket=$ticket cycle=$cycle
-  z.git.commit.with_committer "$REPLY" ${opts[@]}
+  z.git.commit._msg.build tag=$tag message=$message ticket=$ticket cycle=$cycle
+  z.git.commit._with_committer "$REPLY" ${opts[@]}
 }
 
 # commit with committer info
@@ -124,15 +124,15 @@ z.git.commit.tdd() {
 # return: null
 #
 # example:
-#   z.git.commit.with_committer "feat: add new feature" -ca
-z.git.commit.with_committer() {
+#   z.git.commit._with_committer "feat: add new feature" -ca
+z.git.commit._with_committer() {
   local message=$1 && shift
 
-  z.git.commit.opts.extract $@
+  z.git.commit._opts.extract $@
   local opts=(${(@)REPLY})
 
   git commit -m $message ${opts[@]}
-  z.git.commit.help.committer
+  z.git.commit.help._committer
 }
 
 # show help for git commit
@@ -143,7 +143,7 @@ z.git.commit.with_committer() {
 # example:
 #   z.git.commit.help
 z.git.commit.help() {
-  z.git.commit.tag.list && local tags=$REPLY
+  z.git.commit._tag.list && local tags=$REPLY
 
   z.io.empty
   z.io indent=1 "Usage:"

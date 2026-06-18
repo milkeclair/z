@@ -260,15 +260,62 @@ z.install.mod._remove_existing_mod_dir() {
 }
 
 z.install.mod._copy_mod_files() {
+  local copy_mod_name=${current_mod_name:-$mod_name}
+
   if ! mkdir -p $install_dir; then
     echo "❌ failed to create mod dir: $install_dir"
     return 1
   fi
 
   if ! cp -r "$mod_source_dir" "$install_dir/"; then
-    echo "❌ failed to copy mod: $mod_name"
+    echo "❌ failed to copy mod: $copy_mod_name"
     return 1
   fi
+}
+
+z.install.mod._source_mod_files() {
+  z.mod.reset
+
+  local mod_files=("$source_dir"/mod/*/mod.zsh(N))
+  for mod_file in $mod_files; do
+    source "$mod_file"
+  done
+}
+
+z.install.mod._resolve_names() {
+  if z.mod.is.registered $mod_name; then
+    z.mod.dependencies.resolve $mod_name
+    return $?
+  fi
+
+  if [[ -d "$source_dir/mod/$mod_name" ]]; then
+    z.return $mod_name
+    return
+  fi
+
+  echo "❌ mod does not exist: $mod_name"
+  return 1
+}
+
+z.install.mod._install_names() {
+  local -a install_mod_names=("$@")
+
+  for current_mod_name in $install_mod_names; do
+    mod_source_dir="$source_dir/mod/$current_mod_name"
+    mod_target_dir="$install_dir/$current_mod_name"
+
+    if [[ ! -d $mod_source_dir ]]; then
+      echo "❌ mod does not exist: $current_mod_name"
+      return 1
+    fi
+
+    if [[ -d $mod_target_dir && $current_mod_name != $mod_name ]]; then
+      echo "🔄 upgrading dependency: $current_mod_name"
+    fi
+
+    z.install.mod._remove_existing_mod_dir || return 1
+    z.install.mod._copy_mod_files || return 1
+  done
 }
 
 z.install.mod._show_completion() {
@@ -305,9 +352,10 @@ z.install.mod() {
 
   z.install._download_archive || return 1
   z.install._decompress_archive || return 1
-  local mod_source_dir="$source_dir/mod/$mod_name"
-  z.install.mod._remove_existing_mod_dir || return 1
-  z.install.mod._copy_mod_files || return 1
+  z.install.mod._source_mod_files || return 1
+  z.install.mod._resolve_names || return 1
+  local -a mod_names=("${(@)REPLY}")
+  z.install.mod._install_names "${(@)mod_names}" || return 1
   z.install.mod._show_completion
 
   if [[ -f $z_main_path ]]; then

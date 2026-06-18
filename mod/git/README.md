@@ -48,6 +48,21 @@ z.git.b.a
 z.git.branch.current  #=> "main"
 ```
 
+- `z.git.branch.label.current`
+  - return the current branch label
+  - returns `detached-<short HEAD>` when HEAD is detached
+- `z.git.branch.label.for <path>`
+  - return the branch label for a worktree path
+  - returns `detached-<short HEAD>` when the path is detached
+
+```zsh
+z.git.branch.label.current
+echo $REPLY  #=> "main"
+
+z.git.branch.label.for /path/to/worktree
+echo $REPLY  #=> "feature/example"
+```
+
 ### commit
 
 - `z.git.commit` / `z.git.c`
@@ -211,4 +226,14 @@ Both require `user.name` and `user.email` as arguments.
 ```zsh
 z.git.user.set "milkeclair" "milkeclair@example.com"
 z.git.user.set.global "milkeclair" "milkeclair@example.com"
+```
+
+### wt
+
+- `z.git.wt.current.root`
+  - return the current git worktree root
+
+```zsh
+z.git.wt.current.root
+echo $REPLY  #=> "/path/to/worktree"
 ```

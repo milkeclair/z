@@ -9,17 +9,17 @@
 # example:
 #   z.git.pull #=> pull latest changes for current branch
 z.git.pull() {
-  if z.git.hp.arg.has.origin "$@"; then
+  if z.git._hp.arg.has.origin "$@"; then
     git pull "$@"
     return 0
   fi
 
-  if z.git.hp.arg.has.develop "$@"; then
-    z.git.pull.develop
+  if z.git._hp.arg.has.develop "$@"; then
+    z.git.pull._develop
     return 0
   fi
 
-  z.git.pull.pr || z.git.pull.current
+  z.git.pull._pr || z.git.pull._current
 }
 
 # pull latest changes for develop branch
@@ -28,8 +28,8 @@ z.git.pull() {
 # return: null
 #
 # example:
-#   z.git.pull.develop #=> pull latest changes for develop branch
-z.git.pull.develop() {
+#   z.git.pull._develop #=> pull latest changes for develop branch
+z.git.pull._develop() {
   z.io "Pulling latest changes from develop branch"
   z.io.empty
   git pull origin develop
@@ -42,9 +42,9 @@ z.git.pull.develop() {
 #
 # example:
 #   # if current branch is pr/123
-#   z.git.pull.pr #=> pull latest changes for PR #123
-z.git.pull.pr() {
-  z.git.branch.current.get
+#   z.git.pull._pr #=> pull latest changes for PR #123
+z.git.pull._pr() {
+  z.git.branch.current._get
   local current_branch=$REPLY
 
   z.str.match.rest "$current_branch" "pr/"
@@ -73,9 +73,9 @@ z.git.pull.pr() {
 # return: null
 #
 # example:
-#   z.git.pull.current #=> pull latest changes for current branch
-z.git.pull.current() {
-  z.git.branch.current.get
+#   z.git.pull._current #=> pull latest changes for current branch
+z.git.pull._current() {
+  z.git.branch.current._get
   local current_branch=$REPLY
 
   z.io "Pulling latest changes for current branch $current_branch"

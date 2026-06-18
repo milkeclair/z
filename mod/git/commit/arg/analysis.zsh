@@ -6,10 +6,10 @@
 # return: null
 #
 # example:
-#   z.git.commit.arg.extract.opts -m "commit message" --amend
+#   z.git.commit._arg.extract.opts -m "commit message" --amend
 #   #=> (tag "feat" message "commit message" ticket "TICKET-123" opts_count 2 opts_1 "-m" opts_2 "--amend")
 #   local -A results=(${(@)REPLY})
-z.git.commit.arg.extract() {
+z.git.commit._arg.extract() {
   local tag=$1
   local message=$2
   local ticket=""

@@ -1,6 +1,6 @@
 source ${z_main}
 
-z.t.describe "z.git.commit.help.committer"; {
+z.t.describe "z.git.commit.help._committer"; {
   z.t.context "呼び出した場合"; {
     z.t.it "コミッターの名前とメールアドレスを表示する"; {
       z.t.mock name="git" behavior='
@@ -14,7 +14,7 @@ z.t.describe "z.git.commit.help.committer"; {
         fi
       '
 
-      local result=$(z.git.commit.help.committer)
+      local result=$(z.git.commit.help._committer)
 
       z.t.expect "$result" $'\n--- committer ---\nname: milkeclair\nemail: milkeclair@example.com'
     }

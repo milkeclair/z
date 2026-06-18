@@ -5,11 +5,11 @@
 # return: null
 #
 # example:
-#   z.git.stats.author exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
+#   z.git.stats._author exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
 z.git.stats() {
   z.io.line
   z.io "--- author stats ---"
-  z.git.stats.show "$@"
+  z.git.stats._show "$@"
 }
 
 # show commit stats for each author
@@ -21,13 +21,13 @@ z.git.stats() {
 # return: null
 #
 # example:
-#   z.git.stats.show exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
-z.git.stats.show() {
-  z.git.stats.exclude.exts $@ && local exclude_exts=($REPLY)
-  z.git.stats.exclude.dirs $@ && local exclude_dirs=($REPLY)
+#   z.git.stats._show exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
+z.git.stats._show() {
+  z.git.stats._exclude.exts $@ && local exclude_exts=($REPLY)
+  z.git.stats._exclude.dirs $@ && local exclude_dirs=($REPLY)
 
-  z.git.stats.exclude exclude_exts="${exclude_exts[*]}" exclude_dirs="${exclude_dirs[*]}"
-  z.git.stats.author exclude_exts="${exclude_exts[*]}" exclude_dirs="${exclude_dirs[*]}"
+  z.git.stats._exclude exclude_exts="${exclude_exts[*]}" exclude_dirs="${exclude_dirs[*]}"
+  z.git.stats._author exclude_exts="${exclude_exts[*]}" exclude_dirs="${exclude_dirs[*]}"
 }
 
 # display which file extensions and directories are excluded from commit stats analysis
@@ -38,8 +38,8 @@ z.git.stats.show() {
 # return: null
 #
 # example:
-#   z.git.stats.exclude exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
-z.git.stats.exclude() {
+#   z.git.stats._exclude exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
+z.git.stats._exclude() {
   z.arg.named exclude_exts $@ && local exclude_exts=($REPLY)
   z.arg.named exclude_dirs $@ && local exclude_dirs=($REPLY)
 
@@ -55,12 +55,12 @@ z.git.stats.exclude() {
 # return: null
 #
 # example:
-#   z.git.stats.author exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
-z.git.stats.author() {
+#   z.git.stats._author exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
+z.git.stats._author() {
   z.arg.named exclude_exts $@ && local exclude_exts=$REPLY
   z.arg.named exclude_dirs $@ && local exclude_dirs=$REPLY
 
-  z.git.stats.author.header
-  z.git.stats.author.body exclude_exts="$exclude_exts" exclude_dirs="$exclude_dirs"
-  z.git.stats.author.footer
+  z.git.stats._author.header
+  z.git.stats._author.body exclude_exts="$exclude_exts" exclude_dirs="$exclude_dirs"
+  z.git.stats._author.footer
 }

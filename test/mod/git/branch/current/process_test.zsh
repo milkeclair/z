@@ -1,6 +1,6 @@
 source ${z_main}
 
-z.t.describe "z.git.branch.current.get"; {
+z.t.describe "z.git.branch.current._get"; {
   z.t.context "現在のブランチが存在する場合"; {
     z.t.it "ブランチ名を返す"; {
       z.t.mock name="git" behavior='
@@ -14,7 +14,7 @@ z.t.describe "z.git.branch.current.get"; {
         fi
       '
 
-      z.git.branch.current.get
+      z.git.branch.current._get
 
       z.t.expect.reply "main"
     }
@@ -31,7 +31,7 @@ z.t.describe "z.git.branch.current.get"; {
         fi
       '
 
-      z.git.branch.current.get
+      z.git.branch.current._get
 
       z.t.expect.reply.is.null
     }

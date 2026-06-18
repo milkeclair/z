@@ -26,7 +26,7 @@ z.t.describe "z.git.merge"; {
     z.t.it "エラーを返す"; {
       z.t.mock name="z.io.line"
       z.t.mock name="z.io.error"
-      z.t.mock name="z.git.status.is.dirty" behavior="return 0"
+      z.t.mock name="z.git.status._is.dirty" behavior="return 0"
 
       z.git.merge main
 
@@ -36,7 +36,7 @@ z.t.describe "z.git.merge"; {
     z.t.it "エラーメッセージを表示する"; {
       z.t.mock name="z.io.line"
       z.t.mock name="z.io.error"
-      z.t.mock name="z.git.status.is.dirty" behavior="return 0"
+      z.t.mock name="z.git.status._is.dirty" behavior="return 0"
 
       z.git.merge main
 
@@ -56,7 +56,7 @@ z.t.describe "z.git.merge"; {
     }
 
     z.t.it "git mergeコマンドを呼び出す"; {
-      z.t.mock name="z.git.status.is.dirty" behavior="return 1"
+      z.t.mock name="z.git.status._is.dirty" behavior="return 1"
       z.t.mock name="z.git.fetch"
       z.t.mock name="git" behavior='
         if z.str.start_with "$*" "merge main"; then

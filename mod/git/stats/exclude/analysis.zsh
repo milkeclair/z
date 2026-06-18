@@ -6,8 +6,8 @@
 # return: null
 #
 # example:
-#   z.git.stats.exclude.exts exclude_exts=("md" "txt") #=> ("md" "txt")
-z.git.stats.exclude.exts() {
+#   z.git.stats._exclude.exts exclude_exts=("md" "txt") #=> ("md" "txt")
+z.git.stats._exclude.exts() {
   z.arg.named exclude_exts $@ && local exts=($REPLY)
   if z.is.null $REPLY; then
     exts=(
@@ -27,8 +27,8 @@ z.git.stats.exclude.exts() {
 # return: null
 #
 # example:
-#   z.git.stats.exclude.dirs exclude_dirs=("docs" "tests") #=> ("docs" "tests")
-z.git.stats.exclude.dirs() {
+#   z.git.stats._exclude.dirs exclude_dirs=("docs" "tests") #=> ("docs" "tests")
+z.git.stats._exclude.dirs() {
   z.arg.named exclude_dirs $@ && local dirs=($REPLY)
   if z.is.null $REPLY; then
     dirs=(

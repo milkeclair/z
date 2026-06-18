@@ -1,6 +1,6 @@
 source ${z_main}
 
-z.t.describe "z.git.stats.commit.count"; {
+z.t.describe "z.git.stats._commit.count"; {
   z.t.context "authorを渡した場合"; {
     z.t.it "そのauthorのコミット数を返す"; {
       local expected=42
@@ -16,7 +16,7 @@ z.t.describe "z.git.stats.commit.count"; {
         fi
       '
 
-      z.git.stats.commit.count milkeclair
+      z.git.stats._commit.count milkeclair
 
       z.t.expect.reply $expected
       unset expected
@@ -36,7 +36,7 @@ z.t.describe "z.git.stats.commit.count"; {
         fi
       '
 
-      z.git.stats.commit.count unknown
+      z.git.stats._commit.count unknown
 
       z.t.expect.reply $expected
       unset expected
@@ -57,7 +57,7 @@ z.t.describe "z.git.stats.commit.count"; {
         fi
       '
 
-      z.git.stats.commit.count "John Doe"
+      z.git.stats._commit.count "John Doe"
 
       z.t.expect.reply $expected
       unset expected

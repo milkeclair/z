@@ -7,7 +7,7 @@
 #   z.git.commit.help
 #   #=> name: milkeclair
 #   #   email: milkeclair@example.com
-z.git.commit.help.committer() {
+z.git.commit.help._committer() {
   z.io.line
   z.io "--- committer ---"
   z.io "name: $(git config --local user.name)"
