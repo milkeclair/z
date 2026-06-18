@@ -157,6 +157,35 @@ z.t.describe "z.wtproxy.start._serve"; {
     }
   }
 
+
+  z.t.context "listenerのselectに失敗した場合"; {
+    z.t.it "falseを返してcleanupする"; {
+      local base_dir=/tmp/z_t/wtproxy_serve_select_failure
+      local cleanup_calls=$base_dir/cleanup_calls
+      local -A config=(
+        state_dir $base_dir/state
+        pid_file $base_dir/wtproxy.pid
+      )
+      z.dir.make path=$base_dir
+      z.file.write path=$cleanup_calls content=""
+      disable zmodload 2>/dev/null
+      disable zselect 2>/dev/null
+      disable ztcp 2>/dev/null
+      z.t.mock name="zmodload" behavior="return 0"
+      z.t.mock name="ztcp" behavior="REPLY=11"
+      z.t.mock name="zselect" behavior="return 1"
+      z.t.mock name="z.wtproxy._config" behavior="z.return.hash config"
+      z.t.mock name="z.wtproxy._port.keys.from_config" behavior="z.return worktree_port_1"
+      z.t.mock name="z.wtproxy._port.proxy" behavior="z.return 3000"
+      z.t.mock name="z.wtproxy.start._serve.cleanup" behavior="print -r -- \"\$*\" >> /tmp/z_t/wtproxy_serve_select_failure/cleanup_calls"
+
+      (z.wtproxy.start._serve)
+
+      z.t.expect.status.is.false skip_unmock=true
+      z.file.read path=$cleanup_calls
+      z.t.expect.reply "11"
+    }
+  }
   z.t.context "listenerがreadyになった場合"; {
     z.t.it "対応するworktree port keyでacceptを呼び出してcleanupする"; {
       local base_dir=/tmp/z_t/wtproxy_serve_accept

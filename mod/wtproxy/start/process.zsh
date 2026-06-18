@@ -62,7 +62,7 @@ z.wtproxy.start._serve() {
 
   while true; do
     local -A ready=()
-    zselect -A ready $listener_fds || continue
+    zselect -A ready $listener_fds || return 1
 
     for listener_fd in ${(k)ready}; do
       z.wtproxy.start._serve.accept "$listener_fd" "$listener_keys[$listener_fd]"
