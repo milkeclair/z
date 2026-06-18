@@ -52,6 +52,19 @@ z.t.describe "z.wtproxy._config.value"; {
       z.t.expect.reply /tmp/sample.state
     }
   }
+
+  z.t.context "実際のconfigを使う場合"; {
+    z.t.it "pid file pathを返す"; {
+      local XDG_STATE_HOME=/tmp/z_t/state_home
+      z.t.mock name="z.wtproxy._config.file.default_project" behavior="z.return sample"
+      z.t.mock name="z.wtproxy._config.file.values" behavior="local -A config=(); z.return.hash config"
+      z.t.mock name="z.wtproxy._config.port.env.values" behavior="local -A config=(proxy_port_3 5173); z.return.hash config"
+
+      z.wtproxy._config.value pid_file
+
+      z.t.expect.reply /tmp/z_t/state_home/wtproxy/sample.pid
+    }
+  }
 }
 
 z.t.describe "z.wtproxy._config.values"; {
