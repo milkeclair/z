@@ -12,11 +12,11 @@ z.wtproxy._port.is.free() {
   zmodload zsh/net/tcp
   # 一時的にリッスンして確認する
   # 確認が取れたらcloseして準備
-  ztcp -l "$port" >/dev/null 2>&1
+  z.io.null ztcp -l "$port"
   local exit_status=$?
   local fd=$REPLY
   if z.int.is.zero $exit_status; then
-    ztcp -c "$fd" >/dev/null 2>&1
+    z.io.null ztcp -c "$fd"
   fi
 
   return $exit_status

@@ -68,27 +68,29 @@ z.wtproxy._state.save() {
 
   z.dir.make path=$config[state_dir]
 
-  {
-    print -r -- "active ${(qqq)z_wtproxy_state_active_path}"
-    for worktree_path in $z_wtproxy_state_paths; do
-      local port_entries=()
-      z.wtproxy._port.keys
+  local state_lines=(
+    "active ${(qqq)z_wtproxy_state_active_path}"
+  )
+  for worktree_path in $z_wtproxy_state_paths; do
+    local port_entries=()
+    z.wtproxy._port.keys
 
-      for port_key in ${(@)REPLY}; do
-        z.wtproxy._state.port.get "$worktree_path" "$port_key"
-        local port=$REPLY
-        z.is.not.null "$port" && port_entries+=("$port_key=$port")
-      done
-
-      local entry_fields=(
-        entry
-        ${(qqq)worktree_path}
-        ${(qqq)z_wtproxy_state_branch[$worktree_path]}
-        ${(qqq)z_wtproxy_state_compose[$worktree_path]}
-      )
-      print -r -- ${entry_fields[@]} ${port_entries[@]}
+    for port_key in ${(@)REPLY}; do
+      z.wtproxy._state.port.get "$worktree_path" "$port_key"
+      local port=$REPLY
+      z.is.not.null "$port" && port_entries+=("$port_key=$port")
     done
-  } >! $config[state_file]
+
+    local entry_fields=(
+      entry
+      ${(qqq)worktree_path}
+      ${(qqq)z_wtproxy_state_branch[$worktree_path]}
+      ${(qqq)z_wtproxy_state_compose[$worktree_path]}
+    )
+    z.arr.join ${entry_fields[@]} ${port_entries[@]}
+    state_lines+=("$REPLY")
+  done
+  z.file.write path=$config[state_file] content="${(F)state_lines}"$'\n'
 
   z.perm path=$config[state_file] mode=600
 }

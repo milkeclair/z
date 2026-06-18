@@ -11,7 +11,8 @@ z.wtproxy._proxy.is.running() {
 
   z.file.not.exists $pid_file && return 1
 
-  local pid=$(<$pid_file)
+  z.file.read path=$pid_file
+  local pid=$REPLY
 
   z.wtproxy._proxy.is.pid "$pid"
 }
@@ -28,7 +29,7 @@ z.wtproxy._proxy.is.pid() {
   local pid=$1
 
   z.is.null "$pid" && return 1
-  kill -0 "$pid" >/dev/null 2>&1 || return 1
+  z.io.null kill -0 "$pid" || return 1
 
   local command_line
   command_line=$(ps -p "$pid" -o command= 2>/dev/null) || return 1

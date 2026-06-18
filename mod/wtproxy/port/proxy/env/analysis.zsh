@@ -26,7 +26,7 @@ z.wtproxy._port.proxy.env.key() {
 z.wtproxy._port.proxy.env.index() {
   local env_name=$1
 
-  if [[ $env_name == ${z_wtproxy_proxy_port_env_prefix}<-> ]]; then
+  if z.str.is.match "$env_name" "${z_wtproxy_proxy_port_env_prefix}<->"; then
     z.return ${env_name#$z_wtproxy_proxy_port_env_prefix}
     return
   fi

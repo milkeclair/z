@@ -15,7 +15,7 @@ z.wtproxy.start._serve.pipe.pair() {
   zmodload zsh/system
 
   # close left and right conns
-  trap "ztcp -c $left_fd >/dev/null 2>&1; ztcp -c $right_fd >/dev/null 2>&1; exit 0" INT TERM EXIT
+  trap "z.io.null ztcp -c $left_fd; z.io.null ztcp -c $right_fd; exit 0" INT TERM EXIT
 
   while true; do
     local -A ready=()

@@ -10,7 +10,8 @@ z.wtproxy._config.port.env.values() {
 
   local -A config=()
 
-  for env_name in ${(k)parameters}; do
+  z.hash.keys parameters
+  for env_name in ${(@)REPLY}; do
     z.wtproxy._config.file.key $env_name || continue
     local key=$REPLY
 

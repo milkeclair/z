@@ -13,5 +13,5 @@ z.wtproxy.start._serve.host.is.localhost() {
     z.is.eq $host $localhost_host && return 0
   done
 
-  [[ $host == 127.* ]]
+  z.str.start_with "$host" "127."
 }

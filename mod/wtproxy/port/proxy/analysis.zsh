@@ -23,7 +23,7 @@ z.wtproxy._port.proxy.key() {
 z.wtproxy._port.proxy.index() {
   local key=$1
 
-  if [[ $key == ${z_wtproxy_proxy_port_key_prefix}<-> ]]; then
+  if z.str.is.match "$key" "${z_wtproxy_proxy_port_key_prefix}<->"; then
     z.return ${key#$z_wtproxy_proxy_port_key_prefix}
     return
   fi

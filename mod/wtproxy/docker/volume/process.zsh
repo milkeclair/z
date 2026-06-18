@@ -10,7 +10,7 @@ z.wtproxy._docker.volume.remove() {
   local exit_status=0
 
   for volume_name in "$@"; do
-    docker volume rm "$volume_name" >/dev/null 2>&1 || exit_status=1
+    z.io.null docker volume rm "$volume_name" || exit_status=1
   done
 
   return $exit_status

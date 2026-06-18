@@ -56,17 +56,15 @@ z.wtproxy._config.values() {
   z.wtproxy._config.file.values
   local -A file_config=("${(@)REPLY}")
 
-  for key in ${(k)file_config}; do
-    config[$key]=$file_config[$key]
-  done
+  z.hash.merge base=config other=file_config
+  config=("${(@)REPLY}")
 
   # envがconfig fileより優先
   z.wtproxy._config.port.env.values
   local -A env_config=("${(@)REPLY}")
 
-  for key in ${(k)env_config}; do
-    config[$key]=$env_config[$key]
-  done
+  z.hash.merge base=config other=env_config
+  config=("${(@)REPLY}")
 
   z.return.hash config
 }

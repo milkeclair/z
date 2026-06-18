@@ -16,7 +16,7 @@ z.wtproxy.start._daemon() {
   # disownで切り離す
   Z_ROOT=$z_root command zsh -fc 'source "$Z_ROOT/main.zsh" && z.wtproxy.start._serve' </dev/null >>$config[log_file] 2>&1 &!
   local pid=$!
-  print -r -- $pid >! $config[pid_file]
+  z.file.write path=$config[pid_file] content=$pid
   sleep 0.3
 
   z.wtproxy._proxy.is.pid "$pid" && return 0
@@ -41,7 +41,7 @@ z.wtproxy.start._serve() {
   z.wtproxy._config || return 1
   local -A config=("${(@)REPLY}")
   z.dir.make path=$config[state_dir]
-  print -r -- $$ >! $config[pid_file]
+  z.file.write path=$config[pid_file] content=$$
 
   local -A listener_keys=()
   local listener_fds=()
@@ -50,7 +50,7 @@ z.wtproxy.start._serve() {
   for port_key in ${(@)REPLY}; do
     z.wtproxy._port.proxy $port_key || return 1
     local proxy_port=$REPLY
-    ztcp -l $proxy_port || return 1
+    z.io.null ztcp -l $proxy_port || return 1
     local listener_fd=$REPLY
     listener_keys[$listener_fd]=$port_key
     listener_fds+=($listener_fd)

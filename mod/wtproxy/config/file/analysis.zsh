@@ -48,12 +48,13 @@ z.wtproxy._config.file.line() {
     z.str.start_with "$line" "#" && return 1
   }
   if z.str.start_with "$line" "export "; then
-    line=${line#export }
+    z.str.match.rest "$line" "export "
+    line=$REPLY
     z.str.trim "$line"
     line=$REPLY
   fi
 
-  [[ $line == *=* ]] || return 1
+  z.str.includes "$line" "=" || return 1
 
   local env_name=${line%%=*}
   local value=${line#*=}
@@ -105,13 +106,16 @@ z.wtproxy._config.file.values() {
 # example:
 #  z.wtproxy._config.file.default_project
 z.wtproxy._config.file.default_project() {
-  z.git.wt.current.root >/dev/null 2>&1 || {
+  z.io.null z.git.wt.current.root || {
     z.return
     return 1
   }
   local root=$REPLY
-  local root_name=${root:t}
-  local parent_name=${root:h:t}
+  z.path.base "$root"
+  local root_name=$REPLY
+  z.path.dir "$root"
+  z.path.base "$REPLY"
+  local parent_name=$REPLY
   local project=$root_name
 
   if z.str.end_with "$parent_name" "_worktree"; then

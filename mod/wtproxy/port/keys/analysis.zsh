@@ -11,7 +11,8 @@ z.wtproxy._port.keys.from_config() {
   local -A seen=()
   local max_index=0
 
-  for config_key in ${(Pk)config_name}; do
+  z.hash.keys $config_name
+  for config_key in ${(@)REPLY}; do
     z.wtproxy._port.proxy.index $config_key || continue
     local port_index=$REPLY
 
@@ -20,9 +21,7 @@ z.wtproxy._port.keys.from_config() {
     z.is.null $REPLY && continue
 
     seen[$port_index]=true
-    if (( port_index > max_index )); then
-      max_index=$port_index
-    fi
+    z.int.is.gt $port_index $max_index && max_index=$port_index
   done
 
   local keys=()

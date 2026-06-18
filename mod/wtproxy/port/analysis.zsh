@@ -46,7 +46,8 @@ z.wtproxy._port.proxies() {
 z.wtproxy._port.used() {
   local ports=()
 
-  for state_key in ${(k)z_wtproxy_state_port}; do
+  z.hash.keys z_wtproxy_state_port
+  for state_key in ${(@)REPLY}; do
     z.is.not.null $z_wtproxy_state_port[$state_key] && ports+=($z_wtproxy_state_port[$state_key])
   done
 

@@ -10,7 +10,7 @@ z.wtproxy._docker.image.remove() {
   local exit_status=0
 
   for image_id in "$@"; do
-    docker image rm "$image_id" >/dev/null 2>&1 || exit_status=1
+    z.io.null docker image rm "$image_id" || exit_status=1
   done
 
   return $exit_status

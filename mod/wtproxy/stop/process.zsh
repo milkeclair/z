@@ -11,10 +11,11 @@ z.wtproxy.stop._daemon() {
 
   z.file.not.exists $pid_file && return 1
 
-  local pid=$(<$pid_file)
+  z.file.read path=$pid_file
+  local pid=$REPLY
   z.wtproxy._proxy.is.pid "$pid" || return 1
 
-  kill -TERM "$pid" >/dev/null 2>&1 || return 1
+  z.io.null kill -TERM "$pid" || return 1
   sleep 0.2
   return 0
 }

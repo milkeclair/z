@@ -89,12 +89,13 @@ z.wtproxy.env() {
     env_values+=("$z_wtproxy_worktree_port_env_prefix$port_index=$entry[$port_key]")
   done
 
-  if z.is.not.null "$@"; then
+  z.arr.count "$@"
+  if z.int.is.gt $REPLY 0; then
     env "${env_values[@]}" "$@"
     return $?
   fi
 
-  print -r -- "${(F)env_values}"
+  z.io.line ${env_values[@]}
 }
 
 # activate current worktree and print its proxy entry
@@ -132,9 +133,9 @@ z.wtproxy.start() {
 #  z.wtproxy.stop
 z.wtproxy.stop() {
   if z.wtproxy.stop._daemon; then
-    print -r -- "stopped"
+    z.io "stopped"
   else
-    print -r -- "not running"
+    z.io "not running"
   fi
 }
 
@@ -149,13 +150,13 @@ z.wtproxy.status() {
   if z.wtproxy._entry.active; then
     z.wtproxy._print.entry "${(@)REPLY}"
   else
-    print -r -- "active: none"
+    z.io "active: none"
   fi
 
   if z.wtproxy._proxy.is.running; then
-    print -r -- "proxy: running"
+    z.io "proxy: running"
   else
-    print -r -- "proxy: stopped"
+    z.io "proxy: stopped"
   fi
 }
 
@@ -178,10 +179,10 @@ z.wtproxy.rm() {
   z.wtproxy.rm._current expected_project="$project_name" || return 1
   local -A result=("${(@)REPLY}")
 
-  print -r -- "removed: $result[removed_path]"
-  print -r -- "entries: $result[entries_count]"
+  z.io "removed: $result[removed_path]"
+  z.io "entries: $result[entries_count]"
   if z.is.not.null "$result[removed_project]"; then
-    print -r -- "docker_resource_project: $result[removed_project]"
+    z.io "docker_resource_project: $result[removed_project]"
   fi
 }
 
@@ -197,12 +198,15 @@ z.wtproxy.prune() {
   local -A result=("${(@)REPLY}")
   local pruned_project_names=$result[pruned_projects]
 
-  for project_name in ${(z)pruned_project_names}; do
-    z.wtproxy._docker.prune "$project_name" || return 1
-  done
+  if z.is.not.null "$pruned_project_names"; then
+    z.str.split str="$pruned_project_names" delimiter=" "
+    for project_name in ${(@)REPLY}; do
+      z.wtproxy._docker.prune "$project_name" || return 1
+    done
+  fi
 
-  print -r -- "entries: $result[entries_count]"
+  z.io "entries: $result[entries_count]"
   if z.is.not.null "$result[pruned_projects]"; then
-    print -r -- "docker_resource_projects: $result[pruned_projects]"
+    z.io "docker_resource_projects: $result[pruned_projects]"
   fi
 }

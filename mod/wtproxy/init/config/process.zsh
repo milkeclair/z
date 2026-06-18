@@ -57,5 +57,5 @@ z.wtproxy.init._config.file() {
   z.file.make path=$file with_dir=true
   z.file.write path=$file content="$content"
 
-  print -r -- "created: $file"
+  z.io "created: $file"
 }

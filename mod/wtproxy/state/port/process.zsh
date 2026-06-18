@@ -31,7 +31,8 @@ z.wtproxy._state.port.unset_path() {
   local worktree_path=$1
   local state_key
 
-  for state_key in ${(k)z_wtproxy_state_port}; do
+  z.hash.keys z_wtproxy_state_port
+  for state_key in ${(@)REPLY}; do
     z.str.start_with "$state_key" "$worktree_path|" && unset "z_wtproxy_state_port[$state_key]"
   done
 }

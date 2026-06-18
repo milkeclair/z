@@ -34,12 +34,14 @@ z.wtproxy.init._config.port.value() {
 #  z.wtproxy.init._config.port.keys proxy_port_4=8080
 z.wtproxy.init._config.port.keys() {
   z.group "default values"; {
-    local -a keys=(${(k)z_wtproxy_default_config_values})
+    z.hash.keys z_wtproxy_default_config_values
+    local -a keys=("${(@)REPLY}")
   }
 
   z.group "from provided keys"; {
     for arg in "$@"; do
-      local key=${arg%%=*}
+      z.str.split str="$arg" delimiter="="
+      local key=$REPLY[1]
       z.wtproxy._port.proxy.index $key || continue
       keys+=($key)
     done
@@ -48,7 +50,8 @@ z.wtproxy.init._config.port.keys() {
   z.group "environment proxy config"; {
     z.wtproxy._config.port.env.values
     local -A env_config=("${(@)REPLY}")
-    keys+=(${(k)env_config})
+    z.hash.keys env_config
+    keys+=("${(@)REPLY}")
   }
 
   z.arr.unique ${keys[@]}

@@ -11,31 +11,31 @@ z.wtproxy.start._serve.accept() {
   local listener_fd=$1
   local target_key=$2
 
-  ztcp -a -t $listener_fd >/dev/null 2>&1 || return
+  z.io.null ztcp -a -t $listener_fd || return
   local client_fd=$REPLY
 
   z.wtproxy.start._serve.remote.host $client_fd
   local remote_host=$REPLY
   # 0.0.0.0は閉じる(怖いので)
   if ! z.wtproxy.start._serve.host.is.localhost $remote_host; then
-    ztcp -c $client_fd >/dev/null 2>&1
+    z.io.null ztcp -c $client_fd
     return
   fi
 
-  z.wtproxy._entry.active || { ztcp -c $client_fd >/dev/null 2>&1; return; }
+  z.wtproxy._entry.active || { z.io.null ztcp -c $client_fd; return; }
   local -A entry=("${(@)REPLY}")
 
-  ztcp $z_wtproxy_host $entry[$target_key] >/dev/null 2>&1
+  z.io.null ztcp $z_wtproxy_host $entry[$target_key]
   local exit_status=$?
   local upstream_fd=$REPLY
   if z.int.is.not.zero $exit_status; then
-    ztcp -c $client_fd >/dev/null 2>&1
+    z.io.null ztcp -c $client_fd
     return
   fi
 
   z.wtproxy.start._serve.pipe.pair $client_fd $upstream_fd &
-  ztcp -c $client_fd >/dev/null 2>&1
-  ztcp -c $upstream_fd >/dev/null 2>&1
+  z.io.null ztcp -c $client_fd
+  z.io.null ztcp -c $upstream_fd
 }
 
 # clean up proxy listener file descriptors and pid file
@@ -48,12 +48,13 @@ z.wtproxy.start._serve.accept() {
 #  z.wtproxy.start._serve.cleanup 11 12 13
 z.wtproxy.start._serve.cleanup() {
   for fd in "$@"; do
-    ztcp -c $fd >/dev/null 2>&1
+    z.io.null ztcp -c $fd
   done
 
-  z.wtproxy._config.value pid_file >/dev/null 2>&1 || return
+  z.io.null z.wtproxy._config.value pid_file || return
   local pid_file=$REPLY
-  if z.file.exists $pid_file && z.is.eq "$(<$pid_file)" "$$"; then
+  z.file.read path=$pid_file
+  if z.file.exists $pid_file && z.is.eq "$REPLY" "$$"; then
     rm -f $pid_file
   fi
 }
