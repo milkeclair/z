@@ -16,6 +16,15 @@ z.wtproxy.prune._stale.locked() {
       remaining+=($worktree_path)
     else
       z.is.not.null $z_wtproxy_state_compose[$worktree_path] && pruned_projects+=($z_wtproxy_state_compose[$worktree_path])
+    fi
+  done
+
+  for project_name in $pruned_projects; do
+    z.wtproxy._docker.prune "$project_name" || return 1
+  done
+
+  for worktree_path in $z_wtproxy_state_paths; do
+    if z.dir.not.exists "$worktree_path"; then
       unset "z_wtproxy_state_branch[$worktree_path]"
       unset "z_wtproxy_state_compose[$worktree_path]"
       z.wtproxy._state.port.unset_path "$worktree_path"
