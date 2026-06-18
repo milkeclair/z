@@ -309,20 +309,6 @@ z.t.describe "z.wtproxy.prune"; {
       z.t.expect.status.is.false
     }
   }
-
-  z.t.context "Docker resource削除に失敗した場合"; {
-    z.t.it "falseを返す"; {
-      z.t.mock name="z.wtproxy.prune._stale" behavior='
-        local -A result=(entries_count 1 pruned_projects project_a)
-        z.return.hash result
-      '
-      z.t.mock name="z.wtproxy._docker.prune" behavior="return 1"
-
-      z.wtproxy.prune
-
-      z.t.expect.status.is.false
-    }
-  }
 }
 
 z.t.describe "z.wtproxy.status"; {

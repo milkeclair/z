@@ -196,14 +196,6 @@ z.wtproxy.rm() {
 z.wtproxy.prune() {
   z.wtproxy.prune._stale || return 1
   local -A result=("${(@)REPLY}")
-  local pruned_project_names=$result[pruned_projects]
-
-  if z.is.not.null "$pruned_project_names"; then
-    z.str.split str="$pruned_project_names" delimiter=" "
-    for project_name in ${(@)REPLY}; do
-      z.wtproxy._docker.prune "$project_name" || return 1
-    done
-  fi
 
   z.io "entries: $result[entries_count]"
   if z.is.not.null "$result[pruned_projects]"; then
