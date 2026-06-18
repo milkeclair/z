@@ -7,13 +7,9 @@ z.t.describe "z.wtproxy._entry.compose.name"; {
         local -A config=(project sample)
         z.return.hash config
       '
-      local branch=feat/example
-      local branch_hash=$(print -rn -- "$branch" | sha1sum)
-      branch_hash=${branch_hash%% *}
+      z.wtproxy._entry.compose.name feat/example
 
-      z.wtproxy._entry.compose.name "$branch"
-
-      z.t.expect.reply "sample_feat_example_${branch_hash[1,8]}"
+      z.t.expect.reply "sample_feat_example_b671591e"
     }
   }
 
