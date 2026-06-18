@@ -91,7 +91,10 @@ z.wtproxy.env() {
 
   z.arr.count "$@"
   if z.int.is.gt $REPLY 0; then
-    env "${env_values[@]}" "$@"
+    (
+      export "${env_values[@]}"
+      "$@"
+    )
     return $?
   fi
 

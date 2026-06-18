@@ -66,6 +66,24 @@ z.t.describe "z.wtproxy.env"; {
     }
   }
 
+  z.t.context "commandがshell functionの場合"; {
+    z.t.it "worktree用のenvを付けてfunctionを実行する"; {
+      z.t.mock name="z.wtproxy._entry.current" behavior="
+        local -A entry=(compose_project_name project_feat worktree_port_1 3001)
+        z.return.hash entry
+      "
+      z.t.mock name="z.wtproxy._port.keys" behavior="z.return worktree_port_1"
+      wtproxy_test_dev() {
+        print -r -- "$COMPOSE_PROJECT_NAME:$Z_WTPROXY_WORKTREE_PORT_1:$*"
+      }
+
+      local result=$(z.wtproxy.env wtproxy_test_dev back)
+
+      z.t.expect "$result" "project_feat:3001:back"
+      unfunction wtproxy_test_dev
+    }
+  }
+
   z.t.context "current entryが取得できない場合"; {
     z.t.it "falseを返す"; {
       z.t.mock name="z.wtproxy._entry.current" behavior="return 1"
