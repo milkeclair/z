@@ -310,8 +310,7 @@ z.install.mod._install_names() {
     fi
 
     if [[ -d $mod_target_dir && $current_mod_name != $mod_name ]]; then
-      echo "✅ dependency already installed: $current_mod_name"
-      continue
+      echo "🔄 upgrading dependency: $current_mod_name"
     fi
 
     z.install.mod._remove_existing_mod_dir || return 1
