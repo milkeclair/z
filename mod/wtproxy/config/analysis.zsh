@@ -36,11 +36,11 @@ z.wtproxy._config() {
 # example:
 #  z.wtproxy._config.value state_file
 z.wtproxy._config.value() {
-  local key=$1
+  local config_key=$1
 
   z.wtproxy._config || return 1
   local -A config=("${(@)REPLY}")
-  z.return "$config[$key]"
+  z.return "${config[$config_key]}"
 }
 
 # get wtproxy configuration values from defaults, file settings, and environment
