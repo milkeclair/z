@@ -8,13 +8,13 @@ z.t.describe "z.mod.dependencies.resolve"; {
       z.mod docker; {
         z.mod.depends git
       }
-      z.mod wt_proxy; {
+      z.mod wtproxy; {
         z.mod.depends docker
       }
 
-      z.mod.dependencies.resolve wt_proxy
+      z.mod.dependencies.resolve wtproxy
 
-      z.t.expect.reply.is.arr git docker wt_proxy
+      z.t.expect.reply.is.arr git docker wtproxy
     }
   }
 
@@ -25,13 +25,13 @@ z.t.describe "z.mod.dependencies.resolve"; {
       z.mod docker; {
         z.mod.depends git
       }
-      z.mod wt_proxy; {
+      z.mod wtproxy; {
         z.mod.depends git docker
       }
 
-      z.mod.dependencies.resolve wt_proxy
+      z.mod.dependencies.resolve wtproxy
 
-      z.t.expect.reply.is.arr git docker wt_proxy
+      z.t.expect.reply.is.arr git docker wtproxy
     }
   }
 }
@@ -41,20 +41,20 @@ z.t.describe "z.mod.dependencies._resolve"; {
     z.t.it "dependencyを先にresolved namesへ追加する"; {
       z.mod.reset
       z.mod git
-      z.mod wt_proxy; {
+      z.mod wtproxy; {
         z.mod.depends git
       }
       local -a resolved_mod_names=()
       local -A resolving_mod_name_map=()
       local -A resolved_mod_name_map=()
 
-      z.mod.dependencies._resolve wt_proxy
+      z.mod.dependencies._resolve wtproxy
 
       z.t.expect.status.is.true skip_unmock=true
       z.return ${resolved_mod_names[@]}
-      z.t.expect.reply.is.arr git wt_proxy skip_unmock=true
+      z.t.expect.reply.is.arr git wtproxy skip_unmock=true
       z.t.expect "$resolved_mod_name_map[git]" true skip_unmock=true
-      z.t.expect "$resolved_mod_name_map[wt_proxy]" true
+      z.t.expect "$resolved_mod_name_map[wtproxy]" true
       z.mod.reset
       unset resolved_mod_names resolving_mod_name_map resolved_mod_name_map
     }
@@ -83,20 +83,20 @@ z.t.describe "z.mod.dependencies._resolve"; {
       z.mod.reset
       z.t.mock name="z.io.error"
       z.mod git; {
-        z.mod.depends wt_proxy
+        z.mod.depends wtproxy
       }
-      z.mod wt_proxy; {
+      z.mod wtproxy; {
         z.mod.depends git
       }
       local -a resolved_mod_names=()
       local -A resolving_mod_name_map=()
       local -A resolved_mod_name_map=()
 
-      z.mod.dependencies._resolve wt_proxy
+      z.mod.dependencies._resolve wtproxy
 
       z.t.expect.status.is.false skip_unmock=true
       z.t.mock.result name="z.io.error"
-      z.t.expect.reply "cyclic mod dependency: wt_proxy"
+      z.t.expect.reply "cyclic mod dependency: wtproxy"
     }
   }
 

@@ -5,7 +5,7 @@
 # return: null
 #
 # example:
-#  z.mod.dependencies wt_proxy
+#  z.mod.dependencies wtproxy
 z.mod.dependencies() {
   z.mod._store.ensure
   z.arg.first "$@"

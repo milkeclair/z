@@ -28,22 +28,22 @@ z.t.describe "z.mod.depends"; {
     z.t.it "current modのdependencyとして保存する"; {
       z.mod.reset
 
-      z.mod wt_proxy; {
+      z.mod wtproxy; {
         z.mod.depends git
       }
 
-      z.mod.dependencies wt_proxy
+      z.mod.dependencies wtproxy
       z.t.expect.reply.is.arr git
     }
 
     z.t.it "重複したdependencyを一度だけ保存する"; {
       z.mod.reset
 
-      z.mod wt_proxy; {
+      z.mod wtproxy; {
         z.mod.depends git git
       }
 
-      z.mod.dependencies wt_proxy
+      z.mod.dependencies wtproxy
       z.t.expect.reply.is.arr git
     }
   }

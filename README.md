@@ -270,8 +270,8 @@ Mod dependencies are resolved and installed first.
 
 - `z.git`
   - Git command modifier. [README](mod/git/README.md)
-- `z.wt_proxy`
-  - Docker Compose worktree proxy modifier. [README](mod/wt_proxy/README.md)
+- `z.wtproxy`
+  - Docker Compose worktree proxy modifier. [README](mod/wtproxy/README.md)
 
 ## Language Server
 

@@ -5,7 +5,7 @@
 # return: 0 if dependencies can be resolved, otherwise 1
 #
 # example:
-#  z.mod.dependencies.resolve wt_proxy
+#  z.mod.dependencies.resolve wtproxy
 z.mod.dependencies.resolve() {
   z.mod._store.ensure
   z.arg.first "$@"
@@ -25,7 +25,7 @@ z.mod.dependencies.resolve() {
 # return: 0 if dependencies can be resolved, otherwise 1
 #
 # example:
-#  z.mod.dependencies._resolve wt_proxy
+#  z.mod.dependencies._resolve wtproxy
 z.mod.dependencies._resolve() {
   z.arg.first "$@"
   local mod_name=$REPLY

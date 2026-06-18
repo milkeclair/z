@@ -23,7 +23,7 @@ z.mod() {
 # return: 0 if current mod exists, otherwise 1
 #
 # example:
-#  z.mod wt_proxy; {
+#  z.mod wtproxy; {
 #    z.mod.depends git
 #  }
 z.mod.depends() {
