@@ -28,14 +28,15 @@ z.wtproxy.start._serve.pipe.pair() {
       local out_fd=$right_fd
       z.is.eq $fd $right_fd && out_fd=$left_fd
 
+      local should_check_active=$active_check_started
       if z.is.eq $fd $left_fd && z.is.not.null "$active_path"; then
-        if z.is.false "$active_check_started"; then
-          active_check_started=true
-        else
-          z.wtproxy._entry.active || return
-          local -A active_entry=("${(@)REPLY}")
-          z.is.eq "$active_entry[path]" "$active_path" || return
-        fi
+        active_check_started=true
+      else
+        should_check_active=false
+      fi
+
+      if z.is.true "$should_check_active"; then
+        z.wtproxy.start._serve.pipe.active.is.current "$active_path" || return
       fi
 
       # サイズは8kbだが、適当なので変えてもいい
