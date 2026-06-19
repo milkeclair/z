@@ -85,7 +85,7 @@ conn.onCompletion((params) => {
 });
 
 conn.onCompletionResolve((result) => {
-  return zCompletionResolve(result);
+  return zCompletionResolve(result, projectRoot);
 });
 
 conn.onHover((params) => {

@@ -44,6 +44,7 @@ export function zCompletion({
       data: {
         file: f.file,
         line: f.line,
+        args: f.args,
       },
       textEdit: {
         range: {
