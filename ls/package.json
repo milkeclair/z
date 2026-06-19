@@ -56,7 +56,7 @@
     "b": "tsc -b",
     "clean": "rm -rf client/dist server/dist client/tsconfig.tsbuildinfo server/tsconfig.tsbuildinfo",
     "vscode:prepublish": "tsc -b",
-    "package": "npm install --package-lock=false && npm run clean && npm run vscode:prepublish && vsce package"
+    "package": "npm install --package-lock=false && rm -rf client/dist server/dist client/tsconfig.tsbuildinfo server/tsconfig.tsbuildinfo && vsce package"
   },
   "dependencies": {
     "glob": "^13.0.6",
