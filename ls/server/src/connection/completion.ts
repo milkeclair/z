@@ -8,14 +8,20 @@ import {
 import { Func } from '../getFunctions/type';
 import { zFunctionCallRegex } from './regex';
 
+function isPrivateFunction(func: Func): boolean {
+  return /(^|\.)_/.test(func.name);
+}
+
 export function zCompletion({
   params,
   documents,
   functions,
+  showPrivateFunctions,
 }: {
   params: CompletionParams;
   documents: TextDocuments<TextDocument>;
   functions: Func[];
+  showPrivateFunctions: boolean;
 }): CompletionItem[] | null {
   const document = documents.get(params.textDocument.uri);
   if (!document) return null;
@@ -30,6 +36,7 @@ export function zCompletion({
   const startCharacter = params.position.character - matchedText.length;
 
   const items: CompletionItem[] = functions
+    .filter((f) => showPrivateFunctions || !isPrivateFunction(f))
     .filter((f) => f.name.startsWith(matchedText))
     .map((f) => ({
       label: f.name,

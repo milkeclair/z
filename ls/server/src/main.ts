@@ -6,6 +6,7 @@ import { workspaceDiagnostics } from './diagnostics/workspace';
 import { serverCapability } from './serverCapability/main';
 import {
   zInitialize,
+  zSettingsFromConfigurationNotification,
   zCompletion,
   zCompletionResolve,
   zHover,
@@ -22,6 +23,7 @@ export {
   workspaceDiagnostics,
   serverCapability,
   zInitialize,
+  zSettingsFromConfigurationNotification,
   zCompletion,
   zCompletionResolve,
   zHover,

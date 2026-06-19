@@ -5,13 +5,13 @@
   "publisher": "milkeclair",
   "description": "Language Server for z",
   "license": "MIT",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/milkeclair/z"
   },
   "engines": {
-    "vscode": "^1.109.0"
+    "vscode": "^1.110.0"
   },
   "categories": [
     "Programming Languages"
@@ -42,6 +42,12 @@
           "type": "string",
           "default": "~/.z",
           "description": "Path to the z root directory. Defaults to ~/.z"
+        },
+        "z-ls.completion.showPrivateFunctions": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": false,
+          "description": "Show private z functions in completion results."
         }
       }
     }

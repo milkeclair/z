@@ -24,14 +24,21 @@ export function activate(context: ExtensionContext) {
     },
   };
 
-  const zPath = workspace.getConfiguration('z-ls').get('zPath');
+  const configuration = workspace.getConfiguration('z-ls');
+  const zPath = configuration.get<string>('zPath');
+  const showPrivateFunctions =
+    configuration.get<boolean>('completion.showPrivateFunctions') ?? false;
 
   const clientOptions: LanguageClientOptions = {
     documentSelector: [{ scheme: 'file', language: 'shellscript' }],
     synchronize: {
       fileEvents: workspace.createFileSystemWatcher('**/*.{zsh}'),
+      configurationSection: 'z-ls',
     },
-    initializationOptions: { zPath },
+    initializationOptions: {
+      zPath,
+      completion: { showPrivateFunctions },
+    },
   };
 
   client = new LanguageClient('z-ls', 'z-ls', serverOptions, clientOptions);

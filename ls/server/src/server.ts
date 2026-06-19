@@ -11,6 +11,7 @@ import {
   validateTextDocument,
   workspaceDiagnostics,
   zInitialize,
+  zSettingsFromConfigurationNotification,
   zCompletion,
   zCompletionResolve,
   zHover,
@@ -24,11 +25,13 @@ const documents = new TextDocuments(TextDocument);
 
 let functions: Func[] = [];
 let projectRoot = '';
+let showPrivateFunctions = false;
 
 conn.onInitialize((params) => {
   const result = zInitialize(params);
   projectRoot = result.projectRoot;
   functions = result.functions;
+  showPrivateFunctions = result.settings.completion.showPrivateFunctions;
 
   return result.serverCapabilities;
 });
@@ -41,6 +44,11 @@ conn.onInitialized(() => {
       },
     ],
   });
+});
+
+conn.onDidChangeConfiguration((params) => {
+  const settings = zSettingsFromConfigurationNotification(params.settings);
+  showPrivateFunctions = settings.completion.showPrivateFunctions;
 });
 
 conn.onDidChangeWatchedFiles(() => {
@@ -73,7 +81,7 @@ documents.onDidClose(() => {
 });
 
 conn.onCompletion((params) => {
-  return zCompletion({ params, documents, functions });
+  return zCompletion({ params, documents, functions, showPrivateFunctions });
 });
 
 conn.onCompletionResolve((result) => {

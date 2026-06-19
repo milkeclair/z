@@ -1,7 +1,14 @@
-import { zInitialize } from './initialize';
+import { zInitialize, zSettingsFromConfigurationNotification } from './initialize';
 import { zCompletion } from './completion';
 import { zCompletionResolve } from './completionResolve';
 import { zHover } from './hover';
 import { zDefinition } from './definition';
 
-export { zInitialize, zCompletion, zCompletionResolve, zHover, zDefinition };
+export {
+  zInitialize,
+  zSettingsFromConfigurationNotification,
+  zCompletion,
+  zCompletionResolve,
+  zHover,
+  zDefinition,
+};
