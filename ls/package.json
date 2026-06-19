@@ -60,14 +60,14 @@
   },
   "dependencies": {
     "glob": "^13.0.6",
-    "vscode-languageclient": "^9.0.1",
-    "vscode-languageserver": "^9.0.1",
+    "vscode-languageclient": "^10.0.0",
+    "vscode-languageserver": "^10.0.0",
     "vscode-languageserver-textdocument": "^1.0.12"
   },
   "devDependencies": {
-    "@vscode/vsce": "^3.7.1",
-    "typescript": "^5.9.3",
-    "@types/node": "^25.3.1",
-    "@types/vscode": "^1.109.0"
+    "@vscode/vsce": "^3.9.2",
+    "typescript": "^6.0.3",
+    "@types/node": "^25.9.3",
+    "@types/vscode": "^1.125.0"
   }
 }
