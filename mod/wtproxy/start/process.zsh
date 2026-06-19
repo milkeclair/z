@@ -46,6 +46,9 @@ z.wtproxy.start._serve() {
 
   local -A listener_keys=()
   local listener_fds=()
+  typeset -g z_wtproxy_serve_state_file=$config[state_file]
+  typeset -g z_wtproxy_serve_active_line=""
+  typeset -ga z_wtproxy_serve_active_entry=()
   typeset -ga z_wtproxy_serve_pipe_pids=()
 
   z.wtproxy._port.keys.from_config config
@@ -66,7 +69,7 @@ z.wtproxy.start._serve() {
     zselect -A ready $listener_fds || return 1
 
     for listener_fd in ${(k)ready}; do
-      z.wtproxy.start._serve.accept "$listener_fd" "$listener_keys[$listener_fd]"
+      z.wtproxy.start._serve.accept "$listener_fd" "$listener_keys[$listener_fd]" "${(@)listener_fds}"
     done
   done
 }

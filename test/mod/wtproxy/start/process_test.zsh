@@ -262,7 +262,7 @@ z.t.describe "z.wtproxy.start._serve"; {
       z.t.expect "$zselect_content" "-A ready 11 12" skip_unmock=true
       z.file.exists $base_dir/wtproxy.pid
       z.t.expect.status.is.true skip_unmock=true
-      z.t.expect "$accept_content" "12 worktree_port_2" skip_unmock=true
+      z.t.expect "$accept_content" "12 worktree_port_2 11 12" skip_unmock=true
       z.t.expect "$cleanup_content" "11 12"
     }
   }

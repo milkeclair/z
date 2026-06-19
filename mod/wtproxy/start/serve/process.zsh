@@ -2,6 +2,7 @@
 #
 # $1: listener file descriptor
 # $2: target port key
+# $@?: listener file descriptors to close in the pipe child
 # REPLY: null
 # return: null
 #
@@ -10,6 +11,7 @@
 z.wtproxy.start._serve.accept() {
   local listener_fd=$1
   local target_key=$2
+  local listener_fds=("${(@)argv[3,-1]}")
 
   z.io.null ztcp -a -t $listener_fd || return
   local client_fd=$REPLY
@@ -22,8 +24,22 @@ z.wtproxy.start._serve.accept() {
     return
   fi
 
-  z.wtproxy._entry.active || { z.io.null ztcp -c $client_fd; return; }
-  local -A entry=("${(@)REPLY}")
+  local -A entry=()
+  if z.is.null "$z_wtproxy_serve_state_file"; then
+    z.wtproxy._entry.active || { z.io.null ztcp -c $client_fd; return; }
+    entry=("${(@)REPLY}")
+  else
+    local active_line=""
+    z.file.exists "$z_wtproxy_serve_state_file" && IFS= read -r active_line < $z_wtproxy_serve_state_file
+
+    # active lineが違う、またはキャッシュがなければキャッシュミスとする
+    if ! z.is.eq "$active_line" "$z_wtproxy_serve_active_line" || z.int.is.zero ${#z_wtproxy_serve_active_entry[@]}; then
+      z.wtproxy._entry.active || { z.io.null ztcp -c $client_fd; return; }
+      z_wtproxy_serve_active_line=$active_line
+      z_wtproxy_serve_active_entry=("${(@)REPLY}")
+    fi
+    entry=("${(@)z_wtproxy_serve_active_entry}")
+  fi
 
   z.io.null ztcp $z_wtproxy_host $entry[$target_key]
   local exit_status=$?
@@ -33,7 +49,13 @@ z.wtproxy.start._serve.accept() {
     return
   fi
 
-  z.wtproxy.start._serve.pipe.pair $client_fd $upstream_fd &
+  (
+    for fd in $listener_fds; do
+      z.io.null ztcp -c $fd
+    done
+
+    z.wtproxy.start._serve.pipe.pair $client_fd $upstream_fd "$entry[path]"
+  ) &
   z_wtproxy_serve_pipe_pids+=($!)
   z.io.null ztcp -c $client_fd
   z.io.null ztcp -c $upstream_fd

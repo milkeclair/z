@@ -110,12 +110,7 @@ z.wtproxy.env() {
 #  z.wtproxy.use
 z.wtproxy.use() {
   z.wtproxy._entry.current activate=true || return 1
-  local -A entry=("${(@)REPLY}")
-  if z.wtproxy._proxy.is.running; then
-    z.wtproxy.stop._daemon || return 1
-    z.wtproxy.start._daemon || return 1
-  fi
-  z.wtproxy._print.entry "${(@kv)entry}"
+  z.wtproxy._print.entry "${(@)REPLY}"
 }
 
 # activate current worktree and start proxy daemon
@@ -128,9 +123,6 @@ z.wtproxy.use() {
 z.wtproxy.start() {
   z.wtproxy._entry.current activate=true || return 1
   local -A entry=("${(@)REPLY}")
-  if z.wtproxy._proxy.is.running; then
-    z.wtproxy.stop._daemon || return 1
-  fi
   z.wtproxy.start._daemon || return 1
   z.wtproxy._print.entry "${(@kv)entry}"
 }
