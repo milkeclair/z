@@ -1,12 +1,8 @@
 import { isCommentLine } from '../comment';
 import { positionalArgRegex, variablePatternRegex, providePatternRegex } from './regex';
 
-function isAllArgsUsed(line: string, argName: string): boolean {
-  const isPositionalArgument = (name: string): boolean => {
-    return /^\d+$/.test(name);
-  };
-
-  return /\$@/.test(line) && isPositionalArgument(argName);
+function isAllArgsUsed(line: string): boolean {
+  return /\$@/.test(line);
 }
 
 function isPositionalArgUsed(line: string, argName: string): boolean {
@@ -38,7 +34,7 @@ export function isArgumentUsedInFunction(
 
     if (isCommentLine(line.trim())) continue;
 
-    if (isAllArgsUsed(line, argName)) return true;
+    if (isAllArgsUsed(line)) return true;
     if (isPositionalArgUsed(line, argName)) return true;
     if (isNamedArgUsed(line, argName)) return true;
   }
