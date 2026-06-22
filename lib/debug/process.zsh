@@ -60,10 +60,24 @@ z.debug() {
   print -- ""
 }
 
+# enable interactive debug prompts
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.debug.enable
 z.debug.enable() {
   Z_DEBUG=0
 }
 
+# disable interactive debug prompts
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.debug.disable
 z.debug.disable() {
   Z_DEBUG=1
 }
