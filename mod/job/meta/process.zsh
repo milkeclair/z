@@ -42,8 +42,7 @@ z.job.meta._write() {
 # example:
 #  z.job.meta._read dir=/tmp/z/job/123/jobs/id
 z.job.meta._read() {
-  z.arg.named dir "$@"
-  local dir=$REPLY
+  z.arg.named dir "$@" && local dir=$REPLY
   z.is.null "$dir" && return 1
 
   local meta_file="$dir/meta"
