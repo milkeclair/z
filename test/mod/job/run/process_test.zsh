@@ -1,5 +1,46 @@
 source ${z_main}
 
+z.t.describe "z.job.run._prepare"; {
+  z.t.context "nameとcommandがある場合"; {
+    z.t.it "job directoryと初期ファイルを作る"; {
+      z.job.file._root
+      local root=$REPLY
+      z.dir.remove path=$root
+
+      z.job.run._prepare name=example command=z.is.not.null on_success=z.is.not.null on_failure=z.is.null # zls: ignore
+      local prepare_status=$?
+      local -a prepared=("${REPLY[@]}")
+      local id=$prepared[1]
+      local dir=$prepared[2]
+
+      z.t.expect "$prepare_status" 0
+      z.is.not.null "$id"
+      z.t.expect.status.is.true
+      z.t.expect "$dir" "$root/jobs/$id"
+      z.dir.exists "$dir"
+      z.t.expect.status.is.true
+
+      z.job.meta._read dir="$dir"
+      z.t.expect.status.is.true
+      z.t.expect "$z_job_id" "$id"
+      z.t.expect "$z_job_name" example
+      z.t.expect "$z_job_command" z.is.not.null # zls: ignore
+      z.t.expect "$z_job_on_success" z.is.not.null # zls: ignore
+      z.t.expect "$z_job_on_failure" z.is.null # zls: ignore
+      z.file.read path="$dir/status"
+      z.t.expect.reply queued
+      z.file.read path="$dir/exit"
+      z.t.expect.reply ""
+      z.file.exists "$dir/result"
+      z.t.expect.status.is.true
+      z.file.exists "$dir/stdout"
+      z.t.expect.status.is.true
+      z.file.exists "$dir/stderr"
+      z.t.expect.status.is.true
+      z.dir.remove path=$root
+    }
+  }
+}
 
 z.t.describe "z.job.run._spawn"; {
   z.t.context "idとdirがある場合"; {
