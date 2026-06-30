@@ -272,6 +272,10 @@ Mod dependencies are resolved and installed first.
   - Git command modifier. [README](mod/git/README.md)
 - `z.wtproxy`
   - Docker Compose worktree proxy modifier. [README](mod/wtproxy/README.md)
+- `z.job`
+  - A very simple background job. [README](mod/job/README.md)
+- `z.completion`
+  - Completing document or function names in the shell. [README](mod/completion/README.md)
 
 ## Language Server
 
