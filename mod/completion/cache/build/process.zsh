@@ -14,6 +14,26 @@ z.completion.cache.build._names() {
   done
 }
 
+# build function docs cache
+#
+# REPLY: null
+# return: null
+#
+# example:
+#  z.completion.cache.build._docs
+z.completion.cache.build._docs() {
+  z_completion_docs=()
+
+  local files=(
+    "${z_root}"/*.zsh(N)
+    "${z_root}"/lib/**/*.zsh(N)
+    "${z_root}"/mod/**/*.zsh(N)
+  )
+  for file_path in $files; do
+    z.completion.cache.build.docs._from_file $file_path
+  done
+}
+
 # build completion cache and write it to a job result file
 #
 # $result: result file path
