@@ -15,6 +15,10 @@ import {
   MarkupKind,
   InitializeParams,
   InitializeResult,
+  SignatureHelp,
+  SignatureHelpParams,
+  SignatureInformation,
+  ParameterInformation,
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
@@ -35,5 +39,9 @@ export {
   MarkupKind,
   InitializeParams,
   InitializeResult,
+  SignatureHelp,
+  SignatureHelpParams,
+  SignatureInformation,
+  ParameterInformation,
   TextDocument,
 };

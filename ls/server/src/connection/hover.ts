@@ -5,6 +5,7 @@ import { Document } from '../document/main';
 import { Func } from '../getFunctions/type';
 import { extractLineContent, extractCommentText, commentToMarkDown } from './hook';
 import { HoverContent } from './type';
+import { zArgumentHover } from './argumentHover';
 
 export function zHover({
   params,
@@ -39,5 +40,5 @@ export function zHover({
     };
   }
 
-  return null;
+  return zArgumentHover({ params, documents, functions, projectRoot, word });
 }
