@@ -16,6 +16,7 @@ import {
   zCompletionResolve,
   zHover,
   zDefinition,
+  zSignatureHelp,
   Func,
 } from './main';
 import { debounce } from './util/debounce';
@@ -90,6 +91,10 @@ conn.onCompletionResolve((result) => {
 
 conn.onHover((params) => {
   return zHover({ params, documents, functions, projectRoot });
+});
+
+conn.onSignatureHelp((params) => {
+  return zSignatureHelp({ params, documents, functions, projectRoot });
 });
 
 conn.onDefinition((params) => {

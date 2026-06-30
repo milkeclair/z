@@ -11,6 +11,7 @@ import {
   zCompletionResolve,
   zHover,
   zDefinition,
+  zSignatureHelp,
 } from './connection/main';
 import { Func } from './getFunctions/type';
 
@@ -28,5 +29,6 @@ export {
   zCompletionResolve,
   zHover,
   zDefinition,
+  zSignatureHelp,
   Func,
 };

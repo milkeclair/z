@@ -289,6 +289,8 @@ Download: https://marketplace.visualstudio.com/items?itemName=milkeclair.z-ls
   - parameters
   - returns
   - example
+- Signature Help
+  - argument documentation
 - Go to definition
 - Diagnostics
   - Function not found with suggestion

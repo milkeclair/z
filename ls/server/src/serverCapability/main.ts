@@ -9,9 +9,13 @@ export function serverCapability(): InitializeResult {
       },
       completionProvider: {
         resolveProvider: true,
-        triggerCharacters: ['.', ' '],
+        triggerCharacters: ['.'],
       },
       hoverProvider: true,
+      signatureHelpProvider: {
+        triggerCharacters: [' '],
+        retriggerCharacters: [' '],
+      },
       definitionProvider: true,
       diagnosticProvider: {
         interFileDependencies: true,
