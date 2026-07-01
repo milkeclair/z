@@ -65,48 +65,70 @@ z.str.split() {
   REPLY=(${=str})
 }
 
-# match a string against a pattern
+# match a string against a regex
 #
 # $1: string
-# $2: pattern (glob pattern)
-# REPLY: matched substrings
+# $2: regex
+# REPLY: matched string
 # return: null
 #
 # example:
-#  z.str.match "helloWorld" "[a-z]*" #=> ("hello")
+#  z.str.match "helloWorld" "[a-z]+" #=> "hello"
 z.str.match() {
   local str=$1
-  local pattern=$2
+  local regex=$2
 
-  z.return ${(MS)str##${~pattern}}
+  [[ $str =~ $regex ]] && z.return "$MATCH" || z.return
 }
 
 # global substitute in a string
 #
 # $str: original string
-# $search: search string or pattern
+# $search: search regex or literal string
 # $replace: replace string
-# $pattern?: if set, treat search as a glob pattern (default: false)
+# $literal?: if true, treat search as a literal string (default: false)
 # REPLY: modified string
 # return: null
 #
 # example:
 #  z.str.gsub str="Hello World" search="World" replace="Zsh" #=> "Hello Zsh"
-#  z.str.gsub str="Hello123World" search="[0-9]" replace="-" pattern=true #=> "Hello---World"
-#  z.str.gsub str="helloWorld" search="[A-Z]" replace='_$MATCH' pattern=true #=> "hello_World"
+#  z.str.gsub str="Hello123World" search="[0-9]" replace="-" #=> "Hello---World"
+#  z.str.gsub str="a[0-9]b" search="[0-9]" replace="X" literal=true #=> "aXb"
 z.str.gsub() {
   z.arg.named str $@ && local str=$REPLY
   z.arg.named search $@ && local search=$REPLY
   z.arg.named replace $@ && local replace=$REPLY
-  z.arg.named pattern $@ default=false && local pattern=$REPLY
+  z.arg.named literal $@ default=false && local literal=$REPLY
 
   if z.is.null $str || z.is.null $search; then
     z.return $str
-  elif z.is.true $pattern; then
-    setopt local_options EXTENDED_GLOB
-    z.return ${str//(#m)${~search}/${(e)replace}}
-  else
+  elif z.is.true $literal; then
     z.return ${str//$search/$replace}
+  else
+    local result=""
+    local rest=$str
+
+    while [[ $rest =~ $search ]]; do
+      local match=$MATCH
+      local match_start=$MBEGIN
+      local match_end=$MEND
+
+      if z.str.is.empty "$match"; then
+        result+="${rest[1,match_start - 1]}"
+        MATCH=$match
+        result+="${(e)replace}"
+        result+="${rest[match_start,-1]}"
+        z.return "$result"
+        return
+      fi
+
+      result+="${rest[1,match_start - 1]}"
+      MATCH=$match
+      result+="${(e)replace}"
+      rest=${rest[match_end + 1,-1]}
+    done
+
+    z.return "${result}${rest}"
   fi
 }
 
@@ -152,7 +174,7 @@ z.str.camelize() {
   local capitalize_next=false
 
   z.group "downcase if delimiters exist"; {
-    if z.str.is.match "$str" "*[ _-]*"; then
+    if z.str.is.match "$str" "[ _-]"; then
       z.str.downcase "$str"
       str=$REPLY
     fi
@@ -188,7 +210,7 @@ z.str.pascalize() {
   local capitalize_next=true
 
   z.group "downcase if delimiters exist"; {
-    if z.str.is.match "$str" "*[ _-]*"; then
+    if z.str.is.match "$str" "[ _-]"; then
       z.str.downcase "$str"
       str=$REPLY
     fi
@@ -292,7 +314,7 @@ z.str.delimitize() {
   local result=""
 
   z.group "downcase if delimiters exist"; {
-    if z.str.is.match "$str" "*[ _-]*"; then
+    if z.str.is.match "$str" "[ _-]"; then
       z.str.downcase "$str"
       str=$REPLY
     fi
@@ -300,18 +322,18 @@ z.str.delimitize() {
 
   # insert delimiter before uppercase letters
   # e.g., "helloWorld" -> "hello_World" (if delimiter is "_")
-  z.str.gsub str="$str" search="[A-Z]" replace='${delimiter}${MATCH}' pattern=true
+  z.str.gsub str="$str" search="[A-Z]" replace='${delimiter}${MATCH}'
   result=${(L)REPLY}
 
   # replace specified characters with delimiter
   # e.g., "hello world-test" -> "hello_world_test" (if delimiter is "_", replace_chars is "[ -]")
-  z.str.gsub str="$result" search="$replace_chars" replace="${delimiter}" pattern=true
+  z.str.gsub str="$result" search="$replace_chars" replace="${delimiter}"
   result=$REPLY
 
   # remove consecutive delimiters
   # e.g., "hello__world" -> "hello_world" (if delimiter is "_")
-  while z.str.is.match "$result" "*${delimiter}${delimiter}*"; do
-    z.str.gsub str="$result" search="${delimiter}${delimiter}" replace="${delimiter}"
+  while z.str.includes "$result" "${delimiter}${delimiter}"; do
+    z.str.gsub str="$result" search="${delimiter}${delimiter}" replace="${delimiter}" literal=true
     result=$REPLY
   done
 

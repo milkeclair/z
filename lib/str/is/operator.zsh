@@ -13,21 +13,21 @@ z.str.is.empty() {
   [[ -z $value ]]
 }
 
-# check if string matches pattern
+# check if string matches regex
 #
 # $1: string
-# $2: pattern (glob pattern)
+# $2: regex
 # REPLY: null
 # return 0|1
 #
 # example:
-#  z.str.is.match "hello" "h*o"  #=> 0 (true)
-#  z.str.is.match "hello" "H*O"  #=> 1 (false, case-sensitive)
+#  z.str.is.match "hello" "^h.*o$"  #=> 0 (true)
+#  z.str.is.match "hello" "^H.*O$"  #=> 1 (false, case-sensitive)
 z.str.is.match() {
   local string=$1
-  local pattern=$2
+  local regex=$2
 
-  [[ $string == ${~pattern} ]]
+  [[ $string =~ $regex ]]
 }
 
 # check if string is path-like
@@ -47,10 +47,10 @@ z.str.is.match() {
 z.str.is.path_like() {
   local value=$1
 
-  z.str.is.match $value "/*" && return 0
-  z.str.is.match $value "~*" && return 0
-  z.str.is.match $value "./*" && return 0
-  z.str.is.match $value "../*" && return 0
+  z.str.is.match $value "^/" && return 0
+  z.str.is.match $value "^~" && return 0
+  z.str.is.match $value "^\./" && return 0
+  z.str.is.match $value "^\.\./" && return 0
   z.is.eq $value "." && return 0
   z.is.eq $value ".." && return 0
 
