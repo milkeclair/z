@@ -65,6 +65,64 @@ z.str.split() {
   REPLY=(${=str})
 }
 
+# split a string into two parts at the first delimiter match
+#
+# $1: original string
+# $2: delimiter regex or literal string
+# $literal?: if true, treat delimiter as a literal string (default: false)
+# REPLY: array of left and right strings
+# return: null
+#
+# example:
+#  z.str.partition "p foo bar" "[[:space:]]+" #=> ("p" "foo bar")
+#  z.str.partition "a[0-9]b" "[0-9]" literal=true #=> ("a" "b")
+z.str.partition() {
+  z.arg.named literal $@ default=false && local literal=$REPLY
+  z.arg.named.shift literal $@
+  local str=$REPLY[1]
+  local delimiter=$REPLY[2]
+
+  if z.is.null "$delimiter"; then
+    z.return "$str" "" keep_empty=true
+    return
+  fi
+
+  if z.is.true $literal; then
+    local delimiter_length=${#delimiter}
+    local last_delimiter_start=$((${#str} - delimiter_length + 1))
+
+    local delimiter_start
+    for (( delimiter_start=1; delimiter_start<=last_delimiter_start; delimiter_start++ )); do
+      local candidate_end=$((delimiter_start + delimiter_length - 1))
+      local candidate=${str[delimiter_start,candidate_end]}
+
+      if z.is.eq "$candidate" "$delimiter"; then
+        local left=${str[1,delimiter_start - 1]}
+        local right=${str[candidate_end + 1,-1]}
+        z.return "$left" "$right" keep_empty=true
+        return
+      fi
+    done
+
+    z.return "$str" "" keep_empty=true
+    return
+  fi
+
+  if [[ $str =~ $delimiter ]]; then
+    local match_start=$MBEGIN
+    local match_end=$MEND
+    local right_start=$((match_end + 1))
+
+    if z.int.is.lt $match_end $match_start; then
+      right_start=$match_start
+    fi
+
+    z.return "${str[1,match_start - 1]}" "${str[right_start,-1]}" keep_empty=true
+  else
+    z.return "$str" "" keep_empty=true
+  fi
+}
+
 # match a string against a regex
 #
 # $1: string
