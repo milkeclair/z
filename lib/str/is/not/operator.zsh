@@ -47,12 +47,12 @@ z.str.is.not.match() {
 z.str.is.not.path_like() {
   local value=$1
 
-  z.str.is.match $value "^/" && return 1
-  z.str.is.match $value "^~" && return 1
-  z.str.is.match $value "^\./" && return 1
-  z.str.is.match $value "^\.\./" && return 1
-  z.is.eq $value "." && return 1
-  z.is.eq $value ".." && return 1
+  z.str.is.match "$value" "^/" && return 1
+  z.str.is.match "$value" "^~" && return 1
+  z.str.is.match "$value" "^\./" && return 1
+  z.str.is.match "$value" "^\.\./" && return 1
+  z.is.eq "$value" "." && return 1
+  z.is.eq "$value" ".." && return 1
 
   return 0
 }

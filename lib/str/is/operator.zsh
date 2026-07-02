@@ -47,12 +47,12 @@ z.str.is.match() {
 z.str.is.path_like() {
   local value=$1
 
-  z.str.is.match $value "^/" && return 0
-  z.str.is.match $value "^~" && return 0
-  z.str.is.match $value "^\./" && return 0
-  z.str.is.match $value "^\.\./" && return 0
-  z.is.eq $value "." && return 0
-  z.is.eq $value ".." && return 0
+  z.str.is.match "$value" "^/" && return 0
+  z.str.is.match "$value" "^~" && return 0
+  z.str.is.match "$value" "^\./" && return 0
+  z.str.is.match "$value" "^\.\./" && return 0
+  z.is.eq "$value" "." && return 0
+  z.is.eq "$value" ".." && return 0
 
   return 1
 }

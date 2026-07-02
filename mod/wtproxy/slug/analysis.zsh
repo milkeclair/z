@@ -9,14 +9,14 @@
 z.wtproxy._slug() {
   local value=${1:-}
 
-  setopt local_options extended_glob
-
   z.str.downcase "$value"
   value=$REPLY
-  z.str.gsub str="$value" search="[^a-z0-9_-]" replace="_" pattern=true
+  z.str.gsub str="$value" search="[^a-z0-9_-]" replace="_"
   value=$REPLY
-  value=${value##[^a-z0-9]##}
-  value=${value%%[_-]##}
+  z.str.gsub str="$value" search="^[^a-z0-9]+" replace=""
+  value=$REPLY
+  z.str.gsub str="$value" search="[_-]+$" replace=""
+  value=$REPLY
   z.is.null $value && value=$z_wtproxy_default_slug
 
   z.return $value

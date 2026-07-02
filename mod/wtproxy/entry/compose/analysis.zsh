@@ -23,7 +23,9 @@ z.wtproxy._entry.compose.name() {
     print -u2 "z.wtproxy._entry.compose.name: sha1sum or shasum is required"
     return 1
   fi
-  branch_hash=${branch_hash%% *}
+  z.str.partition "$branch_hash" "[[:space:]]+"
+  local -a hash_line=("${(@)REPLY}")
+  branch_hash=$hash_line[1]
 
   local name="$config[project]_${branch_slug[1,42]}_${branch_hash[1,8]}"
   z.return ${name[1,63]}

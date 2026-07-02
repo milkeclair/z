@@ -8,10 +8,12 @@
 #   z.git.commit.tdd._cycle.is.valid "red" #=> true
 #   z.git.commit.tdd._cycle.is.valid "invalid_cycle" #=> false
 z.git.commit.tdd._cycle.is.valid() {
-  z.git.commit.tdd._cycle.list && local cycle_list=$REPLY
+  z.git.commit.tdd._cycle.list && local cycle_list="${REPLY[*]}"
   local cycle=$1
+  z.str.split str="$cycle_list" delimiter=" "
+  local -a cycles=("${(@)REPLY}")
 
-  if z.str.is.not.match " ${cycle_list[*]} " "* $cycle *"; then
+  if ! z.arr.includes target="$cycle" "${cycles[@]}"; then
     z.io.line
     z.git.commit.help
     return 1

@@ -175,7 +175,8 @@ z.help._is_function_declaration_line() {
     return 1
   fi
 
-  local declaration_suffix=${trimmed_line#"$declaration_prefix"}
+  z.str.remove.prefix "$trimmed_line" "$declaration_prefix"
+  local declaration_suffix=$REPLY
   z.help._trim_left_whitespace "$declaration_suffix"
   z.is.eq "$REPLY" "{"
 }
@@ -225,12 +226,8 @@ z.help._is_comment_line() {
 z.help._trim_left_whitespace() {
   local text=$1
 
-  while z.is.not.null "$text"; do
-    z.str.is.match "$text" "[[:space:]]*" || break
-    z.str.match.rest "$text" "[[:space:]]"
-    text=$REPLY
-  done
-
+  z.str.gsub str="$text" search="^[[:space:]]+" replace=""
+  text=$REPLY
   REPLY=$text
 }
 

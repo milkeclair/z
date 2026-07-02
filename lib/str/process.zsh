@@ -310,7 +310,7 @@ z.str.constantize() {
     local char=${str[i]}
 
     if z.str.is.match $char "[ _-]"; then
-      if [[ $previous_char != "_" ]]; then
+      if z.is.not.eq "$previous_char" "_"; then
         result+="_"
         previous_char="_"
       fi
@@ -397,7 +397,8 @@ z.str.delimitize() {
 
   # remove leading delimiter
   # e.g., "_hello_world" -> "hello_world" (if delimiter is "_")
-  result=${result#${delimiter}}
+  z.str.remove.prefix "$result" "$delimiter"
+  result=$REPLY
 
   z.return ${(L)result}
 }

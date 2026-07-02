@@ -7,15 +7,18 @@
 # example:
 #  z.completion.cache.build.line._function_name "z.example() {"
 z.completion.cache.build.line._function_name() {
-  setopt local_options EXTENDED_GLOB
-
   local line=$1
-  local trimmed_line=${line##[[:space:]]##}
-  [[ "$trimmed_line" == z.*\(\)* ]] || return 1
+  z.str.gsub str="$line" search="^[[:space:]]+" replace=""
+  local trimmed_line=$REPLY
+  z.str.is.match "$trimmed_line" '^z[.].*\(\)' || return 1
 
-  local function_name=${trimmed_line%%\(\)*}
-  local declaration_suffix=${trimmed_line#"$function_name()"}
-  declaration_suffix=${declaration_suffix##[[:space:]]##}
+  z.str.partition "$trimmed_line" "()" literal=true
+  local -a declaration=("${(@)REPLY}")
+  local function_name=$declaration[1]
+  local declaration_suffix=$declaration[2]
+
+  z.str.gsub str="$declaration_suffix" search="^[[:space:]]+" replace=""
+  declaration_suffix=$REPLY
   z.is.eq "$declaration_suffix" "{" || return 1
 
   z.return "$function_name"

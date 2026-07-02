@@ -23,7 +23,7 @@ z.return() {
   local filtered_args=()
 
   for arg in "$@"; do
-    if z.is.false $keep_empty && z.str.is.match "$arg" "keep_empty=*"; then
+    if z.is.false $keep_empty && z.str.start_with "$arg" "keep_empty="; then
       keep_empty=${arg#keep_empty=}
     else
       filtered_args+=("$arg")

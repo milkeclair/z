@@ -7,9 +7,9 @@
 # example:
 #  z.completion.cache.build.line.is._comment "# docs"
 z.completion.cache.build.line.is._comment() {
-  setopt local_options EXTENDED_GLOB
-
   local line=$1
-  local trimmed_line=${line##[[:space:]]##}
-  [[ "$trimmed_line" == \#* ]]
+  z.str.gsub str="$line" search="^[[:space:]]+" replace=""
+  local trimmed_line=$REPLY
+
+  z.str.start_with "$trimmed_line" "#"
 }
