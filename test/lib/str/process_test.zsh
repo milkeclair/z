@@ -125,10 +125,63 @@ z.t.describe "z.str.split"; {
   }
 }
 
+z.t.describe "z.str.partition"; {
+  z.t.context "区切り正規表現にマッチする場合"; {
+    z.t.it "最初のマッチ位置で左右に分割した配列を返す"; {
+      z.str.partition "p foo bar" "[[:space:]]+"
+      local parts=("${REPLY[@]}")
+      z.t.expect "$parts[1]" "p"
+      z.t.expect "$parts[2]" "foo bar"
+
+      z.str.partition "a=b=c" "="
+      parts=("${REPLY[@]}")
+      z.t.expect "$parts[1]" "a"
+      z.t.expect "$parts[2]" "b=c"
+    }
+  }
+
+  z.t.context "区切り正規表現にマッチしない場合"; {
+    z.t.it "元の文字列と空文字列の配列を返す"; {
+      z.str.partition "continue" "[[:space:]]+"
+      local parts=("${REPLY[@]}")
+      z.t.expect "$parts[1]" "continue"
+      z.t.expect "$parts[2]" ""
+    }
+  }
+
+  z.t.context "区切り正規表現が文字列の端にマッチする場合"; {
+    z.t.it "空文字列を含む配列を返す"; {
+      z.str.partition "abc" "^"
+      local parts=("${REPLY[@]}")
+      z.t.expect "$parts[1]" ""
+      z.t.expect "$parts[2]" "abc"
+
+      z.str.partition "abc" "$" # zls: ignore
+      parts=("${REPLY[@]}")
+      z.t.expect "$parts[1]" "abc"
+      z.t.expect "$parts[2]" ""
+    }
+  }
+
+  z.t.context "literal=trueが指定された場合"; {
+    z.t.it "区切り文字列をリテラルとして扱う"; {
+      z.str.partition "a[0-9]b[0-9]" "[0-9]" literal=true
+      local parts=("${REPLY[@]}")
+      z.t.expect "$parts[1]" "a"
+      z.t.expect "$parts[2]" "b[0-9]"
+
+      z.str.partition "foo.bar" "." literal=true
+      parts=("${REPLY[@]}")
+      z.t.expect "$parts[1]" "foo"
+      z.t.expect "$parts[2]" "bar"
+    }
+  }
+}
+
 z.t.describe "z.str.match"; {
-  z.t.context "文字列がパターンにマッチする場合"; {
+  z.t.context "文字列が正規表現にマッチする場合"; {
     z.t.it "マッチ部分の文字列を返す"; {
-      z.str.match "hello" "h*o"
+      z.str.match "hello" "h.*o"
       z.t.expect.reply "hello"
 
       z.str.match "zsh_scripting" "ing"
@@ -139,9 +192,9 @@ z.t.describe "z.str.match"; {
     }
   }
 
-  z.t.context "文字列がパターンにマッチしない場合"; {
+  z.t.context "文字列が正規表現にマッチしない場合"; {
     z.t.it "空文字列を返す"; {
-      z.str.match "hello" "H*O"
+      z.str.match "hello" "H.*O"
       z.t.expect.reply.is.null
 
       z.str.match "zsh_scripting" "ZSH"
@@ -184,13 +237,31 @@ z.t.describe "z.str.gsub"; {
     }
   }
 
-  z.t.context "pattern=trueが指定された場合"; {
-    z.t.it "globパターンでマッチした部分を置換した文字列を返す"; {
-      z.str.gsub str="Hello123World" search="[0-9]" replace="-" pattern=true
+  z.t.context "正規表現で検索する場合"; {
+    z.t.it "マッチした部分を置換した文字列を返す"; {
+      z.str.gsub str="Hello123World" search="[0-9]" replace="-"
       z.t.expect.reply "Hello---World"
 
-      z.str.gsub str="abcXYZde" search="[A-Z]" replace='_$MATCH' pattern=true
+      z.str.gsub str="abcXYZde" search="[A-Z]" replace='_$MATCH'
       z.t.expect.reply "abc_X_Y_Zde"
+    }
+  }
+
+  z.t.context "正規表現が空文字列にマッチする場合"; {
+    z.t.it "最初のマッチ位置を置換した文字列を返す"; {
+      z.str.gsub str="abc" search="^" replace=">" # zls: ignore
+      z.t.expect.reply ">abc"
+
+      z.str.gsub str="abc" search="$" replace="<" # zls: ignore
+      z.t.expect.reply "abc<"
+    }
+  }
+
+  z.t.context "literal=trueが指定された場合"; {
+    z.t.it "検索文字列をリテラルとして置換する"; {
+      z.str.gsub str="a[0-9]b[0-9]" search="[0-9]" replace="X" literal=true
+
+      z.t.expect.reply "aXbX"
     }
   }
 }

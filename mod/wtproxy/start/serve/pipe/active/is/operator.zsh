@@ -18,7 +18,8 @@ z.wtproxy.start._serve.pipe.active.is.current() {
     IFS= read -r active_line < "$z_wtproxy_serve_state_file"
     z.is.not.null "$active_line" || return 1
 
-    local state_active_path=${active_line#active }
+    z.str.remove.prefix "$active_line" "active "
+    local state_active_path=$REPLY
     state_active_path=${(Q)state_active_path}
     z.is.eq "$state_active_path" "$active_path"
     return

@@ -12,7 +12,7 @@ z.git.commit._opts.extract() {
   local valid_opts=()
 
   for arg in "$@"; do
-    if z.str.is.match "$arg" "-*"; then
+    if z.str.start_with "$arg" "-"; then
       opts+=($arg)
     fi
   done

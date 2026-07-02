@@ -56,8 +56,10 @@ z.wtproxy._config.file.line() {
 
   z.str.includes "$line" "=" || return 1
 
-  local env_name=${line%%=*}
-  local value=${line#*=}
+  z.str.partition "$line" "=" literal=true
+  local -a config_line=("${(@)REPLY}")
+  local env_name=$config_line[1]
+  local value=$config_line[2]
 
   z.str.trim "$env_name"
   env_name=$REPLY

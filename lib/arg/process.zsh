@@ -51,7 +51,8 @@ z.arg.named() {
     local filtered_args=()
     for arg in $args; do
       if z.str.start_with "$arg" "default="; then
-        default=${arg#"default="}
+        z.str.remove.prefix "$arg" "default="
+        default=$REPLY
       else
         filtered_args+=($arg)
       fi
@@ -66,7 +67,8 @@ z.arg.named() {
 
   while z.int.is.lteq $i $arg_count; do
     if z.is.not.null $args[i] && z.str.start_with "$args[i]" "${name}="; then
-      local value=${args[i]#"${name}="}
+      z.str.remove.prefix "$args[i]" "${name}="
+      local value=$REPLY
 
       z.return ${value:-$default} && return 0
     fi

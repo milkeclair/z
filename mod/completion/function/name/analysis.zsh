@@ -9,16 +9,20 @@
 z.completion.function.name._declaration() {
   local line=$1
 
-  z.help._trim_left_whitespace "$line"
+  z.str.gsub str="$line" search="^[[:space:]]+" replace=""
   local trimmed_line=$REPLY
-  if ! z.str.is.match "$trimmed_line" 'z.*\(\)*'; then
+  if ! z.str.is.match "$trimmed_line" '^z[.].*\(\)'; then
     return 1
   fi
 
-  local function_name=${trimmed_line%%\(\)*}
-  local declaration_suffix=${trimmed_line#"$function_name()"}
-  z.help._trim_left_whitespace "$declaration_suffix"
-  if ! z.is.eq "$REPLY" "{"; then
+  z.str.partition "$trimmed_line" "()" literal=true
+  local -a declaration=("${(@)REPLY}")
+  local function_name=$declaration[1]
+  local declaration_suffix=$declaration[2]
+
+  z.str.gsub str="$declaration_suffix" search="^[[:space:]]+" replace=""
+  declaration_suffix=$REPLY
+  if ! z.is.eq "$declaration_suffix" "{"; then
     return 1
   fi
 

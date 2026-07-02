@@ -19,17 +19,17 @@ z.t.describe "z.str.is.not.empty"; {
 }
 
 z.t.describe "z.str.is.not.match"; {
-  z.t.context "文字列がパターンにマッチする場合"; {
+  z.t.context "文字列が正規表現にマッチする場合"; {
     z.t.it "falseを返す"; {
-      z.str.is.not.match "hello" "h*o"
+      z.str.is.not.match "hello" "^h.*o$"
 
       z.t.expect.status.is.false
     }
   }
 
-  z.t.context "文字列がパターンにマッチしない場合"; {
+  z.t.context "文字列が正規表現にマッチしない場合"; {
     z.t.it "trueを返す"; {
-      z.str.is.not.match "hello" "H*O"
+      z.str.is.not.match "hello" "^H.*O$"
 
       z.t.expect.status.is.true
     }
