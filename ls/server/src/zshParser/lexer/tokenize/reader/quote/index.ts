@@ -1,0 +1,1 @@
+export { readQuote } from './read';
