@@ -118,4 +118,23 @@ z.t.describe "z.completion.cache.build.docs._from_file"; {
       z.t.expect.is.null "$after_docs"
     }
   }
+
+  z.t.context "commentと宣言にtabや空白のindentがある場合"; {
+    z.t.it "exampleの字下げを保持してdocsをcacheする"; {
+      local fixture_root=/tmp/z_t/completion_cache_build_docs_indented_root
+      local fixture_file=$fixture_root/lib/fixture/process.zsh
+      z.fixture.indented_docs() { : } # zls: ignore
+      z.dir.remove path=$fixture_root
+      z.dir.make path=${fixture_file:h}
+      z.file.write path=$fixture_file content=$'\t # fixture docs\n\t #\n\t # example:\n\t #   z.fixture.indented_docs\n\t z.fixture.indented_docs()\t {'
+      z_completion_docs=()
+
+      z.completion.cache.build.docs._from_file $fixture_file
+      local docs=${z_completion_docs[z.fixture.indented_docs]} # zls: ignore
+      unfunction z.fixture.indented_docs # zls: ignore
+      z.dir.remove path=$fixture_root
+
+      z.t.expect "$docs" $'fixture docs\n\nexample:\n  z.fixture.indented_docs'
+    }
+  }
 }

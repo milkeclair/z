@@ -2,7 +2,7 @@ typeset -gA z_completion_docs=()
 typeset -ga z_completion_function_names=()
 typeset -g z_completion_cache_ready=false
 
-# enable z function completion
+# enable z function completion in interactive shells without -c
 #
 # REPLY: null
 # return: 0|1
@@ -10,6 +10,8 @@ typeset -g z_completion_cache_ready=false
 # example:
 #  z.completion.enable
 z.completion.enable() {
+  z.completion.is._interactive || return 0
+
   z.completion.cache.build._names
   z.completion.compdef._ignore_private || return 1
   z.completion.compdef._register || return 1
