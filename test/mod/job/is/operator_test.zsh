@@ -12,8 +12,10 @@ z.t.describe "z.job.is.running"; {
       z.file.write path=$dir/status content=running
       z.file.write path=$dir/pid content=$$
 
-      z.job.is.running id=job-1
+      z.job.is.running id=job-1 > "$root/stdout"
 
+      z.t.expect.status.is.true
+      [[ ! -s "$root/stdout" ]]
       z.t.expect.status.is.true
     }
   }
@@ -29,9 +31,11 @@ z.t.describe "z.job.is.running"; {
       z.file.write path=$dir/status content=success
       z.file.write path=$dir/pid content=$$
 
-      z.job.is.running id=job-1
+      z.job.is.running id=job-1 > "$root/stdout"
 
       z.t.expect.status.is.false
+      [[ ! -s "$root/stdout" ]]
+      z.t.expect.status.is.true
     }
   }
 }

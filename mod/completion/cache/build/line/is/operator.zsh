@@ -1,7 +1,7 @@
 # check whether a cache source line is a comment line
 #
 # $1: source line
-# REPLY: null
+# REPLY: source line with leading whitespace removed
 # return: 0|1
 #
 # example:

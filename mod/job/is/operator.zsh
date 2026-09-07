@@ -10,7 +10,7 @@ z.job.is.running() {
   z.arg.named id "$@" && local id=$REPLY
   z.is.null "$id" && return 1
 
-  z.job.status id="$id" || return 1
+  z.job.status id="$id" >/dev/null || return 1
   z.is.eq "$REPLY" "running" || return 1
 
   z.job.file._path id=$id name=pid

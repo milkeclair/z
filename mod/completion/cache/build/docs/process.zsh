@@ -23,7 +23,8 @@ z.completion.cache.build.docs._from_file() {
       continue
     fi
 
-    if z.completion.cache.build.line._function_name "$line"; then
+    local trimmed_line=$REPLY
+    if z.completion.cache.build.line._function_name "$line" "$trimmed_line"; then
       local function_name=$REPLY
       if z.int.is.positive ${+functions[$function_name]} &&
         z.int.is.positive ${#docs_lines[@]}; then
