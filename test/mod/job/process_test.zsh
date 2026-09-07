@@ -15,7 +15,7 @@ z.t.describe "z.job.run"; {
 
       z.is.not.eq "$first_id" "$second_id"
       z.t.expect.status.is.true
-      z.job.list
+      z.job.list >/dev/null
       local jobs_text=$REPLY
       z.t.expect.includes "$jobs_text" "$first_id"
       z.t.expect.includes "$jobs_text" "$second_id"
@@ -31,7 +31,7 @@ z.t.describe "z.job.run"; {
 
       z.job.run name=example command=z.is.not.null # zls: ignore
       z.t.expect.status.is.false
-      z.job.list
+      z.job.list >/dev/null
       z.t.expect.reply.is.null
     }
   }
@@ -47,7 +47,7 @@ z.t.describe "z.job.run"; {
       z.job.run name=example command=z.is.not.null # zls: ignore
 
       z.t.expect.status.is.false skip_unmock=true
-      z.job.list
+      z.job.list >/dev/null
       z.t.expect.reply.is.null skip_unmock=true
       z.t.mock.result name="z.job.run._spawn"
       z.t.expect.reply ""
