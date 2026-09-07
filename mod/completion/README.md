@@ -56,3 +56,6 @@ The cache variables are:
   - docs indexed by function name
 - `z_completion_cache_ready`
   - whether the docs cache has finished loading
+
+While the background cache is being built, TAB does not scan source files for
+missing descriptions. Descriptions become available after the cache job is collected.
