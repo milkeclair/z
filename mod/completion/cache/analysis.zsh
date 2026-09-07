@@ -14,7 +14,7 @@ z.completion.cache._dump() {
 
   for key in ${(ko)z_completion_docs}; do
     local value=${z_completion_docs[$key]}
-    lines+=("z_completion_docs[${(qqq)key}]=${(qqq)value}")
+    lines+=("z_completion_docs+=(${(qqq)key} ${(qqq)value})")
   done
 
   for function_name in ${z_completion_function_names[@]}; do

@@ -74,7 +74,7 @@ z.t.describe "z.completion.cache.build._result"; {
       z.file.read path=$result
       local cache_content=$REPLY
       z.t.expect.includes "$cache_content" "typeset -gA z_completion_docs=()"
-      z.t.expect.includes "$cache_content" 'z_completion_docs["z.example"]="example docs"'
+      z.t.expect.includes "$cache_content" 'z_completion_docs+=("z.example" "example docs")'
       z.t.expect.includes "$cache_content" "z_completion_cache_ready=true"
     }
   }
