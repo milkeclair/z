@@ -1,8 +1,12 @@
 source ${z_main}
 
 z.t.describe "z.completion.docs._get"; {
-  z.t.context "docsを持つ関数を指定した場合"; {
-    z.t.it "正規化されたdocsを返す"; {
+  z.t.context "readyなcacheにdocsがある関数を指定した場合"; {
+    z.t.it "cache内の正規化されたdocsを返す"; {
+      z_completion_docs=()
+      z_completion_docs[z.arg.get]=$'get the argument at the specified index\n\n$index: 1-based index' # zls: ignore
+      z_completion_cache_ready=true
+
       z.completion.docs._get z.arg.get # zls: ignore
       local docs=$REPLY
 
@@ -32,23 +36,33 @@ z.t.describe "z.completion.docs._get"; {
       z_completion_cache_ready=true
       z.t.mock name="z.help._find_docs" behavior="z.return fallback"
 
+      REPLY=stale
       z.completion.docs._get z.missing # zls: ignore
+      local lookup_code=$?
+      local docs=$REPLY
 
-      z.t.expect.status.is.false skip_unmock=true
+      z.t.expect "$lookup_code" "1" skip_unmock=true
+      z.t.expect "$docs" "" skip_unmock=true
       z.t.mock.result name="z.help._find_docs"
       z.t.expect.reply ""
     }
   }
 
-  z.t.context "cacheが未readyでdoc探索が失敗した場合"; {
-    z.t.it "falseを返す"; {
+  z.t.context "cacheが未readyでdocsがない場合"; {
+    z.t.it "同期doc探索を呼ばず空のREPLYとfalseを返す"; {
       z_completion_docs=()
       z_completion_cache_ready=false
-      z.t.mock name="z.help._find_docs" behavior="return 1"
+      z.t.mock name="z.help._find_docs" behavior="z.return fallback"
 
+      REPLY=stale
       z.completion.docs._get z.missing # zls: ignore
+      local lookup_code=$?
+      local docs=$REPLY
 
-      z.t.expect.status.is.false
+      z.t.expect "$lookup_code" "1" skip_unmock=true
+      z.t.expect "$docs" "" skip_unmock=true
+      z.t.mock.result name="z.help._find_docs"
+      z.t.expect.reply ""
     }
   }
 }
