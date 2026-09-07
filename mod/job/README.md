@@ -80,7 +80,8 @@ echo $REPLY
 ### list
 
 - `z.job.list`
-  - list jobs as separated lines: `<id> <name> <status>`
+  - print jobs as tab-separated lines: `<id> <name> <status>`
+  - return the same lines in `REPLY`
 
 ```zsh
 z.job.list
@@ -89,11 +90,10 @@ z.job.list
 ### status
 
 - `z.job.status id=<id>`
-  - return the current job status in `REPLY`
+  - print the current job status and return it in `REPLY`
 
 ```zsh
 z.job.status id="$job_id"
-echo $REPLY
 ```
 
 ### is.running

@@ -1,6 +1,7 @@
-# get a job status
+# print and return a job status
 #
 # $id: job id
+# stdout: job status
 # REPLY: job status|null
 # return: 0|1
 #
@@ -14,11 +15,15 @@ z.job.status() {
   local status_file=$REPLY
   z.file.exists "$status_file" || return 1
 
-  z.file.read path="$status_file"
+  z.file.read path="$status_file" || return 1
+  local result=$REPLY
+  z.io "$result"
+  z.return "$result"
 }
 
-# list queued jobs
+# print and return queued jobs
 #
+# stdout: tab-separated job lines (empty when no jobs exist)
 # REPLY: tab-separated job lines
 # return: null
 #
@@ -44,4 +49,8 @@ z.job.list() {
   done
 
   z.arr.join.line "${lines[@]}"
+  z.is.null "$REPLY" && return 0
+  local result=$REPLY
+  z.io "$result"
+  z.return "$result"
 }
