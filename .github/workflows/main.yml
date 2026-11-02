@@ -15,11 +15,11 @@ jobs:
     env:
       ZSH_VERSION: '5.9'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.4.0
 
       - name: Cache zsh
         id: cache
-        uses: actions/cache@v4
+        uses: actions/cache@v4.3.0
         with:
           path: ~/.local
           key: ${{ runner.os }}-zsh-${{ env.ZSH_VERSION }}
