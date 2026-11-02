@@ -8,27 +8,39 @@ on:
     branches:
       - main
       - 'feat/**'
+  schedule:
+    - cron: '17 21 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  ZSH_VERSION: '5.9.2'
 
 jobs:
   test:
-    runs-on: ubuntu-latest
-    env:
-      ZSH_VERSION: '5.9'
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libncurses-dev yodl uuid-runtime
 
       - name: Cache zsh
         id: cache
         uses: actions/cache@v4.3.0
         with:
           path: ~/.local
-          key: ${{ runner.os }}-zsh-${{ env.ZSH_VERSION }}
+          key: ubuntu-26.04-${{ runner.arch }}-zsh-${{ env.ZSH_VERSION }}
 
       - name: Build and install zsh
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential libncurses-dev yodl
           wget https://sourceforge.net/projects/zsh/files/zsh/${ZSH_VERSION}/zsh-${ZSH_VERSION}.tar.xz/download -O zsh.tar.xz
           tar xf zsh.tar.xz
           cd zsh-${ZSH_VERSION}
@@ -38,8 +50,42 @@ jobs:
         env:
           ZSH_VERSION: ${{ env.ZSH_VERSION }}
 
+      - name: Verify installed zsh version
+        shell: bash
+        run: |
+          actual_version=$("$HOME/.local/bin/zsh" -c 'print -r -- "$ZSH_VERSION"')
+          if [[ "$actual_version" != "$ZSH_VERSION" ]]; then
+            printf '::error::Expected zsh %s, installed %s\n' "$ZSH_VERSION" "$actual_version"
+            exit 1
+          fi
+
       - name: Run tests
         shell: bash {0}
         run: |
           export PATH="$HOME/.local/bin:$PATH"
           zsh -c "source main.zsh && cd test && z.t"
+
+  check-zsh-release:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    steps:
+      - name: Check latest stable zsh release
+        shell: bash
+        run: |
+          stable_tag_pattern='^refs/tags/zsh-[0-9]+([.][0-9]+)+$'
+          version_tag_prefix='^refs/tags/zsh-'
+          latest_version=$(
+            git ls-remote --tags --refs https://git.code.sf.net/p/zsh/code 'refs/tags/zsh-*' |
+              awk -v pattern="$stable_tag_pattern" -v prefix="$version_tag_prefix" '$2 ~ pattern { sub(prefix, "", $2); print $2 }' |
+              sort -V |
+              tail -n 1
+          )
+          if [[ -z "$latest_version" ]]; then
+            printf '::error::No stable zsh release tags were returned\n'
+            exit 1
+          fi
+          printf 'Configured zsh: %s; latest stable release: %s\n' "$ZSH_VERSION" "$latest_version"
+          if [[ "$latest_version" != "$ZSH_VERSION" ]]; then
+            printf '::error::Review zsh %s and update ZSH_VERSION after testing\n' "$latest_version"
+            exit 1
+          fi
