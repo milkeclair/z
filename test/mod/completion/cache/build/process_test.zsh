@@ -71,11 +71,19 @@ z.t.describe "z.completion.cache.build._result"; {
 
       z.completion.cache.build._result result=$result
 
-      z.file.read path=$result
-      local cache_content=$REPLY
-      z.t.expect.includes "$cache_content" "typeset -gA z_completion_docs=()"
-      z.t.expect.includes "$cache_content" 'z_completion_docs+=("z.example" "example docs")'
-      z.t.expect.includes "$cache_content" "z_completion_cache_ready=true"
+      z_completion_docs=()
+      z_completion_function_names=(stale.function)
+      z_completion_cache_ready=false
+
+      source "$result"
+      local loaded_docs=$z_completion_docs[z.example] # zls: ignore
+      local loaded_names="$z_completion_function_names"
+      local loaded_ready=$z_completion_cache_ready
+      z.dir.remove path=$result_dir
+
+      z.t.expect "$loaded_docs" "example docs"
+      z.t.expect "$loaded_names" "z.example"
+      z.t.expect "$loaded_ready" true
     }
   }
 
