@@ -6,5 +6,6 @@
 # example:
 #  z.completion.is._interactive
 z.completion.is._interactive() {
-  [[ -o interactive && ! -v ZSH_EXECUTION_STRING ]]
+  z.is.eq "$options[interactive]" on &&
+    ! z.var.exists ZSH_EXECUTION_STRING
 }
