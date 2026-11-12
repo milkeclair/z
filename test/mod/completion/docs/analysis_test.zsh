@@ -3,15 +3,14 @@ source ${z_main}
 z.t.describe "z.completion.docs._get"; {
   z.t.context "readyなcacheにdocsがある関数を指定した場合"; {
     z.t.it "cache内の正規化されたdocsを返す"; {
+      local expected_docs=$'get the argument at the specified index\n\n$index: 1-based index'
       z_completion_docs=()
-      z_completion_docs[z.arg.get]=$'get the argument at the specified index\n\n$index: 1-based index' # zls: ignore
+      z_completion_docs[z.arg.get]=$expected_docs # zls: ignore
       z_completion_cache_ready=true
 
       z.completion.docs._get z.arg.get # zls: ignore
-      local docs=$REPLY
 
-      z.t.expect.includes "$docs" "get the argument at the specified index"
-      z.t.expect.includes "$docs" "index: 1-based index"
+      z.t.expect.reply "$expected_docs"
     }
   }
 
