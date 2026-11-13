@@ -30,7 +30,7 @@ and `POSIX_BUILTINS` are recorded too.
 
 The query has a three-second timeout and a two-MiB combined output limit. On
 Unix the child owns a process group, which is terminated on completion or
-failure. A failed query leaves environment-dependent names unresolved; known
+failure, including normal exit of the calling Node process. A failed query leaves environment-dependent names unresolved; known
 project-function argument checks still work. A server restart refreshes changes
 to the runtime environment.
 

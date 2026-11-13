@@ -80,6 +80,7 @@ export function readShellEnvironment({
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      process.removeListener('exit', stop);
       stop();
       resolve(result);
     }
@@ -88,6 +89,7 @@ export function readShellEnvironment({
       if (bytes > maxBytes) finish({ kind: 'unavailable', reason: 'output-limit' });
       else if (keep && !settled) output.push(buffer);
     }
+    process.once('exit', stop);
     const timer = setTimeout(() => finish({ kind: 'unavailable', reason: 'timeout' }), timeout);
     child.stdout.on('data', (buffer: Buffer) => receive(buffer, true));
     child.stderr.on('data', (buffer: Buffer) => receive(buffer, false));

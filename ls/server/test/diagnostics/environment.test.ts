@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { spawn } from 'node:child_process';
 import { readShellEnvironment, parseShellEnvironment } from '../../src/diagnostics/environment';
 
 const roots: string[] = [];
@@ -62,6 +63,32 @@ describe('shell environment', () => {
       catch { return true; }
     })).toBe(true);
   });
+  test('呼び出し元Nodeの終了時にも検査用process groupを停止する', async () => {
+    const f = fixture();
+    const pidFile = path.join(f.root, 'pids');
+    fs.writeFileSync(path.join(f.root, '.zshrc'), [
+      'sleep 10 &', 'print -r -- "$$ $!" > ' + JSON.stringify(pidFile), 'wait',
+    ].join('\n'));
+    const modulePath = path.resolve(__dirname, '../../dist/diagnostics/environment.js');
+    const source = 'const {readShellEnvironment}=require(' + JSON.stringify(modulePath) +
+      '); void readShellEnvironment({timeout:10000}); process.on("message",()=>process.exit(0));';
+    const child = spawn(process.execPath, ['-e', source], { env: f.env, stdio: ['ignore', 'ignore', 'ignore', 'ipc'] });
+    let pids: string[] = [];
+    try {
+      await expect.poll(() => fs.existsSync(pidFile), { timeout: 3000 }).toBe(true);
+      pids = fs.readFileSync(pidFile, 'utf8').trim().split(' ');
+      child.send('exit');
+      await expect.poll(() => child.exitCode, { timeout: 3000 }).toBe(0);
+      await expect.poll(() => pids.every(pid => {
+        try { return fs.readFileSync('/proc/' + pid + '/stat', 'utf8').split(' ')[2] === 'Z'; }
+        catch { return true; }
+      }), { timeout: 1500 }).toBe(true);
+    } finally {
+      if (child.exitCode === null) child.kill('SIGKILL');
+      const leader = pids[0];
+      if (leader) { try { process.kill(-Number(leader), 'SIGKILL'); } catch {} }
+    }
+  }, 10000);
   test('過大な起動出力を制限する', async () => {
     const f = fixture();
     expect(await readShellEnvironment({ env: f.env, maxBytes: 8 })).toEqual({ kind: 'unavailable', reason: 'output-limit' });
