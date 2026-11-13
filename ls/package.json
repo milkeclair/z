@@ -41,7 +41,7 @@
           "scope": "resource",
           "type": "string",
           "default": "~/.z",
-          "description": "Path to the z root directory. Defaults to ~/.z"
+          "description": "Fallback project directory when no workspace folder is supplied. Defaults to ~/.z"
         },
         "z-ls.completion.showPrivateFunctions": {
           "scope": "resource",
@@ -53,10 +53,10 @@
     }
   },
   "scripts": {
-    "b": "tsc -b",
-    "test": "tsc -p server/tsconfig.test.json --noEmit && TMPDIR=/tmp vitest run",
+    "b": "npm run clean && tsc -b",
+    "test": "npm run b && tsc -p server/tsconfig.test.json --noEmit && TMPDIR=/tmp vitest run",
     "clean": "rm -rf client/dist server/dist client/tsconfig.tsbuildinfo server/tsconfig.tsbuildinfo",
-    "vscode:prepublish": "tsc -b",
+    "vscode:prepublish": "npm run b",
     "package": "npm install --package-lock=false && rm -rf client/dist server/dist client/tsconfig.tsbuildinfo server/tsconfig.tsbuildinfo && vsce package"
   },
   "dependencies": {

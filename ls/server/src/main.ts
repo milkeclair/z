@@ -1,4 +1,4 @@
-import { refreshFunctions } from './refreshFunctions/main';
+import { refreshFunctions, refreshFunctionSnapshot, createFunctionSnapshot } from './refreshFunctions/main';
 import { Document } from './document/main';
 import { getAllZFunctions, extractZFunctions } from './getFunctions/main';
 import { validateTextDocument } from './diagnostics/main';
@@ -20,6 +20,8 @@ export {
   getAllZFunctions,
   extractZFunctions,
   refreshFunctions,
+  refreshFunctionSnapshot,
+  createFunctionSnapshot,
   validateTextDocument,
   workspaceDiagnostics,
   serverCapability,

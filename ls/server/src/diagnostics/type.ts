@@ -1,19 +1,21 @@
-import { DiagnosticSeverity, DocumentDiagnosticReportKind } from '../vscode_type';
+import type { DiagnosticSeverity, DocumentDiagnosticReportKind } from '../vscode_type';
 
 export type Diagnostics = {
-  severity: DiagnosticSeverity;
-  range: {
-    start: { line: number; character: number };
-    end: { line: number; character: number };
+  readonly severity: DiagnosticSeverity;
+  readonly code?: string;
+  readonly range: {
+    readonly start: { readonly line: number; readonly character: number };
+    readonly end: { readonly line: number; readonly character: number };
   };
-  message: string;
-  source: string;
+  readonly message: string;
+  readonly source: string;
 };
 
 export type workspaceDiagnosticsReport = {
   items: {
     uri: string;
     version: number | null;
+    resultId?: string;
     kind: typeof DocumentDiagnosticReportKind.Full;
     items: Diagnostics[];
   }[];

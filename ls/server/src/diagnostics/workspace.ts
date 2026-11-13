@@ -1,50 +1,23 @@
-import fs from 'fs';
-import path from 'path';
-import { globSync } from 'glob';
-import { pathToFileURL } from 'url';
-import { TextDocuments, TextDocument, DocumentDiagnosticReportKind } from '../vscode_type';
-import { validateTextDocument } from './main';
-import { Func } from '../getFunctions/type';
-import { workspaceDiagnosticsReport } from './type';
+import { DocumentDiagnosticReportKind } from '../vscode_type';
+import type { workspaceDiagnosticsReport } from './type';
+import type { DiagnosticSnapshot } from './snapshot';
 
-export function workspaceDiagnostics({
-  projectRoot,
-  documents,
-  functions,
-}: {
-  projectRoot: string;
-  documents: TextDocuments<TextDocument>;
-  functions: Func[];
+export function workspaceDiagnostics({ diagnostics, previousResultIds = [] }: {
+  readonly diagnostics: DiagnosticSnapshot;
+  readonly previousResultIds?: readonly { readonly uri: string; readonly value: string }[];
 }): workspaceDiagnosticsReport {
-  if (projectRoot === '') return { items: [] };
-
-  const files = globSync('**/*.zsh', { cwd: projectRoot });
-  const workspaceDiagnostics: workspaceDiagnosticsReport['items'] = [];
-
-  for (const file of files) {
-    const filePath = path.join(projectRoot, file);
-    const fileUri = pathToFileURL(filePath).toString();
-
-    let document = documents.get(fileUri);
-
-    if (!document) {
-      try {
-        const content = fs.readFileSync(filePath, 'utf-8');
-        document = TextDocument.create(fileUri, 'zsh', 1, content);
-      } catch (error) {
-        continue;
-      }
-    }
-
-    const diagnostics = validateTextDocument({ functions, textDocument: document });
-
-    workspaceDiagnostics.push({
-      uri: fileUri,
-      version: document.version,
-      kind: DocumentDiagnosticReportKind.Full,
-      items: diagnostics,
-    });
+  const items: workspaceDiagnosticsReport['items'] = [];
+  const reported = new Set<string>();
+  for (const [uri, file] of diagnostics.files) {
+    if (!file.project) continue;
+    reported.add(uri);
+    items.push({ uri, version: file.version, resultId: file.resultId, kind: DocumentDiagnosticReportKind.Full, items: [...file.items] });
   }
-
-  return { items: workspaceDiagnostics };
+  for (const previous of previousResultIds) {
+    if (!reported.has(previous.uri)) {
+      reported.add(previous.uri);
+      items.push({ uri: previous.uri, version: null, kind: DocumentDiagnosticReportKind.Full, items: [] });
+    }
+  }
+  return { items };
 }

@@ -1,7 +1,7 @@
-import os from 'os';
 import { InitializeParams } from '../vscode_type';
 import { Func } from '../getFunctions/type';
-import { getAllZFunctions } from '../getFunctions/main';
+import { refreshFunctionSnapshot, type FunctionSnapshot } from '../refreshFunctions/main';
+import { projectRootFromSettings, workspaceProjectRoot } from './projectRoot';
 import { serverCapability } from '../serverCapability/main';
 
 export type ZLsSettings = {
@@ -64,17 +64,22 @@ export function zSettingsFromConfigurationNotification(value: unknown): ZLsSetti
 
 export function zInitialize(params: InitializeParams): {
   projectRoot: string;
+  workspaceRoot: string;
+  snapshot: FunctionSnapshot;
   functions: Func[];
   settings: ZLsSettings;
   serverCapabilities: ReturnType<typeof serverCapability>;
 } {
   const settings = zSettingsFromInitializationOptions(params.initializationOptions);
-  const projectRoot = settings.zPath.replace(/^~/, os.homedir());
-  const functions = getAllZFunctions(projectRoot);
+  const workspaceRoot = workspaceProjectRoot(params);
+  const projectRoot = projectRootFromSettings(workspaceRoot, settings.zPath);
+  const snapshot = refreshFunctionSnapshot({ projectRoot, documents: [] });
 
   return {
-    projectRoot: projectRoot,
-    functions: functions,
+    projectRoot,
+    workspaceRoot,
+    snapshot,
+    functions: snapshot.functions,
     settings: settings,
     serverCapabilities: serverCapability(),
   };

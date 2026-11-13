@@ -1,32 +1,17 @@
-import fs from "fs";
-import path from "path";
-import { MarkupKind } from "../vscode_type";
-import { Result } from "../document/type";
-import { Document } from "../document/main";
-import { Func, FuncArg } from "../getFunctions/type";
-import { extractCommentText } from "./hook";
-
-export function functionDocument(projectRoot: string, func: Func): Result | null {
-  const funcPath = path.join(projectRoot, func.file);
-  if (!fs.existsSync(funcPath)) return null;
-
-  const fileContent = fs.readFileSync(funcPath, "utf-8");
-  const lines = fileContent.split("\n");
-  const commentText = extractCommentText(lines, func.line);
-
-  return Document(commentText);
-}
+import { MarkupKind } from '../vscode_type';
+import type { Result } from '../document/type';
+import type { Func, FuncArg } from '../getFunctions/type';
 
 export function argumentName(arg: FuncArg): string {
   if (arg.isNamed) return arg.name;
-  if (arg.name === "@") return "@";
+  if (arg.name === "@" || arg.name === "*") return arg.name;
 
   return arg.position.toString();
 }
 
 export function argumentToken(arg: FuncArg): string {
   if (arg.isNamed) return `${arg.name}=`;
-  if (arg.name === "@") return "$@";
+  if (arg.name === "@" || arg.name === "*") return "$" + arg.name;
 
   return "$" + arg.position.toString();
 }
@@ -42,13 +27,11 @@ export function argumentDescription(doc: Result | null, arg: FuncArg): string {
 }
 
 export function argumentMarkdown(
-  projectRoot: string,
   func: Func,
   arg: FuncArg,
-  doc?: Result | null,
+  doc: Result,
 ): string {
-  const resolvedDoc = doc === undefined ? functionDocument(projectRoot, func) : doc;
-  const description = argumentDescription(resolvedDoc, arg);
+  const description = argumentDescription(doc, arg);
   const header = `\`${func.name} ${argumentToken(arg)}\``;
 
   if (!description) return header;

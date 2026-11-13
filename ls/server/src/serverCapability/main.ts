@@ -6,6 +6,7 @@ export function serverCapability(): InitializeResult {
       textDocumentSync: {
         openClose: true,
         change: TextDocumentSyncKind.Incremental,
+        save: true,
       },
       completionProvider: {
         resolveProvider: true,

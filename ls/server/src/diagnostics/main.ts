@@ -1,73 +1,10 @@
-import { TextDocument } from '../vscode_type';
-import { Func } from '../getFunctions/type';
-import { Diagnostics } from './type';
-import { functionCallRegex, functionDefRegex } from './regex';
-import { handleFirstEmptyLine, handleEmptyLine, handleFinalNewLine } from './emptyLine';
-import { handleFunctionCall } from './functionCall';
-import { isInsideQuoteFunctionCall } from './functionCall/matcher';
-import { isCommentLine, hasIgnoreComment } from './comment';
-import { MultiLineArgsText } from './argument';
-import { checkUnusedArguments } from './unusedArgument';
+import type { TextDocument } from '../vscode_type';
+import type { Diagnostics } from './type';
+import type { DiagnosticSnapshot } from './snapshot';
 
-function resetRegexLastIndex() {
-  functionCallRegex.lastIndex = 0;
-}
-
-export function validateTextDocument({
-  functions,
-  textDocument,
-}: {
-  functions: Func[];
-  textDocument: TextDocument;
+export function validateTextDocument({ diagnostics, textDocument }: {
+  readonly diagnostics: DiagnosticSnapshot; readonly textDocument: TextDocument;
 }): Diagnostics[] {
-  const text = textDocument.getText();
-  const diagnostics: Diagnostics[] = [];
-  const lines = text.split('\n');
-
-  handleFirstEmptyLine(lines, diagnostics);
-
-  const currentFileFunctions = functions.filter((func) => {
-    return textDocument.uri.endsWith(func.file);
-  });
-
-  currentFileFunctions.forEach((func) => {
-    checkUnusedArguments(lines, func, diagnostics);
-  });
-
-  lines.forEach((line, lineIndex) => {
-    const trimmedLine = line.trim();
-    if (isCommentLine(trimmedLine)) return;
-    if (hasIgnoreComment(trimmedLine)) return;
-    if (functionDefRegex.test(line)) return;
-
-    if (trimmedLine === '') {
-      handleEmptyLine(line, lineIndex, diagnostics);
-      return;
-    }
-
-    let match;
-    while ((match = functionCallRegex.exec(line)) !== null) {
-      const functionName = match[1];
-      const startChar = match.index;
-      const endChar = startChar + functionName.length;
-
-      if (isInsideQuoteFunctionCall(line, startChar)) continue;
-
-      handleFunctionCall(
-        functions,
-        functionName,
-        MultiLineArgsText(lines, lineIndex, endChar),
-        startChar,
-        endChar,
-        lineIndex,
-        diagnostics
-      );
-    }
-
-    resetRegexLastIndex();
-  });
-
-  handleFinalNewLine(text, diagnostics, lines.length);
-
-  return diagnostics;
+  const file = diagnostics.files.get(textDocument.uri);
+  return file?.version === textDocument.version ? [...file.items] : [];
 }
