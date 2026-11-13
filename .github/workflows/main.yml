@@ -65,6 +65,26 @@ jobs:
           export PATH="$HOME/.local/bin:$PATH"
           zsh -c "source main.zsh && cd test && z.t"
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: ls/package-lock.json
+
+      - name: Install LSP dependencies
+        working-directory: ls
+        timeout-minutes: 5
+        run: npm ci --no-audit --no-fund
+
+      - name: Run LSP tests
+        working-directory: ls
+        shell: bash
+        timeout-minutes: 5
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          npm test -- --maxWorkers=2
+
   check-zsh-release:
     runs-on: ubuntu-26.04
     timeout-minutes: 5
