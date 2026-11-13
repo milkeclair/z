@@ -7,6 +7,7 @@ import { Func, FuncArg } from "../getFunctions/type";
 import { extractCommentText } from "./hook";
 
 export function functionDocument(projectRoot: string, func: Func): Result | null {
+  if (func.documentation) return func.documentation;
   const funcPath = path.join(projectRoot, func.file);
   if (!fs.existsSync(funcPath)) return null;
 

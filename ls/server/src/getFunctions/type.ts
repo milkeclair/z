@@ -1,3 +1,5 @@
+import type { Result } from '../document/type';
+
 export type FuncArg = {
   position: number;
   name: string;
@@ -6,6 +8,7 @@ export type FuncArg = {
 };
 
 export type Func = {
+  documentation?: Result;
   name: string;
   file: string;
   line: number;

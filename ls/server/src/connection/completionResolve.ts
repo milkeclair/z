@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { CompletionItem, MarkupKind } from '../vscode_type';
 import { Document } from '../document/main';
-import { FuncArg } from '../getFunctions/type';
+import { Func, FuncArg } from '../getFunctions/type';
 import { extractCommentText, commentToMarkDown } from './hook';
 
 type CompletionData = {
@@ -42,12 +42,24 @@ function completionData(value: unknown): CompletionData | null {
   };
 }
 
-export function zCompletionResolve(result: CompletionItem, projectRoot: string): CompletionItem {
+export function zCompletionResolve(result: CompletionItem, projectRoot: string, functions?: Func[]): CompletionItem {
   const data = completionData(result.data);
   if (!data) return result;
 
   const details = data.file + ':' + data.line;
   result.detail = details;
+
+  if (functions) {
+    const current = functions.find(func => func.name === result.label && func.file === data.file);
+    if (current?.documentation) {
+      result.detail = current.file + ':' + current.line;
+      result.documentation = {
+        kind: MarkupKind.Markdown,
+        value: commentToMarkDown(current.documentation, current.name, current.args),
+      };
+    }
+    return result;
+  }
 
   const funcPath = path.join(projectRoot, data.file);
   if (!fs.existsSync(funcPath)) return result;
