@@ -57,7 +57,7 @@
     "test": "npm run b && tsc -p server/tsconfig.test.json --noEmit && TMPDIR=/tmp vitest run",
     "clean": "rm -rf client/dist server/dist client/tsconfig.tsbuildinfo server/tsconfig.tsbuildinfo",
     "vscode:prepublish": "npm run b",
-    "package": "npm install --package-lock=false && rm -rf client/dist server/dist client/tsconfig.tsbuildinfo server/tsconfig.tsbuildinfo && vsce package"
+    "package": "npm ci && vsce package"
   },
   "dependencies": {
     "glob": "^14.0.6",

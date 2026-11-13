@@ -24,3 +24,8 @@ source-built Zsh version. The Node setup caches npm downloads using
 Commit `package-lock.json` together with changes to `package.json`.
 Use `npm install` to update the lockfile when intentionally changing dependencies,
 then run the checks above from a clean installation.
+
+## Package the extension
+
+From this directory, run `npm run package`. It installs the locked dependencies
+with `npm ci` and creates a VSIX after the prepublish build.
