@@ -54,6 +54,7 @@
   },
   "scripts": {
     "b": "tsc -b",
+    "test": "tsc -p server/tsconfig.test.json --noEmit && TMPDIR=/tmp vitest run",
     "clean": "rm -rf client/dist server/dist client/tsconfig.tsbuildinfo server/tsconfig.tsbuildinfo",
     "vscode:prepublish": "tsc -b",
     "package": "npm install --package-lock=false && rm -rf client/dist server/dist client/tsconfig.tsbuildinfo server/tsconfig.tsbuildinfo && vsce package"
@@ -65,9 +66,10 @@
     "vscode-languageserver-textdocument": "^1.0.12"
   },
   "devDependencies": {
+    "@types/node": "^26.0.1",
+    "@types/vscode": "^1.125.0",
     "@vscode/vsce": "^3.9.2",
     "typescript": "^6.0.3",
-    "@types/node": "^26.0.1",
-    "@types/vscode": "^1.125.0"
+    "vitest": "^4.1.10"
   }
 }
