@@ -126,4 +126,36 @@ describe('refreshFunctionSnapshot', () => {
     expect(first.functions).not.toBe(second.functions);
     expect(first.hydrator.files.size).toBe(0);
   });
+  test('文書ASTと関数索引は同じhydrationを参照し、呼び出し編集では索引を再利用する', () => {
+    const root = fixture();
+    const definition = document(root, 'definitions.zsh', 1, 'helper() { : }\n');
+    const caller = document(root, 'caller.zsh', 1, 'helper x\n');
+    const first = refreshFunctionSnapshot({ projectRoot: root, documents: [definition, caller] });
+    const file = first.hydrator.files.get('definitions.zsh');
+    expect(first.documents.get(definition.uri)?.file).toBe(file);
+    expect(first.targets.get('helper')?.[0].definition).toBe(file?.functions[0].definition);
+    const spy = vi.spyOn(Lexer, 'tokenize');
+    const next = refreshFunctionSnapshot({ previous: first, projectRoot: root,
+      documents: [definition, document(root, 'caller.zsh', 2, 'helper y\n')] });
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(next.targets).toBe(first.targets);
+    expect(next.documents.get(definition.uri)).toBe(first.documents.get(definition.uri));
+  });
+
+  test('workspace外の開いた文書は探索用に保持し、候補へ混ぜず、close時に解放する', () => {
+    const root = fixture();
+    const external = document(path.dirname(root), 'external.zsh', 1, 'external() { : }\n');
+    const first = refreshFunctionSnapshot({ projectRoot: root, documents: [external] });
+    expect(first.targets.size).toBe(0);
+    expect(first.hydrator.files.size).toBe(0);
+    expect(first.documents.get(external.uri)?.file.functions[0].name).toBe('external');
+    const spy = vi.spyOn(Lexer, 'tokenize');
+    const same = refreshFunctionSnapshot({ previous: first, projectRoot: root, documents: [external] });
+    expect(same).toBe(first);
+    expect(spy).not.toHaveBeenCalled();
+    const closed = refreshFunctionSnapshot({ previous: same, projectRoot: root, documents: [] });
+    expect(closed.documents.size).toBe(0);
+    expect(first.documents.size).toBe(1);
+  });
+
 });

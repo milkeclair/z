@@ -2,15 +2,20 @@ import type { TextDocuments, TextDocument } from '../vscode_type';
 import type { Func } from '../getFunctions/type';
 import { EmptyZshHydrator, refreshZshHydrator } from '../zshHydrator';
 import type { ZshHydrator } from '../zshHydrator';
-import { functionsFromHydrator } from './projection';
+import { projectFunctions } from './projection';
+import { documentSnapshots } from './documents';
+import type { DocumentSnapshots } from './documents';
+import type { FunctionTargets } from './target';
 
 export type FunctionSnapshot = {
   readonly hydrator: ZshHydrator;
   readonly functions: Func[];
+  readonly targets: FunctionTargets;
+  readonly documents: DocumentSnapshots;
 };
 
 export function createFunctionSnapshot(): FunctionSnapshot {
-  return { hydrator: EmptyZshHydrator, functions: [] };
+  return { hydrator: EmptyZshHydrator, functions: [], targets: new Map(), documents: new Map() };
 }
 
 type RefreshInput = {
@@ -21,10 +26,13 @@ type RefreshInput = {
 export function refreshFunctionSnapshot({
   projectRoot, documents, previous = createFunctionSnapshot(),
 }: RefreshInput & { readonly previous?: FunctionSnapshot }): FunctionSnapshot {
-  const hydrator = refreshZshHydrator({ previous: previous.hydrator, projectRoot, documents });
-  if (sameFiles(previous.hydrator, hydrator)) return previous;
-  return { hydrator, functions: sameFunctionFiles(previous.hydrator, hydrator)
-    ? previous.functions : functionsFromHydrator(hydrator) };
+  const inputs = 'all' in documents ? documents.all() : documents;
+  const hydrator = refreshZshHydrator({ previous: previous.hydrator, projectRoot, documents: inputs });
+  const open = documentSnapshots(inputs, hydrator, previous.documents);
+  if (sameFiles(previous.hydrator, hydrator) && open === previous.documents) return previous;
+  const projection = sameFunctionFiles(previous.hydrator, hydrator)
+    ? { functions: previous.functions, targets: previous.targets } : projectFunctions(hydrator);
+  return { hydrator, functions: projection.functions, targets: projection.targets, documents: open };
 }
 
 export function refreshFunctions(input: RefreshInput): Func[] {
