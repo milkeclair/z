@@ -51,7 +51,7 @@ export function callAt(cursor: Cursor): SimpleCommandNode | null {
 
 export function functionCommand(command: SimpleCommandNode): boolean {
   return !command.precommandModifiers.some(modifier =>
-    modifier.type === 'builtin' || modifier.type === 'command' || modifier.type === 'exec');
+    modifier.type === 'builtin' || modifier.type === 'command');
 }
 
 export function inside(range: SourceRange, offset: number): boolean {

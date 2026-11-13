@@ -57,7 +57,7 @@ describe('completion@AST', () => {
   });
   test.each(['print gr¦', 'print "gr¦"', '# gr¦', 'print > gr¦', 'value=gr¦',
     'for x in gr¦; do :; done', 'case x in gr¦) :;; esac', '[[ gr¦ ]]',
-    '(( gr¦ ))', 'for x in y\n ¦do :; done', 'case x in\n ¦x) :;; esac', 'builtin gr¦', 'command gr¦', 'exec gr¦',
+    '(( gr¦ ))', 'for x in y\n ¦do :; done', 'case x in\n ¦x) :;; esac', 'builtin gr¦', 'command gr¦',
     'print <<END\ngr¦\nEND', '$gr¦', 'print "x$(print gr¦)"'])('command以外を候補にしない: %s', source => {
     expect(fixture(source).complete()).toEqual([]);
   });
@@ -92,7 +92,7 @@ describe('completion@AST', () => {
 });
 
 describe('hover and definition@AST', () => {
-  test.each(['gr¦eet x', '"gr¦eet" x', "gr\\¦eet x", 'print "$(gr¦eet x)"'])('実際の呼び出しだけを解決する: %s', source => {
+  test.each(['gr¦eet x', '"gr¦eet" x', "gr\\¦eet x", 'print "$(gr¦eet x)"', 'exec gr¦eet x'])('実際の呼び出しだけを解決する: %s', source => {
     const f = fixture(source);
     expect(f.hover()).toMatchObject({ contents: { value: expect.stringContaining('Greeting') } });
     expect(f.definition()).toEqual({ uri: f.definitionUri, range: {
@@ -101,7 +101,7 @@ describe('hover and definition@AST', () => {
   });
   test.each(['print gr¦eet', 'print "gr¦eet"', '# gr¦eet', 'print > gr¦eet',
     '[[ gr¦eet ]]', '(( gr¦eet ))', 'value=gr¦eet', '$gr¦eet',
-    'command gr¦eet', 'builtin gr¦eet', 'exec gr¦eet',
+    'command gr¦eet', 'builtin gr¦eet',
     'print <<END\ngr¦eet\nEND'])('同名テキストへ定義ジャンプしない: %s', source => {
     const f = fixture(source);
     expect(f.definition()).toBeNull();
