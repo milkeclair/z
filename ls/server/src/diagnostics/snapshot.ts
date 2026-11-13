@@ -13,15 +13,15 @@ import type { Diagnostics } from './type';
 
 export type FileDiagnostics = {
   readonly file: ZshFileHydration; readonly facts: FileFacts; readonly items: readonly Diagnostics[];
-  readonly version: number | null; readonly project: boolean;
+  readonly version: number | null; readonly project: boolean; readonly resultId: string;
 };
 export type DiagnosticSnapshot = {
-  readonly targets: FunctionTargets; readonly context: ResolutionContext;
+  readonly revision: number; readonly targets: FunctionTargets; readonly context: ResolutionContext;
   readonly files: ReadonlyMap<string, FileDiagnostics>;
 };
 
 export function createDiagnosticSnapshot(): DiagnosticSnapshot {
-  return { targets: new Map(), context: { environment: emptyShellEnvironment(), projectRoot: '',
+  return { revision: 0, targets: new Map(), context: { environment: emptyShellEnvironment(), projectRoot: '',
     aliases: new Set(), globalAliases: new Set(), suffixAliases: new Set(), autoloads: new Set() }, files: new Map() };
 }
 
@@ -74,6 +74,7 @@ export function refreshDiagnosticSnapshot({ snapshot, environment, previous = cr
   const projectFacts = [...inputs].flatMap(([uri, input]) => input.project ? [facts.get(uri)] : [])
     .filter((file): file is FileFacts => file !== undefined);
   const context = resolutionContext(projectFacts, environment, snapshot.hydrator.projectRoot, previous.context);
+  const revision = previous.revision + 1;
   const files = new Map<string, FileDiagnostics>();
   for (const [uri, input] of inputs) {
     const cached = previous.files.get(uri);
@@ -91,7 +92,7 @@ export function refreshDiagnosticSnapshot({ snapshot, environment, previous = cr
         suffixAliases: new Set([...context.suffixAliases, ...local.suffixAliases]),
         autoloads: new Set([...context.autoloads, ...local.autoloads]),
       };
-      files.set(uri, { ...input, facts: current,
+      files.set(uri, { ...input, facts: current, resultId: String(revision),
         items: suppressed(input.file, [...current.base, ...callDiagnostics(snapshot, input.file, current.calls, effective)])
           .toSorted((left, right) => left.range.start.line - right.range.start.line ||
             left.range.start.character - right.range.start.character) });
@@ -99,5 +100,5 @@ export function refreshDiagnosticSnapshot({ snapshot, environment, previous = cr
   }
   if (previous.context === context && previous.targets === snapshot.targets && files.size === previous.files.size &&
     [...files].every(([uri, file]) => previous.files.get(uri) === file)) return previous;
-  return { files, targets: snapshot.targets, context };
+  return { revision, files, targets: snapshot.targets, context };
 }

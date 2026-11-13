@@ -84,7 +84,8 @@ documentation examples has no suppression effect.
 Lexer, parser and documentation diagnostics retain separate sources. Formatting
 checks use syntax whitespace and exact source positions. Workspace reports
 include unsaved project files and their open versions; closed files use a null
-version. Previous workspace result URIs that disappeared receive empty reports.
+version. Reports include a result ID so clients can return their previous URI/ID
+pairs. Previous workspace result URIs that disappeared receive empty reports.
 
 Tests exercise a real Zsh environment and a compiled Node server over stdio,
 alongside AST ownership, argument contracts, controls and snapshot reuse.

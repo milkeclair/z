@@ -208,7 +208,7 @@ describe('hydrated controls and diagnostics cache', () => {
     const f = fixture('greet one\n');
     const report = workspaceDiagnostics({ diagnostics: f.diagnostics,
       previousResultIds: [{ uri: 'file:///removed.zsh', value: 'old' }] });
-    expect(report.items.find(item => item.uri === f.document.uri)).toMatchObject({ version: 1, items: expect.any(Array) });
+    expect(report.items.find(item => item.uri === f.document.uri)).toMatchObject({ version: 1, resultId: expect.any(String), items: expect.any(Array) });
     expect(report.items.find(item => item.uri === f.definitionUri)?.version).toBeNull();
     expect(report.items.find(item => item.uri === 'file:///removed.zsh')?.items).toEqual([]);
   });

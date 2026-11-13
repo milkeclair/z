@@ -11,7 +11,7 @@ export function workspaceDiagnostics({ diagnostics, previousResultIds = [] }: {
   for (const [uri, file] of diagnostics.files) {
     if (!file.project) continue;
     reported.add(uri);
-    items.push({ uri, version: file.version, kind: DocumentDiagnosticReportKind.Full, items: [...file.items] });
+    items.push({ uri, version: file.version, resultId: file.resultId, kind: DocumentDiagnosticReportKind.Full, items: [...file.items] });
   }
   for (const previous of previousResultIds) {
     if (!reported.has(previous.uri)) {

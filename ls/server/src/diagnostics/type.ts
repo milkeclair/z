@@ -15,6 +15,7 @@ export type workspaceDiagnosticsReport = {
   items: {
     uri: string;
     version: number | null;
+    resultId?: string;
     kind: typeof DocumentDiagnosticReportKind.Full;
     items: Diagnostics[];
   }[];

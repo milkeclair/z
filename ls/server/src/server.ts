@@ -93,6 +93,7 @@ function startServer(): void {
     const document = documents.get(params.textDocument.uri);
     return {
       kind: DocumentDiagnosticReportKind.Full,
+      resultId: document ? diagnosticSnapshot.files.get(document.uri)?.resultId : undefined,
       items: document ? validateTextDocument({ diagnostics: diagnosticSnapshot, textDocument: document }) : [],
     };
   });

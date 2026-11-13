@@ -322,12 +322,14 @@ describe('server@hydration stdio', () => {
         version: null, items: [{ code: 'undefined-command' }],
       });
       expect(workspace.items.find(item => item.uri === caller)).toMatchObject({ version: 3, items: [] });
+      const previous = workspace.items.find(item => item.uri === removedUri);
+      if (!previous?.resultId) throw new Error('workspace resultId required');
       fs.unlinkSync(removed);
       await client.connection.sendNotification(DidChangeWatchedFilesNotification.type, { changes: [
         { uri: removedUri, type: FileChangeType.Deleted },
       ] });
       const deleted = await bounded(client.connection.sendRequest(WorkspaceDiagnosticRequest.type, {
-        previousResultIds: [{ uri: removedUri, value: 'previous' }],
+        previousResultIds: [{ uri: removedUri, value: previous.resultId }],
       }));
       expect(deleted.items.find(item => item.uri === removedUri)).toMatchObject({ version: null, items: [] });
     } finally {
