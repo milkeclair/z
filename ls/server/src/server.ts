@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import {
   createConnection, TextDocuments, TextDocument, ProposedFeatures,
   DocumentDiagnosticReportKind, DidChangeWatchedFilesNotification,
@@ -23,6 +24,8 @@ function startServer(): void {
   let showPrivateFunctions = false;
   let supportsRefresh = false;
   let supportsWatchRegistration = false;
+  let watcherReady = false;
+  let stopped = false;
   let diagnosticsTimer: ReturnType<typeof setTimeout> | undefined;
 
   function scheduleDiagnosticsRefresh(): void {
@@ -36,8 +39,9 @@ function startServer(): void {
     }, 500);
   }
 
-  function refresh(root = projectRoot): void {
-    const next = refreshFunctionSnapshot({ projectRoot: root, documents, previous: snapshot });
+  function refresh(root = projectRoot, changedPaths?: readonly string[]): void {
+    const next = refreshFunctionSnapshot({ projectRoot: root, documents, previous: snapshot,
+      changedPaths: watcherReady ? changedPaths : undefined });
     const nextDiagnostics = refreshDiagnosticSnapshot({ snapshot: next, environment, previous: diagnosticSnapshot });
     snapshot = next;
     diagnosticSnapshot = nextDiagnostics;
@@ -63,6 +67,10 @@ function startServer(): void {
     if (supportsWatchRegistration) {
       void conn.client.register(DidChangeWatchedFilesNotification.type, {
         watchers: [{ globPattern: '**/*.zsh' }],
+      }).then(() => {
+        if (stopped) return;
+        refresh();
+        watcherReady = workspaceRoot !== '' && projectRoot === workspaceRoot;
       }).catch((error: unknown) => {
         conn.console.warn('File watcher registration failed: ' + String(error));
       });
@@ -74,10 +82,16 @@ function startServer(): void {
     showPrivateFunctions = settings.completion.showPrivateFunctions;
     refresh(projectRootFromSettings(workspaceRoot, settings.zPath));
   });
-  conn.onDidChangeWatchedFiles(() => refresh());
-  documents.onDidChangeContent(() => refresh());
-  documents.onDidSave(() => refresh());
-  documents.onDidClose(() => refresh());
+  function filePaths(uris: readonly string[]): readonly string[] {
+    return uris.flatMap(uri => {
+      try { return [fileURLToPath(uri)]; } catch { return []; }
+    });
+  }
+
+  conn.onDidChangeWatchedFiles(params => refresh(projectRoot, filePaths(params.changes.map(change => change.uri))));
+  documents.onDidChangeContent(() => refresh(projectRoot, []));
+  documents.onDidSave(event => refresh(projectRoot, filePaths([event.document.uri])));
+  documents.onDidClose(event => refresh(projectRoot, filePaths([event.document.uri])));
 
   conn.onCompletion((params) =>
     zCompletion({ params, documents, snapshot, showPrivateFunctions }));
@@ -101,6 +115,7 @@ function startServer(): void {
     workspaceDiagnostics({ diagnostics: diagnosticSnapshot, previousResultIds: params.previousResultIds }));
 
   conn.onShutdown(() => {
+    stopped = true;
     clearTimeout(diagnosticsTimer);
   });
   documents.listen(conn);

@@ -35,7 +35,7 @@ async function bounded<T>(promise: Promise<T>): Promise<T> {
   }
 }
 
-function startServer(env?: NodeJS.ProcessEnv) {
+function startServer(env?: NodeJS.ProcessEnv, rejectWatchRegistration = false) {
   const child = spawn(process.execPath, [path.resolve(__dirname, '../../dist/server.js'), '--stdio'], {
     stdio: 'pipe', env,
   });
@@ -49,6 +49,7 @@ function startServer(env?: NodeJS.ProcessEnv) {
   const refreshRequests: string[] = [];
   connection.onRequest(RegistrationRequest.type, (params) => {
     registrations.push(...params.registrations.map(registration => registration.method));
+    if (rejectWatchRegistration) throw new Error('watch registration rejected by client');
   });
   connection.onRequest('workspace/diagnostic/refresh', () => { refreshRequests.push('refresh'); });
   connection.listen();
@@ -172,6 +173,9 @@ describe('server@hydration stdio', () => {
       await client.connection.sendNotification(DidSaveTextDocumentNotification.type, {
         textDocument: { uri: definitionUri },
       });
+      await client.connection.sendNotification(DidChangeWatchedFilesNotification.type, { changes: [
+        { uri: pathToFileURL(extra).href, type: FileChangeType.Created },
+      ] });
       await client.edit(callerUri, 'z.', 4);
       expect((await client.items(callerUri)).map(item => item.label)).toEqual(['z.extra', 'z.live']);
 
@@ -335,6 +339,60 @@ describe('server@hydration stdio', () => {
     } finally {
       await client.close();
     }
+  }, 15000);
+
+  test.each(['unsupported', 'rejected', 'no-workspace'])('watcherが%sなら文書更新時の全走査でdisk変更を同期する', async mode => {
+    const root = fixture();
+    const caller = pathToFileURL(path.join(root, 'caller.zsh')).href;
+    const client = startServer(undefined, mode === 'rejected');
+    try {
+      await client.initialize(root, mode !== 'unsupported', mode !== 'no-workspace');
+      await client.open(caller, 'gre');
+      await client.items(caller, 3);
+      fs.writeFileSync(path.join(root, 'added.zsh'), 'greet() { : }\n');
+      await client.edit(caller, 'gree', 2);
+      expect((await client.items(caller, 4)).map(item => item.label)).toEqual(['greet']);
+      fs.unlinkSync(path.join(root, 'added.zsh'));
+      await client.edit(caller, 'gre', 3);
+      expect(await client.items(caller, 3)).toEqual([]);
+      expect(client.registrations).toEqual(mode !== 'unsupported' ? ['workspace/didChangeWatchedFiles'] : []);
+    } finally { await client.close(); }
+  }, 15000);
+
+  test('watcher利用時は編集で未知のdiskを走査せず、通知・save・closeで対象だけ反映する', async () => {
+    const root = fixture();
+    const caller = pathToFileURL(path.join(root, 'caller.zsh')).href;
+    const definition = path.join(root, 'a.zsh');
+    const uri = pathToFileURL(definition).href;
+    const client = startServer();
+    try {
+      await client.initialize(root, true);
+      await client.open(caller, 'z.');
+      await client.items(caller);
+      // Observe a refresh after registration to establish the incremental path.
+      await expect.poll(() => client.refreshRequests.length).toBeGreaterThan(0);
+      fs.writeFileSync(definition, 'z.disk() { : }\n');
+      await client.edit(caller, 'z.d', 2);
+      expect(await client.items(caller, 3)).toEqual([]);
+      await client.connection.sendNotification(DidChangeWatchedFilesNotification.type, { changes: [
+        { uri, type: FileChangeType.Created },
+      ] });
+      expect((await client.items(caller, 3)).map(item => item.label)).toEqual(['z.disk']);
+      await client.open(uri, 'z.live() { : }\n');
+      await client.edit(caller, 'z.', 3);
+      expect((await client.items(caller)).map(item => item.label)).toEqual(['z.live']);
+      fs.writeFileSync(definition, 'z.saved() { : }\n');
+      await client.connection.sendNotification(DidSaveTextDocumentNotification.type, { textDocument: { uri } });
+      expect((await client.items(caller)).map(item => item.label)).toEqual(['z.live']);
+      fs.unlinkSync(definition);
+      await client.connection.sendNotification(DidChangeWatchedFilesNotification.type, { changes: [
+        { uri, type: FileChangeType.Deleted },
+        { uri: 'untitled:ignored.zsh', type: FileChangeType.Created },
+      ] });
+      expect((await client.items(caller)).map(item => item.label)).toEqual(['z.live']);
+      await client.connection.sendNotification(DidCloseTextDocumentNotification.type, { textDocument: { uri } });
+      expect(await client.items(caller)).toEqual([]);
+    } finally { await client.close(); }
   }, 15000);
 
 });
