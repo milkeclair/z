@@ -1,6 +1,6 @@
 import type { QuoteKind, SourcePosition } from '../token';
 
-type LexerDiagnosticKind = 'unclosedQuote';
+type LexerDiagnosticKind = 'unclosedQuote' | 'unclosedHereDocument';
 
 type DiagnosticRange = {
   readonly start: SourcePosition;

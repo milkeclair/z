@@ -14,6 +14,7 @@ type SpecialCharacterSet = {
   readonly carriageReturnLineFeed: string;
   readonly backslash: string;
   readonly backslashLineFeed: string;
+  readonly dollar: string;
   readonly hash: string;
   readonly singleQuote: string;
   readonly doubleQuote: string;
@@ -29,6 +30,7 @@ export const SpecialCharacters: SpecialCharacterSet = {
   carriageReturnLineFeed: '\r\n',
   backslash: '\\',
   backslashLineFeed: '\\\n',
+  dollar: '$',
   hash: '#',
   singleQuote: "'",
   doubleQuote: '"',
@@ -42,6 +44,8 @@ export const Operators: readonly OperatorDefinition[] = [
   { value: '&&', kind: 'andIf' },
   { value: '||', kind: 'orIf' },
   { value: '|&', kind: 'pipeErr' },
+  { value: '&|', kind: 'backgroundPipe' },
+  { value: '&!', kind: 'backgroundBang' },
   { value: ';;', kind: 'doubleSemicolon' },
   { value: ';&', kind: 'caseFallthrough' },
   { value: ';|', kind: 'caseContinue' },

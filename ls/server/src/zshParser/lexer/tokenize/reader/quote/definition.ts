@@ -1,6 +1,6 @@
 import { SpecialCharacters } from '../../../character';
 
-export type QuoteReadKind = 'single' | 'double' | 'dollarSingle';
+export type QuoteReadKind = 'single' | 'double' | 'dollarSingle' | 'backtick';
 
 export type QuoteDefinition = {
   readonly quoteKind: QuoteReadKind;
@@ -28,4 +28,8 @@ export const DollarSingleQuoteDefinition: QuoteDefinition = {
   start: SpecialCharacters.dollarSingleQuoteStart,
   end: SpecialCharacters.singleQuote,
   escapeBackslash: true,
+};
+
+export const BacktickQuoteDefinition: QuoteDefinition = {
+  quoteKind: 'backtick', start: String.fromCharCode(96), end: String.fromCharCode(96), escapeBackslash: true,
 };

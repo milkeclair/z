@@ -1,5 +1,7 @@
 type TokenKind =
   | 'word'
+  | 'hereDocBody'
+  | 'hereDocEnd'
   | 'operator'
   | 'comment'
   | 'whitespace'
@@ -21,13 +23,15 @@ export type OperatorKind =
   | 'pipe'
   | 'pipeErr'
   | 'background'
+  | 'backgroundPipe'
+  | 'backgroundBang'
   | 'redirect'
   | 'conditionStart'
   | 'conditionEnd'
   | 'arithmeticStart'
   | 'arithmeticEnd';
 
-export type QuoteKind = 'none' | 'single' | 'double' | 'dollarSingle' | 'backslash' | 'mixed';
+export type QuoteKind = 'none' | 'single' | 'double' | 'dollarSingle' | 'backtick' | 'backslash' | 'mixed';
 
 export type SourcePosition = {
   readonly offset: number;
@@ -35,7 +39,7 @@ export type SourcePosition = {
   readonly character: number;
 };
 
-type SourceRange = {
+export type SourceRange = {
   readonly start: SourcePosition;
   readonly end: SourcePosition;
 };
@@ -48,6 +52,10 @@ export type Token = {
   readonly quoted: boolean;
   readonly quoteKind: QuoteKind;
   readonly operatorKind?: OperatorKind;
+  readonly hereDoc?: {
+    readonly operatorOffset: number; readonly delimiter: string; readonly quoted: boolean;
+    readonly stripTabs: boolean; readonly closed: boolean;
+  };
 };
 
 export type TokenizeOptions = {

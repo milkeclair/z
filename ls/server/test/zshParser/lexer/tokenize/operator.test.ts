@@ -13,7 +13,7 @@ function operatorSummaries(input: string) {
 describe('tokenize@operator', () => {
   test('定義済みoperatorをすべてトークン化する', () => {
     expect(
-      operatorSummaries('&>> <<< <<- && || |& ;; ;& ;| [[ ]] (( )) >> << >| <> <& >& &> ( ) { } ; | & < >'),
+      operatorSummaries('&>> <<< <<- && || |& &| &! ;; ;& ;| [[ ]] (( )) >> << >| <> <& >& &> ( ) { } ; | & < >'),
     ).toEqual([
       { value: '&>>', operatorKind: 'redirect' },
       { value: '<<<', operatorKind: 'redirect' },
@@ -21,6 +21,8 @@ describe('tokenize@operator', () => {
       { value: '&&', operatorKind: 'andIf' },
       { value: '||', operatorKind: 'orIf' },
       { value: '|&', operatorKind: 'pipeErr' },
+      { value: '&|', operatorKind: 'backgroundPipe' },
+      { value: '&!', operatorKind: 'backgroundBang' },
       { value: ';;', operatorKind: 'doubleSemicolon' },
       { value: ';&', operatorKind: 'caseFallthrough' },
       { value: ';|', operatorKind: 'caseContinue' },
@@ -48,9 +50,11 @@ describe('tokenize@operator', () => {
   });
 
   test('重なり合うoperatorは最長一致で読む', () => {
-    expect(operatorSummaries('&>> &> <<< <<- << ;; ;& ;| && || |& (( (')).toEqual([
+    expect(operatorSummaries('&>> &> &| & <<< <<- << ;; ;& ;| && || |& (( (')).toEqual([
       { value: '&>>', operatorKind: 'redirect' },
       { value: '&>', operatorKind: 'redirect' },
+      { value: '&|', operatorKind: 'backgroundPipe' },
+      { value: '&', operatorKind: 'background' },
       { value: '<<<', operatorKind: 'redirect' },
       { value: '<<-', operatorKind: 'redirect' },
       { value: '<<', operatorKind: 'redirect' },

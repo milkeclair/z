@@ -11,6 +11,7 @@ export type { TokenizeResult } from './tokenize';
 export type {
   OperatorKind,
   QuoteKind,
+  SourceRange,
   SourcePosition,
   Token,
   TokenizeOptions,

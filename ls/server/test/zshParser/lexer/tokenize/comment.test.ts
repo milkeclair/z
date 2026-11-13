@@ -45,4 +45,28 @@ describe('tokenize@comment', () => {
       { kind: 'eof', value: '' },
     ]);
   });
+
+  test('parameter expansion内のハッシュはcommentにしない', () => {
+    expect(
+      tokenSummaries('echo ${#items[@]} && return 1').map((token) => ({
+        kind: token.kind,
+        value: token.value,
+        operatorKind: token.operatorKind,
+      })),
+    ).toEqual([
+      { kind: 'word', value: 'echo', operatorKind: null },
+      { kind: 'whitespace', value: ' ', operatorKind: null },
+      { kind: 'word', value: '$', operatorKind: null },
+      { kind: 'operator', value: '{', operatorKind: 'leftBrace' },
+      { kind: 'word', value: '#items[@]', operatorKind: null },
+      { kind: 'operator', value: '}', operatorKind: 'rightBrace' },
+      { kind: 'whitespace', value: ' ', operatorKind: null },
+      { kind: 'operator', value: '&&', operatorKind: 'andIf' },
+      { kind: 'whitespace', value: ' ', operatorKind: null },
+      { kind: 'word', value: 'return', operatorKind: null },
+      { kind: 'whitespace', value: ' ', operatorKind: null },
+      { kind: 'word', value: '1', operatorKind: null },
+      { kind: 'eof', value: '', operatorKind: null },
+    ]);
+  });
 });

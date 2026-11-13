@@ -5,13 +5,11 @@ type ScanContext<State> = {
 };
 
 export function scan<State>({ state, done, step }: ScanContext<State>): State {
-  if (done(state)) {
-    return state;
-  } else {
-    return scan({
-      state: step(state),
-      done,
-      step,
-    });
+  let current = state;
+
+  while (!done(current)) {
+    current = step(current);
   }
+
+  return current;
 }
