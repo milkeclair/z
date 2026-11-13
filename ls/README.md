@@ -1,7 +1,5 @@
 # z-ls
 
-Requires VS Code 1.146.0 or newer, matching the current VS Code API types.
-
 ## Development checks
 
 Use Node.js 24 and make Zsh available on PATH. From this directory:
