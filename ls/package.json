@@ -11,7 +11,7 @@
     "url": "https://github.com/milkeclair/z"
   },
   "engines": {
-    "vscode": "^1.125.0"
+    "vscode": "^1.146.0"
   },
   "categories": [
     "Programming Languages"
@@ -57,19 +57,19 @@
     "test": "npm run b && tsc -p server/tsconfig.test.json --noEmit && TMPDIR=/tmp vitest run",
     "clean": "rm -rf client/dist server/dist client/tsconfig.tsbuildinfo server/tsconfig.tsbuildinfo",
     "vscode:prepublish": "npm run b",
-    "package": "npm install --package-lock=false && rm -rf client/dist server/dist client/tsconfig.tsbuildinfo server/tsconfig.tsbuildinfo && vsce package"
+    "package": "npm ci && vsce package"
   },
   "dependencies": {
-    "glob": "^13.0.6",
-    "vscode-languageclient": "^10.0.1",
-    "vscode-languageserver": "^10.0.1",
-    "vscode-languageserver-textdocument": "^1.0.12"
+    "glob": "^14.0.6",
+    "vscode-languageclient": "^11.0.0",
+    "vscode-languageserver": "^11.0.0",
+    "vscode-languageserver-textdocument": "^1.0.16"
   },
   "devDependencies": {
-    "@types/node": "^26.0.1",
-    "@types/vscode": "^1.125.0",
-    "@vscode/vsce": "^3.9.2",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.10"
+    "@types/node": "^26.6.6",
+    "@types/vscode": "^1.146.0",
+    "@vscode/vsce": "^4.1.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
   }
 }
