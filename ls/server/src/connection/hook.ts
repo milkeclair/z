@@ -1,57 +1,5 @@
-import { HoverParams, TextDocument } from '../vscode_type';
-import { Result } from '../document/type';
-import { FuncArg } from '../getFunctions/type';
-import { nonEmptyWordRegex } from './regex';
-
-const COMMENT_CHAR = '#';
-const SPACE_OFFSET = 1;
-const COMMENT_START_OFFSET = 2;
-
-function extractLineContent(params: HoverParams, document: TextDocument): string {
-  const line = document.getText({
-    start: { line: params.position.line, character: 0 },
-    end: { line: params.position.line, character: Number.MAX_SAFE_INTEGER },
-  });
-
-  let startIndex = params.position.character;
-  let endIndex = params.position.character;
-
-  const isNonEmpty = (char: string) => nonEmptyWordRegex.test(char);
-
-  while (startIndex > 0 && isNonEmpty(line[startIndex - 1])) {
-    startIndex--;
-  }
-  while (endIndex < line.length && isNonEmpty(line[endIndex])) {
-    endIndex++;
-  }
-
-  return line.substring(startIndex, endIndex);
-}
-
-function extractCommentText(lines: string[], funcLine: number): string {
-  const commentLines: string[] = [];
-  let i = funcLine - COMMENT_START_OFFSET;
-
-  while (i >= 0 && lines[i].trim().startsWith(COMMENT_CHAR)) {
-    commentLines.unshift(lines[i]);
-    i--;
-  }
-
-  return commentLines
-    .map((line) => {
-      if (line.trim() === '') return '';
-
-      const hashIndex = line.indexOf(COMMENT_CHAR);
-      let comment = line.substring(hashIndex + SPACE_OFFSET);
-
-      if (comment.startsWith(' ')) {
-        comment = comment.substring(SPACE_OFFSET);
-      }
-
-      return comment;
-    })
-    .join('\n');
-}
+import type { Result } from '../document/type';
+import type { FuncArg } from '../getFunctions/type';
 
 function findParameterDescription(
   parameters: { name: string; description: string }[],
@@ -72,7 +20,7 @@ function findParameterDescription(
 
 function formatArgument(arg: FuncArg, parameters: { name: string; description: string }[]): string {
   const optional = arg.optional ? '?' : '';
-  const argName = arg.isNamed ? arg.name : arg.name === '@' ? '@' : arg.position.toString();
+  const argName = arg.isNamed ? arg.name : (arg.name === '@' || arg.name === '*') ? arg.name : arg.position.toString();
   const description = findParameterDescription(parameters, argName);
 
   return `- \`$${argName}${optional}:\` ${description}`;
@@ -134,4 +82,4 @@ function commentToMarkDown(comment: Result, funcName: string, args: FuncArg[] = 
   return md.join('\n');
 }
 
-export { extractLineContent, extractCommentText, commentToMarkDown };
+export { commentToMarkDown };

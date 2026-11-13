@@ -71,14 +71,14 @@ function startServer(): void {
   documents.onDidClose(() => refresh());
 
   conn.onCompletion((params) =>
-    zCompletion({ params, documents, functions: snapshot.functions, showPrivateFunctions }));
-  conn.onCompletionResolve((result) => zCompletionResolve(result, projectRoot, snapshot.functions));
+    zCompletion({ params, documents, snapshot, showPrivateFunctions }));
+  conn.onCompletionResolve((result) => zCompletionResolve(result, snapshot));
   conn.onHover((params) =>
-    zHover({ params, documents, functions: snapshot.functions, projectRoot }));
+    zHover({ params, documents, snapshot }));
   conn.onSignatureHelp((params) =>
-    zSignatureHelp({ params, documents, functions: snapshot.functions, projectRoot }));
+    zSignatureHelp({ params, documents, snapshot }));
   conn.onDefinition((params) =>
-    zDefinition({ params, documents, functions: snapshot.functions, projectRoot }));
+    zDefinition({ params, documents, snapshot }));
 
   conn.languages.diagnostics.on((params) => {
     const document = documents.get(params.textDocument.uri);

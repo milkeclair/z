@@ -7,7 +7,7 @@ import { spawn } from 'node:child_process';
 import {
   createProtocolConnection, InitializeRequest, InitializedNotification,
   ShutdownRequest, ExitNotification, RegistrationRequest, CompletionRequest,
-  CompletionResolveRequest, HoverRequest, SignatureHelpRequest, DocumentDiagnosticRequest,
+  CompletionResolveRequest, HoverRequest, SignatureHelpRequest, DefinitionRequest, DocumentDiagnosticRequest,
   DidOpenTextDocumentNotification, DidChangeTextDocumentNotification,
   DidSaveTextDocumentNotification, DidCloseTextDocumentNotification,
   DidChangeWatchedFilesNotification, DidChangeConfigurationNotification, FileChangeType,
@@ -239,4 +239,46 @@ describe('server@hydration stdio', () => {
       await client.close();
     }
   }, 15000);
+  test('一般名の呼び出し・複数行引数・正確な定義位置を実サーバーで返す', async () => {
+    const root = fixture();
+    const definition = path.join(root, '日本語 name.zsh');
+    const definitionUri = pathToFileURL(definition).href;
+    fs.writeFileSync(definition, '# Greeting\n# $1: first\n# $2: second\n  function greet { : }\n');
+    const caller = pathToFileURL(path.join(root, 'caller.zsh')).href;
+    const client = startServer();
+    try {
+      await client.initialize(root, false);
+      await client.open(caller, 'greet "hello\nworld" ');
+      const signature = await bounded(client.connection.sendRequest(SignatureHelpRequest.type, {
+        textDocument: { uri: caller }, position: { line: 1, character: 7 },
+      }));
+      expect(signature).toMatchObject({ activeParameter: 1,
+        signatures: [{ parameters: [
+          { documentation: { value: 'first' } }, { documentation: { value: 'second' } },
+        ] }] });
+      const location = await bounded(client.connection.sendRequest(DefinitionRequest.type, {
+        textDocument: { uri: caller }, position: { line: 0, character: 2 },
+      }));
+      expect(location).toEqual({ uri: definitionUri, range: {
+        start: { line: 3, character: 11 }, end: { line: 3, character: 16 },
+      } });
+      for (const [version, text] of ['print "greet"', '# greet', 'print > greet', 'builtin greet'].entries()) {
+        await client.edit(caller, text, version + 2);
+        const character = text.indexOf('greet') + 2;
+        expect(await bounded(client.connection.sendRequest(DefinitionRequest.type, {
+          textDocument: { uri: caller }, position: { line: 0, character },
+        }))).toBeNull();
+        expect(await bounded(client.connection.sendRequest(HoverRequest.type, {
+          textDocument: { uri: caller }, position: { line: 0, character },
+        }))).toBeNull();
+      }
+      await client.edit(caller, 'print "$(greet x )"', 7);
+      expect(await bounded(client.connection.sendRequest(SignatureHelpRequest.type, {
+        textDocument: { uri: caller }, position: { line: 0, character: 17 },
+      }))).toMatchObject({ activeParameter: 1 });
+    } finally {
+      await client.close();
+    }
+  }, 15000);
+
 });
