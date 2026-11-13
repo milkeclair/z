@@ -1,6 +1,29 @@
 source ${z_main}
 
 z.t.describe "z.completion.enable"; {
+  z.t.context "繰り返し有効化する場合"; {
+    z.t.it "前の補完jobを取り消して終了hookを一つ登録する"; {
+      local z_completion_cache_job_id=old-cache-job
+      local -a zshexit_functions=()
+      local -a cancelled=()
+      z.t.mock name="z.completion.is._interactive" behavior="return 0"
+      z.t.mock name="z.completion.compdef._ignore_private" behavior="return 0"
+      z.t.mock name="z.completion.compdef._register" behavior="return 0"
+      z.t.mock name="z.job.status" behavior="z.return running"
+      z.t.mock name="z.job.cancel" behavior='cancelled+=("$*"); return 0'
+      z.t.mock name="z.job.run" behavior="z.return new-cache-job"
+
+      z.completion.enable
+      local returned_id=$REPLY
+      z.completion.enable
+
+      z.t.expect "$returned_id" "new-cache-job" skip_unmock=true
+      z.t.expect "$z_completion_cache_job_id" "new-cache-job" skip_unmock=true
+      z.t.expect "$cancelled" "id=old-cache-job id=new-cache-job" skip_unmock=true
+      z.t.expect "$zshexit_functions" "z.completion.cache._cancel"
+    }
+  }
+
   z.t.context "補完を使用しないシェルの場合"; {
     z.t.it "名前取得・補完登録・job起動をせず成功する"; {
       local -a completion_calls=()
