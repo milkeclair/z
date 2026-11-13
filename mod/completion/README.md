@@ -48,6 +48,9 @@ For example, `z.arg.n<Tab>` shows function candidates and does not show docs in 
 
 `z.completion.enable` builds the function name synchronously, then starts a background job to build the docs cache.
 
+Unfinished docs jobs are cancelled when the shell exits or completion is enabled again.
+Jobs that have already finished keep their results available for collection.
+
 The cache variables are:
 
 - `z_completion_function_names`

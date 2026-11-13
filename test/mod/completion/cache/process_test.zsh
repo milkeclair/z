@@ -33,3 +33,64 @@ z.t.describe "z.completion.cache._build"; {
     }
   }
 }
+
+z.t.describe "z.completion.cache._cancel"; {
+  z.t.context "未完了の補完jobがある場合"; {
+    for job_state in queued running; do
+      z.t.it "${job_state}のjobだけを取り消してIDを破棄する"; {
+        local z_completion_cache_job_id=cache-job
+        local -a cancelled=()
+        z.t.mock name="z.job.status" behavior="z.return $job_state"
+        z.t.mock name="z.job.cancel" behavior='cancelled+=("$*"); return 0'
+
+        z.completion.cache._cancel
+        local remaining=$z_completion_cache_job_id
+
+        z.t.expect.status.is.true skip_unmock=true
+        z.t.expect "$cancelled" "id=cache-job" skip_unmock=true
+        z.t.expect.is.null "$remaining"
+      }
+    done
+  }
+
+  z.t.context "完了済みまたは回収済みの場合"; {
+    for job_state in success failure; do
+      z.t.it "${job_state}のPIDをkillしない"; {
+        local z_completion_cache_job_id=cache-job
+        local -a cancelled=()
+        z.t.mock name="z.job.status" behavior="z.return $job_state"
+        z.t.mock name="z.job.cancel" behavior='cancelled+=("$*"); return 0'
+
+        z.completion.cache._cancel
+        local remaining=$z_completion_cache_job_id
+
+        z.t.expect.status.is.true skip_unmock=true
+        z.t.expect "$cancelled" "" skip_unmock=true
+        z.t.expect.is.null "$remaining"
+      }
+    done
+
+    z.t.it "回収済みのIDでも成功する"; {
+      local z_completion_cache_job_id=collected-job
+      z.t.mock name="z.job.status" behavior="return 1"
+
+      z.completion.cache._cancel
+
+      z.t.expect.status.is.true skip_unmock=true
+      z.t.expect.is.null "$z_completion_cache_job_id"
+    }
+  }
+
+  z.t.context "補完jobがない場合"; {
+    z.t.it "他のjobに触れず成功する"; {
+      local z_completion_cache_job_id=""
+      local -a inspected=()
+      z.t.mock name="z.job.status" behavior='inspected+=("$*"); return 1'
+
+      z.completion.cache._cancel
+
+      z.t.expect.status.is.true skip_unmock=true
+      z.t.expect "$inspected" ""
+    }
+  }
+}
