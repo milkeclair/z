@@ -8,12 +8,16 @@ import {
   zSettingsFromConfigurationNotification, zCompletion, zCompletionResolve,
   zHover, zDefinition, zSignatureHelp,
 } from './main';
+import { createDiagnosticSnapshot, refreshDiagnosticSnapshot } from './diagnostics/snapshot';
+import { readShellEnvironment, emptyShellEnvironment } from './diagnostics/environment';
 import { projectRootFromSettings } from './connection/projectRoot';
 
 function startServer(): void {
   const conn = createConnection(ProposedFeatures.all);
   const documents = new TextDocuments(TextDocument);
   let snapshot = createFunctionSnapshot();
+  let diagnosticSnapshot = createDiagnosticSnapshot();
+  let environment = emptyShellEnvironment();
   let projectRoot = '';
   let workspaceRoot = '';
   let showPrivateFunctions = false;
@@ -34,16 +38,21 @@ function startServer(): void {
 
   function refresh(root = projectRoot): void {
     const next = refreshFunctionSnapshot({ projectRoot: root, documents, previous: snapshot });
+    const nextDiagnostics = refreshDiagnosticSnapshot({ snapshot: next, environment, previous: diagnosticSnapshot });
     snapshot = next;
+    diagnosticSnapshot = nextDiagnostics;
     projectRoot = root;
     scheduleDiagnosticsRefresh();
   }
 
-  conn.onInitialize((params) => {
+  conn.onInitialize(async (params) => {
     const result = zInitialize(params);
     projectRoot = result.projectRoot;
     workspaceRoot = result.workspaceRoot;
     snapshot = result.snapshot;
+    environment = await readShellEnvironment();
+    if (environment.kind === 'unavailable') conn.console.warn('Shell environment unavailable: ' + environment.reason);
+    diagnosticSnapshot = refreshDiagnosticSnapshot({ snapshot, environment });
     showPrivateFunctions = result.settings.completion.showPrivateFunctions;
     supportsRefresh = params.capabilities.workspace?.diagnostics?.refreshSupport === true;
     supportsWatchRegistration = params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration === true;
@@ -84,11 +93,11 @@ function startServer(): void {
     const document = documents.get(params.textDocument.uri);
     return {
       kind: DocumentDiagnosticReportKind.Full,
-      items: document ? validateTextDocument({ functions: snapshot.functions, textDocument: document }) : [],
+      items: document ? validateTextDocument({ diagnostics: diagnosticSnapshot, textDocument: document }) : [],
     };
   });
-  conn.languages.diagnostics.onWorkspace(() =>
-    workspaceDiagnostics({ projectRoot, documents, functions: snapshot.functions }));
+  conn.languages.diagnostics.onWorkspace(params =>
+    workspaceDiagnostics({ diagnostics: diagnosticSnapshot, previousResultIds: params.previousResultIds }));
 
   conn.onShutdown(() => {
     clearTimeout(diagnosticsTimer);

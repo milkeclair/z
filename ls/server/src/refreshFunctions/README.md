@@ -27,8 +27,8 @@ The projection derives names, one-based declaration lines, argument metadata and
 Named argument positions, rest positions and argument ordering retain the old Func[] conventions.
 The legacy UI formatters consume this projected documentation, so open and new-file documentation comes from the same snapshot as the function and argument data.
 
-Subsequent changes migrate provider call/position matching and semantic diagnostics to AST queries.
-Lexer, parser and hydration diagnostics remain accessible on the snapshot; this connection change preserves the current diagnostic request behavior.
+Language features use the name index and cached document ASTs for call/position queries.
+A separate diagnostic snapshot derives command resolution and parameter checks from the same AST, including lexer, parser and hydration diagnostics. See [diagnostics](../diagnostics/README.md).
 
 ## Verification
 

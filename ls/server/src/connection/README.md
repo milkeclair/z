@@ -37,8 +37,9 @@ definition in that file, then the first indexed project definition. Completion
 and its documentation use the same choice.
 
 Comments, redirect targets, here-document contents and opaque expressions yield
-no function-name actions. Explicit `builtin`, `command` and `exec` modifiers
-select execution outside project function resolution.
+no function-name actions. Explicit `builtin` and `command` modifiers
+select execution outside project function resolution. `exec` can invoke functions
+and retains normal function resolution.
 
 ## Argument documentation
 
@@ -56,8 +57,8 @@ A later direct assignment replaces the earlier alias. This is a local syntax
 query, rather than shell control-flow evaluation.
 
 Expression details retained as raw parameter/arithmetic expansions stay within
-the parser's existing representation. Semantic diagnostics continue to consume
-the compatibility view as a separate migration stage.
+the parser's existing representation. Semantic diagnostics use the same hydrated AST through the
+[diagnostic snapshot](../diagnostics/README.md).
 
 ## Resources and verification
 

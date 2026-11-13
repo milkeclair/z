@@ -8,7 +8,7 @@ import { namedKey } from './word';
 import { callAt, functionCommand, inside } from './cursor';
 import type { Cursor } from './cursor';
 
-export function resolveFunction(snapshot: FunctionSnapshot, name: string, cursor: Cursor): FunctionTarget | null {
+export function resolveFunction(snapshot: FunctionSnapshot, name: string, cursor: Pick<Cursor, 'file' | 'offset'>): FunctionTarget | null {
   const candidates = snapshot.targets.get(name) ?? [];
   const uri = fileUri(cursor.file.sourceFile);
   let local: FunctionTarget | null = null;

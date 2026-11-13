@@ -7,7 +7,7 @@ import { spawn } from 'node:child_process';
 import {
   createProtocolConnection, InitializeRequest, InitializedNotification,
   ShutdownRequest, ExitNotification, RegistrationRequest, CompletionRequest,
-  CompletionResolveRequest, HoverRequest, SignatureHelpRequest, DefinitionRequest, DocumentDiagnosticRequest,
+  CompletionResolveRequest, HoverRequest, SignatureHelpRequest, DefinitionRequest, DocumentDiagnosticRequest, WorkspaceDiagnosticRequest,
   DidOpenTextDocumentNotification, DidChangeTextDocumentNotification,
   DidSaveTextDocumentNotification, DidCloseTextDocumentNotification,
   DidChangeWatchedFilesNotification, DidChangeConfigurationNotification, FileChangeType,
@@ -35,9 +35,9 @@ async function bounded<T>(promise: Promise<T>): Promise<T> {
   }
 }
 
-function startServer() {
+function startServer(env?: NodeJS.ProcessEnv) {
   const child = spawn(process.execPath, [path.resolve(__dirname, '../../dist/server.js'), '--stdio'], {
-    stdio: 'pipe',
+    stdio: 'pipe', env,
   });
   let stderr = '';
   child.stderr.on('data', (data: Buffer) => { stderr += data.toString(); });
@@ -276,6 +276,60 @@ describe('server@hydration stdio', () => {
       expect(await bounded(client.connection.sendRequest(SignatureHelpRequest.type, {
         textDocument: { uri: caller }, position: { line: 0, character: 17 },
       }))).toMatchObject({ activeParameter: 1 });
+    } finally {
+      await client.close();
+    }
+  }, 15000);
+
+  test('AST診断・環境解決・抑制・依存先変更を実サーバーで反映する', async () => {
+    const root = fixture();
+    const definition = path.join(root, 'definition.zsh');
+    const definitionUri = pathToFileURL(definition).href;
+    const caller = pathToFileURL(path.join(root, 'caller.zsh')).href;
+    fs.mkdirSync(path.join(root, 'bin'));
+    fs.writeFileSync(path.join(root, 'bin', 'fixture-protocol-command'), '#!/bin/sh\nexit 0\n', { mode: 0o755 });
+    fs.writeFileSync(path.join(root, '.zshrc'), [
+      'path=(' + JSON.stringify(path.join(root, 'bin')) + ' $path)',
+      "alias fixture-protocol-alias='print value'", 'autoload -Uz fixture-protocol-autoload',
+    ].join('\n'));
+    fs.writeFileSync(definition, '# $1: first\n# $2: second\ngreet() { print "$1" "$2" }\n');
+    const client = startServer({ ...process.env, ZDOTDIR: root });
+    const request = () => bounded(client.connection.sendRequest(DocumentDiagnosticRequest.type, {
+      textDocument: { uri: caller },
+    }));
+    try {
+      await client.initialize(root, false);
+      await client.open(caller, 'greet "hello\nworld"\nfixture-protocol-command\nfixture-protocol-alias\nfixture-protocol-autoload\n');
+      expect(await request()).toMatchObject({ kind: 'full', items: [
+        { code: 'missing-positional-argument', message: 'Missing required argument(s): $2' },
+      ] });
+      await client.open(definitionUri, '# $1: first\ngreet() { print "$1" }\n');
+      expect(await request()).toMatchObject({ kind: 'full', items: [] });
+      await client.edit(caller, 'greet # zls: ignore\nfixture-unresolved-command\n', 2);
+      expect(await request()).toMatchObject({ items: [
+        { code: 'undefined-command', range: { start: { line: 1, character: 0 } } },
+      ] });
+      await client.edit(caller, 'greet # zls: ignore\n', 3);
+      expect(await request()).toMatchObject({ items: [] });
+      const removed = path.join(root, 'removed.zsh');
+      const removedUri = pathToFileURL(removed).href;
+      fs.writeFileSync(removed, 'fixture-unresolved-command\n');
+      await client.connection.sendNotification(DidChangeWatchedFilesNotification.type, { changes: [
+        { uri: removedUri, type: FileChangeType.Created },
+      ] });
+      const workspace = await bounded(client.connection.sendRequest(WorkspaceDiagnosticRequest.type, { previousResultIds: [] }));
+      expect(workspace.items.find(item => item.uri === removedUri)).toMatchObject({
+        version: null, items: [{ code: 'undefined-command' }],
+      });
+      expect(workspace.items.find(item => item.uri === caller)).toMatchObject({ version: 3, items: [] });
+      fs.unlinkSync(removed);
+      await client.connection.sendNotification(DidChangeWatchedFilesNotification.type, { changes: [
+        { uri: removedUri, type: FileChangeType.Deleted },
+      ] });
+      const deleted = await bounded(client.connection.sendRequest(WorkspaceDiagnosticRequest.type, {
+        previousResultIds: [{ uri: removedUri, value: 'previous' }],
+      }));
+      expect(deleted.items.find(item => item.uri === removedUri)).toMatchObject({ version: null, items: [] });
     } finally {
       await client.close();
     }
