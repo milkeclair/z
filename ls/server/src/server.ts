@@ -1,119 +1,100 @@
 import {
-  createConnection,
-  TextDocuments,
-  TextDocument,
-  ProposedFeatures,
-  DocumentDiagnosticReportKind,
-  DidChangeWatchedFilesNotification,
+  createConnection, TextDocuments, TextDocument, ProposedFeatures,
+  DocumentDiagnosticReportKind, DidChangeWatchedFilesNotification,
 } from './vscode_type';
 import {
-  refreshFunctions,
-  validateTextDocument,
-  workspaceDiagnostics,
-  zInitialize,
-  zSettingsFromConfigurationNotification,
-  zCompletion,
-  zCompletionResolve,
-  zHover,
-  zDefinition,
-  zSignatureHelp,
-  Func,
+  refreshFunctionSnapshot, createFunctionSnapshot,
+  validateTextDocument, workspaceDiagnostics, zInitialize,
+  zSettingsFromConfigurationNotification, zCompletion, zCompletionResolve,
+  zHover, zDefinition, zSignatureHelp,
 } from './main';
-import { debounce } from './util/debounce';
+import { projectRootFromSettings } from './connection/projectRoot';
 
-const conn = createConnection(ProposedFeatures.all);
-const documents = new TextDocuments(TextDocument);
+function startServer(): void {
+  const conn = createConnection(ProposedFeatures.all);
+  const documents = new TextDocuments(TextDocument);
+  let snapshot = createFunctionSnapshot();
+  let projectRoot = '';
+  let workspaceRoot = '';
+  let showPrivateFunctions = false;
+  let supportsRefresh = false;
+  let supportsWatchRegistration = false;
+  let diagnosticsTimer: ReturnType<typeof setTimeout> | undefined;
 
-let functions: Func[] = [];
-let projectRoot = '';
-let showPrivateFunctions = false;
+  function scheduleDiagnosticsRefresh(): void {
+    if (!supportsRefresh) return;
+    clearTimeout(diagnosticsTimer);
+    diagnosticsTimer = setTimeout(() => {
+      diagnosticsTimer = undefined;
+      void conn.languages.diagnostics.refresh().catch((error: unknown) => {
+        conn.console.warn('Diagnostic refresh failed: ' + String(error));
+      });
+    }, 500);
+  }
 
-conn.onInitialize((params) => {
-  const result = zInitialize(params);
-  projectRoot = result.projectRoot;
-  functions = result.functions;
-  showPrivateFunctions = result.settings.completion.showPrivateFunctions;
+  function refresh(root = projectRoot): void {
+    const next = refreshFunctionSnapshot({ projectRoot: root, documents, previous: snapshot });
+    snapshot = next;
+    projectRoot = root;
+    scheduleDiagnosticsRefresh();
+  }
 
-  return result.serverCapabilities;
-});
-
-conn.onInitialized(() => {
-  conn.client.register(DidChangeWatchedFilesNotification.type, {
-    watchers: [
-      {
-        globPattern: '**/*.zsh',
-      },
-    ],
+  conn.onInitialize((params) => {
+    const result = zInitialize(params);
+    projectRoot = result.projectRoot;
+    workspaceRoot = result.workspaceRoot;
+    snapshot = result.snapshot;
+    showPrivateFunctions = result.settings.completion.showPrivateFunctions;
+    supportsRefresh = params.capabilities.workspace?.diagnostics?.refreshSupport === true;
+    supportsWatchRegistration = params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration === true;
+    return result.serverCapabilities;
   });
-});
 
-conn.onDidChangeConfiguration((params) => {
-  const settings = zSettingsFromConfigurationNotification(params.settings);
-  showPrivateFunctions = settings.completion.showPrivateFunctions;
-});
+  conn.onInitialized(() => {
+    if (supportsWatchRegistration) {
+      void conn.client.register(DidChangeWatchedFilesNotification.type, {
+        watchers: [{ globPattern: '**/*.zsh' }],
+      }).catch((error: unknown) => {
+        conn.console.warn('File watcher registration failed: ' + String(error));
+      });
+    }
+  });
 
-conn.onDidChangeWatchedFiles(() => {
-  functions = refreshFunctions({ projectRoot, documents });
-  conn.languages.diagnostics.refresh();
-});
+  conn.onDidChangeConfiguration((params) => {
+    const settings = zSettingsFromConfigurationNotification(params.settings);
+    showPrivateFunctions = settings.completion.showPrivateFunctions;
+    refresh(projectRootFromSettings(workspaceRoot, settings.zPath));
+  });
+  conn.onDidChangeWatchedFiles(() => refresh());
+  documents.onDidChangeContent(() => refresh());
+  documents.onDidSave(() => refresh());
+  documents.onDidClose(() => refresh());
 
-documents.onDidOpen(() => {
-  functions = refreshFunctions({ projectRoot, documents });
-  conn.languages.diagnostics.refresh();
-});
+  conn.onCompletion((params) =>
+    zCompletion({ params, documents, functions: snapshot.functions, showPrivateFunctions }));
+  conn.onCompletionResolve((result) => zCompletionResolve(result, projectRoot, snapshot.functions));
+  conn.onHover((params) =>
+    zHover({ params, documents, functions: snapshot.functions, projectRoot }));
+  conn.onSignatureHelp((params) =>
+    zSignatureHelp({ params, documents, functions: snapshot.functions, projectRoot }));
+  conn.onDefinition((params) =>
+    zDefinition({ params, documents, functions: snapshot.functions, projectRoot }));
 
-const debouncedRefresh = debounce(() => {
-  functions = refreshFunctions({ projectRoot, documents });
-  conn.languages.diagnostics.refresh();
-});
+  conn.languages.diagnostics.on((params) => {
+    const document = documents.get(params.textDocument.uri);
+    return {
+      kind: DocumentDiagnosticReportKind.Full,
+      items: document ? validateTextDocument({ functions: snapshot.functions, textDocument: document }) : [],
+    };
+  });
+  conn.languages.diagnostics.onWorkspace(() =>
+    workspaceDiagnostics({ projectRoot, documents, functions: snapshot.functions }));
 
-documents.onDidChangeContent(() => {
-  debouncedRefresh();
-});
+  conn.onShutdown(() => {
+    clearTimeout(diagnosticsTimer);
+  });
+  documents.listen(conn);
+  conn.listen();
+}
 
-documents.onDidSave(() => {
-  functions = refreshFunctions({ projectRoot, documents });
-  conn.languages.diagnostics.refresh();
-});
-
-documents.onDidClose(() => {
-  functions = refreshFunctions({ projectRoot, documents });
-  conn.languages.diagnostics.refresh();
-});
-
-conn.onCompletion((params) => {
-  return zCompletion({ params, documents, functions, showPrivateFunctions });
-});
-
-conn.onCompletionResolve((result) => {
-  return zCompletionResolve(result, projectRoot);
-});
-
-conn.onHover((params) => {
-  return zHover({ params, documents, functions, projectRoot });
-});
-
-conn.onSignatureHelp((params) => {
-  return zSignatureHelp({ params, documents, functions, projectRoot });
-});
-
-conn.onDefinition((params) => {
-  return zDefinition({ params, documents, functions, projectRoot });
-});
-
-conn.languages.diagnostics.on((params) => {
-  const document = documents.get(params.textDocument.uri);
-  const hasDocument = document !== undefined;
-
-  return {
-    kind: DocumentDiagnosticReportKind.Full,
-    items: hasDocument ? validateTextDocument({ functions, textDocument: document }) : [],
-  };
-});
-
-conn.languages.diagnostics.onWorkspace(() => {
-  return workspaceDiagnostics({ projectRoot, documents, functions });
-});
-
-documents.listen(conn);
-conn.listen();
+startServer();

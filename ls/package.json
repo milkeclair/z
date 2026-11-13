@@ -41,7 +41,7 @@
           "scope": "resource",
           "type": "string",
           "default": "~/.z",
-          "description": "Path to the z root directory. Defaults to ~/.z"
+          "description": "Fallback project directory when no workspace folder is supplied. Defaults to ~/.z"
         },
         "z-ls.completion.showPrivateFunctions": {
           "scope": "resource",
