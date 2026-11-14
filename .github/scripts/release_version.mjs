@@ -48,15 +48,12 @@ export function assertVersions(source, manifest, lock, version) {
   }
 }
 
-/** Update only the three version-bearing files before creating a release commit. */
-export function updateVersions(directory, version) {
+export const VERSION_FILES = Object.freeze(['version.zsh', 'ls/package.json', 'ls/package-lock.json']);
+
+/** Calculate the exact allowed metadata edits without modifying inputs or the filesystem. */
+export function versionFiles(source, manifestText, lockText, version) {
   parseVersion(version);
-  const sourcePath = path.join(directory, 'version.zsh');
-  const source = fs.readFileSync(sourcePath, 'utf8');
-  const manifestPath = path.join(directory, 'ls/package.json');
-  const lockPath = path.join(directory, 'ls/package-lock.json');
-  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-  const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+  const manifest = JSON.parse(manifestText), lock = JSON.parse(lockText);
   if (manifest.version !== lock.version || manifest.version !== lock.packages?.['']?.version) {
     throw new Error('Repair the existing package/lockfile version mismatch before releasing.');
   }
@@ -66,11 +63,20 @@ export function updateVersions(directory, version) {
   const match = versionMatch(source);
   const updated = source.slice(0, match.index) + match[1] + 'v' + version + match[3] +
     source.slice(match.index + match[0].length);
-  manifest.version = version;
-  lock.version = version;
-  lock.packages[''].version = version;
-  assertVersions(updated, manifest, lock, version);
-  fs.writeFileSync(sourcePath, updated);
-  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
-  fs.writeFileSync(lockPath, JSON.stringify(lock, null, 2) + '\n');
+  const nextManifest = { ...manifest, version };
+  const nextLock = { ...lock, version, packages: { ...lock.packages, '': { ...lock.packages[''], version } } };
+  assertVersions(updated, nextManifest, nextLock, version);
+  return {
+    'version.zsh': updated,
+    'ls/package.json': JSON.stringify(nextManifest, null, 2) + '\n',
+    'ls/package-lock.json': JSON.stringify(nextLock, null, 2) + '\n',
+  };
+}
+
+/** Write only the exact version-file edits for a new release. */
+export function updateVersions(directory, version) {
+  const texts = VERSION_FILES.map(name => fs.readFileSync(path.join(directory, name), 'utf8'));
+  for (const [name, content] of Object.entries(versionFiles(...texts, version))) {
+    fs.writeFileSync(path.join(directory, name), content);
+  }
 }

@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { assertVersions, compareVersions, parseVersion, sourceVersion, updateVersions, shouldMakeLatest } from './release_version.mjs';
-import { assetNames, packAssets, verifyAssets, verifyRemoteAssets } from './release_assets.mjs';
+import { assertVersions, compareVersions, parseVersion, sourceVersion, updateVersions, shouldMakeLatest, VERSION_FILES, versionFiles } from './release_version.mjs';
+import { assetNames, packAssets, verifyAssets, verifyRemoteAssets, verifySourceArchive } from './release_assets.mjs';
 
 /** Read a command result without invoking a shell. */
 function read(command, args, directory) {
@@ -49,10 +49,49 @@ function getRelease(repository, version) {
   }
 }
 
+/** Require a server-enforced, branch-only main policy for the OIDC environment. */
+export function assertMarketplaceEnvironment(environment, policies) {
+  const policy = environment?.deployment_branch_policy;
+  if (!policy || policy.protected_branches !== false || policy.custom_branch_policies !== true ||
+      policies.length !== 1 || policies[0].name !== 'main' || policies[0].type !== 'branch') {
+    throw new Error('Configure the marketplace environment to allow only branch main before enabling OIDC publishing.');
+  }
+}
+
+/** Read environment controls without changing any repository settings. */
+function checkMarketplaceEnvironment(repository) {
+  const base = 'repos/' + repositoryName(repository) + '/environments/marketplace';
+  const environment = getApi(base);
+  if (!environment) throw new Error('Create the main-only marketplace environment before publishing.');
+  const pages = JSON.parse(read('gh', ['api', '--paginate', '--slurp', base + '/deployment-branch-policies?per_page=100']));
+  assertMarketplaceEnvironment(environment, pages.flatMap(page => page.branch_policies ?? []));
+}
+
 /** Read the three version files from a specific commit. */
 function assertCommitVersions(directory, ref, version) {
   const show = filename => read('git', ['show', ref + ':' + filename], directory);
   assertVersions(show('version.zsh'), JSON.parse(show('ls/package.json')), JSON.parse(show('ls/package-lock.json')), version);
+}
+
+/** Require a single-parent commit containing only the exact generated version-file edits. */
+export function assertVersionCommit(directory, version, ref = 'HEAD', expectedParent = null) {
+  const parents = read('git', ['rev-list', '--parents', '-n', '1', ref], directory).split(/\s+/);
+  if (parents.length !== 2 || (expectedParent && parents[1] !== expectedParent)) {
+    throw new Error('The version commit must have the validated source as its only parent.');
+  }
+  const blob = (revision, name) => execFileSync('git', ['show', revision + ':' + name], { cwd: directory, maxBuffer: 16 * 1024 * 1024 });
+  const expected = versionFiles(...VERSION_FILES.map(name => blob(parents[1], name).toString('utf8')), version);
+  const changed = execFileSync('git', ['diff', '--name-only', '-z', parents[1], ref], { cwd: directory })
+    .toString('utf8').split('\0').filter(Boolean).sort();
+  if (JSON.stringify(changed) !== JSON.stringify([...VERSION_FILES].sort())) {
+    throw new Error('The version commit changes files outside the version-bearing metadata.');
+  }
+  for (const [name, content] of Object.entries(expected)) {
+    const mode = revision => read('git', ['ls-tree', revision, '--', name], directory).split(/\s/)[0];
+    if (!blob(ref, name).equals(Buffer.from(content)) || mode(ref) !== mode(parents[1])) {
+      throw new Error('Unexpected content or mode in version-bearing metadata: ' + name);
+    }
+  }
 }
 
 /** Choose creation, draft/tag recovery, or immutable-asset reuse. */
@@ -71,6 +110,7 @@ export function planRelease(directory, version, repository, sourceSha) {
   if (found.status === 0) {
     run('git', ['merge-base', '--is-ancestor', tag, 'refs/remotes/origin/main'], directory);
     assertCommitVersions(directory, tag, version);
+    assertVersionCommit(directory, version, tag);
     return 'resume';
   }
   if (found.status !== 1) throw new Error('Unable to inspect the existing release tag.');
@@ -105,9 +145,10 @@ export function prepareRelease(directory, version, mode, sourceSha) {
   run('git', [...identity, 'tag', '--annotate', 'v' + version, '--message', 'Release v' + version], directory);
 }
 
-/** Push the version commit and tag atomically after all assets have been verified. */
+/** Compare-and-swap main and tag; the checked single parent makes the main update a fast-forward. */
 export function pushRelease(directory, version, sourceSha) {
   parseVersion(version);
+  assertVersionCommit(directory, version, 'HEAD', sourceSha);
   const remote = read('git', [...gitAuthentication(), 'ls-remote', 'origin', 'refs/heads/main'], directory).split(/\s/)[0];
   if (remote !== sourceSha || read('git', ['rev-parse', 'HEAD^'], directory) !== sourceSha) {
     throw new Error('main advanced; nothing was pushed. Dispatch a new workflow run.');
@@ -115,7 +156,7 @@ export function pushRelease(directory, version, sourceSha) {
   if (read('git', ['rev-parse', 'v' + version + '^{commit}'], directory) !== read('git', ['rev-parse', 'HEAD'], directory)) {
     throw new Error('Local release tag does not match the release commit.');
   }
-  run('git', [...gitAuthentication(), 'push', '--atomic', 'origin', 'HEAD:refs/heads/main', 'refs/tags/v' + version], directory);
+  run('git', [...gitAuthentication(), 'push', '--atomic', '--force-with-lease=refs/heads/main:' + sourceSha, 'origin', 'HEAD:refs/heads/main', 'refs/tags/v' + version], directory);
 }
 
 /** Detect a moved remote tag before and after the publication boundary. */
@@ -131,13 +172,15 @@ export function assertRemoteTag(directory, version) {
 }
 
 /** Verify an already-published release and download its original assets. */
-export function downloadRelease(repository, version, directory) {
+export function downloadRelease(repository, version, directory, sourceDirectory = process.cwd()) {
   parseVersion(version);
   const release = getRelease(repository, version);
   if (!release || release.draft || release.immutable !== true) throw new Error('An immutable published release is required.');
+  read('git', [...gitAuthentication(), 'fetch', '--no-tags', 'origin', 'refs/tags/v' + version + ':refs/tags/v' + version], sourceDirectory);
   fs.mkdirSync(directory, { recursive: true });
   run('gh', ['release', 'download', 'v' + version, '--repo', repository, '--dir', directory,
     ...assetNames(version).flatMap(name => ['--pattern', name])]);
+  verifySourceArchive(sourceDirectory, directory, version, 'v' + version);
   verifyAssets(directory, version);
   verifyRemoteAssets(release, directory, version, true);
 }
@@ -145,6 +188,7 @@ export function downloadRelease(repository, version, directory) {
 /** Publish all assets from a mutable draft, then require immutable protection. */
 export function publishRelease(directory, version, repository, assets, mode, sourceSha) {
   parseVersion(version);
+  verifySourceArchive(directory, assets, version);
   verifyAssets(assets, version);
   if (mode === 'new') pushRelease(directory, version, sourceSha);
   else if (mode !== 'resume') throw new Error('Published releases must be downloaded rather than rebuilt.');
@@ -171,6 +215,10 @@ export function publishRelease(directory, version, repository, assets, mode, sou
 function main(command, version, ...args) {
   const root = process.cwd();
   switch (command) {
+    case 'environment': {
+      checkMarketplaceEnvironment(version);
+      return;
+    }
     case 'plan': {
       const [repository, sourceSha] = args;
       console.log(planRelease(root, version, repository, sourceSha));
@@ -196,7 +244,7 @@ function main(command, version, ...args) {
       downloadRelease(repository, version, directory);
       return;
     }
-    default: throw new Error('Expected plan, prepare, pack, publish or download.');
+    default: throw new Error('Expected environment, plan, prepare, pack, publish or download.');
   }
 }
 

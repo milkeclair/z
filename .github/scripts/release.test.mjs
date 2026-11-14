@@ -6,8 +6,8 @@ import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parseVersion, compareVersions, updateVersions, sourceVersion, shouldMakeLatest } from './release_version.mjs';
-import { assetNames, digest, packAssets, verifyAssets, verifyRemoteAssets } from './release_assets.mjs';
-import { prepareRelease, pushRelease, publishRelease, assertRemoteTag } from './release.mjs';
+import { assetNames, digest, packAssets, verifyAssets, verifyRemoteAssets, verifySourceArchive } from './release_assets.mjs';
+import { prepareRelease, pushRelease, publishRelease, assertRemoteTag, assertMarketplaceEnvironment } from './release.mjs';
 
 const roots = [];
 const script = fileURLToPath(new URL('./release.mjs', import.meta.url));
@@ -44,16 +44,17 @@ function fixture() {
   git(directory, 'push', '-u', 'origin', 'main');
   return { root, directory, remote, source: git(directory, 'rev-parse', 'HEAD') };
 }
-function makeVsix(directory, version = '2.4.0') {
+function makeVsix(directory, version = '2.4.0', xmlId = 'z-ls', properties = '') {
   fs.mkdirSync(directory, { recursive: true });
   const filename = path.join(directory, 'z-ls-2.4.0.vsix');
   execFileSync('python3', ['-c', [
     'import zipfile,json,sys',
     'with zipfile.ZipFile(sys.argv[1],"w") as archive:',
     ' archive.writestr("extension/package.json",json.dumps({"name":"z-ls","publisher":"milkeclair","version":sys.argv[2]}))',
+    ' archive.writestr("extension.vsixmanifest",\'<PackageManifest xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011"><Metadata><Identity Id="\'+sys.argv[3]+\'" Publisher="milkeclair" Version="\'+sys.argv[2]+\'"/>\'+sys.argv[4]+\'</Metadata></PackageManifest>\')',
     ' archive.writestr("extension/client/dist/extension.js","")',
     ' archive.writestr("extension/server/dist/server.js","")',
-  ].join('\n'), filename, version]);
+  ].join('\n'), filename, version, xmlId, properties]);
 }
 function releaseFixture() {
   const item = fixture();
@@ -202,6 +203,27 @@ describe('release state and atomic pushes', () => {
     assert.throws(() => pushRelease(item.directory, '2.4.0', item.source), /main advanced/);
     assert.equal(git(item.root, '--git-dir=' + item.remote, 'tag'), '');
   });
+  test('rejects unrelated code hidden inside an amended version commit', () => {
+    const item = fixture();
+    prepareRelease(item.directory, '2.4.0', 'new', item.source);
+    git(item.directory, 'reset', '--soft', item.source);
+    fs.appendFileSync(path.join(item.directory, 'lib/a.zsh'), 'print unexpected\n');
+    git(item.directory, 'add', '.');
+    git(item.directory, 'commit', '-m', 'release: v2.4.0');
+    git(item.directory, 'tag', '--force', '--annotate', 'v2.4.0', '--message', 'Release v2.4.0');
+    assert.throws(() => pushRelease(item.directory, '2.4.0', item.source), /version commit|metadata|version-bearing/);
+    assert.equal(git(item.root, '--git-dir=' + item.remote, 'rev-parse', 'main'), item.source);
+  });
+  test('rejects non-version edits inside the managed version file', () => {
+    const item = fixture();
+    prepareRelease(item.directory, '2.4.0', 'new', item.source);
+    git(item.directory, 'reset', '--soft', item.source);
+    fs.appendFileSync(path.join(item.directory, 'version.zsh'), '# unapproved extra content\n');
+    git(item.directory, 'add', '.');
+    git(item.directory, 'commit', '-m', 'release: v2.4.0');
+    git(item.directory, 'tag', '--force', '--annotate', 'v2.4.0', '--message', 'Release v2.4.0');
+    assert.throws(() => pushRelease(item.directory, '2.4.0', item.source), /version commit|metadata|version-bearing/);
+  });
   test('an existing conflicting remote tag prevents an atomic main update', () => {
     const item = fixture();
     git(item.root, '--git-dir=' + item.remote, 'tag', 'v2.4.0', item.source);
@@ -219,8 +241,100 @@ describe('complete immutable release assets', () => {
     const names = execFileSync('tar', ['-tzf', path.join(item.assets, 'z-2.4.0.tar.gz')], { encoding: 'utf8' });
     for (const name of ['lib/a.zsh', 'mod/example/mod.zsh', 'test/a_test.zsh', 'ls/package.json']) assert.ok(names.includes('z-2.4.0/' + name));
     const first = digest(path.join(item.assets, 'z-2.4.0.tar.gz'));
+    const header = execFileSync('gzip', ['-dc', path.join(item.assets, 'z-2.4.0.tar.gz')]);
+    assert.equal(parseInt(header.subarray(136, 148).toString().replaceAll('\0', ''), 8),
+      Number(git(item.directory, 'show', '-s', '--format=%ct', 'HEAD^')));
+    verifySourceArchive(item.directory, item.assets, '2.4.0', 'v2.4.0');
     packAssets(item.directory, item.assets, '2.4.0');
     assert.equal(digest(path.join(item.assets, 'z-2.4.0.tar.gz')), first);
+  });
+  test('source archives agree across independently recreated version commits', () => {
+    const item = releaseFixture();
+    const original = digest(path.join(item.assets, 'z-2.4.0.tar.gz'));
+    git(item.directory, 'commit', '--amend', '--no-edit', '--date=2000-01-01T00:00:00Z');
+    packAssets(item.directory, item.assets, '2.4.0');
+    assert.equal(digest(path.join(item.assets, 'z-2.4.0.tar.gz')), original);
+  });
+  test('rejects a forged source tree even when its checksums and versions are self-consistent', () => {
+    const item = releaseFixture();
+    const validated = git(item.directory, 'rev-parse', 'HEAD');
+    fs.appendFileSync(path.join(item.directory, 'lib/a.zsh'), 'print untrusted\n');
+    git(item.directory, 'add', '.');git(item.directory, 'commit', '-m', 'Untrusted builder state');
+    packAssets(item.directory, item.assets, '2.4.0');
+    verifyAssets(item.assets, '2.4.0');
+    git(item.directory, 'checkout', '--detach', validated);
+    assert.throws(() => verifySourceArchive(item.directory, item.assets, '2.4.0'), /validated Git tree/);
+    assert.throws(() => publishRelease(item.directory, '2.4.0', 'local-test-only', item.assets, 'new', item.source), /validated Git tree/);
+    assert.equal(git(item.root, '--git-dir=' + item.remote, 'rev-parse', 'main'), item.source);
+  });
+  test('rejects a VSIX XML identity that differs from its valid JSON identity', () => {
+    const item = fixture();
+    prepareRelease(item.directory, '2.4.0', 'new', item.source);
+    const assets = path.join(item.root, 'assets');makeVsix(assets, '2.4.0', 'another-extension');
+    assert.throws(() => packAssets(item.directory, assets, '2.4.0'), /VSIX XML identity/);
+  });
+  test('rejects a pre-release flag hidden in an otherwise matching VSIX', () => {
+    const item = fixture();
+    prepareRelease(item.directory, '2.4.0', 'new', item.source);
+    const assets = path.join(item.root, 'assets');
+    makeVsix(assets, '2.4.0', 'z-ls',
+      '<Properties><Property Id="Microsoft.VisualStudio.Code.PreRelease" Value="true"/></Properties>');
+    assert.throws(() => packAssets(item.directory, assets, '2.4.0'), /stable VSIX/);
+  });
+  test('rejects XML namespace differentials before a downstream parser can choose another identity', () => {
+    const item = releaseFixture(), filename = path.join(item.assets, 'z-ls-2.4.0.vsix');
+    execFileSync('python3', ['-c', [
+      'import io,zipfile,sys',
+      'target=io.BytesIO()',
+      'with zipfile.ZipFile(sys.argv[1]) as old, zipfile.ZipFile(target,"w") as new:',
+      ' for entry in old.infolist():',
+      '  data=old.read(entry.filename)',
+      '  if entry.filename=="extension.vsixmanifest": data=data.replace(b"<Metadata>",b\'<Metadata xmlns=""><Identity Id="other" Publisher="milkeclair" Version="2.4.0"/></Metadata><Metadata>\',1)',
+      '  new.writestr(entry,data)',
+      'open(sys.argv[1],"wb").write(target.getvalue())',
+    ].join('\n'), filename]);
+    fs.writeFileSync(path.join(item.assets, 'SHA256SUMS'),
+      assetNames('2.4.0').slice(0, 2).map(file => digest(path.join(item.assets, file)) + '  ' + file + '\n').join(''));
+    assert.throws(() => verifyAssets(item.assets, '2.4.0'), /XML element namespace|unambiguous/);
+  });
+  test('rejects downloaded symlinks and unexpected additional files', () => {
+    const item = releaseFixture();
+    fs.writeFileSync(path.join(item.assets, 'extra'), 'unexpected');
+    assert.throws(() => verifyAssets(item.assets, '2.4.0'), /Unexpected release files/);
+    fs.unlinkSync(path.join(item.assets, 'extra'));
+    const target = path.join(item.root, 'outside-source');
+    fs.renameSync(path.join(item.assets, 'z-2.4.0.tar.gz'), target);
+    fs.symlinkSync(target, path.join(item.assets, 'z-2.4.0.tar.gz'));
+    assert.throws(() => verifyAssets(item.assets, '2.4.0'), /bounded regular/);
+  });
+  test('rejects duplicate ZIP metadata and traversal paths despite matching checksums', () => {
+    for (const name of ['extension/package.json', '../outside', 'extension/PACKAGE.JSON', 'extension/package.json/']) {
+      const item = releaseFixture();
+      execFileSync('python3', ['-c', 'import zipfile,sys\nwith zipfile.ZipFile(sys.argv[1],"a") as z: z.writestr(sys.argv[2],"{}")',
+        path.join(item.assets, 'z-ls-2.4.0.vsix'), name]);
+      fs.writeFileSync(path.join(item.assets, 'SHA256SUMS'),
+        assetNames('2.4.0').slice(0, 2).map(file => digest(path.join(item.assets, file)) + '  ' + file + '\n').join(''));
+      assert.throws(() => verifyAssets(item.assets, '2.4.0'), /Duplicate|Unsafe VSIX/);
+    }
+  });
+  test('checks file size before reading an oversized sparse VSIX', () => {
+    const item = releaseFixture();
+    fs.truncateSync(path.join(item.assets, 'z-ls-2.4.0.vsix'), 128 * 1024 * 1024 + 1);
+    assert.throws(() => verifyAssets(item.assets, '2.4.0'), /bounded regular/);
+  });
+  test('rejects oversized XML before parsing it', () => {
+    const item = releaseFixture();
+    const filename = path.join(item.assets, 'z-ls-2.4.0.vsix');
+    execFileSync('python3', ['-c', [
+      'import io,zipfile,sys',
+      'target=io.BytesIO()',
+      'with zipfile.ZipFile(sys.argv[1]) as old, zipfile.ZipFile(target,"w") as new:',
+      ' for entry in old.infolist(): new.writestr(entry, b"x"*(1024*1024+1) if entry.filename=="extension.vsixmanifest" else old.read(entry.filename))',
+      'open(sys.argv[1],"wb").write(target.getvalue())',
+    ].join('\n'), filename]);
+    fs.writeFileSync(path.join(item.assets, 'SHA256SUMS'),
+      assetNames('2.4.0').slice(0, 2).map(file => digest(path.join(item.assets, file)) + '  ' + file + '\n').join(''));
+    assert.throws(() => verifyAssets(item.assets, '2.4.0'), /metadata exceeds/);
   });
   test('rejects tracked source changes made after the version commit', () => {
     const item = releaseFixture();
@@ -231,12 +345,12 @@ describe('complete immutable release assets', () => {
     const item = fixture();
     prepareRelease(item.directory, '2.4.0', 'new', item.source);
     const assets = path.join(item.root, 'assets');makeVsix(assets, '2.3.0');
-    assert.throws(() => packAssets(item.directory, assets, '2.4.0'), /VSIX version/);
+    assert.throws(() => packAssets(item.directory, assets, '2.4.0'), /VSIX.*identity/);
   });
   test('rejects corrupted bytes and altered checksum paths before any publication', () => {
     const item = releaseFixture();
     fs.appendFileSync(path.join(item.assets, 'z-ls-2.4.0.vsix'), 'corrupt');
-    assert.throws(() => publishRelease(item.directory, '2.4.0', 'milkeclair/z', item.assets, 'new', item.source), /checksums/);
+    assert.throws(() => publishRelease(item.directory, '2.4.0', 'local-test-only', item.assets, 'new', item.source), /checksums/);
     assert.equal(git(item.root, '--git-dir=' + item.remote, 'rev-parse', 'main'), item.source);
     fs.writeFileSync(path.join(item.assets, 'SHA256SUMS'), '0  ../outside\n');
     assert.throws(() => verifyAssets(item.assets, '2.4.0'), /checksums/);
@@ -255,5 +369,24 @@ describe('complete immutable release assets', () => {
     verifyRemoteAssets(published, item.assets, '2.4.0', true);
     assert.throws(() => verifyRemoteAssets({ ...published, immutable: false }, item.assets, '2.4.0', true), /immutable/);
     assert.throws(() => verifyRemoteAssets(published, item.assets, '2.4.0'), /never overwritten/);
+  });
+});
+
+describe('Marketplace OIDC environment boundary', () => {
+  const locked = { deployment_branch_policy: { protected_branches: false, custom_branch_policies: true } };
+  test('accepts only one explicit branch main policy', () => {
+    assertMarketplaceEnvironment(locked, [{ name: 'main', type: 'branch' }]);
+  });
+  test('rejects absent, unrestricted or all-protected-branches environments', () => {
+    for (const environment of [null, {}, { deployment_branch_policy: null },
+      { deployment_branch_policy: { protected_branches: true, custom_branch_policies: false } }]) {
+      assert.throws(() => assertMarketplaceEnvironment(environment, [{ name: 'main', type: 'branch' }]), /only branch main/);
+    }
+  });
+  test('rejects a main tag, wildcard, missing type, empty list or additional allowed branch', () => {
+    for (const policies of [[], [{ name: 'main', type: 'tag' }], [{ name: '*', type: 'branch' }],
+      [{ name: 'main' }], [{ name: 'main', type: 'branch' }, { name: 'feature', type: 'branch' }]]) {
+      assert.throws(() => assertMarketplaceEnvironment(locked, policies), /only branch main/);
+    }
   });
 });
