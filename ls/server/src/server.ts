@@ -15,6 +15,7 @@ import { readShellEnvironment, emptyShellEnvironment } from './diagnostics/envir
 import { projectRootFromSettings } from './connection/projectRoot';
 import { queueAnalysis, analysisDelay } from './connection/analysis';
 import type { PendingAnalysis } from './connection/analysis';
+import { startPeriodicRescan } from './connection/rescan';
 
 function startServer(): void {
   const conn = createConnection(ProposedFeatures.all);
@@ -29,6 +30,7 @@ function startServer(): void {
   let supportsWatchRegistration = false;
   let watcherReady = false;
   let stopped = false;
+  let stopRescan: (() => void) | undefined;
   let pendingAnalysis: PendingAnalysis | null = null;
   let analysisTimer: ReturnType<typeof setTimeout> | undefined;
   let diagnosticsTimer: ReturnType<typeof setTimeout> | undefined;
@@ -95,6 +97,12 @@ function startServer(): void {
   });
 
   conn.onInitialized(() => {
+    if (stopped) return;
+    stopRescan?.();
+    stopRescan = startPeriodicRescan(
+      () => { if (projectRoot) refreshAll(); },
+      error => conn.console.error('Periodic rescan failed: ' + String(error)),
+    );
     if (supportsWatchRegistration) {
       void conn.client.register(DidChangeWatchedFilesNotification.type, {
         watchers: [{ globPattern: '**/*.zsh' }],
@@ -158,6 +166,8 @@ function startServer(): void {
 
   conn.onShutdown(() => {
     stopped = true;
+    stopRescan?.();
+    stopRescan = undefined;
     pendingAnalysis = null;
     clearTimeout(analysisTimer);
     clearTimeout(diagnosticsTimer);
