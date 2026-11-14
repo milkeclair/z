@@ -71,8 +71,10 @@ function plan(item, response, status = '200', version = '2.4.0') {
   const bin = path.join(item.root, 'bin');
   fs.mkdirSync(bin, { recursive: true });
   fs.writeFileSync(path.join(bin, 'gh'), '#!' + process.execPath + '\n' +
-    'if(process.env.RELEASE_TEST_STATUS==="200")process.stdout.write(process.env.RELEASE_TEST_RESPONSE);' +
-    'else {process.stderr.write("gh: HTTP "+process.env.RELEASE_TEST_STATUS);process.exit(1);}\n', { mode: 0o755 });
+    'if(process.argv[2]!=="release"||process.argv[3]!=="view")throw new Error("Use draft-aware release lookup");' +
+    'if(process.env.RELEASE_TEST_STATUS==="200"){const v=JSON.parse(process.env.RELEASE_TEST_RESPONSE);' +
+    'process.stdout.write(JSON.stringify({tagName:v.tag_name,isDraft:v.draft,isImmutable:v.immutable,isPrerelease:v.prerelease,assets:v.assets}));}' +
+    'else {process.stderr.write(process.env.RELEASE_TEST_STATUS==="404"?"release not found":"gh: HTTP "+process.env.RELEASE_TEST_STATUS);process.exit(1);}\n', { mode: 0o755 });
   return spawnSync(process.execPath, [script, 'plan', version, 'milkeclair/z', git(item.directory, 'rev-parse', 'HEAD')], {
     cwd: item.directory, encoding: 'utf8', env: { ...process.env, PATH: bin + path.delimiter + process.env.PATH,
       RELEASE_TEST_STATUS: status, RELEASE_TEST_RESPONSE: JSON.stringify(response) },
@@ -126,12 +128,18 @@ describe('unified release versions', () => {
 });
 
 describe('release state and atomic pushes', () => {
-  test('treats only a real 404 as an absent release', () => {
+  test('treats only a missing release as absent and preserves other service errors', () => {
     const item = fixture();
     const absent = plan(item, {}, '404');
     assert.equal(absent.status, 0, absent.stderr);
     assert.equal(absent.stdout.trim(), 'new');
     for (const status of ['403', '500']) assert.notEqual(plan(item, {}, status).status, 0);
+  });
+  test('recognizes a draft that the published-by-tag REST endpoint would not return', () => {
+    const item = fixture();
+    const result = plan(item, { tag_name: 'v2.4.0', draft: true, immutable: false });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Draft release has no source tag/);
   });
   test('reuses published immutable releases and rejects mutable ones', () => {
     const item = fixture();

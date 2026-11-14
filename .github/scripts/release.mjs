@@ -36,9 +36,17 @@ function getApi(endpoint) {
   }
 }
 
-/** Read one version's GitHub Release metadata. */
+/** Resolve pending and published tags through gh's draft-aware release lookup. */
 function getRelease(repository, version) {
-  return getApi('repos/' + repositoryName(repository) + '/releases/tags/v' + version);
+  try {
+    const release = JSON.parse(read('gh', ['release', 'view', 'v' + version, '--repo', repositoryName(repository),
+      '--json', 'tagName,isDraft,isPrerelease,isImmutable,assets']));
+    return { tag_name: release.tagName, draft: release.isDraft, prerelease: release.isPrerelease,
+      immutable: release.isImmutable, assets: release.assets };
+  } catch (error) {
+    if (error.stderr?.toString().trim() === 'release not found') return null;
+    throw error;
+  }
 }
 
 /** Read the three version files from a specific commit. */
