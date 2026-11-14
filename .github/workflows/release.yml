@@ -1,0 +1,174 @@
+name: Release
+
+run-name: Release v${{ inputs.version }} (Marketplace ${{ inputs.publish_marketplace }})
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Unified stable version for z and z-ls, without v (for example 2.4.0)'
+        type: string
+        required: true
+      publish_marketplace:
+        description: 'Also publish the released VSIX to Visual Studio Marketplace'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    outputs:
+      mode: ${{ steps.plan.outputs.mode }}
+      check_ref: ${{ steps.plan.outputs.check_ref }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+      - name: Install lockfile verifier
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh extension install github/gh-actions-lock --pin v0.4.1
+      - name: Verify locked actions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh actions-lock --verify
+      - name: Validate release request
+        id: plan
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_REF: ${{ github.ref }}
+          RELEASE_SOURCE: ${{ github.sha }}
+          RELEASE_REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ "$RELEASE_REF" != refs/heads/main ]]; then
+            printf '::error::Run releases from main.\n'
+            exit 1
+          fi
+          mode=$(node .github/scripts/release.mjs plan "$RELEASE_VERSION" "$RELEASE_REPOSITORY" "$RELEASE_SOURCE")
+          printf 'mode=%s\n' "$mode" >> "$GITHUB_OUTPUT"
+          check_ref="$RELEASE_SOURCE"
+          if [[ "$mode" == resume ]]; then
+            check_ref=$(git rev-parse "v$RELEASE_VERSION^{commit}")
+          fi
+          printf 'check_ref=%s\n' "$check_ref" >> "$GITHUB_OUTPUT"
+
+  checks:
+    needs: preflight
+    if: needs.preflight.outputs.mode != 'published'
+    uses: ./.github/workflows/main.yml
+    with:
+      ref: ${{ needs.preflight.outputs.check_ref }}
+    permissions:
+      contents: read
+
+  github-release:
+    needs: [preflight, checks]
+    if: >-
+      always() && needs.preflight.result == 'success' &&
+      (needs.checks.result == 'success' ||
+       (needs.preflight.outputs.mode == 'published' && needs.checks.result == 'skipped'))
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
+      RELEASE_SOURCE: ${{ github.sha }}
+      RELEASE_REPOSITORY: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: ls/package-lock.json
+      - name: Preserve workflow tools and recheck release state
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          release_tools="$RUNNER_TEMP/release-tools"
+          release_assets="$RUNNER_TEMP/release-assets"
+          mkdir -p "$release_tools" "$release_assets"
+          printf 'RELEASE_TOOLS=%s\nRELEASE_ASSETS=%s\n' "$release_tools" "$release_assets" >> "$GITHUB_ENV"
+          cp .github/scripts/release.mjs .github/scripts/release_version.mjs .github/scripts/release_assets.mjs "$release_tools/"
+          mode=$(node "$release_tools/release.mjs" plan "$RELEASE_VERSION" "$RELEASE_REPOSITORY" "$RELEASE_SOURCE")
+          printf 'mode=%s\n' "$mode" >> "$GITHUB_OUTPUT"
+      - name: Prepare version commit or select the unpublished release tag
+        if: steps.plan.outputs.mode != 'published'
+        env:
+          RELEASE_MODE: ${{ steps.plan.outputs.mode }}
+          RELEASE_CHECK_REF: ${{ needs.preflight.outputs.check_ref }}
+        run: node "$RELEASE_TOOLS/release.mjs" prepare "$RELEASE_VERSION" "$RELEASE_MODE" "$RELEASE_CHECK_REF"
+      - name: Install locked extension dependencies
+        if: steps.plan.outputs.mode != 'published'
+        working-directory: ls
+        run: npm ci --no-audit --no-fund
+      - name: Build the versioned VSIX
+        if: steps.plan.outputs.mode != 'published'
+        working-directory: ls
+        run: ./node_modules/.bin/vsce package --out "$RELEASE_ASSETS/z-ls-$RELEASE_VERSION.vsix"
+      - name: Package all tracked source and verify release artifacts
+        if: steps.plan.outputs.mode != 'published'
+        run: node "$RELEASE_TOOLS/release.mjs" pack "$RELEASE_VERSION" "$RELEASE_ASSETS"
+      - name: Push version and tag atomically, then publish immutable release
+        if: steps.plan.outputs.mode != 'published'
+        env:
+          RELEASE_MODE: ${{ steps.plan.outputs.mode }}
+          GH_TOKEN: ${{ github.token }}
+          GIT_TERMINAL_PROMPT: '0'
+        run: node "$RELEASE_TOOLS/release.mjs" publish "$RELEASE_VERSION" "$RELEASE_REPOSITORY" "$RELEASE_SOURCE" "$RELEASE_ASSETS" "$RELEASE_MODE"
+      - name: Reuse the existing immutable release
+        if: steps.plan.outputs.mode == 'published'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node "$RELEASE_TOOLS/release.mjs" download "$RELEASE_VERSION" "$RELEASE_REPOSITORY" "$RELEASE_ASSETS"
+
+  marketplace:
+    needs: github-release
+    if: inputs.publish_marketplace
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
+      RELEASE_REPOSITORY: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: ls/package-lock.json
+      - name: Set release asset directory
+        run: printf 'RELEASE_ASSETS=%s/release-assets\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+      - name: Install the locked publishing tool without lifecycle scripts
+        working-directory: ls
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Download and verify the original immutable release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node .github/scripts/release.mjs download "$RELEASE_VERSION" "$RELEASE_REPOSITORY" "$RELEASE_ASSETS"
+      - name: Publish the same VSIX using Trusted Publishing
+        working-directory: ls
+        run: ./node_modules/.bin/vsce publish --oidc --packagePath "$RELEASE_ASSETS/z-ls-$RELEASE_VERSION.vsix"

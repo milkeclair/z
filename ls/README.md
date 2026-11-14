@@ -41,3 +41,8 @@ then run the checks above from a clean installation.
 
 From this directory, run `npm run package`. It installs the locked dependencies
 with `npm ci` and creates a VSIX after the prepublish build.
+
+## Releases
+
+z and z-ls share the version selected in the repository [release workflow](../.github/RELEASING.md).
+Every GitHub release includes a versioned VSIX; Marketplace publication is an optional OIDC-authenticated job.

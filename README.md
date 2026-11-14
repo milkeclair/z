@@ -3,6 +3,11 @@
 A zsh utility library for me who can't memorize shell script syntax.
 Provide functions with readable names for syntax that is not intuitive for me.
 
+## Releases
+
+Versioned source archives and matching z-ls VSIX packages are published through the
+[release workflow](.github/RELEASING.md). Marketplace publication is optional.
+
 ## Installation
 
 ### First time
