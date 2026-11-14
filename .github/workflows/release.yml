@@ -9,6 +9,10 @@ on:
         description: 'Unified stable version for z and z-ls, without v (for example 2.4.0)'
         type: string
         required: true
+      release_notes:
+        description: 'Release notes in Markdown (required; no automatic generation)'
+        type: string
+        required: true
       publish_marketplace:
         description: 'Also publish the released VSIX to Visual Studio Marketplace'
         type: boolean
@@ -51,6 +55,7 @@ jobs:
         id: plan
         env:
           RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_NOTES: ${{ inputs.release_notes }}
           RELEASE_REF: ${{ github.ref }}
           RELEASE_SOURCE: ${{ github.sha }}
           RELEASE_REPOSITORY: ${{ github.repository }}
@@ -60,6 +65,7 @@ jobs:
             printf '::error::Run releases from main.\n'
             exit 1
           fi
+          node .github/scripts/release.mjs notes "$RELEASE_NOTES" "$RUNNER_TEMP/release-notes.md"
           mode=$(node .github/scripts/release.mjs plan "$RELEASE_VERSION" "$RELEASE_REPOSITORY" "$RELEASE_SOURCE")
           printf 'mode=%s\n' "$mode" >> "$GITHUB_OUTPUT"
           check_ref="$RELEASE_SOURCE"
@@ -163,6 +169,7 @@ jobs:
       - name: Preserve trusted tools and recheck state
         id: plan
         env:
+          RELEASE_NOTES: ${{ inputs.release_notes }}
           GH_TOKEN: ${{ github.token }}
         run: |
           release_tools="$RUNNER_TEMP/release-tools"
@@ -170,6 +177,7 @@ jobs:
           mkdir -p "$release_tools" "$release_assets"
           cp .github/scripts/release.mjs .github/scripts/release_version.mjs .github/scripts/release_assets.mjs .github/scripts/verify_vsix.py "$release_tools/"
           printf 'RELEASE_TOOLS=%s\nRELEASE_ASSETS=%s\n' "$release_tools" "$release_assets" >> "$GITHUB_ENV"
+          node "$release_tools/release.mjs" notes "$RELEASE_NOTES" "$RUNNER_TEMP/release-notes.md"
           mode=$(node "$release_tools/release.mjs" plan "$RELEASE_VERSION" "$RELEASE_REPOSITORY" "$RELEASE_SOURCE")
           printf 'mode=%s\n' "$mode" >> "$GITHUB_OUTPUT"
       - name: Require the validated build state and one artifact ID
@@ -203,7 +211,7 @@ jobs:
           RELEASE_MODE: ${{ steps.plan.outputs.mode }}
           GH_TOKEN: ${{ github.token }}
           GIT_TERMINAL_PROMPT: '0'
-        run: node "$RELEASE_TOOLS/release.mjs" publish "$RELEASE_VERSION" "$RELEASE_REPOSITORY" "$RELEASE_SOURCE" "$RELEASE_ASSETS" "$RELEASE_MODE"
+        run: node "$RELEASE_TOOLS/release.mjs" publish "$RELEASE_VERSION" "$RELEASE_REPOSITORY" "$RELEASE_SOURCE" "$RELEASE_ASSETS" "$RELEASE_MODE" "$RUNNER_TEMP/release-notes.md"
       - name: Reuse the existing immutable release
         if: steps.plan.outputs.mode == 'published'
         env:

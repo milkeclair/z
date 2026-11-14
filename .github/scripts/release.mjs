@@ -185,9 +185,16 @@ export function downloadRelease(repository, version, directory, sourceDirectory 
   verifyRemoteAssets(release, directory, version, true);
 }
 
+/** Require author-written release notes while preserving their Markdown verbatim. */
+export function releaseNotes(notes) {
+  if (typeof notes !== 'string' || !notes.trim()) throw new Error('Release notes are required; enter non-empty Markdown.');
+  return notes;
+}
+
 /** Publish all assets from a mutable draft, then require immutable protection. */
-export function publishRelease(directory, version, repository, assets, mode, sourceSha) {
+export function publishRelease(directory, version, repository, assets, mode, sourceSha, notesFile) {
   parseVersion(version);
+  releaseNotes(fs.readFileSync(notesFile, 'utf8'));
   verifySourceArchive(directory, assets, version);
   verifyAssets(assets, version);
   if (mode === 'new') pushRelease(directory, version, sourceSha);
@@ -197,7 +204,7 @@ export function publishRelease(directory, version, repository, assets, mode, sou
   if (release && !release.draft) throw new Error('Release was published concurrently; retry to reuse its original assets.');
   if (!release) {
     run('gh', ['release', 'create', tag, '--repo', repository, '--draft', '--verify-tag',
-      '--target', read('git', ['rev-parse', 'HEAD'], directory), '--title', tag, '--generate-notes']);
+      '--target', read('git', ['rev-parse', 'HEAD'], directory), '--title', tag, '--notes-file', notesFile]);
   }
   run('gh', ['release', 'upload', tag, '--repo', repository, '--clobber',
     ...assetNames(version).map(name => path.join(assets, name))]);
@@ -206,7 +213,7 @@ export function publishRelease(directory, version, repository, assets, mode, sou
   assertRemoteTag(directory, version);
   const latest = getApi('repos/' + repositoryName(repository) + '/releases/latest');
   const latestFlag = shouldMakeLatest(version, latest?.tag_name ?? null) ? '--latest' : '--latest=false';
-  run('gh', ['release', 'edit', tag, '--repo', repository, '--draft=false', latestFlag]);
+  run('gh', ['release', 'edit', tag, '--repo', repository, '--draft=false', latestFlag, '--notes-file', notesFile]);
   verifyRemoteAssets(getRelease(repository, version), assets, version, true);
   assertRemoteTag(directory, version);
 }
@@ -215,6 +222,10 @@ export function publishRelease(directory, version, repository, assets, mode, sou
 function main(command, version, ...args) {
   const root = process.cwd();
   switch (command) {
+    case 'notes': {
+      fs.writeFileSync(args[0], releaseNotes(version), 'utf8');
+      return;
+    }
     case 'environment': {
       checkMarketplaceEnvironment(version);
       return;
@@ -235,8 +246,8 @@ function main(command, version, ...args) {
       return;
     }
     case 'publish': {
-      const [repository, sourceSha, directory, mode] = args;
-      publishRelease(root, version, repository, directory, mode, sourceSha);
+      const [repository, sourceSha, directory, mode, notesFile] = args;
+      publishRelease(root, version, repository, directory, mode, sourceSha, notesFile);
       return;
     }
     case 'download': {
@@ -244,7 +255,7 @@ function main(command, version, ...args) {
       downloadRelease(repository, version, directory);
       return;
     }
-    default: throw new Error('Expected environment, plan, prepare, pack, publish or download.');
+    default: throw new Error('Expected notes, environment, plan, prepare, pack, publish or download.');
   }
 }
 
