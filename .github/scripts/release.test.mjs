@@ -7,7 +7,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parseVersion, compareVersions, updateVersions, sourceVersion, shouldMakeLatest } from './release_version.mjs';
 import { assetNames, digest, packAssets, verifyAssets, verifyRemoteAssets, verifySourceArchive } from './release_assets.mjs';
-import { prepareRelease, pushRelease, publishRelease, assertRemoteTag, assertMarketplaceEnvironment } from './release.mjs';
+import { prepareRelease, pushRelease, publishRelease, assertRemoteTag, assertMarketplaceEnvironment, releaseNotes } from './release.mjs';
 
 const roots = [];
 const script = fileURLToPath(new URL('./release.mjs', import.meta.url));
@@ -62,7 +62,9 @@ function releaseFixture() {
   const assets = path.join(item.root, 'assets');
   makeVsix(assets);
   packAssets(item.directory, assets, '2.4.0');
-  return { ...item, assets };
+  const notesFile = path.join(item.root, 'release-notes.md');
+  fs.writeFileSync(notesFile, '## Changes\n\n- Test release\n');
+  return { ...item, assets, notesFile };
 }
 function remoteData(assets) {
   return { tag_name: 'v2.4.0', draft: true, prerelease: false, immutable: false,
@@ -234,6 +236,106 @@ describe('release state and atomic pushes', () => {
   });
 });
 
+describe('author-written release notes', () => {
+  test('requires non-empty notes and preserves Markdown and whitespace', () => {
+    for (const notes of [undefined, null, '', ' \t\r\n']) {
+      assert.throws(() => releaseNotes(notes), /Release notes are required/);
+    }
+    const notes = '  ## 変更\r\n\r\n- Fix "quotes" and $HOME\r\n\r\n';
+    assert.equal(releaseNotes(notes), notes);
+  });
+
+  test('writes multiline input literally through the workflow shell boundary', () => {
+    const item = fixture(), filename = path.join(item.root, 'notes.md');
+    const marker = path.join(item.root, 'should-not-exist');
+    const notes = '## 変更\r\n\r\n- "quoted" \'text\' $HOME $(touch ' + marker + ') ' +
+      String.fromCharCode(96) + 'touch ' + marker + String.fromCharCode(96) +
+      '\nEOF\n::error::ordinary Markdown\n--generate-notes\n';
+    const result = spawnSync('bash', ['-euo', 'pipefail', '-c',
+      '"$NODE" "$RELEASE_SCRIPT" notes "$RELEASE_NOTES" "$NOTES_FILE"'], {
+      encoding: 'utf8', env: { ...process.env, NODE: process.execPath, RELEASE_SCRIPT: script,
+        RELEASE_NOTES: notes, NOTES_FILE: filename },
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(fs.readFileSync(filename, 'utf8'), notes);
+    assert.equal(result.stdout, '');
+    assert.equal(fs.existsSync(marker), false);
+  });
+
+  test('rejects missing or blank CLI input without creating a notes file', () => {
+    const item = fixture(), filename = path.join(item.root, 'notes.md');
+    for (const args of [[], ['', filename], [' \n\t', filename]]) {
+      const result = spawnSync(process.execPath, [script, 'notes', ...args], { encoding: 'utf8' });
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, /Release notes are required/);
+      assert.equal(fs.existsSync(filename), false);
+    }
+  });
+
+  test('rejects blank notes before pushing main or a release tag', () => {
+    const item = releaseFixture();
+    fs.writeFileSync(item.notesFile, ' \n');
+    assert.throws(() => publishRelease(item.directory, '2.4.0', 'milkeclair/z',
+      item.assets, 'new', item.source, item.notesFile), /Release notes are required/);
+    assert.equal(git(item.root, '--git-dir=' + item.remote, 'rev-parse', 'main'), item.source);
+    assert.equal(git(item.root, '--git-dir=' + item.remote, 'tag'), '');
+  });
+
+  for (const existingDraft of [false, true]) {
+    test(existingDraft ? 'replaces an existing draft body with this dispatch input' :
+      'creates and publishes a draft using only the supplied notes', () => {
+      const item = releaseFixture(), bin = path.join(item.root, 'bin');
+      fs.mkdirSync(bin);
+      const notes = '## 変更\n\n- "quotes" $HOME $(false)\n\n';
+      fs.writeFileSync(item.notesFile, notes);
+      if (existingDraft) pushRelease(item.directory, '2.4.0', item.source);
+      const callsFile = path.join(item.root, 'gh-calls.jsonl'), stateFile = path.join(item.root, 'release.json');
+      if (existingDraft) fs.writeFileSync(stateFile, JSON.stringify({ ...remoteData(item.assets), body: 'Old draft notes' }));
+      fs.writeFileSync(path.join(bin, 'gh'), '#!' + process.execPath + '\n' + [
+        'const fs = require("node:fs");',
+        'const args = process.argv.slice(2), stateFile = process.env.RELEASE_TEST_STATE;',
+        'let state = fs.existsSync(stateFile) ? JSON.parse(fs.readFileSync(stateFile)) : null;',
+        'const notesIndex = args.indexOf("--notes-file");',
+        'const body = notesIndex < 0 ? null : fs.readFileSync(args[notesIndex + 1], "utf8");',
+        'fs.appendFileSync(process.env.RELEASE_TEST_CALLS, JSON.stringify({ args, body }) + "\\n");',
+        'if (args[0] === "release" && args[1] === "view") {',
+        '  if (!state) { process.stderr.write("release not found"); process.exit(1); }',
+        '  process.stdout.write(JSON.stringify({tagName: state.tag_name, isDraft: state.draft, isImmutable: state.immutable, isPrerelease: state.prerelease, assets: state.assets}));',
+        '} else if (args[0] === "release" && args[1] === "create") {',
+        '  if (body === null || args.includes("--generate-notes")) throw new Error("Expected authored notes file");',
+        '  state = { ...JSON.parse(process.env.RELEASE_TEST_DATA), body };',
+        '} else if (args[0] === "release" && args[1] === "upload") {',
+        '  if (!state || !state.draft) throw new Error("Expected mutable draft");',
+        '} else if (args[0] === "api" && args[1].endsWith("/releases/latest")) {',
+        '  process.stderr.write("gh: HTTP 404"); process.exit(1);',
+        '} else if (args[0] === "release" && args[1] === "edit") {',
+        '  if (body === null || !args.includes("--draft=false")) throw new Error("Expected notes at publication");',
+        '  state = { ...state, body, draft: false, immutable: true };',
+        '} else { throw new Error("Unexpected gh command: " + JSON.stringify(args)); }',
+        'if (state) fs.writeFileSync(stateFile, JSON.stringify(state));',
+      ].join('\n') + '\n', { mode: 0o755 });
+      const result = spawnSync(process.execPath, [script, 'publish', '2.4.0', 'milkeclair/z',
+        item.source, item.assets, existingDraft ? 'resume' : 'new', item.notesFile], {
+        cwd: item.directory, encoding: 'utf8', env: { ...process.env,
+          PATH: bin + path.delimiter + process.env.PATH, RELEASE_TEST_STATE: stateFile,
+          RELEASE_TEST_CALLS: callsFile, RELEASE_TEST_DATA: JSON.stringify(remoteData(item.assets)) },
+      });
+      assert.equal(result.status, 0, result.stderr);
+      const calls = fs.readFileSync(callsFile, 'utf8').trim().split('\n').map(line => JSON.parse(line));
+      const writes = calls.filter(call => call.args[0] === 'release' && ['create', 'edit'].includes(call.args[1]));
+      assert.deepEqual(writes.map(call => call.args[1]), existingDraft ? ['edit'] : ['create', 'edit']);
+      for (const call of writes) {
+        assert.equal(call.body, notes);
+        assert.ok(!call.args.includes('--generate-notes'));
+      }
+      const published = JSON.parse(fs.readFileSync(stateFile));
+      assert.equal(published.body, notes);
+      assert.equal(published.draft, false);
+      assert.equal(published.immutable, true);
+    });
+  }
+});
+
 describe('complete immutable release assets', () => {
   test('archives lib, mod, tests and versioned LSP source alongside the matching VSIX', () => {
     const item = releaseFixture();
@@ -264,7 +366,7 @@ describe('complete immutable release assets', () => {
     verifyAssets(item.assets, '2.4.0');
     git(item.directory, 'checkout', '--detach', validated);
     assert.throws(() => verifySourceArchive(item.directory, item.assets, '2.4.0'), /validated Git tree/);
-    assert.throws(() => publishRelease(item.directory, '2.4.0', 'local-test-only', item.assets, 'new', item.source), /validated Git tree/);
+    assert.throws(() => publishRelease(item.directory, '2.4.0', 'local-test-only', item.assets, 'new', item.source, item.notesFile), /validated Git tree/);
     assert.equal(git(item.root, '--git-dir=' + item.remote, 'rev-parse', 'main'), item.source);
   });
   test('rejects a VSIX XML identity that differs from its valid JSON identity', () => {
@@ -350,7 +452,7 @@ describe('complete immutable release assets', () => {
   test('rejects corrupted bytes and altered checksum paths before any publication', () => {
     const item = releaseFixture();
     fs.appendFileSync(path.join(item.assets, 'z-ls-2.4.0.vsix'), 'corrupt');
-    assert.throws(() => publishRelease(item.directory, '2.4.0', 'local-test-only', item.assets, 'new', item.source), /checksums/);
+    assert.throws(() => publishRelease(item.directory, '2.4.0', 'local-test-only', item.assets, 'new', item.source, item.notesFile), /checksums/);
     assert.equal(git(item.root, '--git-dir=' + item.remote, 'rev-parse', 'main'), item.source);
     fs.writeFileSync(path.join(item.assets, 'SHA256SUMS'), '0  ../outside\n');
     assert.throws(() => verifyAssets(item.assets, '2.4.0'), /checksums/);

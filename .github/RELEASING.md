@@ -3,7 +3,17 @@
 ## Run a release
 
 Open Actions → Release → Run workflow on main. Enter a stable version such as 2.4.0
-(without v), and choose whether to publish to Visual Studio Marketplace.
+(without v), enter the required Markdown release notes, and choose whether to
+publish to Visual Studio Marketplace. The notes become the GitHub Release body
+exactly as entered; empty or whitespace-only notes fail before building or pushing.
+The workflow uses only your written notes and does not generate release notes.
+
+For multiline Markdown, use a local file with the GitHub CLI:
+
+```sh
+gh workflow run release.yml --ref main -f version=2.4.0 \
+  -F release_notes=@/path/to/release-notes.md -F publish_marketplace=false
+```
 
 The version applies to z.version, ls/package.json and ls/package-lock.json.
 The first unified release must be newer than the existing z-ls version 2.3.0.
@@ -84,6 +94,8 @@ dispatch from current main to include the latest changes.
 If the version commit/tag were pushed but GitHub publication failed, dispatch
 the same version again. The workflow checks that the tag belongs to main and
 contains matching source/manifest/lock versions, then runs CI against that exact tag commit and resumes from it. A tag change after validation requires a new dispatch.
+Enter the release notes again when retrying. For an unpublished draft, the new
+input replaces its existing body before publication.
 A draft's three expected assets may be replaced before publication; unexpected
 extra assets cause a failure for manual review. Resuming an older draft preserves
 a newer release's Latest designation.
@@ -91,8 +103,9 @@ a newer release's Latest designation.
 Once the GitHub release is immutable, dispatching the same version verifies and
 reuses its existing assets. Select the Marketplace checkbox to retry that
 publication or to publish a version initially released only on GitHub. The
-GitHub release, tag and assets are preserved. Marketplace duplicate-version
-errors remain errors rather than being silently accepted.
+GitHub release, tag and assets are preserved. Release notes remain a required
+workflow input on retries, but an already-published release keeps its existing body.
+Marketplace duplicate-version errors remain errors rather than being silently accepted.
 
 GitHub and Marketplace are separate services. A Marketplace failure leaves the
 immutable GitHub release published and available for retry.
