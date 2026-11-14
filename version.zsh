@@ -6,7 +6,7 @@
 # example:
 #  z.version #=> v... (current version)
 z.version() {
-  z.io "v0.7.0"
+  z.io "v3.0.0"
 }
 
 # echo the latest version from GitHub
