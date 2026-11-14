@@ -7,7 +7,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parseVersion, compareVersions, updateVersions, sourceVersion, shouldMakeLatest } from './release_version.mjs';
 import { assetNames, digest, packAssets, verifyAssets, verifyRemoteAssets, verifySourceArchive } from './release_assets.mjs';
-import { prepareRelease, pushRelease, publishRelease, assertRemoteTag, assertMarketplaceEnvironment, releaseNotes } from './release.mjs';
+import { prepareRelease, pushRelease, assertRemoteTag, assertMarketplaceEnvironment, releaseNotes, stageRelease } from './release.mjs';
 
 const roots = [];
 const script = fileURLToPath(new URL('./release.mjs', import.meta.url));
@@ -63,25 +63,69 @@ function releaseFixture() {
   makeVsix(assets);
   packAssets(item.directory, assets, '2.4.0');
   const notesFile = path.join(item.root, 'release-notes.md');
-  fs.writeFileSync(notesFile, '## Changes\n\n- Test release\n');
   return { ...item, assets, notesFile };
 }
 function remoteData(assets) {
   return { tag_name: 'v2.4.0', draft: true, prerelease: false, immutable: false,
     assets: assetNames('2.4.0').map(name => ({ name, state: 'uploaded', digest: 'sha256:' + digest(path.join(assets, name)) })) };
 }
-function plan(item, response, status = '200', version = '2.4.0') {
+function plan(item, response, status = '200', version = '2.4.0', action = 'draft') {
   const bin = path.join(item.root, 'bin');
   fs.mkdirSync(bin, { recursive: true });
   fs.writeFileSync(path.join(bin, 'gh'), '#!' + process.execPath + '\n' +
     'if(process.argv[2]!=="release"||process.argv[3]!=="view")throw new Error("Use draft-aware release lookup");' +
     'if(process.env.RELEASE_TEST_STATUS==="200"){const v=JSON.parse(process.env.RELEASE_TEST_RESPONSE);' +
-    'process.stdout.write(JSON.stringify({tagName:v.tag_name,isDraft:v.draft,isImmutable:v.immutable,isPrerelease:v.prerelease,assets:v.assets}));}' +
+    'process.stdout.write(JSON.stringify({tagName:v.tag_name,isDraft:v.draft,isImmutable:v.immutable,isPrerelease:v.prerelease,assets:v.assets,body:v.body,databaseId:v.id}));}' +
     'else {process.stderr.write(process.env.RELEASE_TEST_STATUS==="404"?"release not found":"gh: HTTP "+process.env.RELEASE_TEST_STATUS);process.exit(1);}\n', { mode: 0o755 });
-  return spawnSync(process.execPath, [script, 'plan', version, 'milkeclair/z', git(item.directory, 'rev-parse', 'HEAD')], {
+  return spawnSync(process.execPath, [script, 'plan', version, 'milkeclair/z', git(item.directory, 'rev-parse', 'HEAD'), action], {
     cwd: item.directory, encoding: 'utf8', env: { ...process.env, PATH: bin + path.delimiter + process.env.PATH,
       RELEASE_TEST_STATUS: status, RELEASE_TEST_RESPONSE: JSON.stringify(response) },
   });
+}
+
+
+function releaseService(item, initial, changeBody = false) {
+  const bin = path.join(item.root, 'service-bin'), stateFile = path.join(item.root, 'release.json');
+  const callsFile = path.join(item.root, 'gh-calls.jsonl');
+  fs.mkdirSync(bin);
+  if (initial) fs.writeFileSync(stateFile, JSON.stringify(initial));
+  fs.writeFileSync(path.join(bin, 'gh'), '#!' + process.execPath + '\n' + [
+    'const fs = require("node:fs"), path = require("node:path");',
+    'const args = process.argv.slice(2), stateFile = process.env.RELEASE_TEST_STATE;',
+    'let state = fs.existsSync(stateFile) ? JSON.parse(fs.readFileSync(stateFile)) : null;',
+    'const previous = fs.existsSync(process.env.RELEASE_TEST_CALLS) ? fs.readFileSync(process.env.RELEASE_TEST_CALLS, "utf8").trim().split("\\n").map(JSON.parse) : [];',
+    'fs.appendFileSync(process.env.RELEASE_TEST_CALLS, JSON.stringify(args) + "\\n");',
+    'if (args[0] === "release" && args[1] === "view") {',
+    '  if (!state) { process.stderr.write("release not found"); process.exit(1); }',
+    '  if (process.env.RELEASE_TEST_CHANGE === "true" && previous.filter(a => a[0] === "release" && a[1] === "view").length === 2) state.body = "Changed while validating";',
+    '  process.stdout.write(JSON.stringify({tagName: state.tag_name, isDraft: state.draft, isImmutable: state.immutable, isPrerelease: state.prerelease, assets: state.assets, body: state.body, databaseId: state.id}));',
+    '} else if (args[0] === "release" && args[1] === "create") {',
+    '  if (!args.includes("--draft") || args.includes("--generate-notes") || args[args.indexOf("--notes") + 1] !== "") throw new Error("Expected empty draft");',
+    '  state = { ...JSON.parse(process.env.RELEASE_TEST_DATA), assets: [], id: 7, body: "" };',
+    '} else if (args[0] === "release" && args[1] === "upload") {',
+    '  if (!state || !state.draft) throw new Error("Expected mutable draft");',
+    '  state.assets = JSON.parse(process.env.RELEASE_TEST_DATA).assets;',
+    '} else if (args[0] === "release" && args[1] === "download") {',
+    '  const dir = args[args.indexOf("--dir") + 1];',
+    '  for (const asset of state.assets) fs.copyFileSync(path.join(process.env.RELEASE_TEST_ASSETS, asset.name), path.join(dir, asset.name));',
+    '} else if (args[0] === "api" && args[1].endsWith("/releases/latest")) {',
+    '  process.stderr.write("gh: HTTP 404"); process.exit(1);',
+    '} else if (args[0] === "release" && args[1] === "edit") {',
+    '  if (!args.includes("--notes-file") || !args.includes("--draft=false")) throw new Error("Expected saved notes at publication");',
+    '  state = { ...state, body: fs.readFileSync(args[args.indexOf("--notes-file") + 1], "utf8"), draft: false, immutable: true };',
+    '} else { throw new Error("Unexpected gh command: " + JSON.stringify(args)); }',
+    'if (state) fs.writeFileSync(stateFile, JSON.stringify(state));',
+  ].join('\n') + '\n', { mode: 0o755 });
+  return {
+    run: (...args) => spawnSync(process.execPath, [script, ...args], {
+      cwd: item.directory, encoding: 'utf8', env: { ...process.env,
+        PATH: bin + path.delimiter + process.env.PATH, RELEASE_TEST_STATE: stateFile,
+        RELEASE_TEST_CALLS: callsFile, RELEASE_TEST_DATA: JSON.stringify(remoteData(item.assets)),
+        RELEASE_TEST_ASSETS: item.assets, RELEASE_TEST_CHANGE: String(changeBody) },
+    }),
+    state: () => JSON.parse(fs.readFileSync(stateFile)),
+    calls: () => fs.readFileSync(callsFile, 'utf8').trim().split('\n').map(line => JSON.parse(line)),
+  };
 }
 
 describe('unified release versions', () => {
@@ -146,10 +190,10 @@ describe('release state and atomic pushes', () => {
   });
   test('reuses published immutable releases and rejects mutable ones', () => {
     const item = fixture();
-    const published = plan(item, { draft: false, immutable: true });
+    const published = plan(item, { draft: false, immutable: true }, '200', '2.4.0', 'publish');
     assert.equal(published.status, 0, published.stderr);
     assert.equal(published.stdout.trim(), 'published');
-    assert.notEqual(plan(item, { draft: false, immutable: false }).status, 0);
+    assert.notEqual(plan(item, { draft: false, immutable: false }, '200', '2.4.0', 'publish').status, 0);
   });
   test('creates a local version commit and tag before any remote write', () => {
     const item = fixture();
@@ -236,7 +280,8 @@ describe('release state and atomic pushes', () => {
   });
 });
 
-describe('author-written release notes', () => {
+
+describe('draft creation and saved multiline release notes', () => {
   test('requires non-empty notes and preserves Markdown and whitespace', () => {
     for (const notes of [undefined, null, '', ' \t\r\n']) {
       assert.throws(() => releaseNotes(notes), /Release notes are required/);
@@ -245,95 +290,137 @@ describe('author-written release notes', () => {
     assert.equal(releaseNotes(notes), notes);
   });
 
-  test('writes multiline input literally through the workflow shell boundary', () => {
-    const item = fixture(), filename = path.join(item.root, 'notes.md');
-    const marker = path.join(item.root, 'should-not-exist');
-    const notes = '## 変更\r\n\r\n- "quoted" \'text\' $HOME $(touch ' + marker + ') ' +
-      String.fromCharCode(96) + 'touch ' + marker + String.fromCharCode(96) +
-      '\nEOF\n::error::ordinary Markdown\n--generate-notes\n';
-    const result = spawnSync('bash', ['-euo', 'pipefail', '-c',
-      '"$NODE" "$RELEASE_SCRIPT" notes "$RELEASE_NOTES" "$NOTES_FILE"'], {
-      encoding: 'utf8', env: { ...process.env, NODE: process.execPath, RELEASE_SCRIPT: script,
-        RELEASE_NOTES: notes, NOTES_FILE: filename },
-    });
+  test('creates an empty draft with verified assets and stops before publication', () => {
+    const item = releaseFixture(), service = releaseService(item, null);
+    const result = service.run('stage', '2.4.0', 'milkeclair/z', item.source, item.assets, 'new');
     assert.equal(result.status, 0, result.stderr);
-    assert.equal(fs.readFileSync(filename, 'utf8'), notes);
-    assert.equal(result.stdout, '');
-    assert.equal(fs.existsSync(marker), false);
+    const draft = service.state();
+    assert.equal(draft.draft, true);
+    assert.equal(draft.immutable, false);
+    assert.equal(draft.body, '');
+    assert.equal(draft.assets.length, 3);
+    assert.ok(!service.calls().some(args => args[1] === 'edit'));
+    assert.equal(git(item.root, '--git-dir=' + item.remote, 'rev-parse', 'main'),
+      git(item.directory, 'rev-parse', 'HEAD'));
   });
 
-  test('rejects missing or blank CLI input without creating a notes file', () => {
-    const item = fixture(), filename = path.join(item.root, 'notes.md');
-    for (const args of [[], ['', filename], [' \n\t', filename]]) {
-      const result = spawnSync(process.execPath, [script, 'notes', ...args], { encoding: 'utf8' });
+  test('preserves saved notes when retrying draft preparation', () => {
+    const item = releaseFixture();
+    pushRelease(item.directory, '2.4.0', item.source);
+    const notes = '## Already edited\n\n- Keep my notes\n';
+    const service = releaseService(item, { ...remoteData(item.assets), id: 7, body: notes });
+    const result = service.run('stage', '2.4.0', 'milkeclair/z', item.source, item.assets, 'resume');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(service.state().body, notes);
+    assert.equal(service.state().draft, true);
+    assert.ok(!service.calls().some(args => ['create', 'edit'].includes(args[1])));
+  });
+
+  test('publishes the saved Markdown verbatim from existing assets even after main advances', () => {
+    const item = releaseFixture();
+    pushRelease(item.directory, '2.4.0', item.source);
+    const validated = git(item.directory, 'rev-parse', 'v2.4.0^{commit}');
+    fs.writeFileSync(path.join(item.directory, 'later'), 'Newer main');
+    git(item.directory, 'add', '.');git(item.directory, 'commit', '-m', 'Advance main');git(item.directory, 'push', 'origin', 'main');
+    const marker = path.join(item.root, 'should-not-exist');
+    const notes = '## 変更\r\n\r\n- "quoted" \'text\' $HOME $(touch ' + marker + ') ' +
+      String.fromCharCode(96) + 'touch ' + marker + String.fromCharCode(96) + '\nEOF\n::error::ordinary Markdown\n';
+    const service = releaseService(item, { ...remoteData(item.assets), id: 7, body: notes });
+    const assets = path.join(item.root, 'downloaded');
+    const result = service.run('publish', '2.4.0', 'milkeclair/z', assets, item.notesFile, validated);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(fs.readFileSync(item.notesFile, 'utf8'), notes);
+    assert.equal(service.state().body, notes);
+    assert.equal(service.state().draft, false);
+    assert.equal(service.state().immutable, true);
+    const calls = service.calls();
+    assert.equal(calls.filter(args => args[1] === 'edit').length, 1);
+    assert.ok(!calls.some(args => ['create', 'upload'].includes(args[1])));
+    assert.equal(fs.existsSync(marker), false);
+    for (const name of assetNames('2.4.0')) assert.equal(digest(path.join(assets, name)), digest(path.join(item.assets, name)));
+    assert.equal(git(item.directory, 'rev-parse', 'HEAD'), git(item.root, '--git-dir=' + item.remote, 'rev-parse', 'main'));
+  });
+
+  test('requires a saved draft and non-blank body before planning publication', () => {
+    for (const body of [null, '', ' \n\t']) {
+      const item = releaseFixture();
+      pushRelease(item.directory, '2.4.0', item.source);
+      const initial = body === null ? null : { ...remoteData(item.assets), id: 7, body };
+      const service = releaseService(item, initial);
+      const result = service.run('plan', '2.4.0', 'milkeclair/z', git(item.directory, 'rev-parse', 'HEAD'), 'publish');
       assert.notEqual(result.status, 0);
-      assert.match(result.stderr, /Release notes are required/);
-      assert.equal(fs.existsSync(filename), false);
+      assert.match(result.stderr, body === null ? /Run release-draft first/ : /Release notes are required/);
+      assert.ok(!service.calls().some(args => ['download', 'edit', 'upload'].includes(args[1])));
     }
   });
 
-  test('rejects blank notes before pushing main or a release tag', () => {
+  test('stops if the draft body changes while its artifacts are being validated', () => {
     const item = releaseFixture();
-    fs.writeFileSync(item.notesFile, ' \n');
-    assert.throws(() => publishRelease(item.directory, '2.4.0', 'milkeclair/z',
-      item.assets, 'new', item.source, item.notesFile), /Release notes are required/);
-    assert.equal(git(item.root, '--git-dir=' + item.remote, 'rev-parse', 'main'), item.source);
-    assert.equal(git(item.root, '--git-dir=' + item.remote, 'tag'), '');
+    pushRelease(item.directory, '2.4.0', item.source);
+    const service = releaseService(item, { ...remoteData(item.assets), id: 7, body: '## Saved notes\n' }, true);
+    const result = service.run('publish', '2.4.0', 'milkeclair/z', path.join(item.root, 'downloaded'),
+      item.notesFile, git(item.directory, 'rev-parse', 'HEAD'));
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Draft changed during validation/);
+    assert.equal(service.state().draft, true);
+    assert.ok(!service.calls().some(args => args[1] === 'edit'));
+    assert.equal(fs.existsSync(item.notesFile), false);
   });
 
-  for (const existingDraft of [false, true]) {
-    test(existingDraft ? 'replaces an existing draft body with this dispatch input' :
-      'creates and publishes a draft using only the supplied notes', () => {
-      const item = releaseFixture(), bin = path.join(item.root, 'bin');
-      fs.mkdirSync(bin);
-      const notes = '## 変更\n\n- "quotes" $HOME $(false)\n\n';
-      fs.writeFileSync(item.notesFile, notes);
-      if (existingDraft) pushRelease(item.directory, '2.4.0', item.source);
-      const callsFile = path.join(item.root, 'gh-calls.jsonl'), stateFile = path.join(item.root, 'release.json');
-      if (existingDraft) fs.writeFileSync(stateFile, JSON.stringify({ ...remoteData(item.assets), body: 'Old draft notes' }));
-      fs.writeFileSync(path.join(bin, 'gh'), '#!' + process.execPath + '\n' + [
-        'const fs = require("node:fs");',
-        'const args = process.argv.slice(2), stateFile = process.env.RELEASE_TEST_STATE;',
-        'let state = fs.existsSync(stateFile) ? JSON.parse(fs.readFileSync(stateFile)) : null;',
-        'const notesIndex = args.indexOf("--notes-file");',
-        'const body = notesIndex < 0 ? null : fs.readFileSync(args[notesIndex + 1], "utf8");',
-        'fs.appendFileSync(process.env.RELEASE_TEST_CALLS, JSON.stringify({ args, body }) + "\\n");',
-        'if (args[0] === "release" && args[1] === "view") {',
-        '  if (!state) { process.stderr.write("release not found"); process.exit(1); }',
-        '  process.stdout.write(JSON.stringify({tagName: state.tag_name, isDraft: state.draft, isImmutable: state.immutable, isPrerelease: state.prerelease, assets: state.assets}));',
-        '} else if (args[0] === "release" && args[1] === "create") {',
-        '  if (body === null || args.includes("--generate-notes")) throw new Error("Expected authored notes file");',
-        '  state = { ...JSON.parse(process.env.RELEASE_TEST_DATA), body };',
-        '} else if (args[0] === "release" && args[1] === "upload") {',
-        '  if (!state || !state.draft) throw new Error("Expected mutable draft");',
-        '} else if (args[0] === "api" && args[1].endsWith("/releases/latest")) {',
-        '  process.stderr.write("gh: HTTP 404"); process.exit(1);',
-        '} else if (args[0] === "release" && args[1] === "edit") {',
-        '  if (body === null || !args.includes("--draft=false")) throw new Error("Expected notes at publication");',
-        '  state = { ...state, body, draft: false, immutable: true };',
-        '} else { throw new Error("Unexpected gh command: " + JSON.stringify(args)); }',
-        'if (state) fs.writeFileSync(stateFile, JSON.stringify(state));',
-      ].join('\n') + '\n', { mode: 0o755 });
-      const result = spawnSync(process.execPath, [script, 'publish', '2.4.0', 'milkeclair/z',
-        item.source, item.assets, existingDraft ? 'resume' : 'new', item.notesFile], {
-        cwd: item.directory, encoding: 'utf8', env: { ...process.env,
-          PATH: bin + path.delimiter + process.env.PATH, RELEASE_TEST_STATE: stateFile,
-          RELEASE_TEST_CALLS: callsFile, RELEASE_TEST_DATA: JSON.stringify(remoteData(item.assets)) },
-      });
-      assert.equal(result.status, 0, result.stderr);
-      const calls = fs.readFileSync(callsFile, 'utf8').trim().split('\n').map(line => JSON.parse(line));
-      const writes = calls.filter(call => call.args[0] === 'release' && ['create', 'edit'].includes(call.args[1]));
-      assert.deepEqual(writes.map(call => call.args[1]), existingDraft ? ['edit'] : ['create', 'edit']);
-      for (const call of writes) {
-        assert.equal(call.body, notes);
-        assert.ok(!call.args.includes('--generate-notes'));
-      }
-      const published = JSON.parse(fs.readFileSync(stateFile));
-      assert.equal(published.body, notes);
-      assert.equal(published.draft, false);
-      assert.equal(published.immutable, true);
-    });
-  }
+  test('rejects corrupt downloaded artifacts before publishing or changing the draft', () => {
+    const item = releaseFixture();
+    pushRelease(item.directory, '2.4.0', item.source);
+    const service = releaseService(item, { ...remoteData(item.assets), id: 7, body: '## Saved notes\n' });
+    fs.appendFileSync(path.join(item.assets, 'z-ls-2.4.0.vsix'), 'corrupted');
+    const result = service.run('publish', '2.4.0', 'milkeclair/z', path.join(item.root, 'downloaded'),
+      item.notesFile, git(item.directory, 'rev-parse', 'HEAD'));
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /checksums/);
+    assert.equal(service.state().draft, true);
+    assert.ok(!service.calls().some(args => args[1] === 'edit'));
+  });
+
+  test('rejects a release tag different from the preflight-validated commit', () => {
+    const item = releaseFixture();
+    pushRelease(item.directory, '2.4.0', item.source);
+    const service = releaseService(item, { ...remoteData(item.assets), id: 7, body: '## Saved notes\n' });
+    const result = service.run('publish', '2.4.0', 'milkeclair/z', path.join(item.root, 'downloaded'),
+      item.notesFile, item.source);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Release tag changed after validation/);
+    assert.equal(service.state().draft, true);
+    assert.ok(!service.calls().some(args => args[1] === 'edit'));
+  });
+
+  test('requires non-blank saved notes in the publishing job as well as preflight', () => {
+    const item = releaseFixture();
+    pushRelease(item.directory, '2.4.0', item.source);
+    const service = releaseService(item, { ...remoteData(item.assets), id: 7, body: ' \n\t' });
+    const result = service.run('publish', '2.4.0', 'milkeclair/z', path.join(item.root, 'downloaded'),
+      item.notesFile, git(item.directory, 'rev-parse', 'HEAD'));
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Release notes are required/);
+    assert.ok(!service.calls().some(args => ['download', 'edit', 'upload'].includes(args[1])));
+  });
+
+  test('reuses immutable releases only through release-publish and keeps the saved body', () => {
+    const item = releaseFixture();
+    pushRelease(item.directory, '2.4.0', item.source);
+    const service = releaseService(item, { ...remoteData(item.assets), id: 7, body: '## Published notes\n',
+      draft: false, immutable: true });
+    const sha = git(item.directory, 'rev-parse', 'HEAD');
+    const publishPlan = service.run('plan', '2.4.0', 'milkeclair/z', sha, 'publish');
+    assert.equal(publishPlan.status, 0, publishPlan.stderr);
+    assert.equal(publishPlan.stdout.trim(), 'published');
+    const draftPlan = service.run('plan', '2.4.0', 'milkeclair/z', sha, 'draft');
+    assert.notEqual(draftPlan.status, 0);
+    assert.match(draftPlan.stderr, /already published/);
+    const download = service.run('download', '2.4.0', 'milkeclair/z', path.join(item.root, 'downloaded'));
+    assert.equal(download.status, 0, download.stderr);
+    assert.equal(service.state().body, '## Published notes\n');
+    assert.ok(!service.calls().some(args => ['create', 'edit', 'upload'].includes(args[1])));
+  });
+
 });
 
 describe('complete immutable release assets', () => {
@@ -366,7 +453,7 @@ describe('complete immutable release assets', () => {
     verifyAssets(item.assets, '2.4.0');
     git(item.directory, 'checkout', '--detach', validated);
     assert.throws(() => verifySourceArchive(item.directory, item.assets, '2.4.0'), /validated Git tree/);
-    assert.throws(() => publishRelease(item.directory, '2.4.0', 'local-test-only', item.assets, 'new', item.source, item.notesFile), /validated Git tree/);
+    assert.throws(() => stageRelease(item.directory, '2.4.0', 'local-test-only', item.assets, 'new', item.source), /validated Git tree/);
     assert.equal(git(item.root, '--git-dir=' + item.remote, 'rev-parse', 'main'), item.source);
   });
   test('rejects a VSIX XML identity that differs from its valid JSON identity', () => {
@@ -452,7 +539,7 @@ describe('complete immutable release assets', () => {
   test('rejects corrupted bytes and altered checksum paths before any publication', () => {
     const item = releaseFixture();
     fs.appendFileSync(path.join(item.assets, 'z-ls-2.4.0.vsix'), 'corrupt');
-    assert.throws(() => publishRelease(item.directory, '2.4.0', 'local-test-only', item.assets, 'new', item.source, item.notesFile), /checksums/);
+    assert.throws(() => stageRelease(item.directory, '2.4.0', 'local-test-only', item.assets, 'new', item.source), /checksums/);
     assert.equal(git(item.root, '--git-dir=' + item.remote, 'rev-parse', 'main'), item.source);
     fs.writeFileSync(path.join(item.assets, 'SHA256SUMS'), '0  ../outside\n');
     assert.throws(() => verifyAssets(item.assets, '2.4.0'), /checksums/);

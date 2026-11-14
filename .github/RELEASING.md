@@ -2,17 +2,30 @@
 
 ## Run a release
 
-Open Actions → Release → Run workflow on main. Enter a stable version such as 2.4.0
-(without v), enter the required Markdown release notes, and choose whether to
-publish to Visual Studio Marketplace. The notes become the GitHub Release body
-exactly as entered; empty or whitespace-only notes fail before building or pushing.
-The workflow uses only your written notes and does not generate release notes.
+1. Open Actions → release-draft → Run workflow on main and enter a stable version
+   such as 2.4.0 (without v). This builds and verifies the source archive and VSIX,
+   pushes the version commit/tag, and saves a draft GitHub Release.
+2. Open Releases, edit the prepared draft, write the multiline Markdown in
+   "Release description", and click Save draft. The workflow starts with an
+   empty body so that you can write the release notes yourself.
+3. Open Actions → release-publish → Run workflow on main. Enter the same version
+   and choose whether to publish to Visual Studio Marketplace. It downloads the
+   draft's existing artifacts, validates them and the saved body, and publishes
+   the release without rebuilding. Empty or whitespace-only notes stop publication.
 
-For multiline Markdown, use a local file with the GitHub CLI:
+Both forms use single-line version fields; the Markdown is edited in GitHub's
+release editor, which supports multiple lines and a preview. No release notes are
+generated. Use Save draft in the editor, then release-publish to run the final
+validation and optional Marketplace publication.
+
+The publishing workflow keeps the filename release.yml because Marketplace's
+Trusted Publishing policy is bound to that filename. The draft workflow is
+release-draft.yml. From the CLI, their display names work as well:
 
 ```sh
-gh workflow run release.yml --ref main -f version=2.4.0 \
-  -F release_notes=@/path/to/release-notes.md -F publish_marketplace=false
+gh workflow run release-draft --ref main -f version=2.4.0
+# Edit and save the prepared draft body in GitHub.
+gh workflow run release-publish --ref main -f version=2.4.0 -F publish_marketplace=false
 ```
 
 The version applies to z.version, ls/package.json and ls/package-lock.json.
@@ -20,7 +33,7 @@ The first unified release must be newer than the existing z-ls version 2.3.0.
 Every new release must advance both component versions. Prereleases and build
 metadata are currently outside this workflow.
 
-The workflow validates the request, runs the existing Zsh/LSP CI, and creates a
+release-draft validates the request, runs the existing Zsh/LSP CI, and creates a
 local version commit and annotated vVERSION tag in a read-only build job. That job
 builds the VSIX and packages all tracked source, including lib, mod, tests and LSP
 source. A separate contents-write job executes no npm install or build code. It
@@ -29,9 +42,10 @@ source archive against that tree, then pushes main and the tag atomically.
 The checked single parent makes this a fast-forward; an explicit lease also
 requires main to retain the dispatched SHA until the push.
 
-It attaches these assets to a draft GitHub Release and verifies the uploaded
-SHA256 digests before publishing. VSIX JSON and XML must agree on extension ID,
-publisher, version and stable channel; source contents must match the trusted Git
+It attaches these assets to a draft GitHub Release, verifies the uploaded SHA256
+digests, and stops with the draft editable. release-publish downloads and verifies
+the same bytes, source/version commit, tag and saved Markdown before publishing.
+VSIX JSON and XML must agree on extension ID, publisher, version and stable channel; source contents must match the trusted Git
 tree. The source tar uses the validated source parent's timestamp and fixed permissions,
 so independently recreated version commits produce the same archive contents:
 
@@ -42,16 +56,20 @@ so independently recreated version commits produce the same archive contents:
 GitHub's immutable releases setting must stay enabled. It is already enabled for
 milkeclair/z. Publication fixes the tag and asset bytes; the workflow also verifies
 the published release's immutable flag. Correct a published release with a new
-version. The GITHUB_TOKEN needs contents: write for the release job, and branch
+version. Draft-aware publication validation runs in the existing contents-write
+publishing job because GitHub requires push access to see drafts. The read-only preflight
+checks the dispatch branch, locked Actions and optional Marketplace controls.
+The GITHUB_TOKEN needs contents: write for the draft/publishing jobs, and branch
 rules must permit its version commit on main. A rejected atomic push changes
 neither main nor the tag.
 
-The release workflow reuses CI from the same commit through a local workflow
+The draft workflow reuses CI from the same commit through a local workflow
 reference. External Actions are pinned by actions.lock.
 
 ## Optional Marketplace publication
 
-The checkbox defaults to false. The VSIX is attached to GitHub in either case.
+The release-publish checkbox defaults to false. The VSIX is attached to GitHub in
+either case.
 When selected, the publishing job downloads the already-published immutable
 assets, verifies their checksums, versions and extension identity, then runs:
 
@@ -88,24 +106,29 @@ matching workflow files on other branches.
 
 ## Recover a failed run
 
-If main advances during validation/building, the push is rejected. Start a new
-dispatch from current main to include the latest changes.
+If main advances while release-draft is validating/building, the push is rejected.
+Start a new release-draft dispatch from current main to include the latest changes.
 
-If the version commit/tag were pushed but GitHub publication failed, dispatch
-the same version again. The workflow checks that the tag belongs to main and
-contains matching source/manifest/lock versions, then runs CI against that exact tag commit and resumes from it. A tag change after validation requires a new dispatch.
-Enter the release notes again when retrying. For an unpublished draft, the new
-input replaces its existing body before publication.
-A draft's three expected assets may be replaced before publication; unexpected
-extra assets cause a failure for manual review. Resuming an older draft preserves
-a newer release's Latest designation.
+If the version commit/tag were pushed but draft preparation failed, run
+release-draft again with the same version. It checks that the tag belongs to main
+and contains matching source/manifest/lock versions, then runs CI against that tag
+and resumes from it. A tag change after validation requires a new dispatch.
+Retrying draft preparation preserves its saved body. The three expected draft
+assets may be replaced before publication; unexpected extra assets cause a failure
+for manual review.
 
-Once the GitHub release is immutable, dispatching the same version verifies and
-reuses its existing assets. Select the Marketplace checkbox to retry that
-publication or to publish a version initially released only on GitHub. The
-GitHub release, tag and assets are preserved. Release notes remain a required
-workflow input on retries, but an already-published release keeps its existing body.
-Marketplace duplicate-version errors remain errors rather than being silently accepted.
+If release-publish fails, correct the draft notes or reported issue and run it
+again. Publication downloads the existing draft assets; it does not rebuild,
+replace assets or update main. A change to the draft body during validation causes
+a failure so that the next run uses the newly saved text. Publishing an older
+draft preserves a newer release's Latest designation.
+
+Once the GitHub release is immutable, run release-publish with the same version to
+verify and reuse its existing assets. Select the Marketplace checkbox to retry
+that publication or publish a version initially released only on GitHub. The
+existing body, tag and assets are preserved; no notes input is needed on retries.
+Marketplace duplicate-version errors remain errors rather than being silently
+accepted.
 
 GitHub and Marketplace are separate services. A Marketplace failure leaves the
 immutable GitHub release published and available for retry.
