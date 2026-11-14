@@ -21,6 +21,11 @@ Unchanged file entries reuse their ASTs. When every file entry and the project o
 Edits in files without function definitions reuse the compatibility view while replacing the changed AST entry.
 Each connection creates its own empty compatibility view.
 
+The snapshot also owns a readonly map from current hydrated file entries to their compatibility projections.
+A function-file edit rebuilds only that file's arguments, documentation and definition targets; unchanged file projections retain their references.
+Merged arrays and name groups follow the current hydrator file order, including disk-before-buffer-only precedence after a save.
+Each refreshed map contains only current files with function definitions, so edits, removals and root changes release obsolete cached entries without retaining earlier snapshots.
+
 ## Compatibility projection
 
 The projection derives names, one-based declaration lines, argument metadata and legacy documentation values from the hydrated AST.

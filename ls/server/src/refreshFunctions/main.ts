@@ -3,6 +3,7 @@ import type { Func } from '../getFunctions/type';
 import { EmptyZshHydrator, refreshZshHydrator } from '../zshHydrator';
 import type { ZshHydrator } from '../zshHydrator';
 import { projectFunctions } from './projection';
+import type { FileFunctionProjections } from './projection';
 import { documentSnapshots } from './documents';
 import type { DocumentSnapshots } from './documents';
 import type { FunctionTargets } from './target';
@@ -12,10 +13,11 @@ export type FunctionSnapshot = {
   readonly functions: Func[];
   readonly targets: FunctionTargets;
   readonly documents: DocumentSnapshots;
+  readonly fileProjections: FileFunctionProjections;
 };
 
 export function createFunctionSnapshot(): FunctionSnapshot {
-  return { hydrator: EmptyZshHydrator, functions: [], targets: new Map(), documents: new Map() };
+  return { hydrator: EmptyZshHydrator, functions: [], targets: new Map(), documents: new Map(), fileProjections: new Map() };
 }
 
 type RefreshInput = {
@@ -32,8 +34,10 @@ export function refreshFunctionSnapshot({
   const open = documentSnapshots(inputs, hydrator, previous.documents);
   if (previous.hydrator === hydrator && open === previous.documents) return previous;
   const projection = sameFunctionFiles(previous.hydrator, hydrator)
-    ? { functions: previous.functions, targets: previous.targets } : projectFunctions(hydrator);
-  return { hydrator, functions: projection.functions, targets: projection.targets, documents: open };
+    ? { functions: previous.functions, targets: previous.targets, fileProjections: previous.fileProjections }
+    : projectFunctions(hydrator, previous.fileProjections);
+  return { hydrator, functions: projection.functions, targets: projection.targets, documents: open,
+    fileProjections: projection.fileProjections };
 }
 
 export function refreshFunctions(input: RefreshInput): Func[] {

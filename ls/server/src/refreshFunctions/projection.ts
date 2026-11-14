@@ -5,39 +5,63 @@ import type { Result } from '../document/type';
 import type { Func, FuncArg } from '../getFunctions/type';
 import { NAMED_ARG_POSITION } from '../getFunctions/constant';
 import { documentationOf } from '../zshHydrator';
-import type { FunctionDocumentation, ParameterDoc, ZshHydrator } from '../zshHydrator';
+import type { FunctionDocumentation, ParameterDoc, ZshFileHydration, ZshHydrator } from '../zshHydrator';
 
-export function projectFunctions(hydrator: ZshHydrator): {
-  readonly functions: Func[]; readonly targets: FunctionTargets;
-} {
+type FunctionProjection = {
+  readonly functions: Func[];
+  readonly targets: FunctionTargets;
+};
+export type FileFunctionProjections = ReadonlyMap<ZshFileHydration, FunctionProjection>;
+
+/** Reuse current file projections and merge candidates in hydrator order. */
+export function projectFunctions(
+  hydrator: ZshHydrator, previous: FileFunctionProjections = new Map(),
+): FunctionProjection & { readonly fileProjections: FileFunctionProjections } {
   const functions: Func[] = [];
   const targets = new Map<string, FunctionTarget[]>();
+  const fileProjections = new Map<ZshFileHydration, FunctionProjection>();
   for (const entry of hydrator.files.values()) {
-    const definitions = new Set(entry.functions.map(fn => fn.definition));
-    for (const definition of definitions) {
-      const documentation = documentationOf(definition);
-      const parameters = documentation?.parameters ?? [];
-      const args = parameters.toReversed().map(legacyArgument).sort((left, right) => {
-        if (left.isNamed && right.isNamed) return 0;
-        if (left.isNamed) return 1;
-        if (right.isNamed) return -1;
-        return left.position - right.position;
-      });
-      const view = legacyDocumentation(documentation);
-      for (const word of definition.names) {
-        const info = { name: word.raw, file: entry.file, line: word.range.start.line + 1,
-          args, documentation: view };
-        functions.push(info);
-        const name = literalWord(word);
-        if (!name) continue;
-        const target: FunctionTarget = {
-          name, uri: pathToFileURL(entry.sourceFile).href, definition, nameNode: word,
-          info: { ...info, name },
-        };
-        const group = targets.get(name) ?? [];
-        group.push(target);
-        targets.set(name, group);
-      }
+    if (entry.functions.length === 0) continue;
+    const projection = previous.get(entry) ?? projectFileFunctions(entry);
+    fileProjections.set(entry, projection);
+    for (const info of projection.functions) functions.push(info);
+    for (const [name, candidates] of projection.targets) {
+      const group = targets.get(name) ?? [];
+      for (const target of candidates) group.push(target);
+      targets.set(name, group);
+    }
+  }
+  return { functions, targets, fileProjections };
+}
+
+/** Derive the compatibility view and definition targets for one hydrated file. */
+function projectFileFunctions(entry: ZshFileHydration): FunctionProjection {
+  const functions: Func[] = [];
+  const targets = new Map<string, FunctionTarget[]>();
+  const definitions = new Set(entry.functions.map(fn => fn.definition));
+  for (const definition of definitions) {
+    const documentation = documentationOf(definition);
+    const parameters = documentation?.parameters ?? [];
+    const args = parameters.toReversed().map(legacyArgument).sort((left, right) => {
+      if (left.isNamed && right.isNamed) return 0;
+      if (left.isNamed) return 1;
+      if (right.isNamed) return -1;
+      return left.position - right.position;
+    });
+    const view = legacyDocumentation(documentation);
+    for (const word of definition.names) {
+      const info = { name: word.raw, file: entry.file, line: word.range.start.line + 1,
+        args, documentation: view };
+      functions.push(info);
+      const name = literalWord(word);
+      if (!name) continue;
+      const target: FunctionTarget = {
+        name, uri: pathToFileURL(entry.sourceFile).href, definition, nameNode: word,
+        info: { ...info, name },
+      };
+      const group = targets.get(name) ?? [];
+      group.push(target);
+      targets.set(name, group);
     }
   }
   return { functions, targets };
