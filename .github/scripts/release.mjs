@@ -40,9 +40,9 @@ function getApi(endpoint) {
 function getRelease(repository, version) {
   try {
     const release = JSON.parse(read('gh', ['release', 'view', 'v' + version, '--repo', repositoryName(repository),
-      '--json', 'tagName,isDraft,isPrerelease,isImmutable,assets']));
+      '--json', 'tagName,isDraft,isPrerelease,isImmutable,assets,body,databaseId']));
     return { tag_name: release.tagName, draft: release.isDraft, prerelease: release.isPrerelease,
-      immutable: release.isImmutable, assets: release.assets };
+      immutable: release.isImmutable, assets: release.assets, body: release.body, id: release.databaseId };
   } catch (error) {
     if (error.stderr?.toString().trim() === 'release not found') return null;
     throw error;
@@ -95,15 +95,21 @@ export function assertVersionCommit(directory, version, ref = 'HEAD', expectedPa
 }
 
 /** Choose creation, draft/tag recovery, or immutable-asset reuse. */
-export function planRelease(directory, version, repository, sourceSha) {
+export function planRelease(directory, version, repository, sourceSha, action = 'draft') {
   parseVersion(version);
   repositoryName(repository);
+  if (!['draft', 'publish'].includes(action)) throw new Error('Expected draft or publish action.');
   if (read('git', ['rev-parse', 'HEAD'], directory) !== sourceSha) throw new Error('Checkout must match the dispatched source commit.');
   read('git', [...gitAuthentication(), 'fetch', '--tags', 'origin', 'refs/heads/main:refs/remotes/origin/main'], directory);
   const release = getRelease(repository, version);
   if (release && !release.draft) {
     if (release.immutable !== true) throw new Error('Existing release is not immutable.');
+    if (action === 'draft') throw new Error('This version is already published; use release-publish to reuse it.');
     return 'published';
+  }
+  if (action === 'publish') {
+    if (!release) throw new Error('Run release-draft first, then enter and save its release notes.');
+    releaseNotes(release.body);
   }
   const tag = 'v' + version;
   const found = spawnSync('git', ['rev-parse', '--quiet', '--verify', 'refs/tags/' + tag], { cwd: directory });
@@ -160,41 +166,42 @@ export function pushRelease(directory, version, sourceSha) {
 }
 
 /** Detect a moved remote tag before and after the publication boundary. */
-export function assertRemoteTag(directory, version) {
+export function assertRemoteTag(directory, version, expectedRef = 'HEAD') {
   parseVersion(version);
   const tag = 'refs/tags/v' + version;
   const refs = read('git', [...gitAuthentication(), 'ls-remote', 'origin', tag, tag + '^{}'], directory)
     .split('\n').map(line => line.split(/\s+/));
   const commit = refs.find(([, name]) => name === tag + '^{}')?.[0] ?? refs.find(([, name]) => name === tag)?.[0];
-  if (commit !== read('git', ['rev-parse', 'HEAD'], directory)) {
+  if (commit !== read('git', ['rev-parse', expectedRef], directory)) {
     throw new Error('Remote release tag changed; stop and review the release.');
   }
 }
 
-/** Verify an already-published release and download its original assets. */
-export function downloadRelease(repository, version, directory, sourceDirectory = process.cwd()) {
+/** Download and verify original release assets, requiring immutable state by default. */
+export function downloadRelease(repository, version, directory, sourceDirectory = process.cwd(), published = true) {
   parseVersion(version);
   const release = getRelease(repository, version);
-  if (!release || release.draft || release.immutable !== true) throw new Error('An immutable published release is required.');
+  if (!release || (published ? release.draft || release.immutable !== true : !release.draft)) {
+    throw new Error(published ? 'An immutable published release is required.' : 'An unpublished draft release is required.');
+  }
   read('git', [...gitAuthentication(), 'fetch', '--no-tags', 'origin', 'refs/tags/v' + version + ':refs/tags/v' + version], sourceDirectory);
   fs.mkdirSync(directory, { recursive: true });
   run('gh', ['release', 'download', 'v' + version, '--repo', repository, '--dir', directory,
     ...assetNames(version).flatMap(name => ['--pattern', name])]);
   verifySourceArchive(sourceDirectory, directory, version, 'v' + version);
   verifyAssets(directory, version);
-  verifyRemoteAssets(release, directory, version, true);
+  verifyRemoteAssets(release, directory, version, published);
 }
 
 /** Require author-written release notes while preserving their Markdown verbatim. */
 export function releaseNotes(notes) {
-  if (typeof notes !== 'string' || !notes.trim()) throw new Error('Release notes are required; enter non-empty Markdown.');
+  if (typeof notes !== 'string' || !notes.trim()) throw new Error('Release notes are required; write and save non-empty Markdown in the draft body.');
   return notes;
 }
 
-/** Publish all assets from a mutable draft, then require immutable protection. */
-export function publishRelease(directory, version, repository, assets, mode, sourceSha, notesFile) {
+/** Upload and verify all assets while keeping the draft editable for release notes. */
+export function stageRelease(directory, version, repository, assets, mode, sourceSha) {
   parseVersion(version);
-  releaseNotes(fs.readFileSync(notesFile, 'utf8'));
   verifySourceArchive(directory, assets, version);
   verifyAssets(assets, version);
   if (mode === 'new') pushRelease(directory, version, sourceSha);
@@ -204,35 +211,52 @@ export function publishRelease(directory, version, repository, assets, mode, sou
   if (release && !release.draft) throw new Error('Release was published concurrently; retry to reuse its original assets.');
   if (!release) {
     run('gh', ['release', 'create', tag, '--repo', repository, '--draft', '--verify-tag',
-      '--target', read('git', ['rev-parse', 'HEAD'], directory), '--title', tag, '--notes-file', notesFile]);
+      '--target', read('git', ['rev-parse', 'HEAD'], directory), '--title', tag, '--notes', '']);
   }
   run('gh', ['release', 'upload', tag, '--repo', repository, '--clobber',
     ...assetNames(version).map(name => path.join(assets, name))]);
   release = getRelease(repository, version);
   verifyRemoteAssets(release, assets, version);
   assertRemoteTag(directory, version);
+}
+
+/** Publish the verified draft assets and saved Markdown without rebuilding or pushing. */
+export function publishRelease(directory, version, repository, assets, notesFile, sourceSha) {
+  parseVersion(version);
+  const draft = getRelease(repository, version);
+  if (!draft || !draft.draft) throw new Error('An unpublished draft release is required.');
+  const notes = releaseNotes(draft.body);
+  downloadRelease(repository, version, assets, directory, false);
+  const tag = 'v' + version;
+  if (read('git', ['rev-parse', tag + '^{commit}'], directory) !== sourceSha) {
+    throw new Error('Release tag changed after validation; dispatch a new workflow run.');
+  }
+  run('git', ['merge-base', '--is-ancestor', tag, 'origin/main'], directory);
+  assertCommitVersions(directory, tag, version);
+  assertVersionCommit(directory, version, tag);
+  const current = getRelease(repository, version);
+  verifyRemoteAssets(current, assets, version);
+  if (current.id !== draft.id || current.body !== notes) throw new Error('Draft changed during validation; retry publication.');
+  assertRemoteTag(directory, version, sourceSha);
+  fs.writeFileSync(notesFile, notes, 'utf8');
   const latest = getApi('repos/' + repositoryName(repository) + '/releases/latest');
   const latestFlag = shouldMakeLatest(version, latest?.tag_name ?? null) ? '--latest' : '--latest=false';
   run('gh', ['release', 'edit', tag, '--repo', repository, '--draft=false', latestFlag, '--notes-file', notesFile]);
   verifyRemoteAssets(getRelease(repository, version), assets, version, true);
-  assertRemoteTag(directory, version);
+  assertRemoteTag(directory, version, sourceSha);
 }
 
 /** Dispatch workflow commands using explicit arguments instead of interpolated shell code. */
 function main(command, version, ...args) {
   const root = process.cwd();
   switch (command) {
-    case 'notes': {
-      fs.writeFileSync(args[0], releaseNotes(version), 'utf8');
-      return;
-    }
     case 'environment': {
       checkMarketplaceEnvironment(version);
       return;
     }
     case 'plan': {
-      const [repository, sourceSha] = args;
-      console.log(planRelease(root, version, repository, sourceSha));
+      const [repository, sourceSha, action] = args;
+      console.log(planRelease(root, version, repository, sourceSha, action));
       return;
     }
     case 'prepare': {
@@ -245,9 +269,14 @@ function main(command, version, ...args) {
       packAssets(root, directory, version);
       return;
     }
+    case 'stage': {
+      const [repository, sourceSha, directory, mode] = args;
+      stageRelease(root, version, repository, directory, mode, sourceSha);
+      return;
+    }
     case 'publish': {
-      const [repository, sourceSha, directory, mode, notesFile] = args;
-      publishRelease(root, version, repository, directory, mode, sourceSha, notesFile);
+      const [repository, directory, notesFile, sourceSha] = args;
+      publishRelease(root, version, repository, directory, notesFile, sourceSha);
       return;
     }
     case 'download': {
@@ -255,7 +284,7 @@ function main(command, version, ...args) {
       downloadRelease(repository, version, directory);
       return;
     }
-    default: throw new Error('Expected notes, environment, plan, prepare, pack, publish or download.');
+    default: throw new Error('Expected environment, plan, prepare, pack, stage, publish or download.');
   }
 }
 
