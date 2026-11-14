@@ -1,5 +1,19 @@
 # z-ls
 
+## Server memory behavior
+
+The VS Code client starts the server with
+`--no-allocation-site-pretenuring` in both run and debug mode. Initial indexing
+and repeated edits share token allocation sites, so this prevents short-lived
+edit data from being allocated directly in old space. Normal young-to-old
+promotion remains enabled. The flag applies only to the language server process.
+
+For a standalone server started from this directory, use the same option:
+
+```sh
+node --no-allocation-site-pretenuring server/dist/server.js --stdio
+```
+
 ## Development checks
 
 Use Node.js 24 and make Zsh available on PATH. From this directory:

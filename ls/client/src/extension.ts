@@ -15,12 +15,18 @@ export function activate(context: ExtensionContext) {
     run: {
       module: serverModule,
       transport: TransportKind.ipc,
-      options: { cwd: path.dirname(serverModule) },
+      options: {
+        cwd: path.dirname(serverModule),
+        execArgv: ['--no-allocation-site-pretenuring'],
+      },
     },
     debug: {
       module: serverModule,
       transport: TransportKind.ipc,
-      options: { cwd: path.dirname(serverModule) },
+      options: {
+        cwd: path.dirname(serverModule),
+        execArgv: ['--no-allocation-site-pretenuring'],
+      },
     },
   };
 
