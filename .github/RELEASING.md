@@ -11,12 +11,19 @@ Every new release must advance both component versions. Prereleases and build
 metadata are currently outside this workflow.
 
 The workflow validates the request, runs the existing Zsh/LSP CI, and creates a
-local version commit and annotated vVERSION tag. It builds the VSIX and packages
-all tracked source, including lib, mod, tests and LSP source. Only after checking
-the artifacts does it push the version commit to main and the tag atomically.
+local version commit and annotated vVERSION tag in a read-only build job. That job
+builds the VSIX and packages all tracked source, including lib, mod, tests and LSP
+source. A separate contents-write job executes no npm install or build code. It
+recreates the three exact metadata edits from trusted source, checks the full
+source archive against that tree, then pushes main and the tag atomically.
+The checked single parent makes this a fast-forward; an explicit lease also
+requires main to retain the dispatched SHA until the push.
 
 It attaches these assets to a draft GitHub Release and verifies the uploaded
-SHA256 digests before publishing:
+SHA256 digests before publishing. VSIX JSON and XML must agree on extension ID,
+publisher, version and stable channel; source contents must match the trusted Git
+tree. The source tar uses the validated source parent's timestamp and fixed permissions,
+so independently recreated version commits produce the same archive contents:
 
 - z-VERSION.tar.gz
 - z-ls-VERSION.vsix
@@ -43,10 +50,18 @@ assets, verifies their checksums, versions and extension identity, then runs:
 ```
 
 This publishes the same VSIX without rebuilding it. Only this job requests
-id-token: write. No Marketplace PAT or repository secret is required.
+id-token: write. No Marketplace PAT or repository secret is required. The job is
+bound to the marketplace environment, and branch restrictions are enforced by
+GitHub rather than relying only on workflow conditionals.
 
-Before the first Marketplace publication, an owner of publisher milkeclair must
-create this Trusted Publishing policy at the
+Before the first Marketplace publication:
+
+1. In repository Settings → Environments, create marketplace. Under deployment
+   branches and tags, allow exactly one rule: branch main. Use selected branches,
+   with no wildcard, tag rule or additional allowed branch.
+2. Keep these controls in place. Preflight and the publishing job read them with
+   actions: read and reject a missing or broader environment.
+3. An owner of publisher milkeclair creates this Trusted Publishing policy at the
 [Marketplace publisher management page](https://marketplace.visualstudio.com/manage):
 
 | Field | Value |
@@ -55,9 +70,11 @@ create this Trusted Publishing policy at the
 | Repository owner | milkeclair |
 | Repository | z |
 | Workflow | release.yml |
-| Environment | Leave empty; this workflow does not use a GitHub environment |
+| Environment | marketplace |
 
-The workflow accepts release dispatches only from main.
+The workflow accepts release dispatches only from main. Bind the policy to the
+configured environment; leaving its Environment field empty would also trust
+matching workflow files on other branches.
 
 ## Recover a failed run
 
@@ -98,6 +115,12 @@ cd ls
 npm ci
 npm test -- --maxWorkers=2
 ```
+
+Asset validation accepts exactly three regular files, caps source expansion at
+64 MiB, VSIX size at 128 MiB, and VSIX expanded contents at 512 MiB. Metadata is
+limited to 1 MiB per file. Duplicate/unsafe ZIP paths, symlinks, DTDs and unexpected
+identities are rejected before publication. This validates packaging and source
+association; the reviewed main code and locked build toolchain remain trusted.
 
 The release tests use temporary real Git repositories to verify version updates,
 atomic pushes, conflicting refs and artifact checks. GitHub API states are
