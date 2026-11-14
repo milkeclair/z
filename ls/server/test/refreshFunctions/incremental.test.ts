@@ -27,6 +27,10 @@ describe('refreshFunctionSnapshot incremental inputs', () => {
     expect(read).not.toHaveBeenCalled();
     expect(changed.hydrator.files.get('b.zsh')).toBe(previous.hydrator.files.get('b.zsh'));
     expect(changed.functions.map(fn => fn.name)).toEqual(['edited', 'second']);
+    expect(changed.functions[1]).toBe(previous.functions[1]);
+    const unchanged = previous.targets.get('second')?.[0];
+    expect(unchanged).toBeDefined();
+    expect(changed.targets.get('second')?.[0]).toBe(unchanged);
   });
   test('buffer-only関数の保存で同名候補の順序が変わったら投影も更新する', () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-incremental-order-'));
@@ -40,6 +44,8 @@ describe('refreshFunctionSnapshot incremental inputs', () => {
     const next = refreshFunctionSnapshot({ projectRoot: root, documents: [opened], previous, changedPaths: ['a.zsh'] });
     expect(next.targets.get('helper')?.map(target => target.info.file)).toEqual(['a.zsh', 'z.zsh']);
     expect(next.hydrator.files.get('a.zsh')).toBe(previous.hydrator.files.get('a.zsh'));
+    expect(next.targets.get('helper')?.[0]).toBe(previous.targets.get('helper')?.[1]);
+    expect(next.targets.get('helper')?.[1]).toBe(previous.targets.get('helper')?.[0]);
     const fresh = refreshFunctionSnapshot({ projectRoot: root, documents: [opened] });
     expect(next.functions).toEqual(fresh.functions);
   });

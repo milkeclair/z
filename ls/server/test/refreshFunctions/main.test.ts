@@ -32,6 +32,7 @@ describe('refreshFunctionSnapshot', () => {
     expect(next).not.toBe(first);
     expect(next.hydrator.files.has('caller.zsh')).toBe(true);
     expect(next.functions).toBe(first.functions);
+    expect(next.fileProjections).toBe(first.fileProjections);
     expect(first.hydrator.files.has('caller.zsh')).toBe(false);
   });
 
@@ -124,6 +125,7 @@ describe('refreshFunctionSnapshot', () => {
     const first = createFunctionSnapshot();
     const second = createFunctionSnapshot();
     expect(first.functions).not.toBe(second.functions);
+    expect(first.fileProjections).not.toBe(second.fileProjections);
     expect(first.hydrator.files.size).toBe(0);
   });
   test('文書ASTと関数索引は同じhydrationを参照し、呼び出し編集では索引を再利用する', () => {
