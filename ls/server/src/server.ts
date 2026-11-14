@@ -1,3 +1,5 @@
+import { performance } from 'node:perf_hooks';
+import { fileURLToPath } from 'node:url';
 import {
   createConnection, TextDocuments, TextDocument, ProposedFeatures,
   DocumentDiagnosticReportKind, DidChangeWatchedFilesNotification,
@@ -11,6 +13,9 @@ import {
 import { createDiagnosticSnapshot, refreshDiagnosticSnapshot } from './diagnostics/snapshot';
 import { readShellEnvironment, emptyShellEnvironment } from './diagnostics/environment';
 import { projectRootFromSettings } from './connection/projectRoot';
+import { queueAnalysis, analysisDelay } from './connection/analysis';
+import type { PendingAnalysis } from './connection/analysis';
+import { startPeriodicRescan } from './connection/rescan';
 
 function startServer(): void {
   const conn = createConnection(ProposedFeatures.all);
@@ -23,6 +28,11 @@ function startServer(): void {
   let showPrivateFunctions = false;
   let supportsRefresh = false;
   let supportsWatchRegistration = false;
+  let watcherReady = false;
+  let stopped = false;
+  let stopRescan: (() => void) | undefined;
+  let pendingAnalysis: PendingAnalysis | null = null;
+  let analysisTimer: ReturnType<typeof setTimeout> | undefined;
   let diagnosticsTimer: ReturnType<typeof setTimeout> | undefined;
 
   function scheduleDiagnosticsRefresh(): void {
@@ -36,13 +46,40 @@ function startServer(): void {
     }, 500);
   }
 
-  function refresh(root = projectRoot): void {
-    const next = refreshFunctionSnapshot({ projectRoot: root, documents, previous: snapshot });
+  function refresh(root = projectRoot, changedPaths?: readonly string[]): void {
+    const next = refreshFunctionSnapshot({ projectRoot: root, documents, previous: snapshot,
+      changedPaths: watcherReady ? changedPaths : undefined });
     const nextDiagnostics = refreshDiagnosticSnapshot({ snapshot: next, environment, previous: diagnosticSnapshot });
     snapshot = next;
     diagnosticSnapshot = nextDiagnostics;
     projectRoot = root;
     scheduleDiagnosticsRefresh();
+  }
+
+  function flushAnalysis(): void {
+    clearTimeout(analysisTimer);
+    analysisTimer = undefined;
+    if (!pendingAnalysis) return;
+    refresh(projectRoot, pendingAnalysis.changedPaths);
+    pendingAnalysis = null;
+  }
+
+  function scheduleAnalysis(changedPaths: readonly string[] | undefined): void {
+    if (stopped) return;
+    const now = performance.now();
+    pendingAnalysis = queueAnalysis(pendingAnalysis, watcherReady ? changedPaths : undefined, now);
+    clearTimeout(analysisTimer);
+    analysisTimer = setTimeout(() => {
+      try { flushAnalysis(); }
+      catch (error: unknown) { conn.console.error('Analysis refresh failed: ' + String(error)); }
+    }, analysisDelay(pendingAnalysis, now));
+  }
+
+  function refreshAll(root = projectRoot): void {
+    clearTimeout(analysisTimer);
+    analysisTimer = undefined;
+    refresh(root);
+    pendingAnalysis = null;
   }
 
   conn.onInitialize(async (params) => {
@@ -60,9 +97,19 @@ function startServer(): void {
   });
 
   conn.onInitialized(() => {
+    if (stopped) return;
+    stopRescan?.();
+    stopRescan = startPeriodicRescan(
+      () => { if (projectRoot) refreshAll(); },
+      error => conn.console.error('Periodic rescan failed: ' + String(error)),
+    );
     if (supportsWatchRegistration) {
       void conn.client.register(DidChangeWatchedFilesNotification.type, {
         watchers: [{ globPattern: '**/*.zsh' }],
+      }).then(() => {
+        if (stopped) return;
+        refreshAll();
+        watcherReady = workspaceRoot !== '' && projectRoot === workspaceRoot;
       }).catch((error: unknown) => {
         conn.console.warn('File watcher registration failed: ' + String(error));
       });
@@ -72,24 +119,39 @@ function startServer(): void {
   conn.onDidChangeConfiguration((params) => {
     const settings = zSettingsFromConfigurationNotification(params.settings);
     showPrivateFunctions = settings.completion.showPrivateFunctions;
-    refresh(projectRootFromSettings(workspaceRoot, settings.zPath));
+    refreshAll(projectRootFromSettings(workspaceRoot, settings.zPath));
   });
-  conn.onDidChangeWatchedFiles(() => refresh());
-  documents.onDidChangeContent(() => refresh());
-  documents.onDidSave(() => refresh());
-  documents.onDidClose(() => refresh());
+  function filePaths(uris: readonly string[]): readonly string[] {
+    return uris.flatMap(uri => {
+      try { return [fileURLToPath(uri)]; } catch { return []; }
+    });
+  }
 
-  conn.onCompletion((params) =>
-    zCompletion({ params, documents, snapshot, showPrivateFunctions }));
-  conn.onCompletionResolve((result) => zCompletionResolve(result, snapshot));
-  conn.onHover((params) =>
-    zHover({ params, documents, snapshot }));
-  conn.onSignatureHelp((params) =>
-    zSignatureHelp({ params, documents, snapshot }));
-  conn.onDefinition((params) =>
-    zDefinition({ params, documents, snapshot }));
+  conn.onDidChangeWatchedFiles(params => scheduleAnalysis(filePaths(params.changes.map(change => change.uri))));
+  documents.onDidChangeContent(() => scheduleAnalysis([]));
+  documents.onDidSave(event => { scheduleAnalysis(filePaths([event.document.uri])); flushAnalysis(); });
+  documents.onDidClose(event => { scheduleAnalysis(filePaths([event.document.uri])); flushAnalysis(); });
+
+  conn.onCompletion((params) => {
+    flushAnalysis();
+    return zCompletion({ params, documents, snapshot, showPrivateFunctions });
+  });
+  conn.onCompletionResolve((result) => { flushAnalysis(); return zCompletionResolve(result, snapshot); });
+  conn.onHover((params) => {
+    flushAnalysis();
+    return zHover({ params, documents, snapshot });
+  });
+  conn.onSignatureHelp((params) => {
+    flushAnalysis();
+    return zSignatureHelp({ params, documents, snapshot });
+  });
+  conn.onDefinition((params) => {
+    flushAnalysis();
+    return zDefinition({ params, documents, snapshot });
+  });
 
   conn.languages.diagnostics.on((params) => {
+    flushAnalysis();
     const document = documents.get(params.textDocument.uri);
     return {
       kind: DocumentDiagnosticReportKind.Full,
@@ -97,10 +159,17 @@ function startServer(): void {
       items: document ? validateTextDocument({ diagnostics: diagnosticSnapshot, textDocument: document }) : [],
     };
   });
-  conn.languages.diagnostics.onWorkspace(params =>
-    workspaceDiagnostics({ diagnostics: diagnosticSnapshot, previousResultIds: params.previousResultIds }));
+  conn.languages.diagnostics.onWorkspace(params => {
+    flushAnalysis();
+    return workspaceDiagnostics({ diagnostics: diagnosticSnapshot, previousResultIds: params.previousResultIds });
+  });
 
   conn.onShutdown(() => {
+    stopped = true;
+    stopRescan?.();
+    stopRescan = undefined;
+    pendingAnalysis = null;
+    clearTimeout(analysisTimer);
     clearTimeout(diagnosticsTimer);
   });
   documents.listen(conn);

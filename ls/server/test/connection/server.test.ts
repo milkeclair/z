@@ -35,8 +35,8 @@ async function bounded<T>(promise: Promise<T>): Promise<T> {
   }
 }
 
-function startServer(env?: NodeJS.ProcessEnv) {
-  const child = spawn(process.execPath, [path.resolve(__dirname, '../../dist/server.js'), '--stdio'], {
+function startServer(env?: NodeJS.ProcessEnv, rejectWatchRegistration = false, preload?: string) {
+  const child = spawn(process.execPath, [...(preload ? ['--require', preload] : []), path.resolve(__dirname, '../../dist/server.js'), '--stdio'], {
     stdio: 'pipe', env,
   });
   let stderr = '';
@@ -49,6 +49,7 @@ function startServer(env?: NodeJS.ProcessEnv) {
   const refreshRequests: string[] = [];
   connection.onRequest(RegistrationRequest.type, (params) => {
     registrations.push(...params.registrations.map(registration => registration.method));
+    if (rejectWatchRegistration) throw new Error('watch registration rejected by client');
   });
   connection.onRequest('workspace/diagnostic/refresh', () => { refreshRequests.push('refresh'); });
   connection.listen();
@@ -100,6 +101,43 @@ function startServer(env?: NodeJS.ProcessEnv) {
       }
     },
   };
+}
+
+function observedServer(root: string) {
+  const filename = path.join(root, 'parsed.json');
+  const preload = path.join(root, 'observe.cjs');
+  fs.writeFileSync(filename, '[]');
+  fs.writeFileSync(preload, [
+    "const fs = require('node:fs');",
+    'const hydration = require(' + JSON.stringify(path.resolve(__dirname, '../../dist/zshHydrator/fileHydration.js')) + ');',
+    'const original = hydration.createZshFileHydration;',
+    'const parsed = [];',
+    'hydration.createZshFileHydration = input => {',
+    '  const result = original(input);',
+    '  parsed.push({ sourceFile: input.sourceFile, content: input.content });',
+    '  fs.writeFileSync(' + JSON.stringify(filename) + ', JSON.stringify(parsed));',
+    '  return result;',
+    '};',
+  ].join('\n'));
+  return { client: startServer(undefined, false, preload), parsed: () => fs.readFileSync(filename, 'utf8') };
+}
+
+function periodicServer(root: string) {
+  const filename = path.join(root, 'ticks.log');
+  const preload = path.join(root, 'periodic-clock.cjs');
+  fs.writeFileSync(filename, '');
+  fs.writeFileSync(preload, [
+    "const fs = require('node:fs');",
+    'const original = global.setInterval;',
+    'global.setInterval = (callback, delay, ...args) => {',
+    '  if (delay !== 60000) return original(callback, delay, ...args);',
+    '  return original(() => {',
+    '    try { callback(...args); }',
+    '    finally { fs.appendFileSync(' + JSON.stringify(filename) + ', "tick\\n"); }',
+    '  }, 100);',
+    '};',
+  ].join('\n'));
+  return { client: startServer(undefined, false, preload), ticks: () => fs.readFileSync(filename, 'utf8').length };
 }
 
 describe('server@hydration stdio', () => {
@@ -172,6 +210,9 @@ describe('server@hydration stdio', () => {
       await client.connection.sendNotification(DidSaveTextDocumentNotification.type, {
         textDocument: { uri: definitionUri },
       });
+      await client.connection.sendNotification(DidChangeWatchedFilesNotification.type, { changes: [
+        { uri: pathToFileURL(extra).href, type: FileChangeType.Created },
+      ] });
       await client.edit(callerUri, 'z.', 4);
       expect((await client.items(callerUri)).map(item => item.label)).toEqual(['z.extra', 'z.live']);
 
@@ -335,6 +376,254 @@ describe('server@hydration stdio', () => {
     } finally {
       await client.close();
     }
+  }, 15000);
+
+  test.each(['unsupported', 'rejected', 'no-workspace'])('watcherが%sなら文書更新時の全走査でdisk変更を同期する', async mode => {
+    const root = fixture();
+    const caller = pathToFileURL(path.join(root, 'caller.zsh')).href;
+    const client = startServer(undefined, mode === 'rejected');
+    try {
+      await client.initialize(root, mode !== 'unsupported', mode !== 'no-workspace');
+      await client.open(caller, 'gre');
+      await client.items(caller, 3);
+      fs.writeFileSync(path.join(root, 'added.zsh'), 'greet() { : }\n');
+      await client.edit(caller, 'gree', 2);
+      expect((await client.items(caller, 4)).map(item => item.label)).toEqual(['greet']);
+      fs.unlinkSync(path.join(root, 'added.zsh'));
+      await client.edit(caller, 'gre', 3);
+      expect(await client.items(caller, 3)).toEqual([]);
+      expect(client.registrations).toEqual(mode !== 'unsupported' ? ['workspace/didChangeWatchedFiles'] : []);
+    } finally { await client.close(); }
+  }, 15000);
+
+  test('watcher利用時は編集で未知のdiskを走査せず、通知・save・closeで対象だけ反映する', async () => {
+    const root = fixture();
+    const caller = pathToFileURL(path.join(root, 'caller.zsh')).href;
+    const definition = path.join(root, 'a.zsh');
+    const uri = pathToFileURL(definition).href;
+    const client = startServer();
+    try {
+      await client.initialize(root, true);
+      await client.open(caller, 'z.');
+      await client.items(caller);
+      // Observe a refresh after registration to establish the incremental path.
+      await expect.poll(() => client.refreshRequests.length).toBeGreaterThan(0);
+      fs.writeFileSync(definition, 'z.disk() { : }\n');
+      await client.edit(caller, 'z.d', 2);
+      expect(await client.items(caller, 3)).toEqual([]);
+      await client.connection.sendNotification(DidChangeWatchedFilesNotification.type, { changes: [
+        { uri, type: FileChangeType.Created },
+      ] });
+      expect((await client.items(caller, 3)).map(item => item.label)).toEqual(['z.disk']);
+      await client.open(uri, 'z.live() { : }\n');
+      await client.edit(caller, 'z.', 3);
+      expect((await client.items(caller)).map(item => item.label)).toEqual(['z.live']);
+      fs.writeFileSync(definition, 'z.saved() { : }\n');
+      await client.connection.sendNotification(DidSaveTextDocumentNotification.type, { textDocument: { uri } });
+      expect((await client.items(caller)).map(item => item.label)).toEqual(['z.live']);
+      fs.unlinkSync(definition);
+      await client.connection.sendNotification(DidChangeWatchedFilesNotification.type, { changes: [
+        { uri, type: FileChangeType.Deleted },
+        { uri: 'untitled:ignored.zsh', type: FileChangeType.Created },
+      ] });
+      expect((await client.items(caller)).map(item => item.label)).toEqual(['z.live']);
+      await client.connection.sendNotification(DidCloseTextDocumentNotification.type, { textDocument: { uri } });
+      expect(await client.items(caller)).toEqual([]);
+    } finally { await client.close(); }
+  }, 15000);
+
+  test('連続編集を最新内容の一回の解析へまとめ、補完要求では待機せず反映する', async () => {
+    const root = fixture();
+    const filename = path.join(root, 'definitions.zsh');
+    const uri = pathToFileURL(filename).href;
+    const caller = pathToFileURL(path.join(root, 'caller.zsh')).href;
+    fs.writeFileSync(filename, 'greet_old() { : }\n');
+    const { client, parsed } = observedServer(root);
+    try {
+      await client.initialize(root, true);
+      await client.open(uri, 'greet_old() { : }\n');
+      await client.open(caller, 'greet_');
+      await client.items(caller, 6);
+      const before = parsed();
+      for (let version = 2; version <= 101; version++) {
+        await client.edit(uri, '# Version ' + version + '\ngreet_final() { : }\n', version);
+      }
+      expect((await client.items(caller, 6)).map(item => item.label)).toEqual(['greet_final']);
+      const additions = parsed().slice(before.length - 1);
+      expect(additions.match(/greet_final/g)).toHaveLength(1);
+      expect(additions).toContain('Version 101');
+    } finally { await client.close(); }
+  }, 15000);
+
+  test('要求がなくても待機後に最新bufferを解析する', async () => {
+    const root = fixture();
+    const filename = path.join(root, 'definitions.zsh');
+    const uri = pathToFileURL(filename).href;
+    fs.writeFileSync(filename, 'old() { : }\n');
+    const { client, parsed } = observedServer(root);
+    try {
+      await client.initialize(root, false);
+      await client.open(uri, 'old() { : }\n');
+      await client.items(uri);
+      const before = parsed();
+      for (let version = 2; version <= 101; version++) {
+        await client.edit(uri, '# Version ' + version + '\nquiet_latest() { : }\n', version);
+      }
+      await expect.poll(() => parsed().slice(before.length - 1).match(/quiet_latest/g)?.length ?? 0).toBe(1);
+      expect(parsed()).toContain('Version 101');
+    } finally { await client.close(); }
+  }, 15000);
+
+  test('各providerは保留中の編集を反映し、save/closeは複数のdisk通知も引き継ぐ', async () => {
+    const root = fixture();
+    const filename = path.join(root, 'definitions.zsh');
+    const uri = pathToFileURL(filename).href;
+    const caller = pathToFileURL(path.join(root, 'caller.zsh')).href;
+    const initial = '# First docs\n# $1: first\ngreet() { print "$1" }\n';
+    fs.writeFileSync(filename, initial);
+    const client = startServer();
+    try {
+      await client.initialize(root, true);
+      await client.open(uri, initial);
+      await client.open(caller, 'gre');
+      const completion = (await client.items(caller, 3)).find(item => item.label === 'greet');
+      if (!completion) throw new Error('greet completion required');
+      const later = initial.replace('First', 'Later');
+      await client.edit(uri, later, 2);
+      expect(await bounded(client.connection.sendRequest(CompletionResolveRequest.type, completion)))
+        .toMatchObject({ documentation: { value: expect.stringContaining('Later docs') } });
+      await client.edit(uri, '\n' + later, 3);
+      await client.edit(caller, 'greet one\n', 2);
+      const params = { textDocument: { uri: caller }, position: { line: 0, character: 2 } };
+      expect(await bounded(client.connection.sendRequest(DefinitionRequest.type, params)))
+        .toMatchObject({ uri, range: { start: { line: 3 } } });
+      const fresh = '\n' + later.replace('Later', 'Fresh');
+      await client.edit(uri, fresh, 4);
+      expect(await bounded(client.connection.sendRequest(HoverRequest.type, params)))
+        .toMatchObject({ contents: { value: expect.stringContaining('Fresh docs') } });
+      await client.edit(uri, fresh.replace('$1: first', '$2: second'), 5);
+      expect(await bounded(client.connection.sendRequest(DocumentDiagnosticRequest.type, { textDocument: { uri: caller } })))
+        .toMatchObject({ items: [{ code: 'missing-positional-argument', message: 'Missing required argument(s): $2' }] });
+      const newest = fresh.replace('$1: first', '$1: newest');
+      await client.edit(uri, newest, 6);
+      await client.edit(caller, 'greet ', 3);
+      expect(await bounded(client.connection.sendRequest(SignatureHelpRequest.type,
+        { textDocument: { uri: caller }, position: { line: 0, character: 6 } })))
+        .toMatchObject({ signatures: [{ parameters: [{ documentation: { value: 'newest' } }] }] });
+      await client.edit(uri, newest + 'fixture_debounce_never_defined\n', 7);
+      const workspace = await bounded(client.connection.sendRequest(WorkspaceDiagnosticRequest.type, { previousResultIds: [] }));
+      expect(workspace.items.find(item => item.uri === uri))
+        .toMatchObject({ version: 7, items: [{ code: 'empty-line' }, { code: 'undefined-command' }] });
+
+      const watched = path.join(root, 'watched.zsh');
+      fs.writeFileSync(watched, 'watch_merged() { : }\n');
+      await client.connection.sendNotification(DidChangeWatchedFilesNotification.type,
+        { changes: [{ uri: pathToFileURL(watched).href, type: FileChangeType.Created }] });
+      await client.edit(uri, 'greet_live() { : }\n', 8);
+      await client.connection.sendNotification(DidSaveTextDocumentNotification.type, { textDocument: { uri } });
+      await client.edit(caller, 'watch_', 4);
+      expect((await client.items(caller, 6)).map(item => item.label)).toEqual(['watch_merged']);
+      await client.edit(uri, 'greet_pending() { : }\n', 9);
+      fs.writeFileSync(filename, 'greet_disk() { : }\n');
+      await client.connection.sendNotification(DidCloseTextDocumentNotification.type, { textDocument: { uri } });
+      await client.edit(caller, 'greet_', 5);
+      expect((await client.items(caller, 6)).map(item => item.label)).toEqual(['greet_disk']);
+    } finally { await client.close(); }
+  }, 15000);
+
+  test('shutdown時に保留中の解析を破棄し、タイマーを残さず終了する', async () => {
+    const root = fixture();
+    const filename = path.join(root, 'definitions.zsh');
+    const uri = pathToFileURL(filename).href;
+    fs.writeFileSync(filename, 'old() { : }\n');
+    const { client, parsed } = observedServer(root);
+    try {
+      await client.initialize(root, false);
+      await client.open(uri, 'old() { : }\n');
+      await client.items(uri);
+      const before = parsed();
+      await client.edit(uri, 'discarded_on_shutdown() { : }\n', 2);
+      await client.close();
+      expect(parsed()).toBe(before);
+    } finally { await client.close(); }
+  }, 15000);
+
+  test('定期走査で通知されなかったdiskの追加・変更・削除・renameと診断を同期する', async () => {
+    const root = fixture();
+    const first = path.join(root, 'first.zsh');
+    const added = path.join(root, 'added.zsh');
+    const renamed = path.join(root, 'renamed.zsh');
+    const caller = pathToFileURL(path.join(root, 'caller.zsh')).href;
+    fs.writeFileSync(first, 'z.original() { : }\n');
+    const { client, ticks } = periodicServer(root);
+    try {
+      await client.initialize(root, true);
+      await client.open(caller, 'z.');
+      await client.items(caller);
+      await expect.poll(ticks, { timeout: 1500 }).toBeGreaterThan(0);
+      fs.writeFileSync(first, 'z.changed() { : }\n');
+      fs.writeFileSync(added, 'z.added() { : }\nfixture_periodic_unknown\n');
+      const before = ticks();
+      await expect.poll(ticks).toBeGreaterThan(before);
+      expect((await client.items(caller)).map(item => item.label)).toEqual(['z.added', 'z.changed']);
+      fs.renameSync(added, renamed);
+      fs.unlinkSync(first);
+      const moved = ticks();
+      await expect.poll(ticks).toBeGreaterThan(moved);
+      expect((await client.items(caller)).map(item => item.label)).toEqual(['z.added']);
+      const workspace = await bounded(client.connection.sendRequest(WorkspaceDiagnosticRequest.type, { previousResultIds: [] }));
+      expect(workspace.items.find(item => item.uri === pathToFileURL(renamed).href))
+        .toMatchObject({ version: null, items: [{ code: 'undefined-command' }] });
+      expect(workspace.items.some(item => item.uri === pathToFileURL(first).href)).toBe(false);
+    } finally { await client.close(); }
+  }, 15000);
+
+  test('定期走査中も未保存bufferを優先し、closeで更新後のdiskへ戻す', async () => {
+    const root = fixture();
+    const filename = path.join(root, 'definition.zsh');
+    const uri = pathToFileURL(filename).href;
+    const caller = pathToFileURL(path.join(root, 'caller.zsh')).href;
+    fs.writeFileSync(filename, 'z.disk() { : }\n');
+    const { client, ticks } = periodicServer(root);
+    try {
+      await client.initialize(root, true);
+      await client.open(uri, '# Unsaved docs\nz.live() { : }\n');
+      await client.open(caller, 'z.');
+      await client.items(caller);
+      fs.writeFileSync(filename, 'z.saved() { : }\n');
+      const before = ticks();
+      await expect.poll(ticks).toBeGreaterThan(before);
+      expect((await client.items(caller)).map(item => item.label)).toEqual(['z.live']);
+      await client.connection.sendNotification(DidCloseTextDocumentNotification.type, { textDocument: { uri } });
+      expect((await client.items(caller)).map(item => item.label)).toEqual(['z.saved']);
+    } finally { await client.close(); }
+  }, 15000);
+
+  test('定期走査は設定変更後のrootを参照し、project未選択なら走査を休止する', async () => {
+    const first = fixture();
+    const second = fixture();
+    fs.writeFileSync(path.join(first, 'first.zsh'), 'z.first() { : }\n');
+    fs.writeFileSync(path.join(second, 'second.zsh'), 'z.second() { : }\n');
+    const caller = pathToFileURL(path.join(first, 'caller.zsh')).href;
+    const { client, ticks } = periodicServer(first);
+    try {
+      await client.initialize(first, false, false);
+      await client.open(caller, 'z.');
+      await client.items(caller);
+      await client.connection.sendNotification(DidChangeConfigurationNotification.type,
+        { settings: { 'z-ls': { zPath: second } } });
+      await client.items(caller);
+      fs.writeFileSync(path.join(second, 'new.zsh'), 'z.new() { : }\n');
+      const before = ticks();
+      await expect.poll(ticks).toBeGreaterThan(before);
+      expect((await client.items(caller)).map(item => item.label)).toEqual(['z.new', 'z.second']);
+      await client.connection.sendNotification(DidChangeConfigurationNotification.type,
+        { settings: { 'z-ls': { zPath: '' } } });
+      await client.items(caller);
+      const empty = ticks();
+      await expect.poll(ticks).toBeGreaterThan(empty);
+      expect(await client.items(caller)).toEqual([]);
+    } finally { await client.close(); }
   }, 15000);
 
 });

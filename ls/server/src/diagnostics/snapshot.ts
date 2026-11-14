@@ -8,6 +8,7 @@ import { emptyShellEnvironment } from './environment';
 import { collectFileFacts } from './facts';
 import type { FileFacts, Declarations } from './facts';
 import { callDiagnostics } from './calls';
+import { sameCallContracts } from './contracts';
 import type { ResolutionContext } from './calls';
 import type { Diagnostics } from './type';
 
@@ -74,6 +75,7 @@ export function refreshDiagnosticSnapshot({ snapshot, environment, previous = cr
   const projectFacts = [...inputs].flatMap(([uri, input]) => input.project ? [facts.get(uri)] : [])
     .filter((file): file is FileFacts => file !== undefined);
   const context = resolutionContext(projectFacts, environment, snapshot.hydrator.projectRoot, previous.context);
+  const reusableContracts = sameCallContracts(previous.targets, snapshot.targets);
   const revision = previous.revision + 1;
   const files = new Map<string, FileDiagnostics>();
   for (const [uri, input] of inputs) {
@@ -81,7 +83,7 @@ export function refreshDiagnosticSnapshot({ snapshot, environment, previous = cr
     const current = facts.get(uri);
     if (!current) continue;
     if (cached && cached.file === input.file && cached.version === input.version && cached.project === input.project &&
-      previous.targets === snapshot.targets && previous.context === context) {
+      reusableContracts && previous.context === context) {
       files.set(uri, cached);
     } else {
       const local = input.project ? context : resolutionContext([current], environment,
