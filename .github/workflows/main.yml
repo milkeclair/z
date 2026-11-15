@@ -11,6 +11,13 @@ on:
   schedule:
     - cron: '17 21 * * 0'
   workflow_dispatch:
+    inputs:
+      ref:
+        type: string
+        default: ''
+      fail_node:
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       ref:
@@ -79,6 +86,12 @@ jobs:
         run: |
           export PATH="$HOME/.local/bin:$PATH"
           npm test -- --maxWorkers=2
+
+      - name: Expected Node failure
+        if: inputs.fail_node
+        run: |
+          echo EXPECTED_NODE_FAILURE
+          exit 7
 
   test:
     if: ${{ always() }}
