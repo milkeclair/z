@@ -53,3 +53,9 @@ zの関数は、関数名の階層とディレクトリ構成を対応させて�
 - `lib/a/process.zsh` のテストは `test/lib/a/process_test.zsh`
 - `lib/a/b/process.zsh` のテストは `test/lib/a/b/process_test.zsh`
 - `mod/a/b/operator.zsh` のテストは `test/mod/a/b/operator_test.zsh`
+
+## 失敗処理
+
+`|| return 1`は、コピー失敗後の切替防止や依存関係の循環検出など、失敗時に後続の処理を止める必要がある箇所に置いてください。削除・置換では操作対象の検証と復旧処理を維持し、通常の取得・計算では同じ条件の重複検証を整理してください。
+
+引数取得と代入は、`z.arg.named ... && local ...`などの既存の書式に合わせてください。常に成功する値取得に`|| return 1`を追加する必要はありません。

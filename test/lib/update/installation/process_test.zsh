@@ -254,20 +254,28 @@ z.t.describe "z.update.installation._reload"; {
     }
   }
 
-  z.t.context "cancelが失敗した場合"; {
-    z.t.it "sourceを実行しない"; {
-      local dir=/tmp/z_t/update_reload/cancel_failure
+  z.t.context "補完jobが回収済みの場合"; {
+    z.t.it "IDを破棄して本体の再読込を続ける"; {
+      local dir=/tmp/z_t/update_reload/collected_job
+      local z_completion_cache_job_id=collected-job
       z.dir.make path="$dir"
       z.file.write path="$dir/main.zsh" content="touch \"$dir/loaded\""
 
-      z.t.mock name="z.completion.cache._cancel" behavior="return 1"
+      z.t.mock name="z.job.status" behavior="return 1"
+      z.t.mock name="z.completion.enable" behavior="return 0"
 
-      z.update.installation._reload dir="$dir"
+      () {
+        local Z_ROOT=$z_root
+
+        z.update.installation._reload dir="$dir"
+      }
       local reload_status=$?
+      local remaining_id=$z_completion_cache_job_id
 
-      z.t.expect "$reload_status" 1
+      z.t.expect "$reload_status" 0
+      z.t.expect.is.null "$remaining_id"
 
-      z.file.not.exists "$dir/loaded"
+      z.file.exists "$dir/loaded"
       z.t.expect.status.is.true
 
       z.dir.remove path=/tmp/z_t/update_reload

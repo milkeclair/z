@@ -8,7 +8,7 @@
 # example:
 #  z.update.mod._resolve source=/tmp/source completion
 z.update.mod._resolve() {
-  z.arg.named source "$@" || { z.return; return 1; }
+  z.arg.named source "$@"
   local source_dir=$REPLY
   z.dir.exists "$source_dir" || { z.return; return 1; }
 

@@ -9,13 +9,13 @@
 # example:
 #  z.update.installation._replace dir=~/.z prepared=/tmp/next backup=/tmp/previous
 z.update.installation._replace() {
-  z.arg.named dir "$@" || return 1
+  z.arg.named dir "$@"
   local dir=$REPLY
 
-  z.arg.named prepared "$@" || return 1
+  z.arg.named prepared "$@"
   local prepared=$REPLY
 
-  z.arg.named backup "$@" || return 1
+  z.arg.named backup "$@"
   local backup=$REPLY
 
   z.is.null "$backup" && return 1
@@ -45,7 +45,7 @@ z.update.installation._replace() {
 # example:
 #  z.update.installation._reload dir=~/.z previous=$PWD
 z.update.installation._reload() {
-  z.arg.named dir "$@" || return 1
+  z.arg.named dir "$@"
   local dir=$REPLY
   z.file.exists "$dir/main.zsh" || return 1
 
@@ -53,7 +53,7 @@ z.update.installation._reload() {
   local previous_dir=$REPLY
 
   if (( ${+functions[z.completion.cache._cancel]} )); then
-    z.completion.cache._cancel || return 1
+    z.completion.cache._cancel
   fi
 
   if z.is.eq "$previous_dir" "$dir" || z.str.start_with "$previous_dir" "$dir/"; then

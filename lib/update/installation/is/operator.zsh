@@ -7,7 +7,7 @@
 # example:
 #  z.update.installation.is._valid dir=~/.z
 z.update.installation.is._valid() {
-  z.arg.named dir "$@" || return 1
+  z.arg.named dir "$@"
   local dir=$REPLY
 
   z.is.null "$dir" && return 1

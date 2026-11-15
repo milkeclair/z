@@ -10,13 +10,13 @@
 # example:
 #  z.update.mod._copy source=/tmp/source current=~/.z dir=/tmp/update/next job
 z.update.mod._copy() {
-  z.arg.named source "$@" || return 1
+  z.arg.named source "$@"
   local source_dir=$REPLY
 
-  z.arg.named current "$@" || return 1
+  z.arg.named current "$@"
   local current_dir=$REPLY
 
-  z.arg.named dir "$@" || return 1
+  z.arg.named dir "$@"
   local dir=$REPLY
 
   z.dir.exists "$source_dir" || return 1
@@ -28,10 +28,6 @@ z.update.mod._copy() {
   z.arg.named.shift current "${(@)REPLY}"
   z.arg.named.shift dir "${(@)REPLY}"
   local selected=(${(@)REPLY})
-
-  for mod_name in "${selected[@]}"; do
-    z.dir.exists "$source_dir/mod/$mod_name" || return 1
-  done
 
   if z.dir.exists "$current_dir/mod"; then
     z.dir.make path="$dir/mod" || return 1

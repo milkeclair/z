@@ -60,36 +60,30 @@ z.t.describe "z.update.core._copy"; {
   }
 
   z.t.context "配布元のtest directoryがない場合"; {
-    z.t.it "コピーを開始しない"; {
+    z.t.it "コピーの失敗を返す"; {
       local dir=/tmp/z_t/update_core/missing_directory
       z.dir.make path="$dir/source/lib"
 
-      z.update.core._copy source="$dir/source" dir="$dir/prepared"
+      z.update.core._copy source="$dir/source" dir="$dir/prepared" 2>/dev/null
       local copy_status=$?
 
       z.t.expect "$copy_status" 1
-
-      z.dir.not.exists "$dir/prepared"
-      z.t.expect.status.is.true
 
       z.dir.remove path=/tmp/z_t/update_core
     }
   }
 
   z.t.context "必須fileがない場合"; {
-    z.t.it "コピーを開始しない"; {
+    z.t.it "コピーの失敗を返す"; {
       local dir=/tmp/z_t/update_core/missing_file
       z.dir.make path="$dir/source/lib"
       z.dir.make path="$dir/source/test"
       z.file.write path="$dir/source/main.zsh" content=main
 
-      z.update.core._copy source="$dir/source" dir="$dir/prepared"
+      z.update.core._copy source="$dir/source" dir="$dir/prepared" 2>/dev/null
       local copy_status=$?
 
       z.t.expect "$copy_status" 1
-
-      z.dir.not.exists "$dir/prepared"
-      z.t.expect.status.is.true
 
       z.dir.remove path=/tmp/z_t/update_core
     }

@@ -8,13 +8,12 @@
 # example:
 #  z.update.archive._download dir=/tmp/update branch=main
 z.update.archive._download() {
-  z.arg.named dir "$@" || { z.return; return 1; }
+  z.arg.named dir "$@"
   local dir=$REPLY
   z.dir.exists "$dir" || { z.return; return 1; }
 
   z.arg.named branch "$@" default=main
   local branch=$REPLY
-  z.is.null "$branch" && { z.return; return 1; }
 
   local file="$dir/source.tar.gz"
   z.file.exists "$file" && { z.return; return 1; }
@@ -25,8 +24,6 @@ z.update.archive._download() {
     z.return
     return 1
   fi
-
-  z.file.exists "$file" || { z.return; return 1; }
 
   z.return "$file"
 }
@@ -41,15 +38,14 @@ z.update.archive._download() {
 # example:
 #  z.update.archive._extract file=/tmp/source.tar.gz dir=/tmp/update/source
 z.update.archive._extract() {
-  z.arg.named file "$@" || { z.return; return 1; }
+  z.arg.named file "$@"
 
   local file=$REPLY
 
-  z.arg.named dir "$@" || { z.return; return 1; }
+  z.arg.named dir "$@"
   local dir=$REPLY
   z.is.null "$dir" && { z.return; return 1; }
 
-  z.file.exists "$file" || { z.return; return 1; }
   z.dir.exists "$dir" && { z.return; return 1; }
 
   z.dir.make path="$dir" || return 1

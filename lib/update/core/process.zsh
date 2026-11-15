@@ -8,23 +8,16 @@
 # example:
 #  z.update.core._copy source=/tmp/source dir=/tmp/update/next
 z.update.core._copy() {
-  z.arg.named source "$@" || return 1
+  z.arg.named source "$@"
   local source_dir=$REPLY
+  z.dir.exists "$source_dir" || return 1
 
-  z.arg.named dir "$@" || return 1
+  z.arg.named dir "$@"
   local dir=$REPLY
   z.is.null "$dir" && return 1
   z.dir.exists "$dir" && return 1
 
   local core_files=(main.zsh install.zsh uninstall.zsh version.zsh help.zsh README.md)
-
-  for directory in lib test; do
-    z.dir.exists "$source_dir/$directory" || return 1
-  done
-
-  for core_file in "${core_files[@]}"; do
-    z.file.exists "$source_dir/$core_file" || return 1
-  done
 
   z.dir.make path="$dir" || return 1
 
