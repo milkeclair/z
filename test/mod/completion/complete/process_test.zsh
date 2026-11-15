@@ -1,9 +1,18 @@
 source ${z_main}
+source "$z_root/test/mod/completion/complete/terminal.zsh"
+
+if ! z92_terminal_start; then
+  zpty -d completion_terminal 2>/dev/null
+  exit 1
+fi
+local terminal_fd=$REPLY
+
+{
 
 z.t.describe "z.completion.complete._command"; {
   z.t.context "コマンド位置でz関数を補完する場合"; {
     z.t.it "実際の候補を1行1件で表示する"; {
-      local actual=$(zsh "$z_root/test/mod/completion/complete/terminal.zsh" input=z.fixture.)
+      local actual=$(z92_terminal "$terminal_fd" input=z.fixture.)
 
       z.t.expect "$actual" $'matches:lines=2:2\nbuffer=z.fixture.'
     }
@@ -11,7 +20,7 @@ z.t.describe "z.completion.complete._command"; {
 
   z.t.context "z.からnamespaceを選ぶ場合"; {
     z.t.it "namespaceを1件にまとめて空白を付けず挿入する"; {
-      local actual=$(zsh "$z_root/test/mod/completion/complete/terminal.zsh" input=z. 'setup=zstyle ":completion:*:z-functions" ignored-patterns "^z.fixture.*"')
+      local actual=$(z92_terminal "$terminal_fd" input=z. 'setup=zstyle ":completion:*:z-functions" ignored-patterns "^z.fixture.*"')
 
       z.t.expect "$actual" $'matches:lines=1:1\nbuffer=z.fixture.'
     }
@@ -19,7 +28,7 @@ z.t.describe "z.completion.complete._command"; {
 
   z.t.context "同じ接頭辞のaliasがある場合"; {
     z.t.it "aliasも補完候補として維持する"; {
-      local actual=$(zsh "$z_root/test/mod/completion/complete/terminal.zsh" input=z.fixture. "setup=alias z.fixture.alias=:")
+      local actual=$(z92_terminal "$terminal_fd" input=z.fixture. "setup=alias z.fixture.alias=:")
 
       z.t.expect.includes "$actual" "matches:lines=3:"
     }
@@ -30,7 +39,7 @@ z.t.describe "z.completion.complete._command"; {
       local fixture_dir=$(mktemp -d)
       z.file.write path=$fixture_dir/z.fixture.external content=$'#!/bin/sh\nexit 0'
       z.perm path=$fixture_dir/z.fixture.external mode=755
-      local actual=$(PATH="$fixture_dir:$PATH" zsh "$z_root/test/mod/completion/complete/terminal.zsh" input=z.fixture.)
+      local actual=$(z92_terminal "$terminal_fd" input=z.fixture. command_path="$fixture_dir")
       z.dir.remove path=$fixture_dir
 
       z.t.expect.includes "$actual" "matches:lines=3:"
@@ -39,7 +48,7 @@ z.t.describe "z.completion.complete._command"; {
 
   z.t.context "commandに続く名前を補完する場合"; {
     z.t.it "シェル関数を外部コマンドの候補に含めない"; {
-      local actual=$(zsh "$z_root/test/mod/completion/complete/terminal.zsh" "input=command z.fixture.")
+      local actual=$(z92_terminal "$terminal_fd" "input=command z.fixture.")
 
       z.t.expect "$actual" $'matches:lines=0:0\nbuffer=command z.fixture.'
     }
@@ -47,7 +56,7 @@ z.t.describe "z.completion.complete._command"; {
 
   z.t.context "候補が1件の場合"; {
     z.t.it "候補名を入力へ挿入する"; {
-      local actual=$(zsh "$z_root/test/mod/completion/complete/terminal.zsh" input=z.fixture.al)
+      local actual=$(z92_terminal "$terminal_fd" input=z.fixture.al)
 
       z.t.expect "$actual" $'matches:lines=1:1\nbuffer=z.fixture.alpha '
     }
@@ -55,7 +64,7 @@ z.t.describe "z.completion.complete._command"; {
 
   z.t.context "一般のコマンド名を補完する場合"; {
     z.t.it "従来の補完で候補を入力へ挿入する"; {
-      local actual=$(zsh "$z_root/test/mod/completion/complete/terminal.zsh" input=fixture-c "setup=alias fixture-command=:")
+      local actual=$(z92_terminal "$terminal_fd" input=fixture-c "setup=alias fixture-command=:")
 
       z.t.expect "$actual" $'matches:lines=1:1\nbuffer=fixture-command '
     }
@@ -63,7 +72,7 @@ z.t.describe "z.completion.complete._command"; {
 
   z.t.context "main.zshを読み直した場合"; {
     z.t.it "登録済みの補完を維持して候補を表示できる"; {
-      local actual=$(zsh "$z_root/test/mod/completion/complete/terminal.zsh" input=z.fixture. 'setup=source "$Z_ROOT/main.zsh"; z.completion.cache.build._names; z.completion.compdef._register')
+      local actual=$(z92_terminal "$terminal_fd" input=z.fixture. 'setup=source "$Z_ROOT/main.zsh"; z.completion.cache.build._names; z.completion.compdef._register')
 
       z.t.expect "$actual" $'matches:lines=2:2\nbuffer=z.fixture.'
     }
@@ -97,7 +106,7 @@ z.t.describe "z.completion.complete._run"; {
 z.t.describe "z.completion.complete._functions"; {
   z.t.context "current wordがz関数prefixの場合"; {
     z.t.it "引数位置でも実際の候補を1行1件で表示する"; {
-      local actual=$(zsh "$z_root/test/mod/completion/complete/terminal.zsh" "input=z.arg.named z.fixture.")
+      local actual=$(z92_terminal "$terminal_fd" "input=z.arg.named z.fixture.")
 
       z.t.expect "$actual" $'matches:lines=2:2\nbuffer=z.arg.named z.fixture.'
     }
@@ -105,7 +114,7 @@ z.t.describe "z.completion.complete._functions"; {
 
   z.t.context "引数位置でz.からnamespaceを選ぶ場合"; {
     z.t.it "namespaceの直後から続けて入力できる"; {
-      local actual=$(zsh "$z_root/test/mod/completion/complete/terminal.zsh" "input=z.arg.named z." 'setup=zstyle ":completion:*:z-functions" ignored-patterns "^z.fixture.*"')
+      local actual=$(z92_terminal "$terminal_fd" "input=z.arg.named z." 'setup=zstyle ":completion:*:z-functions" ignored-patterns "^z.fixture.*"')
 
       z.t.expect "$actual" $'matches:lines=1:1\nbuffer=z.arg.named z.fixture.'
     }
@@ -191,4 +200,8 @@ z.t.describe "z.completion.complete._docs"; {
       z.t.expect.reply ""
     }
   }
+}
+
+} always {
+  zpty -d completion_terminal
 }
