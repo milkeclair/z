@@ -40,21 +40,21 @@ z.t._state.current_idx.set() {
 #  z.t._state.current_idx.add "describe"
 z.t._state.current_idx.add() {
   local context=$1
-  z.arr.count $z_t_logs
-  local idx=$REPLY
+  local logs=($z_t_logs)
+  local idx=${#logs}
 
   case $context in
   "describe")
-    z.t._state.current_idx.set "describe" value=$idx
-    z.t._state.current_idx.set "context" value=0
-    z.t._state.current_idx.set "it" value=0
+    z_t_current_idx[describe]=$idx
+    z_t_current_idx[context]=0
+    z_t_current_idx[it]=0
     ;;
   "context")
-    z.t._state.current_idx.set "context" value=$idx
-    z.t._state.current_idx.set "it" value=0
+    z_t_current_idx[context]=$idx
+    z_t_current_idx[it]=0
     ;;
   "it")
-    z.t._state.current_idx.set "it" value=$idx
+    z_t_current_idx[it]=$idx
     ;;
   esac
 
