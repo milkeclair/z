@@ -104,4 +104,35 @@ z.t.describe "z.install"; {
       z.dir.remove path="$fixture"
     }
   }
+  z.t.context "z本体を読み込む前にinstallerを実行する場合"; {
+    z.t.it "zのAPIに依存せず単体でインストールできる"; {
+      local fixture=$(mktemp -d /tmp/z_install_standalone.XXXXXX)
+      local target="$fixture/installed"
+      z.dir.make path="$fixture/archive/lib"
+      z.dir.make path="$fixture/archive/test"
+      z.file.write path="$fixture/archive/main.zsh" content="standalone main"
+      z.file.write path="$fixture/archive/lib/core.zsh" content="standalone core"
+
+      zsh -f -c '
+        source "$1"
+        (( ${+functions[z.io]} == 0 )) || exit 1
+        fixture="$3"
+        z.install._question_overwrite_install_dir() { return 0; }
+        z.install._create_temp_dir() { temp_dir="$fixture/download"; mkdir -p "$temp_dir"; }
+        z.install._download_archive() { return 0; }
+        z.install._decompress_archive() { source_dir="$fixture/archive"; }
+        z.install._zshrc_exists() { return 1; }
+        z.install "$2"
+      ' z_standalone_install "$z_root/install.zsh" "$target" "$fixture" >/dev/null
+      local install_result=$?
+
+      z.t.expect "$install_result" 0
+      z.file.read path="$target/main.zsh"
+      z.t.expect.reply "standalone main"
+      z.file.read path="$target/lib/core.zsh"
+      z.t.expect.reply "standalone core"
+      z.dir.remove path="$fixture"
+    }
+  }
+
 }

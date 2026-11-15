@@ -18,7 +18,7 @@ local -A z_modules=(
   [status]="analysis:operator"
   [str]="operator:process"
   [t]="state:dsl:expect:log:mock:process"
-  [update]="process"
+  [update]="analysis:process"
   [var]="operator:analysis"
 )
 

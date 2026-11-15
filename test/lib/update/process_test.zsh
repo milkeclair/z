@@ -21,7 +21,7 @@ z_update_test_fixture() {
   z.file.write path="$upstream/lib/core.zsh" content="new core"
   z.file.write path="$upstream/main.zsh" content="z_update_test_loaded=true"
   local core_file
-  for core_file in install.zsh uninstall.zsh version.zsh help.zsh; do
+  for core_file in install.zsh uninstall.zsh version.zsh help.zsh README.md; do
     z.file.write path="$upstream/$core_file" content=":"
   done
   local mod_name
@@ -34,8 +34,8 @@ z_update_test_fixture() {
   z.file.write path="$upstream/mod/beta/mod.zsh" content=$'z.mod beta\nz.mod.depends shared\n'
   tar -czf "$fixture/archive.tar.gz" -C "$fixture/source" z-main
   z_update_test_loaded=false
-  z.t.mock name="z.install._question_overwrite_install_dir" behavior="return 0"
-  z.t.mock name="z.install._download_archive" behavior="print downloaded >> \"$fixture/downloads\"; cp \"$fixture/archive.tar.gz\" \"\$temp_dir/z.tar.gz\""
+  z.t.mock name="z.update._confirm" behavior="return 0"
+  z.t.mock name="z.update._download" behavior="print downloaded >> \"$fixture/downloads\"; z.dir.make path=\"\$1/source\"; tar -xzf \"$fixture/archive.tar.gz\" -C \"\$1/source\"; z.return \"\$1/source/z-main\""
   z.return "$fixture"
 }
 
@@ -126,12 +126,36 @@ z.t.describe "z.update"; {
     }
   }
 
+  z.t.context "相対パスで読み込んだインストール先の場合"; {
+    z.t.it "zのパスAPIで絶対パスへ解決して更新する"; {
+      z_update_test_fixture
+      local fixture=$REPLY
+      local target="$fixture/installed copy"
+      local original_directory=$PWD
+      () {
+        local z_root="installed copy"
+        local Z_ROOT=$z_root
+        cd "$fixture"
+        z.update >/dev/null 2>&1
+        local update_result=$?
+        cd "$original_directory"
+        return $update_result
+      }
+      local update_result=$?
+
+      z.t.expect "$update_result" 0
+      z.file.read path="$target/lib/core.zsh"
+      z.t.expect.reply "new core"
+      z.dir.remove path="$fixture"
+    }
+  }
+
   z.t.context "ダウンロードに失敗した場合"; {
     z.t.it "本体とmodを変更せず一時領域を除去する"; {
       z_update_test_fixture
       local fixture=$REPLY
       local target="$fixture/installed copy"
-      z.t.mock name="z.install._download_archive" behavior="return 1"
+      z.t.mock name="z.update._download" behavior="return 1"
       () {
         local z_root=$target
         local Z_ROOT=$target
@@ -180,7 +204,7 @@ z.t.describe "z.update"; {
       z_update_test_fixture
       local fixture=$REPLY
       local target="$fixture/installed copy"
-      z.t.mock name="z.install._copy_files" behavior="return 1"
+      z.t.mock name="z.update._stage" behavior="return 1"
       () {
         local z_root=$target
         local Z_ROOT=$target
@@ -286,7 +310,7 @@ exec \"$real_mv\" \"\$@\"
       z_update_test_fixture
       local fixture=$REPLY
       local target="$fixture/installed copy"
-      z.t.mock name="z.install._question_overwrite_install_dir" behavior="return 1"
+      z.t.mock name="z.update._confirm" behavior="return 1"
       () {
         local z_root=$target
         local Z_ROOT=$target
@@ -302,4 +326,55 @@ exec \"$real_mv\" \"\$@\"
       z.dir.remove path="$fixture"
     }
   }
+  z.t.context "installerの関数が読み込まれていない場合"; {
+    z.t.it "zのAPIだけで本体とmodを更新できる"; {
+      z_update_test_fixture
+      local fixture=$REPLY
+      local target="$fixture/installed copy"
+      () {
+        local z_root=$target
+        local Z_ROOT=$target
+        local function_name
+        for function_name in ${(k)functions}; do
+          if [[ "$function_name" == z.install || "$function_name" == z.install.* ]]; then
+            unfunction "$function_name"
+          fi
+        done
+        z.update >/dev/null
+      }
+      local update_result=$?
+
+      z.t.expect "$update_result" 0
+      z.file.read path="$target/lib/core.zsh"
+      z.t.expect.reply "new core"
+      z.file.read path="$target/mod/shared/value"
+      z.t.expect.reply "new shared"
+      z.t.expect "$z_update_test_loaded" true
+      z.dir.remove path="$fixture"
+    }
+  }
+
+  z.t.context "modディレクトリが外部ディレクトリへのリンクの場合"; {
+    z.t.it "外部の元データを変更せず置換用ファイルを作る"; {
+      z_update_test_fixture
+      local fixture=$REPLY
+      local target="$fixture/installed copy"
+      command mv "$target/mod" "$fixture/external-mods"
+      ln -s "$fixture/external-mods" "$target/mod"
+      () {
+        local z_root=$target
+        local Z_ROOT=$target
+        z.update >/dev/null
+      }
+      local update_result=$?
+
+      z.t.expect "$update_result" 0
+      z.file.read path="$target/mod/alpha/value"
+      z.t.expect.reply "new alpha"
+      z.file.read path="$fixture/external-mods/alpha/value"
+      z.t.expect.reply "old alpha"
+      z.dir.remove path="$fixture"
+    }
+  }
+
 }
