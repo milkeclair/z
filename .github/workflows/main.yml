@@ -25,8 +25,9 @@ env:
   ZSH_VERSION: '5.9.2'
 
 jobs:
-  test:
+  test-zsh:
     runs-on: ubuntu-26.04
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -40,8 +41,21 @@ jobs:
 
       - name: Run tests
         shell: bash {0}
-        run: |
-          zsh -c "source main.zsh && cd test && z.t"
+        run: zsh -c "source main.zsh && cd test && z.t"
+
+  test-lsp:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+
+      - name: Set up zsh
+        uses: $/.github/actions/setup-zsh
+        with:
+          version: ${{ env.ZSH_VERSION }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v7.1.0
@@ -49,9 +63,6 @@ jobs:
           node-version: '24'
           cache: npm
           cache-dependency-path: ls/package-lock.json
-
-      - name: Test release tooling
-        run: node --test .github/scripts/release.test.mjs
 
       - name: Install LSP dependencies
         working-directory: ls
@@ -62,8 +73,42 @@ jobs:
         working-directory: ls
         shell: bash
         timeout-minutes: 5
+        run: npm test -- --maxWorkers=2
+
+  test-release:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+
+      - name: Test release tooling
+        run: node --test .github/scripts/release.test.mjs
+
+  test:
+    needs: [test-zsh, test-lsp, test-release]
+    if: always()
+    runs-on: ubuntu-26.04
+    timeout-minutes: 2
+    steps:
+      - name: Require all test jobs to succeed
+        env:
+          ZSH_RESULT: ${{ needs.test-zsh.result }}
+          LSP_RESULT: ${{ needs.test-lsp.result }}
+          RELEASE_RESULT: ${{ needs.test-release.result }}
+        shell: bash
         run: |
-          npm test -- --maxWorkers=2
+          if [[ "$ZSH_RESULT" != success || "$LSP_RESULT" != success || "$RELEASE_RESULT" != success ]]; then
+            printf '::error::Zsh: %s; LSP: %s; release tooling: %s\n' "$ZSH_RESULT" "$LSP_RESULT" "$RELEASE_RESULT"
+            exit 1
+          fi
 
   check-zsh-release:
     runs-on: ubuntu-26.04
