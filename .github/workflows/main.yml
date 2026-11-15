@@ -33,43 +33,14 @@ jobs:
           ref: ${{ inputs.ref || github.sha }}
           persist-credentials: false
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential libncurses-dev yodl uuid-runtime
-
-      - name: Cache zsh
-        id: cache
-        uses: actions/cache@v6.1.0
+      - name: Set up zsh
+        uses: $/.github/actions/setup-zsh
         with:
-          path: ~/.local
-          key: ubuntu-26.04-${{ runner.arch }}-zsh-${{ env.ZSH_VERSION }}
-
-      - name: Build and install zsh
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          wget https://sourceforge.net/projects/zsh/files/zsh/${ZSH_VERSION}/zsh-${ZSH_VERSION}.tar.xz/download -O zsh.tar.xz
-          tar xf zsh.tar.xz
-          cd zsh-${ZSH_VERSION}
-          ./configure --prefix=$HOME/.local --with-tcsetpgrp
-          make
-          make install
-        env:
-          ZSH_VERSION: ${{ env.ZSH_VERSION }}
-
-      - name: Verify installed zsh version
-        shell: bash
-        run: |
-          actual_version=$("$HOME/.local/bin/zsh" -c 'print -r -- "$ZSH_VERSION"')
-          if [[ "$actual_version" != "$ZSH_VERSION" ]]; then
-            printf '::error::Expected zsh %s, installed %s\n' "$ZSH_VERSION" "$actual_version"
-            exit 1
-          fi
+          version: ${{ env.ZSH_VERSION }}
 
       - name: Run tests
         shell: bash {0}
         run: |
-          export PATH="$HOME/.local/bin:$PATH"
           zsh -c "source main.zsh && cd test && z.t"
 
       - name: Set up Node.js
@@ -92,7 +63,6 @@ jobs:
         shell: bash
         timeout-minutes: 5
         run: |
-          export PATH="$HOME/.local/bin:$PATH"
           npm test -- --maxWorkers=2
 
   check-zsh-release:
