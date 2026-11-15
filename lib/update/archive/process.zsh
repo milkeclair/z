@@ -1,0 +1,71 @@
+# download one branch archive into an existing work directory
+#
+# $dir: work directory
+# $branch?: branch name (default: main)
+# REPLY: archive file path
+# return: 0|1
+#
+# example:
+#  z.update.archive._download dir=/tmp/update branch=main
+z.update.archive._download() {
+  z.arg.named dir "$@" || { z.return; return 1; }
+  local dir=$REPLY
+  z.dir.exists "$dir" || { z.return; return 1; }
+
+  z.arg.named branch "$@" default=main
+  local branch=$REPLY
+  z.is.null "$branch" && { z.return; return 1; }
+
+  local file="$dir/source.tar.gz"
+  z.file.exists "$file" && { z.return; return 1; }
+
+  local url="https://github.com/milkeclair/z/archive/refs/heads/$branch.tar.gz"
+  if ! curl -fLsS "$url" -o "$file"; then
+    rm -f "$file"
+    z.return
+    return 1
+  fi
+
+  z.file.exists "$file" || { z.return; return 1; }
+
+  z.return "$file"
+}
+
+# extract a branch archive into a new directory
+#
+# $file: archive file
+# $dir: new extraction directory
+# REPLY: extracted source directory
+# return: 0|1
+#
+# example:
+#  z.update.archive._extract file=/tmp/source.tar.gz dir=/tmp/update/source
+z.update.archive._extract() {
+  z.arg.named file "$@" || { z.return; return 1; }
+
+  local file=$REPLY
+
+  z.arg.named dir "$@" || { z.return; return 1; }
+  local dir=$REPLY
+  z.is.null "$dir" && { z.return; return 1; }
+
+  z.file.exists "$file" || { z.return; return 1; }
+  z.dir.exists "$dir" && { z.return; return 1; }
+
+  z.dir.make path="$dir" || return 1
+
+  if ! tar -xzf "$file" -C "$dir"; then
+    z.dir.remove path="$dir"
+    z.return
+    return 1
+  fi
+
+  local roots=("$dir"/*(N/))
+  if ! z.int.is.eq ${#roots} 1; then
+    z.dir.remove path="$dir"
+    z.return
+    return 1
+  fi
+
+  z.return "$roots[1]"
+}

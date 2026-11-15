@@ -9,9 +9,17 @@ Provide functions with readable names for syntax that is not intuitive for me.
 
 `curl -sL https://raw.githubusercontent.com/milkeclair/z/main/install.zsh | zsh`
 
-### Reinstall or Update
+### Update
 
-`z.install`
+`z.update` updates the loaded installation and its installed mods from one
+branch archive. Required mod dependencies are included. The command asks once,
+prepares the new files before replacement, and reloads the current shell.
+Git checkouts are updated with Git.
+
+### Reinstall core
+
+`z.install` replaces the core while preserving installed mods.
+Use `z.install.mod <mod_name>` to update a single mod.
 
 ### Uninstall
 
