@@ -12,7 +12,7 @@ z.job.status() {
   local id=$REPLY
   z.is.null "$id" && return 1
 
-  z.job.file._path id=$id name=status || return 1
+  z.job.file._path id=$id name=status
   local status_file=$REPLY
   z.file.exists "$status_file" || return 1
 

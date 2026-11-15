@@ -57,6 +57,6 @@ z.job.file._path() {
   z.is.null "$id" && return 1
   z.is.null "$name" && return 1
 
-  z.job.file._dir id=$id || return 1
+  z.job.file._dir id=$id
   z.return "$REPLY/$name"
 }

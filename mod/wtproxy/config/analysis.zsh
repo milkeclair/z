@@ -6,7 +6,7 @@
 # example:
 #  z.wtproxy._config
 z.wtproxy._config() {
-  z.wtproxy._config.values || return 1
+  z.wtproxy._config.values
   local -A config=("${(@)REPLY}")
 
   z.wtproxy._config.file.default_project || {

@@ -1,11 +1,11 @@
-# prepare a job directory
+# prepare a job directory after argument validation
 #
 # $name: job name
 # $command: child function name
 # $on_success?: parent success callback function name
 # $on_failure?: parent failure callback function name
 # REPLY: job id and job directory
-# return: 0|1
+# return: null
 #
 # example:
 #  z.job.run._prepare name=example command=z.example.build
@@ -21,9 +21,6 @@ z.job.run._prepare() {
 
   z.arg.named on_failure "$@"
   local on_failure=$REPLY
-
-  z.is.null "$name" && return 1
-  z.is.null "$command" && return 1
 
   z.job.file._jobs
   local jobs_dir=$REPLY

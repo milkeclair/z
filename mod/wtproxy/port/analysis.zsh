@@ -26,7 +26,7 @@ z.wtproxy._port.proxies() {
 
   z.wtproxy._port.keys.from_config config
   for port_key in ${(@)REPLY}; do
-    z.wtproxy._port.worktree.index $port_key || return 1
+    z.wtproxy._port.worktree.index $port_key
     local port_index=$REPLY
     z.wtproxy._port.proxy.key $port_index
     local config_key=$REPLY

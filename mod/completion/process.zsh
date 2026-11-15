@@ -15,10 +15,10 @@ z.completion.enable() {
   z.completion.is._interactive || return 0
 
   z.completion.cache.build._names
-  z.completion.compdef._ignore_private || return 1
+  z.completion.compdef._ignore_private
   z.completion.compdef._register || return 1
   autoload -Uz add-zsh-hook
-  add-zsh-hook zshexit z.completion.cache._cancel || return 1
+  add-zsh-hook zshexit z.completion.cache._cancel
   z.completion.cache._cancel
 
   z.job.run \
