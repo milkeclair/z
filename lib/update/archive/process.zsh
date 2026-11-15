@@ -46,7 +46,6 @@ z.update.archive._extract() {
   local dir=$REPLY
   z.is.null "$dir" && { z.return; return 1; }
 
-  z.file.exists "$file" || { z.return; return 1; }
   z.dir.exists "$dir" && { z.return; return 1; }
 
   z.dir.make path="$dir" || return 1

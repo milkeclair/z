@@ -53,7 +53,7 @@ z.update.installation._reload() {
   local previous_dir=$REPLY
 
   if (( ${+functions[z.completion.cache._cancel]} )); then
-    z.completion.cache._cancel || return 1
+    z.completion.cache._cancel
   fi
 
   if z.is.eq "$previous_dir" "$dir" || z.str.start_with "$previous_dir" "$dir/"; then

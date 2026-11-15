@@ -165,8 +165,8 @@ z.t.describe "z.update.archive._extract"; {
   }
 
   z.t.context "file引数がない場合"; {
-    z.t.it "展開先を作らない"; {
-      z.update.archive._extract dir=/tmp/z_t/update_extract_absent
+    z.t.it "失敗して展開先を残さない"; {
+      z.update.archive._extract dir=/tmp/z_t/update_extract_absent 2>/dev/null
       local extract_status=$?
       local result=$REPLY
 
