@@ -21,6 +21,26 @@ z.t.describe "z.completion.function._candidates"; {
     }
   }
 
+  z.t.context "同じnamespaceの候補が離れている場合"; {
+    z.t.it "最初に現れた順序で一度だけ返す"; {
+      z_completion_function_names=(z.file.read z.str.split z.file.write z.arg.get z.str.color.red)
+
+      z.completion.function._candidates z.
+
+      z.t.expect.reply $'z.file.\nz.str.\nz.arg.'
+    }
+  }
+
+  z.t.context "空のsegmentやハイフンを含む名前の場合"; {
+    z.t.it "名前のsegmentを保ってnamespaceを返す"; {
+      z_completion_function_names=(z.with-hyphen.get z..nested z.str..nested z.with-hyphen.other)
+
+      z.completion.function._candidates z.
+
+      z.t.expect.reply $'z.with-hyphen.\nz..\nz.str.'
+    }
+  }
+
   z.t.context "z.でprivate関数しかないnamespaceがある場合"; {
     z.t.it "public関数を持つnamespaceだけを返す"; {
       z_completion_function_names=(z.str.split z.hidden._helper z.other)
