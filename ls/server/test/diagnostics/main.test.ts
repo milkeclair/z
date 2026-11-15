@@ -119,6 +119,47 @@ describe('command resolution', () => {
       expect(semantic(fixture(source).items)).toEqual([]);
     }
   });
+  test.each([
+    ['zsh/zpty', 'zpty'], ['zsh/zselect', 'zselect'],
+    ['zsh/system', 'sysread'], ['zsh/system', 'zsystem'],
+    ['zsh/net/tcp', 'ztcp'], ['zsh/datetime', 'strftime'],
+  ])('zmodloadで読み込む%sの%sを解決する', (module, command) => {
+    expect(semantic(fixture('zmodload ' + module + '\n' + command + '\n').items)).toEqual([]);
+  });
+  test('読み込み宣言のないmodule builtinは未定義として残す', () => {
+    expect(semantic(fixture('zpty\nzselect\nsysread\nzsystem\n').items))
+      .toHaveLength(4);
+  });
+  test.each(['-u', '-e', '-L', '-d', '-Fl', '-FL', '-Fe'])('照会や解除の%sを読み込み宣言にしない', option => {
+    expect(semantic(fixture('zmodload ' + option + ' zsh/zpty\nzpty\n').items))
+      .toMatchObject([{ code: 'undefined-command' }]);
+  });
+  test('静的なmodule名とbuiltinのautoload・feature指定を解決する', () => {
+    for (const source of [
+      'builtin zmodload -is -- "zsh/zpty"\nzpty\n',
+      'zmodload -ab fixture/module fixture-module-builtin\nfixture-module-builtin\n',
+      'zmodload -Fa fixture/module +b:fixture-module-builtin\nfixture-module-builtin\n',
+      'zmodload -F zsh/system b:sysread -b:zsystem\nsysread\n',
+    ]) expect(semantic(fixture(source).items)).toEqual([]);
+    for (const source of [
+      'zmodload "$module"\nzpty\n',
+      'zmodload fixture/unknown\nzpty\n',
+      'zmodload -F zsh/system b:sysread -b:zsystem\nzsystem\n',
+      'zmodload -F zsh/zpty\nzpty\n',
+      'zmodload -F zsh/system b:sysread -b:sysread\nsysread\n',
+      'command -v zmodload zsh/zpty\nzpty\n',
+      'print zmodload zsh/zpty\nzpty\n',
+    ]) expect(semantic(fixture(source).items)).toMatchObject([{ code: 'undefined-command' }]);
+  });
+  test('module builtinでもbuiltinとcommandの解決規則を維持する', () => {
+    const declaration = 'zmodload zsh/zpty\n';
+    expect(semantic(fixture(declaration + 'builtin zpty\n').items)).toEqual([]);
+    expect(semantic(fixture(declaration + 'command zpty\n').items))
+      .toMatchObject([{ code: 'undefined-command' }]);
+    if (environment.kind !== 'available') throw new Error('shell unavailable');
+    expect(semantic(fixture(declaration + 'command zpty\n', '', { ...environment, commandBuiltins: true }).items))
+      .toEqual([]);
+  });
   test('引用されたalias名と明示modifierを区別する', () => {
     expect(semantic(fixture("'fixture-shell-alias'\n").items)).toMatchObject([{ code: 'undefined-command' }]);
     expect(semantic(fixture('builtin greet\n').items)).toMatchObject([{ code: 'undefined-command' }]);
@@ -206,6 +247,30 @@ describe('hydrated controls and diagnostics cache', () => {
     expect(semantic(validateTextDocument({ diagnostics: next, textDocument: outside }))).toEqual([]);
     expect(semantic(validateTextDocument({ diagnostics: next, textDocument: f.document }))).toHaveLength(1);
     expect(workspaceDiagnostics({ diagnostics: next }).items.some(item => item.uri === outside.uri)).toBe(false);
+  });
+  test('module読み込みの追加・削除で未編集の呼び出しも再評価する', () => {
+    const f = fixture('zpty\n', 'zmodload zsh/zpty\n');
+    expect(semantic(f.items)).toEqual([]);
+    const changed = TextDocument.create(f.definitionUri, 'shellscript', 1, '');
+    const snapshot = refreshFunctionSnapshot({ projectRoot: f.root, documents: [f.document, changed], previous: f.snapshot });
+    const next = refreshDiagnosticSnapshot({ snapshot, environment, previous: f.diagnostics });
+    expect(next.files.get(f.document.uri)?.facts).toBe(f.diagnostics.files.get(f.document.uri)?.facts);
+    expect(semantic(validateTextDocument({ diagnostics: next, textDocument: f.document })))
+      .toMatchObject([{ code: 'undefined-command' }]);
+    const restored = TextDocument.create(f.definitionUri, 'shellscript', 2, 'zmodload zsh/zpty\n');
+    const restoredSnapshot = refreshFunctionSnapshot({ projectRoot: f.root, documents: [f.document, restored], previous: snapshot });
+    const checked = refreshDiagnosticSnapshot({ snapshot: restoredSnapshot, environment, previous: next });
+    expect(semantic(validateTextDocument({ diagnostics: checked, textDocument: f.document }))).toEqual([]);
+  });
+  test('workspace外のmodule読み込みはその文書だけへ適用する', () => {
+    const f = fixture('zpty\n', '');
+    const outside = TextDocument.create(pathToFileURL(path.join(path.dirname(f.root), 'module-outside.zsh')).href,
+      'shellscript', 1, 'zmodload zsh/zpty\nzpty\n');
+    const snapshot = refreshFunctionSnapshot({ projectRoot: f.root, documents: [f.document, outside], previous: f.snapshot });
+    const next = refreshDiagnosticSnapshot({ snapshot, environment });
+    expect(semantic(validateTextDocument({ diagnostics: next, textDocument: outside }))).toEqual([]);
+    expect(semantic(validateTextDocument({ diagnostics: next, textDocument: f.document })))
+      .toMatchObject([{ code: 'undefined-command' }]);
   });
   test('workspace外の関数はその文書の診断に使い、projectへ混ぜない', () => {
     const f = fixture('fixture-outside-function\n');

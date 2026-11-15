@@ -8,14 +8,14 @@ watcher and configuration notifications refresh the function and diagnostic
 snapshots together. Document and workspace requests read the resulting reports.
 
 `collectFileFacts` uses the iterative syntax walker once for each changed
-hydration. It records command nodes, static alias/autoload declarations,
+hydration. It records command nodes, static alias/autoload/module builtin declarations,
 documentation usage and lexer/parser/documentation diagnostics. Function usage
 has its own traversal frame, so nested function parameters belong to that
 function. The existing semantic references share syntax nodes and are not
 visited twice.
 
 `refreshDiagnosticSnapshot` reuses unchanged facts and reports. Changes to
-function definitions or alias/autoload declarations rebind calls in other files.
+function definitions or alias/autoload/module builtin declarations rebind calls in other files.
 Reports retain AST references rather than copying syntax trees. An external open
 document has local declarations and diagnostics; its declarations and report
 stay outside project-wide enumeration.
@@ -45,6 +45,18 @@ environment. Alias calls are recognized as macros and their expanded argument
 lists are left unresolved. The analyzer does not execute project files or
 autoload bodies. Runtime changes to PATH, shell options and declarations can
 differ from these static inputs.
+
+Static `zmodload` declarations also supplement the builtin table. Plain loads
+(with optional `-i`/`-s`) recognize the standard module builtins used by this
+repository: `zsh/datetime`, `zsh/net/tcp`, `zsh/system`, `zsh/zpty` and
+`zsh/zselect`. Explicit `-a`/`-ab` builtin autoloads and `-F`/`-Fa` builtin
+feature names are collected directly; disabled features, queries and unload-only
+commands do not introduce declarations. Dynamic module/feature names remain
+unresolved. This uses the same project-wide declaration model as aliases and
+autoloads, including cross-file invalidation and local declarations for external
+open documents. It does not model runtime execution order or conditional loads.
+The standard module names and features are documented in the
+[Zsh module manual](https://zsh.sourceforge.io/Doc/Release/Zsh-Modules.html).
 
 Absolute executable paths are checked for file type and execution permission.
 Existing executable paths relative to the project root are recognized. A missing

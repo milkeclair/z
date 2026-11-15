@@ -7,10 +7,12 @@ import type { Diagnostics } from './type';
 import { protocolRange } from '../connection/ast/cursor';
 import { literalWord } from '../refreshFunctions/word';
 import { formatDiagnostics } from './format';
+import { moduleBuiltins } from './modules';
 
 export type Declarations = {
   readonly aliases: ReadonlySet<string>; readonly globalAliases: ReadonlySet<string>;
   readonly suffixAliases: ReadonlySet<string>; readonly autoloads: ReadonlySet<string>;
+  readonly builtins: ReadonlySet<string>;
 };
 export type FileFacts = {
   readonly calls: readonly SimpleCommandNode[]; readonly base: readonly Diagnostics[];
@@ -60,7 +62,7 @@ function wordUsage(word: WordNode, usage: Usage): void {
 }
 
 function declarations(command: SimpleCommandNode, sets: {
-  aliases: Set<string>; globalAliases: Set<string>; suffixAliases: Set<string>; autoloads: Set<string>;
+  aliases: Set<string>; globalAliases: Set<string>; suffixAliases: Set<string>; autoloads: Set<string>; builtins: Set<string>;
 }): void {
   const name = command.commandName && literalWord(command.commandName.word);
   if (name === 'autoload') {
@@ -68,6 +70,8 @@ function declarations(command: SimpleCommandNode, sets: {
       const value = literalWord(word);
       if (value && !value.startsWith('-') && !value.startsWith('+')) sets.autoloads.add(value.slice(value.lastIndexOf('/') + 1));
     }
+  } else if (name === 'zmodload') {
+    for (const builtin of moduleBuiltins(command)) sets.builtins.add(builtin);
   } else if (name === 'alias') {
     let target = sets.aliases;
     for (const word of command.arguments) {
@@ -89,7 +93,7 @@ export function collectFileFacts(file: ZshFileHydration): FileFacts {
   const usages: Usage[] = [];
   const active: Usage[] = [];
   const sets = { aliases: new Set<string>(), globalAliases: new Set<string>(),
-    suffixAliases: new Set<string>(), autoloads: new Set<string>() };
+    suffixAliases: new Set<string>(), autoloads: new Set<string>(), builtins: new Set<string>() };
   walk(file.ast, (node, depth) => {
     while (active.length && active[active.length - 1].depth >= depth) active.pop();
     if (node.kind === 'functionDefinition') {

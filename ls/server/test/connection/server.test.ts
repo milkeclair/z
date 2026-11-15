@@ -410,6 +410,33 @@ describe('server@hydration stdio', () => {
     }
   }, 15000);
 
+  test('moduleの読み込み宣言を編集すると未編集文書の診断も更新する', async () => {
+    const root = fixture();
+    fs.writeFileSync(path.join(root, '.zshrc'), '');
+    const declaration = path.join(root, 'module.zsh');
+    const declarationUri = pathToFileURL(declaration).href;
+    const caller = pathToFileURL(path.join(root, 'caller.zsh')).href;
+    fs.writeFileSync(declaration, 'zmodload zsh/zpty\n');
+    const client = startServer({ ...process.env, ZDOTDIR: root });
+    const request = () => bounded(client.connection.sendRequest(DocumentDiagnosticRequest.type, {
+      textDocument: { uri: caller },
+    }));
+    try {
+      await client.initialize(root, false);
+      await client.open(caller, 'zpty\n');
+      expect(await request()).toMatchObject({ items: [] });
+      await client.open(declarationUri, 'zmodload zsh/zpty\n');
+      await client.edit(declarationUri, '', 2);
+      expect(await request()).toMatchObject({ items: [{ code: 'undefined-command' }] });
+      await client.edit(declarationUri, 'zmodload zsh/zpty\n', 3);
+      expect(await request()).toMatchObject({ items: [] });
+      const workspace = await bounded(client.connection.sendRequest(WorkspaceDiagnosticRequest.type, { previousResultIds: [] }));
+      expect(workspace.items.find(item => item.uri === caller)).toMatchObject({ version: 1, items: [] });
+    } finally {
+      await client.close();
+    }
+  }, 15000);
+
   test.each(['unsupported', 'rejected', 'no-workspace'])('watcherが%sなら文書更新時の全走査でdisk変更を同期する', async mode => {
     const root = fixture();
     const caller = pathToFileURL(path.join(root, 'caller.zsh')).href;
