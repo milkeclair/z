@@ -29,10 +29,6 @@ z.update.mod._copy() {
   z.arg.named.shift dir "${(@)REPLY}"
   local selected=(${(@)REPLY})
 
-  for mod_name in "${selected[@]}"; do
-    z.dir.exists "$source_dir/mod/$mod_name" || return 1
-  done
-
   if z.dir.exists "$current_dir/mod"; then
     z.dir.make path="$dir/mod" || return 1
 

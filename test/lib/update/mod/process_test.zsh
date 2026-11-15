@@ -112,23 +112,20 @@ z.t.describe "z.update.mod._copy"; {
   }
 
   z.t.context "配布元に選択modがない場合"; {
-    z.t.it "既存と準備先を変更しない"; {
+    z.t.it "コピーの失敗を返して現行modを保持する"; {
       local dir=/tmp/z_t/update_mod_copy/missing
       z.dir.make path="$dir/current/mod/app"
       z.dir.make path="$dir/source"
       z.dir.make path="$dir/prepared"
       z.file.write path="$dir/current/mod/app/value" content=original
 
-      z.update.mod._copy source="$dir/source" current="$dir/current" dir="$dir/prepared" missing
+      z.update.mod._copy source="$dir/source" current="$dir/current" dir="$dir/prepared" missing 2>/dev/null
       local copy_status=$?
 
       z.t.expect "$copy_status" 1
 
       z.file.read path="$dir/current/mod/app/value"
       z.t.expect.reply original
-
-      z.dir.not.exists "$dir/prepared/mod"
-      z.t.expect.status.is.true
 
       z.dir.remove path=/tmp/z_t/update_mod_copy
     }

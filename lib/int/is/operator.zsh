@@ -42,8 +42,6 @@ z.int.is.eq() {
 z.int.is.zero() {
   local value=$1
 
-  z.int.is.match $value || return 1
-
   z.is.eq $value 0
 }
 
@@ -58,8 +56,6 @@ z.int.is.zero() {
 z.int.is.positive() {
   local value=$1
 
-  z.int.is.match $value || return 1
-
   z.int.is.gt $value 0
 }
 
@@ -73,8 +69,6 @@ z.int.is.positive() {
 #  z.int.is.negative -123 && z.io "is negative" || z.io "is not negative"
 z.int.is.negative() {
   local value=$1
-
-  z.int.is.match $value || return 1
 
   z.int.is.lt $value 0
 }

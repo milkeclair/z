@@ -14,7 +14,6 @@ z.update.archive._download() {
 
   z.arg.named branch "$@" default=main
   local branch=$REPLY
-  z.is.null "$branch" && { z.return; return 1; }
 
   local file="$dir/source.tar.gz"
   z.file.exists "$file" && { z.return; return 1; }
@@ -25,8 +24,6 @@ z.update.archive._download() {
     z.return
     return 1
   fi
-
-  z.file.exists "$file" || { z.return; return 1; }
 
   z.return "$file"
 }

@@ -26,7 +26,6 @@ z.is.truthy() {
   local value=$1
 
   z.guard; {
-    z.arg.is.empty $@ && return 1
     z.is.false $value && return 1
   }
 
@@ -68,7 +67,6 @@ z.is.falsy() {
   local value=$1
 
   z.guard; {
-    z.arg.is.empty $@ && return 0
     z.is.true $value && return 1
   }
 
