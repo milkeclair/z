@@ -46,6 +46,9 @@ z.arg.named <Tab>
 # shows docs for z.arg.named
 ```
 
+Docs highlight argument names in cyan, the `REPLY`, `return`, and `example`
+headings in yellow, and indented examples in green. Other text keeps the terminal default color.
+
 Function name completion takes priority.
 For example, `z.arg.n<Tab>` shows function candidates and does not show docs in the same completion attempt.
 
