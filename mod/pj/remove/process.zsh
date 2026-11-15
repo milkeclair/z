@@ -1,35 +1,49 @@
-# select a registered project name without modifying the registry
+# display numbered registration names on standard error
+#
+# $@: project names in display order
+# REPLY: null
+# return: null
+#
+# example:
+#  z.pj.remove._menu first second
+z.pj.remove._menu() {
+  local index=1
+  local name
+  for name in "$@"; do
+    z.io "$index) $name" >&2
+    ((index++))
+  done
+}
+
+# select a registered project without modifying the registry
 #
 # REPLY: selected name, or empty when cancelled
-# return: 0 for selection or cancellation, otherwise 1
+# return: 0|1
 #
 # example:
 #  z.pj.remove._select
 z.pj.remove._select() {
-  z.pj._names
-  local -a names=("${REPLY[@]}")
-  if [[ ${#names} -eq 0 ]]; then
-    print -ru2 -- "No projects registered."
+  z.pj.file._names
+  local names=("${(@)REPLY}")
+  z.arr.count "${names[@]}"
+  if z.int.is.zero $REPLY; then
+    z.io "No projects registered." >&2
     z.return
     return 0
   fi
 
-  local index=1
-  local name
-  for name in "${names[@]}"; do
-    print -ru2 -- "$index) $name"
-    ((index++))
-  done
-  print -nu2 -- "Project number (empty to cancel): "
-  if ! z.io.read || [[ -z $REPLY ]]; then
+  z.pj.remove._menu "${names[@]}"
+  z.io.oneline "Project number (empty to cancel): " >&2
+  if ! z.io.read || z.is.null "$REPLY"; then
     z.return
     return 0
   fi
 
   local selection=$REPLY
-  index=1
+  local index=1
+  local name
   for name in "${names[@]}"; do
-    if [[ $selection == "$index" ]]; then
+    if z.is.eq "$selection" "$index"; then
       REPLY=$name
       return 0
     fi
@@ -38,4 +52,23 @@ z.pj.remove._select() {
   z.io.error "Invalid project number: $selection"
   z.return
   return 1
+}
+
+# delete only the plain registration file for a validated name
+#
+# $1: project name
+# REPLY: null
+# return: 0|1
+#
+# example:
+#  z.pj.remove._entry example
+z.pj.remove._entry() {
+  z.pj.file._path "$1" || return 1
+  local file=$REPLY
+  if ! z.pj.file.is.registration "$file"; then
+    z.io.error "Project is not registered: $1"
+    return 1
+  fi
+
+  rm -- "$file"
 }
