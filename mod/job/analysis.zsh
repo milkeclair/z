@@ -8,7 +8,8 @@
 # example:
 #  z.job.status id=20260623T121530000000000.100.1
 z.job.status() {
-  z.arg.named id "$@" && local id=$REPLY
+  z.arg.named id "$@"
+  local id=$REPLY
   z.is.null "$id" && return 1
 
   z.job.file._path id=$id name=status || return 1

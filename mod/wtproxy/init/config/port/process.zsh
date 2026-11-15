@@ -8,7 +8,8 @@
 # example:
 #  z.wtproxy.init._config.port.value proxy_port_1 proxy_port_1=3000
 z.wtproxy.init._config.port.value() {
-  local key=$1 && shift
+  local key=$1
+  shift
   z.arg.named $key $@
   local value=$REPLY
 

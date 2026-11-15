@@ -23,8 +23,10 @@ z.git.stats() {
 # example:
 #   z.git.stats._show exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
 z.git.stats._show() {
-  z.git.stats._exclude.exts $@ && local exclude_exts=($REPLY)
-  z.git.stats._exclude.dirs $@ && local exclude_dirs=($REPLY)
+  z.git.stats._exclude.exts $@
+  local exclude_exts=($REPLY)
+  z.git.stats._exclude.dirs $@
+  local exclude_dirs=($REPLY)
 
   z.git.stats._exclude exclude_exts="${exclude_exts[*]}" exclude_dirs="${exclude_dirs[*]}"
   z.git.stats._author exclude_exts="${exclude_exts[*]}" exclude_dirs="${exclude_dirs[*]}"
@@ -40,8 +42,11 @@ z.git.stats._show() {
 # example:
 #   z.git.stats._exclude exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
 z.git.stats._exclude() {
-  z.arg.named exclude_exts $@ && local exclude_exts=($REPLY)
-  z.arg.named exclude_dirs $@ && local exclude_dirs=($REPLY)
+  z.arg.named exclude_exts $@
+  local exclude_exts=($REPLY)
+
+  z.arg.named exclude_dirs $@
+  local exclude_dirs=($REPLY)
 
   z.io.line "exclude_exts: ${exclude_exts[*]}" "exclude_dirs: ${exclude_dirs[*]}"
   z.io.line
@@ -57,8 +62,11 @@ z.git.stats._exclude() {
 # example:
 #   z.git.stats._author exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
 z.git.stats._author() {
-  z.arg.named exclude_exts $@ && local exclude_exts=$REPLY
-  z.arg.named exclude_dirs $@ && local exclude_dirs=$REPLY
+  z.arg.named exclude_exts $@
+  local exclude_exts=$REPLY
+
+  z.arg.named exclude_dirs $@
+  local exclude_dirs=$REPLY
 
   z.git.stats._author.header
   z.git.stats._author.body exclude_exts="$exclude_exts" exclude_dirs="$exclude_dirs"

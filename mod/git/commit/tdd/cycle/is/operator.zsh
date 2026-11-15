@@ -8,7 +8,8 @@
 #   z.git.commit.tdd._cycle.is.valid "red" #=> true
 #   z.git.commit.tdd._cycle.is.valid "invalid_cycle" #=> false
 z.git.commit.tdd._cycle.is.valid() {
-  z.git.commit.tdd._cycle.list && local cycle_list="${REPLY[*]}"
+  z.git.commit.tdd._cycle.list
+  local cycle_list="${REPLY[*]}"
   local cycle=$1
   z.str.split str="$cycle_list" delimiter=" "
   local -a cycles=("${(@)REPLY}")

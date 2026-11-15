@@ -43,7 +43,8 @@ z.completion.cache.build._docs() {
 # example:
 #  z.completion.cache.build._result result=/tmp/z/job/result
 z.completion.cache.build._result() {
-  z.arg.named result "$@" && local result=$REPLY
+  z.arg.named result "$@"
+  local result=$REPLY
   z.is.null "$result" && return 1
 
   z.completion.cache._build

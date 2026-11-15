@@ -10,19 +10,29 @@
 # example:
 #  z.job.run._prepare name=example command=z.example.build
 z.job.run._prepare() {
-  z.arg.named name "$@" && local name=$REPLY
-  z.arg.named command "$@" && local command=$REPLY
-  z.arg.named on_success "$@" && local on_success=$REPLY
-  z.arg.named on_failure "$@" && local on_failure=$REPLY
+  z.arg.named name "$@"
+  local name=$REPLY
+
+  z.arg.named command "$@"
+  local command=$REPLY
+
+  z.arg.named on_success "$@"
+  local on_success=$REPLY
+
+  z.arg.named on_failure "$@"
+  local on_failure=$REPLY
 
   z.is.null "$name" && return 1
   z.is.null "$command" && return 1
 
-  z.job.file._jobs && local jobs_dir=$REPLY
+  z.job.file._jobs
+  local jobs_dir=$REPLY
   z.dir.exists "$jobs_dir" || z.dir.make path="$jobs_dir"
 
-  z.job.id._generate && local id=$REPLY
-  z.job.file._dir id="$id" && local dir=$REPLY
+  z.job.id._generate
+  local id=$REPLY
+  z.job.file._dir id="$id"
+  local dir=$REPLY
   z.dir.exists "$dir" || z.dir.make path="$dir"
 
   z.job.meta._write \
@@ -51,8 +61,11 @@ z.job.run._prepare() {
 # example:
 #  z.job.run._spawn id=job dir=/tmp/z/job/123/jobs/job
 z.job.run._spawn() {
-  z.arg.named id "$@" && local id=$REPLY
-  z.arg.named dir "$@" && local dir=$REPLY
+  z.arg.named id "$@"
+  local id=$REPLY
+
+  z.arg.named dir "$@"
+  local dir=$REPLY
 
   z.is.null "$id" && return 1
   z.is.null "$dir" && return 1
@@ -73,8 +86,11 @@ z.job.run._spawn() {
 # example:
 #  z.job.run._child id=job dir=/tmp/z/job/123/jobs/job
 z.job.run._child() {
-  z.arg.named id "$@" && local id=$REPLY
-  z.arg.named dir "$@" && local dir=$REPLY
+  z.arg.named id "$@"
+  local id=$REPLY
+
+  z.arg.named dir "$@"
+  local dir=$REPLY
 
   z.job.meta._read dir="$dir" || return 1
   z.file.write path="$dir/status" content=running

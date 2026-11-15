@@ -22,9 +22,13 @@ z.git.stats._author.header() {
 # example:
 #   z.git.stats._author.body exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
 z.git.stats._author.body() {
-  z.arg.named exclude_exts $@ && local exclude_exts=($REPLY)
-  z.arg.named exclude_dirs $@ && local exclude_dirs=($REPLY)
-  z.git.stats._author.names && local authors=($REPLY)
+  z.arg.named exclude_exts $@
+  local exclude_exts=($REPLY)
+
+  z.arg.named exclude_dirs $@
+  local exclude_dirs=($REPLY)
+  z.git.stats._author.names
+  local authors=($REPLY)
 
   local commit_map=()
   z.git.stats._commit.map authors="${authors[*]}" exclude_exts="${exclude_exts[*]}" exclude_dirs="${exclude_dirs[*]}"
@@ -68,19 +72,33 @@ z.git.stats._author.body() {
 #   z.git.stats._author.show author="milkeclair" commit_count=100 inserted=1000 deleted=1000 total=2000
 #   #=> display a table row for milkeclair with her commit stats
 z.git.stats._author.show() {
-  z.arg.named author $@ && local author=$REPLY
-  z.arg.named commit_count $@ && local commit_count=$REPLY
-  z.arg.named inserted $@ && local inserted=$REPLY
-  z.arg.named deleted $@ && local deleted=$REPLY
-  z.arg.named total $@ && local total=$REPLY
+  z.arg.named author $@
+  local author=$REPLY
+
+  z.arg.named commit_count $@
+  local commit_count=$REPLY
+
+  z.arg.named inserted $@
+  local inserted=$REPLY
+
+  z.arg.named deleted $@
+  local deleted=$REPLY
+
+  z.arg.named total $@
+  local total=$REPLY
 
   z.is.null $author && author="Everyone"
 
-  z.str.color red && local red=$REPLY
-  z.str.color green && local green=$REPLY
-  z.str.color yellow && local yellow=$REPLY
-  z.str.color magenta && local magenta=$REPLY
-  z.str.color reset && local reset=$REPLY
+  z.str.color red
+  local red=$REPLY
+  z.str.color green
+  local green=$REPLY
+  z.str.color yellow
+  local yellow=$REPLY
+  z.str.color magenta
+  local magenta=$REPLY
+  z.str.color reset
+  local reset=$REPLY
 
   # %-20s: ljust 20 for string
   # %-10d: ljust 10 for digit

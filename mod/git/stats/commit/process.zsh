@@ -10,9 +10,14 @@
 #   z.git.stats._commit.map authors=("Alice" "Bob") exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
 #   #=> REPLY=("Alice:1000 500:50" "Bob:800 300:40")
 z.git.stats._commit.map() {
-  z.arg.named authors $@ && local authors_raw=$REPLY
-  z.arg.named exclude_exts $@ && local exclude_exts=($REPLY)
-  z.arg.named exclude_dirs $@ && local exclude_dirs=($REPLY)
+  z.arg.named authors $@
+  local authors_raw=$REPLY
+
+  z.arg.named exclude_exts $@
+  local exclude_exts=($REPLY)
+
+  z.arg.named exclude_dirs $@
+  local exclude_dirs=($REPLY)
 
   local authors=()
   if z.is.not.null "$authors_raw"; then
@@ -26,7 +31,8 @@ z.git.stats._commit.map() {
     z.git.stats._commit.details author="$author" exclude_exts=$exclude_exts exclude_dirs=$exclude_dirs
     z.str.split str="$REPLY" delimiter=" "
     local details=($REPLY)
-    z.git.stats._commit.count "$author" && local count=$REPLY
+    z.git.stats._commit.count "$author"
+    local count=$REPLY
 
     if z.int.is.not.zero $count; then
       local details_str="${details[1]} ${details[2]}"
@@ -48,16 +54,23 @@ z.git.stats._commit.map() {
 # example:
 #   z.git.stats._commit.details author="milkeclair" exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
 z.git.stats._commit.details() {
-  z.arg.named author $@ && local author=$REPLY
-  z.arg.named exclude_exts $@ && local exclude_exts_raw=$REPLY
-  z.arg.named exclude_dirs $@ && local exclude_dirs_raw=$REPLY
+  z.arg.named author $@
+  local author=$REPLY
+
+  z.arg.named exclude_exts $@
+  local exclude_exts_raw=$REPLY
+
+  z.arg.named exclude_dirs $@
+  local exclude_dirs_raw=$REPLY
 
   z.git.stats._commit.details.excludes exclude_exts=$exclude_exts_raw exclude_dirs=$exclude_dirs_raw
-  z.arr.split "$REPLY" && local patterns=($REPLY)
+  z.arr.split "$REPLY"
+  local patterns=($REPLY)
   local exclude_exts_pattern=$patterns[1]
   local exclude_dirs_pattern=$patterns[2]
 
-  local inserted_total=0 && local deleted_total=0
+  local inserted_total=0
+  local deleted_total=0
   local log=$(
     git log --pretty=tformat: --numstat --author="$author" |
       grep -v -E "$exclude_exts_pattern|$exclude_dirs_pattern"
@@ -86,8 +99,11 @@ z.git.stats._commit.details() {
 #   z.git.stats._commit.sum_lines inserted=1000 deleted=500
 #   #=> 1500
 z.git.stats._commit.sum_lines() {
-  z.arg.named inserted $@ && local inserted=$REPLY
-  z.arg.named deleted $@ && local deleted=$REPLY
+  z.arg.named inserted $@
+  local inserted=$REPLY
+
+  z.arg.named deleted $@
+  local deleted=$REPLY
 
   z.is.null "$inserted" && inserted=0
   z.is.null "$deleted" && deleted=0
