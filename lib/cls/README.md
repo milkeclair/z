@@ -143,6 +143,7 @@ Function-name entries and instance state still scale with the number of
 instances and attributes. Method attribute copying remains proportional to the
 attribute count and value size. Deleting instances releases their state, commands
 and inactive-state entries.
+
 After the last instance is deleted, empty instance tables are rebuilt to release
 their capacity and unset lookup entries. Class definitions and shared command
 programs remain cached for the shell session.

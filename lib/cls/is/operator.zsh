@@ -4,8 +4,12 @@
 # REPLY: unchanged
 # return: 0|1
 z.cls.is.name() {
+  local name=${1:-}
   local pattern='^[A-Za-z_][A-Za-z0-9_]*$'
-  [[ ${1:-} =~ $pattern && $1 != z_cls_* && $1 != __z_cls_* ]]
+
+  z.str.is.match "$name" "$pattern" &&
+    ! z.str.start_with "$name" z_cls_ &&
+    ! z.str.start_with "$name" __z_cls_
 }
 
 # Check that an attribute can be restored as an ordinary local parameter.
@@ -15,5 +19,7 @@ z.cls.is.name() {
 # return: 0|1
 z.cls.is.attribute() {
   z.cls.is.name "${1:-}" &&
-    [[ $1 != REPLY && $1 != reply && ${parameters[$1]:-} != *special* ]]
+    z.is.not.eq "$1" REPLY &&
+    z.is.not.eq "$1" reply &&
+    z.str.excludes "${parameters[$1]:-}" special
 }

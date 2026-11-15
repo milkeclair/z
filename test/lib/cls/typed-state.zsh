@@ -6,6 +6,7 @@ z.cls.draw TypedState; {
   z.cls.attr missing initial
   z.cls.attr plain initial
 
+
   z.cls.fn fill
     unset table
     typeset -gA table=("space key" "value words" empty "")
@@ -15,6 +16,7 @@ z.cls.draw TypedState; {
     unset missing
     plain=$'quote\' slash\\ newline\n$(print SHOULD_NOT_RUN)'
   z.cls.fn.done
+
 
   z.cls.fn verify
     [[ ${table[space key]} == "value words" && ${table[empty]} == "" ]] || return 1
@@ -28,6 +30,7 @@ z.cls.draw TypedState; {
     [[ $plain == $'quote\' slash\\ newline\n$(print SHOULD_NOT_RUN)' ]] || return 1
     REPLY=preserved
   z.cls.fn.done
+
 
   z.cls.drew
 }

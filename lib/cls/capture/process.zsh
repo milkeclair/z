@@ -12,13 +12,15 @@ z.cls.capture.start() {
   typeset -g z_cls_debug_function="${functions[TRAPDEBUG]-}"
   typeset -g z_cls_debug_has_function=${+functions[TRAPDEBUG]} z_cls_debug_trap=''
   typeset -g z_cls_debug_before=$options[debugbeforecmd] z_cls_debug_localtraps=$options[localtraps]
+
   local trap_line
-  local -a trap_words
+
   for trap_line in "${(@f)$(trap)}"; do
-    [[ $trap_line == 'trap -- '* ]] || continue
-    trap_words=(${(z)trap_line})
-    [[ $trap_words[4] == DEBUG ]] && z_cls_debug_trap=$trap_line
+    z.str.start_with "$trap_line" 'trap -- ' || continue
+    local -a trap_words=(${(z)trap_line})
+    z.is.eq "$trap_words[4]" DEBUG && z_cls_debug_trap=$trap_line
   done
+
   unsetopt localtraps
   setopt debugbeforecmd
   functions[TRAPDEBUG]='unsetopt localoptions; z.cls.capture.debug "$ZSH_DEBUG_CMD"'
@@ -30,16 +32,19 @@ z.cls.capture.start() {
 # REPLY: unchanged
 # return: 0
 z.cls.capture.stop() {
-  [[ -n ${z_cls_capture_method:-} ]] || return 0
+  z.is.not.null "${z_cls_capture_method:-}" || return 0
   z_cls_capture_method=''
   trap - DEBUG
-  if [[ $z_cls_debug_has_function == 1 ]]; then
+
+  if z.is.eq "$z_cls_debug_has_function" 1; then
     functions[TRAPDEBUG]=$z_cls_debug_function
-  elif [[ -n $z_cls_debug_trap ]]; then
+  elif z.is.not.null "$z_cls_debug_trap"; then
     eval "$z_cls_debug_trap"
   fi
-  [[ $z_cls_debug_before == on ]] || unsetopt debugbeforecmd
-  [[ $z_cls_debug_localtraps == off ]] || setopt localtraps
+
+  z.is.eq "$z_cls_debug_before" on || unsetopt debugbeforecmd
+  z.is.eq "$z_cls_debug_localtraps" off || setopt localtraps
+
   return 0
 }
 
@@ -50,15 +55,17 @@ z.cls.capture.stop() {
 # REPLY: unchanged
 # return: 0
 z.cls.capture.debug() {
-  [[ -n ${z_cls_capture_method:-} ]] || return 0
-  if [[ ${(j:|:)funcstack[3,-1]} != "$z_cls_capture_stack" ||
-        $1 == z.cls.drew || $1 == z.cls.abort ]]; then
+  z.is.not.null "${z_cls_capture_method:-}" || return 0
+
+  if z.is.not.eq "${(j:|:)funcstack[3,-1]}" "$z_cls_capture_stack" ||
+      z.is.eq "$1" z.cls.drew || z.is.eq "$1" z.cls.abort; then
     z.cls.abort
     z.io.error "Unfinished class method in $z_cls_capture_file; definition discarded."
     return 0
   fi
-  if [[ $1 == z.cls.fn.done ]]; then
-    if [[ $z_cls_capture_discard == 1 ]]; then
+
+  if z.is.eq "$1" z.cls.fn.done; then
+    if z.is.eq "$z_cls_capture_discard" 1; then
       z.cls.abort
       z_cls_capture_done_result=1
     else

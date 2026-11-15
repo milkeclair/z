@@ -8,6 +8,8 @@
 #  z.cls.fn.done
 z.cls.fn.done() {
   local result=${z_cls_capture_done_result:-0}
+
   unset z_cls_capture_done_result
+
   return $result
 }
