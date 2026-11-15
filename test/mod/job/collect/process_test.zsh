@@ -42,6 +42,97 @@ z.t.describe "z.job.collect._one"; {
     }
   }
 
+  z.t.context "queued jobのpidが生きている場合"; {
+    z.t.it "起動中の子を失敗扱いにせず待機する"; {
+      local fixture=$(mktemp -d /tmp/z_queued_live.XXXXXX)
+      local dir="$fixture/jobs/job-1"
+      z.dir.make path="$dir"
+      z.job.meta._write id=job-1 name=example command=z.is.not.null dir="$dir"
+      z.file.write path="$dir/status" content=queued
+      z.file.write path="$dir/pid" content=$$
+
+      z.job.collect._one dir="$dir"
+      local collect_status=$?
+      local collected_id=$REPLY
+
+      z.t.expect "$collect_status" 0
+      REPLY=$collected_id
+      z.t.expect.reply.is.null
+      z.file.read path="$dir/status"
+      z.t.expect.reply queued
+      z.dir.exists "$dir"
+      z.t.expect.status.is.true
+      z.dir.remove path="$fixture"
+    }
+  }
+
+  z.t.context "子の初期化中に終了したqueued job"; {
+    z.t.it "実際の起動失敗をfailureとして回収してcallbackを呼ぶ"; {
+      local fixture=$(mktemp -d /tmp/z_queued_boot_failure.XXXXXX)
+      local dir="$fixture/jobs/job-1"
+      local callback_file="$fixture/failure-called"
+      z.dir.make path="$dir"
+      z.dir.make path="$fixture/partial-install"
+      z.file.write path="$fixture/partial-install/main.zsh" content=":"
+      z.t.mock name="z_job_queued_failure" behavior="z.file.write path=\"$callback_file\" content=failed"
+      z.job.meta._write id=job-1 name=example command=z.is.not.null on_failure=z_job_queued_failure dir="$dir"
+      z.file.write path="$dir/status" content=queued
+      z.file.write path="$dir/exit" content=""
+
+      () {
+        local z_root="$fixture/partial-install"
+        z.job.run._spawn id=job-1 dir="$dir"
+      }
+      local child_pid=$REPLY
+      z.file.write path="$dir/pid" content="$child_pid"
+      local attempts=0
+      while kill -0 "$child_pid" >/dev/null 2>&1 && z.int.is.lt $attempts 40; do
+        sleep 0.05
+        ((attempts++))
+      done
+
+      z.job.collect._one dir="$dir"
+      local collect_status=$?
+      local collected_id=$REPLY
+
+      z.t.expect "$collect_status" 0
+      REPLY=$collected_id
+      z.t.expect.reply job-1
+      z.file.read path="$callback_file"
+      z.t.expect.reply failed
+      z.dir.not.exists "$dir"
+      z.t.expect.status.is.true
+      z.dir.remove path="$fixture"
+    }
+  }
+
+  z.t.context "pidの確認中にqueuedからsuccessへ遷移した場合"; {
+    z.t.it "保存済みのsuccessをfailureで上書きしない"; {
+      local fixture=$(mktemp -d /tmp/z_queued_finished.XXXXXX)
+      local dir="$fixture/jobs/job-1"
+      local callback_file="$fixture/success-called"
+      z.dir.make path="$dir"
+      z.t.mock name="z_job_queued_success" behavior="z.file.write path=\"$callback_file\" content=success"
+      z.job.meta._write id=job-1 name=example command=z.is.not.null on_success=z_job_queued_success dir="$dir"
+      z.file.write path="$dir/status" content=queued
+      z.file.write path="$dir/pid" content=999999999
+      z.t.mock name="kill" behavior="z.file.write path=\"$dir/status\" content=success; z.file.write path=\"$dir/exit\" content=0; return 1"
+
+      z.job.collect._one dir="$dir"
+      local collect_status=$?
+      local collected_id=$REPLY
+
+      z.t.expect "$collect_status" 0
+      REPLY=$collected_id
+      z.t.expect.reply job-1
+      z.file.read path="$callback_file"
+      z.t.expect.reply success
+      z.dir.not.exists "$dir"
+      z.t.expect.status.is.true
+      z.dir.remove path="$fixture"
+    }
+  }
+
   z.t.context "running jobのpidが生きている場合"; {
     z.t.it "collectしない"; {
       z.job.file._root

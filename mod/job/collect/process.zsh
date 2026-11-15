@@ -19,20 +19,26 @@ z.job.collect._one() {
   z.file.read path="$dir/status"
   local job_status=$REPLY
 
-  if z.is.eq "$job_status" "running"; then
-    z.job.is.running id="$id" && {
+  if z.is.eq "$job_status" queued || z.is.eq "$job_status" running; then
+    local pid=""
+    z.file.read path="$dir/pid" && pid=$REPLY
+    if z.is.eq "$job_status" queued && z.is.null "$pid"; then
       z.return
       return 0
-    }
-    z.file.write path="$dir/exit" content=1
-    z.file.write path="$dir/status" content=failure
-    job_status=failure
+    fi
+    if z.is.not.null "$pid" && kill -0 "$pid" >/dev/null 2>&1; then
+      z.return
+      return 0
+    fi
+
+    z.file.read path="$dir/status" && job_status=$REPLY
+    if z.is.eq "$job_status" queued || z.is.eq "$job_status" running; then
+      z.file.write path="$dir/exit" content=1
+      z.file.write path="$dir/status" content=failure
+      job_status=failure
+    fi
   fi
 
-  z.is.eq "$job_status" "queued" && {
-    z.return
-    return 0
-  }
   if z.is.not.eq "$job_status" "success" && z.is.not.eq "$job_status" "failure"; then
     z.return
     return 0

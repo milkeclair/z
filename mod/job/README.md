@@ -187,8 +187,11 @@ Job statuses:
 - `success`
 - `failure`
 
-`z.job.collect` skips `queued` jobs and live `running` jobs.
-If a `running` job no longer has a live process, it is collected as `failure`.
+`z.job.collect` waits for `queued` jobs until their child PID is registered, and
+skips jobs whose child process is still alive. If a `queued` or `running` job has
+a recorded PID that is no longer alive, it is collected as `failure`. The status
+is checked again before marking failure so a child that finished during the
+liveness check keeps its saved success or failure result.
 
 ## Files
 
