@@ -284,6 +284,8 @@ Mod dependencies are resolved and installed first.
 
 ### List of Mods
 
+- `z.pj`
+  - Named project directories and VS Code launcher. [README](mod/pj/README.md)
 - `z.git`
   - Git command modifier. [README](mod/git/README.md)
 - `z.wtproxy`
