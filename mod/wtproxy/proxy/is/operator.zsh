@@ -31,7 +31,6 @@ z.wtproxy._proxy.is.pid() {
   z.is.null "$pid" && return 1
   z.io.null kill -0 "$pid" || return 1
 
-  local command_line
-  command_line=$(ps -p "$pid" -o command= 2>/dev/null) || return 1
+  local command_line=$(ps -p "$pid" -o command= 2>/dev/null)
   z.str.includes "$command_line" "z.wtproxy.start._serve"
 }
