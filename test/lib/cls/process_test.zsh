@@ -2,6 +2,10 @@ source ${z_main}
 
 z.t.describe "z.cls"; {
   z.t.context "sourceでクラスを定義する場合"; {
+    z.t.it "大量削除後も生存中の参照とクラス定義、ユーザー関数を保持する"; {
+      zsh -f "$z_root/test/lib/cls/scenarios.zsh" cleanup-recreate
+      z.t.expect.status.is.true
+    }
     z.t.it "本体の実行を保留し、制御構文と呼出元の変数を保つ"; {
       zsh -f "$z_root/test/lib/cls/scenarios.zsh" capture
       z.t.expect.status.is.true

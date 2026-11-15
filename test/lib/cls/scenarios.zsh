@@ -240,6 +240,40 @@ child_instance.increment
     first.increment
     [[ $REPLY == 1 ]] || scenario.fail "capture failed with list trap"
     ;;
+  cleanup-recreate)
+    source "$Z_ROOT/test/lib/cls/counter.zsh"
+    local -a saved_refs=()
+    local index reference
+    # 同名localの参照をスコープ外に保持し、一部だけを先に削除する。
+    for (( index=1; index<=72; index++ )); do
+      () {
+        local object
+        z.cls.new TestCounter object || scenario.fail create
+        saved_refs+=("$object")
+      }
+    done
+    for reference in "${(@)saved_refs[1,36]}"; do
+      z.cls.delete "$reference" || scenario.fail "partial cleanup"
+    done
+    reference=$saved_refs[37]
+    "$reference.count.set" 42
+    "$reference.value"
+    [[ $REPLY == 42 ]] || scenario.fail "live state lost during cleanup"
+    object.increment() { REPLY=custom; }
+    for reference in "${(@)saved_refs[37,72]}"; do
+      z.cls.delete "$reference" || scenario.fail "final cleanup"
+    done
+    object.increment
+    [[ $REPLY == custom ]] || scenario.fail "user replacement removed"
+    (( ${+functions[$reference.value]} == 0 )) || scenario.fail "deleted reference callable"
+    () {
+      local fresh
+      z.cls.new TestCounter fresh || scenario.fail "class definition lost"
+      fresh.increment
+      [[ $REPLY == 1 ]] || scenario.fail "cached program lost or old state reused"
+      z.cls.delete fresh || scenario.fail "recreated instance cleanup"
+    }
+    ;;
   lifecycle)
     source "$Z_ROOT/test/lib/cls/counter.zsh"
     z.cls.new TestCounter first

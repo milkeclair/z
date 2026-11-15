@@ -141,6 +141,12 @@ exact registered programs before cleanup.
 
 Function-name entries and instance state still scale with the number of
 instances and attributes. Method attribute copying remains proportional to the
-attribute count and value size. Deleting instances releases their logical
-state and commands; Zsh may retain allocated process memory. Shared command
+attribute count and value size. Deleting instances releases their state, commands
+and inactive-state entries.
+After the last instance is deleted, empty instance tables are rebuilt to release
+their capacity and unset lookup entries. Class definitions and shared command
 programs remain cached for the shell session.
+
+The allocator may keep freed memory for reuse by the same Zsh process, so RSS
+need not return to its startup value. Process exit releases all of its memory.
+Runtime cleanup uses ordinary Zsh and requires no native module.

@@ -229,6 +229,16 @@ z.cls.delete() {
   for __z_cls_member in ${=z_cls_class_attrs[${z_cls_instances[$__z_cls_id]}]}; do
     unset "z_cls_values[$__z_cls_id:$__z_cls_member]"
   done
-  unset "z_cls_instances[$__z_cls_id]" "z_cls_members[$__z_cls_id]"
+  # 未設定の要素参照でも管理ノードが残るため、activeも明示的に削除する。
+  unset "z_cls_instances[$__z_cls_id]" "z_cls_members[$__z_cls_id]" "z_cls_active[$__z_cls_id]"
+  if (( ${#z_cls_instances} == 0 )); then
+    # 全実体の削除後に空テーブルを作り直し、バケットと未設定ノードを解放する。
+    z_cls_instances=()
+    z_cls_values=()
+    z_cls_members=()
+    z_cls_active=()
+    z_cls_wrapper_refs=()
+    z_cls_wrapper_bodies=()
+  fi
   return 0
 }
