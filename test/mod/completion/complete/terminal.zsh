@@ -1,6 +1,5 @@
-if [[ "$1" == initialize ]]; then
+if z.is.eq "$1" initialize; then
   z_mode=normal
-  source "$Z_ROOT/main.zsh" || return 1
   cd "$Z_ROOT" || return 1
   stty cols 120 rows 40
   PROMPT=""
@@ -22,12 +21,12 @@ if [[ "$1" == initialize ]]; then
   # run the real completion system and report its match and display counts
   z92_complete() {
     _main_complete
-    print -r -- "Z92_RESULT:${compstate[nmatches]}:${compstate[list_lines]}:Z92_END"
+    z.io "Z92_RESULT:${compstate[nmatches]}:${compstate[list_lines]}:Z92_END"
   }
   zle -C z92-complete complete-word z92_complete
   bindkey '^I' z92-complete
 
-  # clear the input after reporting it so the next case starts at an empty prompt
+  # report literal buffer text, then clear the input for the next case
   z92_buffer() {
     print -r -- "Z92_BUFFER:${BUFFER}:Z92_END"
     BUFFER=""
@@ -49,10 +48,10 @@ z92_terminal_start() {
   zpty -b completion_terminal env TERM=xterm z_mode=normal zsh -dfi || return 1
   local terminal_fd=$REPLY
 
-  zpty -w completion_terminal 'source "$Z_ROOT/test/mod/completion/complete/terminal.zsh" initialize; print Z92_READY'
+  zpty -w completion_terminal 'source "$Z_ROOT/main.zsh" && source "$Z_ROOT/test/mod/completion/complete/terminal.zsh" initialize && z.io Z92_READY'
   z92_terminal_read "$terminal_fd" $'\r\nZ92_READY\r\n' || return 1
 
-  REPLY=$terminal_fd
+  z.return "$terminal_fd"
 }
 
 # read terminal output until a marker arrives within five seconds
@@ -68,9 +67,9 @@ z92_terminal_read() {
   local output=""
   local chunk=""
 
-  while [[ "$output" != *"$marker"* ]]; do
+  while z.str.excludes "$output" "$marker"; do
     local -i remaining=$(((deadline - EPOCHREALTIME) * 100))
-    if (( remaining <= 0 )) || ! zpty -t completion_terminal ||
+    if z.int.is.lteq "$remaining" 0 || ! zpty -t completion_terminal ||
       ! zselect -r "$terminal_fd" -t "$remaining"; then
       z.io.error "completion terminal timed out: $output"
       return 1
@@ -81,7 +80,7 @@ z92_terminal_read() {
     done
   done
 
-  REPLY=$output
+  z.return "$output"
 }
 
 # complete one input using isolated aliases, styles and command search paths
@@ -100,13 +99,12 @@ z92_terminal() {
   z.arg.named command_path "$@" && local command_path=$REPLY
   local result=""
   local buffer=""
-  local prepare="PATH=${(q)command_path}
-    hash -r
-    unalias z.fixture.alias fixture-command 2>/dev/null
-    zstyle -d ':completion:*:z-functions' ignored-patterns
-    $setup
-    print Z92_READY"
+  local prepare="PATH=${(q)command_path}; hash -r; "
+  prepare+="unalias z.fixture.alias fixture-command 2>/dev/null; "
+  prepare+="zstyle -d ':completion:*:z-functions' ignored-patterns"
+  prepare+=$'\n'"$setup"$'\n'"z.io Z92_READY"
 
+  local phase=""
   for phase in preparation completion buffer; do
     case $phase in
       preparation)
@@ -127,11 +125,19 @@ z92_terminal() {
     local output=$REPLY
 
     case $phase in
-      completion) result=${${output##*Z92_RESULT:}%%:Z92_END*} ;;
-      buffer) buffer=${${output##*Z92_BUFFER:}%%:Z92_END*} ;;
+      completion)
+        z.str.partition "$output" Z92_RESULT:
+        z.str.partition "$REPLY[2]" :Z92_END
+        result=$REPLY[1]
+        ;;
+      buffer)
+        z.str.partition "$output" Z92_BUFFER:
+        z.str.partition "$REPLY[2]" :Z92_END
+        buffer=$REPLY[1]
+        ;;
     esac
   done
 
-  print -r -- "matches:lines=$result"
+  z.io "matches:lines=$result"
   print -r -- "buffer=$buffer"
 }
