@@ -1,8 +1,8 @@
-# pj
+# z.pj
 
 Register named project directories and open them in Visual Studio Code.
 
-## Install
+## Installation
 
 ```zsh
 z.install.mod pj
