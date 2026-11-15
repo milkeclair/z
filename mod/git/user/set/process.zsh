@@ -16,7 +16,7 @@ z.git.user.set() {
 # $1: user.name value
 # $2: user.email value
 # REPLY: null
-# return: null
+# return: 0|1
 #
 # example:
 #   z.git.user.set.local "milkeclair" "milkeclair@example.com"
@@ -24,8 +24,8 @@ z.git.user.set.local() {
   z.io "--- set local user info ---"
   z.git.user.set._arg.is.enough "$1" "$2" || return 1
 
-  git config --local user.name "$1"
-  git config --local user.email "$2"
+  git config --local user.name "$1" || return 1
+  git config --local user.email "$2" || return 1
   z.io "set user.name: $1"
   z.io "set user.email: $2"
 }

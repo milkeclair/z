@@ -228,6 +228,16 @@ z.git.user.set "milkeclair" "milkeclair@example.com"
 z.git.user.set.global "milkeclair" "milkeclair@example.com"
 ```
 
+- `z.git.user.set.from.global`
+  - copy global `user.name` and `user.email` into the current repository's local configuration
+
+```zsh
+z.git.user.set.from.global
+```
+
+Both global values must be set and non-empty. If either value is missing, the existing local identity is preserved.
+Global values and unrelated local configuration remain unchanged. Configuration write failures return a non-zero status.
+
 ### wt
 
 - `z.git.wt.current.root`
