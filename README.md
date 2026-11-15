@@ -21,6 +21,10 @@ Git checkouts are updated with Git.
 `z.install` replaces the core while preserving installed mods.
 Use `z.install.mod <mod_name>` to update a single mod.
 
+`z.install.mod.list` lists available and installed mods: green for installed,
+orange for different contents, and red for not installed. It compares against
+`Z_INSTALL_BRANCH` (default: `main`); local edits also appear orange.
+
 ### Uninstall
 
 `z.uninstall`

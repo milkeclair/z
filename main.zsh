@@ -9,6 +9,7 @@ local -A z_modules=(
   [file]="operator:process"
   [fn]="analysis:operator:process"
   [hash]="analysis:operator:process"
+  [install]="process"
   [int]="operator"
   [io]="process"
   [mode]="process"
@@ -42,6 +43,7 @@ local z_module_depends_order=(
   str
   t
   update
+  install
 )
 
 local -A loaded_files=()
