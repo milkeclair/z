@@ -322,6 +322,38 @@ describe('server@hydration stdio', () => {
     }
   }, 15000);
 
+  test('引用した名前付き引数の診断・署名・hoverを実サーバーで返す', async () => {
+    const root = fixture();
+    const caller = pathToFileURL(path.join(root, 'caller.zsh')).href;
+    fs.writeFileSync(path.join(root, 'definition.zsh'), [
+      '# $1: first', '# $message: error message',
+      'z.t._log.failure.handle() { print "$1" "$message" }', '',
+    ].join('\n'));
+    const client = startServer();
+    const source = 'z.t._log.failure.handle "message=failed: expected [ $expect_display ] but got [ $actual_display ]" first\n';
+    const request = () => bounded(client.connection.sendRequest(DocumentDiagnosticRequest.type, {
+      textDocument: { uri: caller },
+    }));
+    try {
+      await client.initialize(root, false);
+      await client.open(caller, source);
+      expect(await request()).toMatchObject({ kind: 'full', items: [] });
+      const position = { line: 0, character: source.indexOf('expected') };
+      expect(await bounded(client.connection.sendRequest(SignatureHelpRequest.type, {
+        textDocument: { uri: caller }, position,
+      }))).toMatchObject({ activeParameter: 1, signatures: [{ activeParameter: 1 }] });
+      expect(await bounded(client.connection.sendRequest(HoverRequest.type, {
+        textDocument: { uri: caller }, position,
+      }))).toMatchObject({ contents: { value: expect.stringContaining('error message') } });
+      await client.edit(caller, 'z.t._log.failure.handle first\n', 2);
+      expect(await request()).toMatchObject({ kind: 'full', items: [{
+        code: 'missing-named-argument', message: 'Missing required named argument: message',
+      }] });
+    } finally {
+      await client.close();
+    }
+  }, 15000);
+
   test('AST診断・環境解決・抑制・依存先変更を実サーバーで反映する', async () => {
     const root = fixture();
     const definition = path.join(root, 'definition.zsh');
