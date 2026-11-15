@@ -55,7 +55,7 @@ z.t.describe "z.update.mod._resolve"; {
 
   z.t.context "source引数がない場合"; {
     z.t.it "失敗する"; {
-      z.update.mod._resolve app
+      z.update.mod._resolve app # zls: ignore missing-named-argument
       local resolve_status=$?
       local result=$REPLY
 

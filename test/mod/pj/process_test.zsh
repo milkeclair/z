@@ -231,10 +231,10 @@ z.t.describe "z.pj.add"; {
       local XDG_CONFIG_HOME="$fixture_root/missing_args"
       z.t.mock name=z.io.error
 
-      z.pj.add dir="$fixture_root"
+      z.pj.add dir="$fixture_root" # zls: ignore missing-named-argument
 
       z.t.expect.status.is.false skip_unmock=true
-      z.pj.add name=example
+      z.pj.add name=example # zls: ignore missing-named-argument
 
       z.t.expect.status.is.false skip_unmock=true
       z.pj.add name=../outside dir="$fixture_root"

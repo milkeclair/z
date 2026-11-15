@@ -35,13 +35,13 @@ z.t.describe "z.update.installation._replace"; {
     z.t.it "mvを実行しない"; {
       z.t.mock name=mv
 
-      z.update.installation._replace prepared=/tmp/prepared backup=/tmp/previous
+      z.update.installation._replace prepared=/tmp/prepared backup=/tmp/previous # zls: ignore missing-named-argument
       local missing_dir=$?
 
-      z.update.installation._replace dir=/tmp/current backup=/tmp/previous
+      z.update.installation._replace dir=/tmp/current backup=/tmp/previous # zls: ignore missing-named-argument
       local missing_prepared=$?
 
-      z.update.installation._replace dir=/tmp/current prepared=/tmp/prepared
+      z.update.installation._replace dir=/tmp/current prepared=/tmp/prepared # zls: ignore missing-named-argument
       local missing_backup=$?
 
       z.t.mock.result name=mv
@@ -240,7 +240,7 @@ z.t.describe "z.update.installation._reload"; {
 
   z.t.context "dir引数がない場合"; {
     z.t.it "失敗する"; {
-      z.update.installation._reload
+      z.update.installation._reload # zls: ignore missing-named-argument
 
       z.t.expect.status.is.false
     }
