@@ -61,9 +61,7 @@ z.git.commit() {
   z.group "extract arguments"; {
     z.git.commit._arg.extract $@
     local -A args=("${(@)REPLY}")
-    local tag=$args[tag]
-    local message=$args[message]
-    local ticket=$args[ticket]
+    local tag=$args[tag] && local message=$args[message] && local ticket=$args[ticket]
 
     z.git.commit._arg.extract.opts "${(@kv)args}"
     local opts=(${(@)REPLY})
@@ -93,8 +91,7 @@ z.git.commit() {
 # example:
 #   z.git.commit.tdd red feat "add new feature" TICKET-123 -ca -ae
 z.git.commit.tdd() {
-  local cycle=$1
-  shift
+  local cycle=$1 && shift
 
   z.git.commit.tdd._cycle.is.valid $cycle || return 1
   z.git.commit._arg.is.enough $@ || return 1
@@ -102,9 +99,7 @@ z.git.commit.tdd() {
   z.group "extract arguments"; {
     z.git.commit._arg.extract $@
     local -A args=("${(@)REPLY}")
-    local tag=$args[tag]
-    local message=$args[message]
-    local ticket=$args[ticket]
+    local tag=$args[tag] && local message=$args[message] && local ticket=$args[ticket]
 
     z.git.commit._arg.extract.opts "${(@kv)args}"
     local opts=(${(@)REPLY})
@@ -131,8 +126,7 @@ z.git.commit.tdd() {
 # example:
 #   z.git.commit._with_committer "feat: add new feature" -ca
 z.git.commit._with_committer() {
-  local message=$1
-  shift
+  local message=$1 && shift
 
   z.git.commit._opts.extract $@
   local opts=(${(@)REPLY})
@@ -149,8 +143,7 @@ z.git.commit._with_committer() {
 # example:
 #   z.git.commit.help
 z.git.commit.help() {
-  z.git.commit._tag.list
-  local tags=$REPLY
+  z.git.commit._tag.list && local tags=$REPLY
 
   z.io.empty
   z.io indent=1 "Usage:"

@@ -8,8 +8,7 @@
 # example:
 #   z.git.stats._exclude.exts exclude_exts=("md" "txt") #=> ("md" "txt")
 z.git.stats._exclude.exts() {
-  z.arg.named exclude_exts $@
-  local exts=($REPLY)
+  z.arg.named exclude_exts $@ && local exts=($REPLY)
   if z.is.null $REPLY; then
     exts=(
       log
@@ -30,8 +29,7 @@ z.git.stats._exclude.exts() {
 # example:
 #   z.git.stats._exclude.dirs exclude_dirs=("docs" "tests") #=> ("docs" "tests")
 z.git.stats._exclude.dirs() {
-  z.arg.named exclude_dirs $@
-  local dirs=($REPLY)
+  z.arg.named exclude_dirs $@ && local dirs=($REPLY)
   if z.is.null $REPLY; then
     dirs=(
       node_modules

@@ -7,8 +7,7 @@
 # example:
 #  z.job.is.running id=20260623T121530000000000.100.1
 z.job.is.running() {
-  z.arg.named id "$@"
-  local id=$REPLY
+  z.arg.named id "$@" && local id=$REPLY
   z.is.null "$id" && return 1
 
   z.job.status id="$id" >/dev/null || return 1

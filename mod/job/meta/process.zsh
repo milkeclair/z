@@ -12,23 +12,12 @@
 # example:
 #  z.job.meta._write id=job name=example command=z.example.run dir=/tmp/job
 z.job.meta._write() {
-  z.arg.named id "$@"
-  local id=$REPLY
-
-  z.arg.named name "$@"
-  local name=$REPLY
-
-  z.arg.named command "$@"
-  local command=$REPLY
-
-  z.arg.named on_success "$@"
-  local on_success=$REPLY
-
-  z.arg.named on_failure "$@"
-  local on_failure=$REPLY
-
-  z.arg.named dir "$@"
-  local dir=$REPLY
+  z.arg.named id "$@" && local id=$REPLY
+  z.arg.named name "$@" && local name=$REPLY
+  z.arg.named command "$@" && local command=$REPLY
+  z.arg.named on_success "$@" && local on_success=$REPLY
+  z.arg.named on_failure "$@" && local on_failure=$REPLY
+  z.arg.named dir "$@" && local dir=$REPLY
 
   local lines=()
   lines+=("z_job_id=${(qqq)id}")
@@ -53,8 +42,7 @@ z.job.meta._write() {
 # example:
 #  z.job.meta._read dir=/tmp/z/job/123/jobs/id
 z.job.meta._read() {
-  z.arg.named dir "$@"
-  local dir=$REPLY
+  z.arg.named dir "$@" && local dir=$REPLY
   z.is.null "$dir" && return 1
 
   local meta_file="$dir/meta"

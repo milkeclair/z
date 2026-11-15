@@ -10,17 +10,10 @@
 # example:
 #  z.job.run._validate name=example command=z.example.build
 z.job.run._validate() {
-  z.arg.named name "$@"
-  local name=$REPLY
-
-  z.arg.named command "$@"
-  local command=$REPLY
-
-  z.arg.named on_success "$@"
-  local on_success=$REPLY
-
-  z.arg.named on_failure "$@"
-  local on_failure=$REPLY
+  z.arg.named name "$@" && local name=$REPLY
+  z.arg.named command "$@" && local command=$REPLY
+  z.arg.named on_success "$@" && local on_success=$REPLY
+  z.arg.named on_failure "$@" && local on_failure=$REPLY
 
   z.is.null "$name" && return 1
   z.is.null "$command" && return 1

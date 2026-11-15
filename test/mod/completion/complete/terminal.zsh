@@ -36,11 +36,8 @@ if z.is.eq "$1" initialize; then
   return 0
 fi
 
-z.arg.named input "$@"
-local input=$REPLY
-
-z.arg.named setup "$@"
-local setup=$REPLY
+z.arg.named input "$@" && local input=$REPLY
+z.arg.named setup "$@" && local setup=$REPLY
 zmodload zsh/zpty || exit 1
 zmodload zsh/zselect || exit 1
 

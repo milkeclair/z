@@ -7,8 +7,7 @@
 # example:
 #  z.wtproxy._entry.current activate=true
 z.wtproxy._entry.current() {
-  z.arg.named activate $@ default=false
-  local activate=$REPLY
+  z.arg.named activate $@ default=false && local activate=$REPLY
 
   z.git.wt.current.root || return 1
   local worktree_path=$REPLY

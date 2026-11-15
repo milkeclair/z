@@ -30,8 +30,7 @@ z.job.file._jobs() {
 # example:
 #  z.job.file._dir id=20260623T121530000000000.100.1
 z.job.file._dir() {
-  z.arg.named id "$@"
-  local id=$REPLY
+  z.arg.named id "$@" && local id=$REPLY
   z.is.null "$id" && return 1
 
   z.job.file._jobs
@@ -48,11 +47,8 @@ z.job.file._dir() {
 # example:
 #  z.job.file._path id=20260623T121530000000000.100.1 name=status
 z.job.file._path() {
-  z.arg.named id "$@"
-  local id=$REPLY
-
-  z.arg.named name "$@"
-  local name=$REPLY
+  z.arg.named id "$@" && local id=$REPLY
+  z.arg.named name "$@" && local name=$REPLY
 
   z.is.null "$id" && return 1
   z.is.null "$name" && return 1

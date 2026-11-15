@@ -7,8 +7,7 @@
 # example:
 #  z.wtproxy.rm._current expected_project=project_branch_hash
 z.wtproxy.rm._current() {
-  z.arg.named expected_project $@ default=""
-  local expected_project=$REPLY
+  z.arg.named expected_project $@ default="" && local expected_project=$REPLY
 
   z.git.wt.current.root || return 1
   local worktree_path=$REPLY

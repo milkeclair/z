@@ -7,8 +7,7 @@
 # example:
 #   z.git.stats._commit.map.split entry="milkeclair:1000 500:50"
 z.git.stats._commit.map.split() {
-  z.arg.named entry "$@"
-  local entry=$REPLY
+  z.arg.named entry "$@" && local entry=$REPLY
   z.str.split str="$entry" delimiter=:
   local parts=($REPLY)
 
@@ -16,8 +15,7 @@ z.git.stats._commit.map.split() {
   local details=$parts[2]
   local commit_count=$parts[3]
 
-  z.str.split str="$details" delimiter=" "
-  local lines=($REPLY)
+  z.str.split str="$details" delimiter=" " && local lines=($REPLY)
   local inserted=$lines[1]
   local deleted=$lines[2]
   z.git.stats._commit.sum_lines inserted=$inserted deleted=$deleted

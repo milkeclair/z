@@ -7,8 +7,7 @@
 #   # if current branch is feature/some-description-123
 #   z.git._hp.ticket #=> "123"
 z.git._hp.ticket() {
-  z.git.branch.current._get
-  local branch=$REPLY
+  z.git.branch.current._get && local branch=$REPLY
 
   # e.g. feature/some-description-123 => some-description-123
   z.str.split str=$branch delimiter="/"

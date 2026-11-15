@@ -8,8 +8,7 @@
 #   z.git.commit._tag.is.valid "feat" #=> true
 #   z.git.commit._tag.is.valid "invalid_tag" #=> false
 z.git.commit._tag.is.valid() {
-  z.git.commit._tag.list
-  local tag_list="${REPLY[*]}"
+  z.git.commit._tag.list && local tag_list="${REPLY[*]}"
   local tag=$1
   z.str.split str="$tag_list" delimiter=" "
   local -a tags=("${(@)REPLY}")

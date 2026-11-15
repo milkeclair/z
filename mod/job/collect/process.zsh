@@ -7,8 +7,7 @@
 # example:
 #  z.job.collect._one dir=/tmp/z/job/123/jobs/job
 z.job.collect._one() {
-  z.arg.named dir "$@"
-  local dir=$REPLY
+  z.arg.named dir "$@" && local dir=$REPLY
   z.is.null "$dir" && return 1
 
   z.job.meta._read dir="$dir" || {
@@ -63,11 +62,8 @@ z.job.collect._one() {
 # example:
 #  z.job.collect._callback dir=/tmp/z/job/123/jobs/job status=success
 z.job.collect._callback() {
-  z.arg.named dir "$@"
-  local dir=$REPLY
-
-  z.arg.named status "$@"
-  local job_status=$REPLY
+  z.arg.named dir "$@" && local dir=$REPLY
+  z.arg.named status "$@" && local job_status=$REPLY
 
   z.job.meta._read dir="$dir" || return 1
   z.file.read path="$dir/exit"
