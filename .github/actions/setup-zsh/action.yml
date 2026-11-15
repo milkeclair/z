@@ -1,0 +1,54 @@
+name: Set up zsh
+description: Restore or build the pinned zsh version and verify it
+inputs:
+  version:
+    description: Exact zsh version
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Cache zsh
+      id: cache
+      uses: actions/cache@v6.1.0
+      with:
+        path: ~/.local
+        key: ubuntu-26.04-${{ runner.arch }}-zsh-${{ inputs.version }}
+
+    - name: Install dependencies
+      shell: bash
+      env:
+        CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
+      run: |
+        if [[ "$CACHE_HIT" != 'true' ]]; then
+          packages=(build-essential libncurses-dev yodl uuid-runtime)
+        elif ! command -v uuidgen >/dev/null 2>&1; then
+          packages=(uuid-runtime)
+        else
+          exit 0
+        fi
+        sudo apt-get update
+        sudo apt-get install -y "${packages[@]}"
+
+    - name: Build and install zsh
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        ZSH_VERSION: ${{ inputs.version }}
+      run: |
+        wget "https://sourceforge.net/projects/zsh/files/zsh/$ZSH_VERSION/zsh-$ZSH_VERSION.tar.xz/download" -O zsh.tar.xz
+        tar xf zsh.tar.xz
+        cd "zsh-$ZSH_VERSION"
+        ./configure --prefix="$HOME/.local" --with-tcsetpgrp
+        make
+        make install
+
+    - name: Verify installed zsh version
+      shell: bash
+      env:
+        ZSH_VERSION: ${{ inputs.version }}
+      run: |
+        actual_version=$("$HOME/.local/bin/zsh" -c 'print -r -- "$ZSH_VERSION"')
+        if [[ "$actual_version" != "$ZSH_VERSION" ]]; then
+          printf '::error::Expected zsh %s, installed %s\n' "$ZSH_VERSION" "$actual_version"
+          exit 1
+        fi

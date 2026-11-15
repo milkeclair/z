@@ -25,7 +25,8 @@ env:
   ZSH_VERSION: '5.9.2'
 
 jobs:
-  test:
+  zsh:
+    name: test-zsh
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7.0.1
@@ -33,53 +34,28 @@ jobs:
           ref: ${{ inputs.ref || github.sha }}
           persist-credentials: false
 
-      - name: Cache zsh
-        id: cache
-        uses: actions/cache@v6.1.0
+      - uses: $/.github/actions/setup-zsh
         with:
-          path: ~/.local
-          key: ubuntu-26.04-${{ runner.arch }}-zsh-${{ env.ZSH_VERSION }}
-
-      - name: Install dependencies
-        env:
-          CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
-        run: |
-          if [[ "$CACHE_HIT" != 'true' ]]; then
-            packages=(build-essential libncurses-dev yodl uuid-runtime)
-          elif ! command -v uuidgen >/dev/null 2>&1; then
-            packages=(uuid-runtime)
-          else
-            exit 0
-          fi
-          sudo apt-get update
-          sudo apt-get install -y "${packages[@]}"
-
-      - name: Build and install zsh
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          wget https://sourceforge.net/projects/zsh/files/zsh/${ZSH_VERSION}/zsh-${ZSH_VERSION}.tar.xz/download -O zsh.tar.xz
-          tar xf zsh.tar.xz
-          cd zsh-${ZSH_VERSION}
-          ./configure --prefix=$HOME/.local --with-tcsetpgrp
-          make
-          make install
-        env:
-          ZSH_VERSION: ${{ env.ZSH_VERSION }}
-
-      - name: Verify installed zsh version
-        shell: bash
-        run: |
-          actual_version=$("$HOME/.local/bin/zsh" -c 'print -r -- "$ZSH_VERSION"')
-          if [[ "$actual_version" != "$ZSH_VERSION" ]]; then
-            printf '::error::Expected zsh %s, installed %s\n' "$ZSH_VERSION" "$actual_version"
-            exit 1
-          fi
+          version: ${{ env.ZSH_VERSION }}
 
       - name: Run tests
         shell: bash {0}
         run: |
           export PATH="$HOME/.local/bin:$PATH"
           zsh -c "source main.zsh && cd test && z.t"
+
+  node:
+    name: test-node
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+
+      - uses: $/.github/actions/setup-zsh
+        with:
+          version: ${{ env.ZSH_VERSION }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v7.1.0
@@ -103,6 +79,20 @@ jobs:
         run: |
           export PATH="$HOME/.local/bin:$PATH"
           npm test -- --maxWorkers=2
+
+  test:
+    if: ${{ always() }}
+    needs: [zsh, node]
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Check all test suites passed
+        shell: bash
+        env:
+          ZSH_RESULT: ${{ needs.zsh.result }}
+          NODE_RESULT: ${{ needs.node.result }}
+        run: |
+          printf 'Zsh: %s; Node: %s\n' "$ZSH_RESULT" "$NODE_RESULT"
+          [[ "$ZSH_RESULT" == 'success' && "$NODE_RESULT" == 'success' ]]
 
   check-zsh-release:
     runs-on: ubuntu-26.04
