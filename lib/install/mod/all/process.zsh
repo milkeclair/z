@@ -8,7 +8,6 @@
 #  z.install.mod.all._confirm dir=~/.z/mod
 z.install.mod.all._confirm() {
   z.arg.named dir "$@" && local dir=$REPLY
-  z.is.null "$dir" && return 1
 
   z.io.oneline "Install or update all available mods in $dir? (y/n): "
   z.io.read || return 1
@@ -39,21 +38,19 @@ z.install.mod.all._prepare() {
   z.arg.named dir "$@" && local dir=$REPLY
 
   z.dir.exists "$source_dir" || return 1
-  z.dir.make path="$dir" || return 1
+  cp -R "$source_dir/." "$dir" || return 1
 
   if z.dir.exists "$current_dir"; then
-    cp -R "$current_dir/." "$dir/" || return 1
+    for entry in "$current_dir"/*(ND); do
+      local name=${entry:t}
+
+      if z.dir.exists "$entry" && z.dir.exists "$source_dir/$name"; then
+        continue
+      fi
+
+      cp -R "$entry" "$dir/" || return 1
+    done
   fi
-
-  for mod_dir in "$source_dir"/*(N/); do
-    local name=${mod_dir:t}
-
-    if z.dir.exists "$dir/$name"; then
-      z.dir.remove path="$dir/$name" || return 1
-    fi
-
-    cp -R "$mod_dir" "$dir/$name" || return 1
-  done
 
   z.return
 }
@@ -73,11 +70,7 @@ z.install.mod.all._replace() {
   z.arg.named prepared "$@" && local prepared=$REPLY
   z.arg.named backup "$@" && local backup=$REPLY
 
-  z.is.null "$current_dir" && return 1
-  z.is.null "$backup" && return 1
   z.dir.exists "$prepared" || return 1
-  z.file.exists "$current_dir" && return 1
-  z.file.exists "$backup" && return 1
   z.dir.exists "$backup" && return 1
 
   if z.dir.exists "$current_dir"; then
@@ -95,6 +88,7 @@ z.install.mod.all._replace() {
 }
 
 # reconnect the working directory and load newly installed mods
+# completion setup does not affect the reload result
 #
 # $dir: loaded z installation
 # $previous?: working directory before switching (default: PWD)
@@ -120,7 +114,7 @@ z.install.mod.all._reload() {
   source "$dir/main.zsh" || return 1
 
   if (( ${+functions[z.completion.enable]} )); then
-    z.completion.enable || return 1
+    z.completion.enable
   fi
 
   z.return

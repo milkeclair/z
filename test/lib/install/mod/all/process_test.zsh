@@ -21,9 +21,9 @@ z.t.describe "z.install.mod.all._confirm"; {
     }
   }
 
-  z.t.context "dirが未指定の場合"; {
-    z.t.it "入力を読まず失敗する"; {
-      z.install.mod.all._confirm <<< y >/dev/null # zls: ignore
+  z.t.context "改行なしの入力でEOFになった場合"; {
+    z.t.it "途中のyを承諾として扱わない"; {
+      printf y | z.install.mod.all._confirm dir=/tmp/example >/dev/null
 
       z.t.expect.status.is.false
     }
@@ -82,6 +82,29 @@ z.t.describe "z.install.mod.all._prepare"; {
     }
   }
 
+  z.t.context "置換対象の旧fileを読み取れない場合"; {
+    z.t.it "旧fileをコピーせず配布元から準備する"; {
+      local fixture=$(mktemp -d /tmp/z_all_prepare.XXXXXX)
+      z.dir.make path="$fixture/source/app"
+      z.dir.make path="$fixture/current/app"
+      z.file.write path="$fixture/source/app/value" content=new
+      z.file.write path="$fixture/current/app/value" content=old
+      chmod 000 "$fixture/current/app/value"
+
+      z.install.mod.all._prepare source="$fixture/source" current="$fixture/current" dir="$fixture/next" 2>/dev/null
+      local result_code=$?
+      chmod 644 "$fixture/current/app/value"
+
+      z.t.expect "$result_code" 0
+      z.file.read path="$fixture/next/app/value"
+      z.t.expect.reply new
+      z.file.read path="$fixture/current/app/value"
+      z.t.expect.reply old
+
+      z.dir.remove path="$fixture"
+    }
+  }
+
   z.t.context "コピーに失敗した場合"; {
     z.t.it "現行modを維持して失敗する"; {
       local fixture=$(mktemp -d /tmp/z_all_prepare.XXXXXX)
@@ -109,6 +132,23 @@ z.t.describe "z.install.mod.all._prepare"; {
       z.t.expect.status.is.false
       z.dir.not.exists "$fixture/next"
       z.t.expect.status.is.true
+
+      z.dir.remove path="$fixture"
+    }
+  }
+  z.t.context "独自file名が配布元mod名と衝突する場合"; {
+    z.t.it "独自fileを失わず準備を中断する"; {
+      local fixture=$(mktemp -d /tmp/z_all_prepare.XXXXXX)
+      z.dir.make path="$fixture/source/app"
+      z.dir.make path="$fixture/current"
+      z.file.write path="$fixture/source/app/value" content=new
+      z.file.write path="$fixture/current/app" content=custom
+
+      z.install.mod.all._prepare source="$fixture/source" current="$fixture/current" dir="$fixture/next" 2>/dev/null
+
+      z.t.expect.status.is.false
+      z.file.read path="$fixture/current/app"
+      z.t.expect.reply custom
 
       z.dir.remove path="$fixture"
     }
@@ -248,6 +288,53 @@ z.t.describe "z.install.mod.all._replace"; {
       z.dir.remove path="$fixture"
     }
   }
+  z.t.context "準備先がdirectoryではない場合"; {
+    z.t.it "現行modを変更せず失敗する"; {
+      local fixture=$(mktemp -d /tmp/z_all_replace.XXXXXX)
+      z.dir.make path="$fixture/current"
+      z.file.write path="$fixture/current/value" content=old
+      z.file.write path="$fixture/next" content=not-a-directory
+
+      z.install.mod.all._replace current="$fixture/current" prepared="$fixture/next" backup="$fixture/previous"
+      local result_code=$?
+
+      z.t.expect "$result_code" 1
+      z.file.read path="$fixture/current/value"
+      z.t.expect.reply old
+      z.dir.not.exists "$fixture/previous"
+      z.t.expect.status.is.true
+
+      z.dir.remove path="$fixture"
+    }
+  }
+
+  z.t.context "currentまたはbackupが通常fileの場合"; {
+    z.t.it "mvの失敗を返して既存fileを維持する"; {
+      for slot in current backup; do
+        local fixture=$(mktemp -d /tmp/z_all_replace.XXXXXX)
+        z.dir.make path="$fixture/next"
+        if z.is.eq "$slot" current; then
+          z.file.write path="$fixture/current" content=keep
+        else
+          z.dir.make path="$fixture/current"
+          z.file.write path="$fixture/current/value" content=old
+          z.file.write path="$fixture/previous" content=keep
+        fi
+
+        z.install.mod.all._replace current="$fixture/current" prepared="$fixture/next" backup="$fixture/previous" 2>/dev/null
+
+        z.t.expect.status.is.false
+        if z.is.eq "$slot" current; then
+          z.file.read path="$fixture/current"
+        else
+          z.file.read path="$fixture/previous"
+        fi
+        z.t.expect.reply keep
+
+        z.dir.remove path="$fixture"
+      done
+    }
+  }
 }
 
 z.t.describe "z.install.mod.all._reload"; {
@@ -327,9 +414,9 @@ z.t.describe "z.install.mod.all._reload"; {
   }
 
   z.t.context "補完の有効化が失敗する場合"; {
-    z.t.it "再読込後の失敗を返す"; {
+    z.t.it "本体を読み込めていれば成功する"; {
       local fixture=$(mktemp -d /tmp/z_all_reload.XXXXXX)
-      z.file.write path="$fixture/main.zsh" content=":"
+      z.file.write path="$fixture/main.zsh" content="touch \"$fixture/loaded\""
       z.t.mock name="z.completion.enable" behavior="return 1"
 
       () {
@@ -337,7 +424,9 @@ z.t.describe "z.install.mod.all._reload"; {
         z.install.mod.all._reload dir="$fixture"
       }
 
-      z.t.expect.status.is.false
+      z.t.expect.status.is.true
+      z.file.exists "$fixture/loaded"
+      z.t.expect.status.is.true
 
       z.dir.remove path="$fixture"
     }

@@ -429,4 +429,34 @@ z.t.describe "z.install.mod.all"; {
       z.t.expect.status.is.false
     }
   }
+  z.t.context "補完の有効化だけが失敗した場合"; {
+    z.t.it "導入成功として更新しbackupを片付ける"; {
+      local fixture=$(mktemp -d /tmp/z_all_command.XXXXXX)
+      local z_root="$fixture/installed"
+      z.dir.make path="$z_root/mod/app"
+      z.dir.make path="$fixture/source/app"
+      z.file.write path="$z_root/main.zsh" content=":"
+      z.file.write path="$z_root/mod/app/value" content=old
+      z.file.write path="$fixture/source/app/value" content=new
+      z.t.mock name="z.install.mod._fetch" behavior="z.return \"$fixture/source\""
+      z.t.mock name="z.install.mod.all._confirm" behavior="return 0"
+      z.t.mock name="z.completion.cache._cancel" behavior="return 0"
+      z.t.mock name="z.completion.enable" behavior="return 1"
+
+      () {
+        local Z_ROOT=$z_root
+
+        z.install.mod.all > "$fixture/output"
+      }
+      local result_code=$?
+      local leftovers=("$z_root"/.z-mod-all.*(N/))
+
+      z.t.expect "$result_code" 0
+      z.t.expect "${#leftovers}" 0
+      z.file.read path="$z_root/mod/app/value"
+      z.t.expect.reply new
+
+      z.dir.remove path="$fixture"
+    }
+  }
 }
