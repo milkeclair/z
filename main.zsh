@@ -18,6 +18,7 @@ local -A z_modules=(
   [status]="analysis:operator"
   [str]="operator:process"
   [t]="state:dsl:expect:log:mock:process"
+  [update]="process"
   [var]="operator:analysis"
 )
 
@@ -40,6 +41,7 @@ local z_module_depends_order=(
   status
   str
   t
+  update
 )
 
 local -A loaded_files=()
