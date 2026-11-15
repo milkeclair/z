@@ -4,6 +4,7 @@ local -A z_modules=(
   [arg]="analysis:operator:process"
   [arr]="analysis:operator:process"
   [common]="dsl:operator"
+  [cls]="process"
   [debug]="process"
   [dir]="operator:process"
   [file]="operator:process"
@@ -27,6 +28,7 @@ local z_module_depends_order=(
   arg
   arr
   common
+  cls
   debug
   dir
   file
