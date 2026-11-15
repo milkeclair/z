@@ -61,13 +61,6 @@ z.install._decompress_archive() {
   fi
 }
 
-# preserve individually installed mods before replacing the core installation
-#
-# REPLY: null
-# return: 0|1
-#
-# example:
-#  z.install._preserve_mods
 z.install._preserve_mods() {
   if [[ ! -e "$install_dir/mod" && ! -L "$install_dir/mod" ]]; then
     return 0
