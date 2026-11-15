@@ -9,6 +9,9 @@ z.t.describe "z.str.color"; {
       z.str.color "green"
       z.t.expect.reply $'\033[32m'
 
+      z.str.color "orange"
+      z.t.expect.reply $'\033[38;5;208m'
+
       z.str.color "yellow"
       z.t.expect.reply $'\033[33m'
 
