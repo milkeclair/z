@@ -19,6 +19,7 @@ import { simpleParameter } from './facts';
 
 export type ResolutionContext = Declarations & {
   readonly environment: ShellEnvironment; readonly projectRoot: string;
+  readonly classCommands: ReadonlySet<string>;
 };
 
 function alias(name: string, word: WordNode, context: ResolutionContext): boolean {
@@ -159,6 +160,8 @@ export function analyzeCalls(snapshot: FunctionSnapshot, file: ZshFileHydration,
           if (!options.ignores || !ignored(options.ignores, word.range.start.line, diagnostic.code)) diagnostics.push(diagnostic);
         }
       }
+    } else if (functionCommand(command) && context.classCommands.has(name)) {
+      continue;
     } else if (context.autoloads.has(name) && functionCommand(command)) {
       continue;
     } else if (shellKnown(name, command, context) === false &&

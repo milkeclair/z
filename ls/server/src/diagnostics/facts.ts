@@ -8,6 +8,8 @@ import { protocolRange } from '../connection/ast/cursor';
 import { literalWord } from '../refreshFunctions/word';
 import { formatDiagnostics } from './format';
 import { moduleBuiltins } from './modules';
+import { createClassState, classDeclaration } from './classes';
+import type { ClassDeclarations } from './classes';
 
 export type Declarations = {
   readonly aliases: ReadonlySet<string>; readonly globalAliases: ReadonlySet<string>;
@@ -16,7 +18,7 @@ export type Declarations = {
 };
 export type FileFacts = {
   readonly calls: readonly SimpleCommandNode[]; readonly base: readonly Diagnostics[];
-  readonly declarations: Declarations;
+  readonly declarations: Declarations; readonly classes: ClassDeclarations;
 };
 type Usage = {
   readonly definition: FunctionDefinitionNode; readonly depth: number;
@@ -91,6 +93,7 @@ function declarations(command: SimpleCommandNode, sets: {
 export function collectFileFacts(file: ZshFileHydration): FileFacts {
   const calls: SimpleCommandNode[] = [];
   const usages: Usage[] = [];
+  const classes = createClassState();
   const active: Usage[] = [];
   const sets = { aliases: new Set<string>(), globalAliases: new Set<string>(),
     suffixAliases: new Set<string>(), autoloads: new Set<string>(), builtins: new Set<string>() };
@@ -105,13 +108,14 @@ export function collectFileFacts(file: ZshFileHydration): FileFacts {
     if (node.kind === 'simpleCommand') {
       if (node.commandName) calls.push(node);
       declarations(node, sets);
-      if (current && node.commandName && literalWord(node.commandName.word) === 'z.arg.named') {
-        const word = node.arguments[0];
-        const name = word && literalWord(word);
-        if (name) use(current, name);
-      }
+      classDeclaration(node, depth, current?.definition, classes);
     }
-    if (!current) return;
+    if (!current || classes.pending?.methodDepth !== undefined && classes.pending.scope === current.definition) return;
+    if (node.kind === 'simpleCommand' && node.commandName && literalWord(node.commandName.word) === 'z.arg.named') {
+      const word = node.arguments[0];
+      const name = word && literalWord(word);
+      if (name) use(current, name);
+    }
     if (node.kind === 'word') wordUsage(node, current);
     if (node.kind === 'opaqueCommand' || node.kind === 'unknown' ||
       node.kind === 'hereDocument' && !node.quoted) current.uncertain = true;
@@ -135,5 +139,5 @@ export function collectFileFacts(file: ZshFileHydration): FileFacts {
     code: diagnostic.kind, range: protocolRange(diagnostic.range), message: diagnostic.message, source: 'z-ls/parser' });
   for (const diagnostic of file.hydrationDiagnostics) base.push({ severity: DiagnosticSeverity.Warning,
     code: diagnostic.kind, range: protocolRange(diagnostic.range), message: diagnostic.message, source: 'z-ls/documentation' });
-  return { calls, base, declarations: sets };
+  return { calls, base, declarations: sets, classes };
 }
