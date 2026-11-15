@@ -67,6 +67,7 @@ z.completion.complete._docs() {
   local function_name=$REPLY
 
   z.completion.docs._get $function_name || return 1
+  z.completion.docs._format "$REPLY"
   if z.int.is.positive ${+compstate}; then
     compstate[list]="list force messages"
   fi

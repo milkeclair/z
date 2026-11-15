@@ -157,6 +157,8 @@ z.t.describe "z.completion.complete._docs"; {
       z.t.expect.includes "$output" "get named argument value"
       z.t.expect.excludes "$output" $'z.arg.named\nget named argument value'
       z.t.expect.includes "$output" "name of the argument"
+      z.t.expect.includes "$output" $'%{\e[36m%}$name:%{\e[0m%}'
+      z.t.expect "${z_completion_docs[z.arg.named]}" $'get named argument value\n\n$name: name of the argument'
     }
   }
 
