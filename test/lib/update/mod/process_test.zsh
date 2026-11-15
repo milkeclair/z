@@ -14,24 +14,33 @@ z.t.describe "z.update.mod._copy"; {
       z.file.write path="$dir/current/mod/.settings" content=settings
       z.file.write path="$dir/source/mod/app/value" content=new_app
       z.file.write path="$dir/source/mod/base/value" content=new_base
+
       z.update.mod._copy source="$dir/source" current="$dir/current" dir="$dir/prepared" base app
       local copy_status=$?
       local result=$REPLY
+
       z.t.expect "$copy_status" 0
       REPLY=$result
       z.t.expect.reply.is.null
+
       z.file.read path="$dir/prepared/mod/app/value"
       z.t.expect.reply new_app
+
       z.file.read path="$dir/prepared/mod/base/value"
       z.t.expect.reply new_base
+
       z.file.read path="$dir/prepared/mod/.settings"
       z.t.expect.reply settings
+
       z.file.not.exists "$dir/prepared/mod/app/obsolete"
       z.t.expect.status.is.true
+
       z.dir.not.exists "$dir/prepared/mod/unselected"
       z.t.expect.status.is.true
+
       z.file.read path="$dir/current/mod/app/obsolete"
       z.t.expect.reply old
+
       z.dir.remove path=/tmp/z_t/update_mod_copy
     }
   }
@@ -42,11 +51,15 @@ z.t.describe "z.update.mod._copy"; {
       z.dir.make path="$dir/current"
       z.dir.make path="$dir/source/mod/unselected"
       z.dir.make path="$dir/prepared"
+
       z.update.mod._copy source="$dir/source" current="$dir/current" dir="$dir/prepared"
       local copy_status=$?
+
       z.t.expect "$copy_status" 0
+
       z.dir.not.exists "$dir/prepared/mod"
       z.t.expect.status.is.true
+
       z.dir.remove path=/tmp/z_t/update_mod_copy
     }
   }
@@ -58,13 +71,18 @@ z.t.describe "z.update.mod._copy"; {
       z.dir.make path="$dir/source/mod/unselected"
       z.dir.make path="$dir/prepared"
       z.file.write path="$dir/current/mod/.settings" content=original
+
       z.update.mod._copy source="$dir/source" current="$dir/current" dir="$dir/prepared"
       local copy_status=$?
+
       z.t.expect "$copy_status" 0
+
       z.file.read path="$dir/prepared/mod/.settings"
       z.t.expect.reply original
+
       z.dir.not.exists "$dir/prepared/mod/unselected"
       z.t.expect.status.is.true
+
       z.dir.remove path=/tmp/z_t/update_mod_copy
     }
   }
@@ -72,6 +90,7 @@ z.t.describe "z.update.mod._copy"; {
   z.t.context "source引数がない場合"; {
     z.t.it "失敗する"; {
       z.update.mod._copy current=/tmp/current dir=/tmp/prepared
+
       z.t.expect.status.is.false
     }
   }
@@ -79,6 +98,7 @@ z.t.describe "z.update.mod._copy"; {
   z.t.context "current引数がない場合"; {
     z.t.it "失敗する"; {
       z.update.mod._copy source=/tmp/source dir=/tmp/prepared
+
       z.t.expect.status.is.false
     }
   }
@@ -86,6 +106,7 @@ z.t.describe "z.update.mod._copy"; {
   z.t.context "dir引数がない場合"; {
     z.t.it "失敗する"; {
       z.update.mod._copy source=/tmp/source current=/tmp/current
+
       z.t.expect.status.is.false
     }
   }
@@ -97,13 +118,18 @@ z.t.describe "z.update.mod._copy"; {
       z.dir.make path="$dir/source"
       z.dir.make path="$dir/prepared"
       z.file.write path="$dir/current/mod/app/value" content=original
+
       z.update.mod._copy source="$dir/source" current="$dir/current" dir="$dir/prepared" missing
       local copy_status=$?
+
       z.t.expect "$copy_status" 1
+
       z.file.read path="$dir/current/mod/app/value"
       z.t.expect.reply original
+
       z.dir.not.exists "$dir/prepared/mod"
       z.t.expect.status.is.true
+
       z.dir.remove path=/tmp/z_t/update_mod_copy
     }
   }
@@ -115,11 +141,15 @@ z.t.describe "z.update.mod._copy"; {
       z.dir.make path="$dir/source/mod/app"
       z.dir.make path="$dir/prepared/mod"
       z.file.write path="$dir/prepared/mod/value" content=original
+
       z.update.mod._copy source="$dir/source" current="$dir/current" dir="$dir/prepared" app
       local copy_status=$?
+
       z.t.expect "$copy_status" 1
+
       z.file.read path="$dir/prepared/mod/value"
       z.t.expect.reply original
+
       z.dir.remove path=/tmp/z_t/update_mod_copy
     }
   }
@@ -131,12 +161,17 @@ z.t.describe "z.update.mod._copy"; {
       z.dir.make path="$dir/source/mod/app"
       z.dir.make path="$dir/prepared"
       z.file.write path="$dir/current/mod/app/value" content=original
+
       z.t.mock name=cp behavior="return 1"
+
       z.update.mod._copy source="$dir/source" current="$dir/current" dir="$dir/prepared" app
       local copy_status=$?
+
       z.t.expect "$copy_status" 1
+
       z.file.read path="$dir/current/mod/app/value"
       z.t.expect.reply original
+
       z.dir.remove path=/tmp/z_t/update_mod_copy
     }
   }
@@ -151,13 +186,18 @@ z.t.describe "z.update.mod._copy"; {
       z.file.write path="$dir/external/app/value" content=original
       z.file.write path="$dir/source/mod/app/value" content=updated
       ln -s "$dir/external" "$dir/current/mod"
+
       z.update.mod._copy source="$dir/source" current="$dir/current" dir="$dir/prepared" app
       local copy_status=$?
+
       z.t.expect "$copy_status" 0
+
       z.file.read path="$dir/prepared/mod/app/value"
       z.t.expect.reply updated
+
       z.file.read path="$dir/external/app/value"
       z.t.expect.reply original
+
       z.dir.remove path=/tmp/z_t/update_mod_copy
     }
   }

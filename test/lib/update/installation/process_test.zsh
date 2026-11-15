@@ -9,18 +9,24 @@ z.t.describe "z.update.installation._replace"; {
       z.dir.make path="$dir/prepared"
       z.file.write path="$dir/current/value" content=old
       z.file.write path="$dir/prepared/value" content=new
+
       z.update.installation._replace dir="$dir/current" prepared="$dir/prepared" backup="$dir/previous"
       local replace_status=$?
       local result=$REPLY
+
       z.t.expect "$replace_status" 0
       REPLY=$result
       z.t.expect.reply.is.null
+
       z.file.read path="$dir/current/value"
       z.t.expect.reply new
+
       z.file.read path="$dir/previous/value"
       z.t.expect.reply old
+
       z.dir.not.exists "$dir/prepared"
       z.t.expect.status.is.true
+
       z.dir.remove path=/tmp/z_t/update_replace
     }
   }
@@ -28,14 +34,19 @@ z.t.describe "z.update.installation._replace"; {
   z.t.context "必須引数が欠ける場合"; {
     z.t.it "mvを実行しない"; {
       z.t.mock name=mv
+
       z.update.installation._replace prepared=/tmp/prepared backup=/tmp/previous
       local missing_dir=$?
+
       z.update.installation._replace dir=/tmp/current backup=/tmp/previous
       local missing_prepared=$?
+
       z.update.installation._replace dir=/tmp/current prepared=/tmp/prepared
       local missing_backup=$?
+
       z.t.mock.result name=mv
       local call=$REPLY
+
       z.t.expect "$missing_dir" 1
       z.t.expect "$missing_prepared" 1
       z.t.expect "$missing_backup" 1
@@ -52,13 +63,18 @@ z.t.describe "z.update.installation._replace"; {
       z.dir.make path="$dir/previous"
       z.file.write path="$dir/current/value" content=old
       z.file.write path="$dir/previous/value" content=keep
+
       z.update.installation._replace dir="$dir/current" prepared="$dir/prepared" backup="$dir/previous"
       local replace_status=$?
+
       z.t.expect "$replace_status" 1
+
       z.file.read path="$dir/current/value"
       z.t.expect.reply old
+
       z.file.read path="$dir/previous/value"
       z.t.expect.reply keep
+
       z.dir.remove path=/tmp/z_t/update_replace
     }
   }
@@ -69,14 +85,20 @@ z.t.describe "z.update.installation._replace"; {
       z.dir.make path="$dir/current"
       z.dir.make path="$dir/prepared"
       z.file.write path="$dir/current/value" content=old
+
       z.t.mock name=mv behavior="return 1"
+
       z.update.installation._replace dir="$dir/current" prepared="$dir/prepared" backup="$dir/previous"
       local replace_status=$?
+
       z.t.expect "$replace_status" 1
+
       z.file.read path="$dir/current/value"
       z.t.expect.reply old
+
       z.dir.not.exists "$dir/previous"
       z.t.expect.status.is.true
+
       z.dir.remove path=/tmp/z_t/update_replace
     }
   }
@@ -88,19 +110,26 @@ z.t.describe "z.update.installation._replace"; {
       z.dir.make path="$dir/prepared"
       z.file.write path="$dir/current/value" content=old
       z.file.write path="$dir/prepared/value" content=new
+
       z.t.mock name=mv behavior="
         if z.is.eq \"\$1\" \"$dir/prepared\"; then return 1; fi
         command mv \"\$@\"
       "
+
       z.update.installation._replace dir="$dir/current" prepared="$dir/prepared" backup="$dir/previous"
       local replace_status=$?
+
       z.t.expect "$replace_status" 1
+
       z.file.read path="$dir/current/value"
       z.t.expect.reply old
+
       z.file.read path="$dir/prepared/value"
       z.t.expect.reply new
+
       z.dir.not.exists "$dir/previous"
       z.t.expect.status.is.true
+
       z.dir.remove path=/tmp/z_t/update_replace
     }
   }
@@ -111,19 +140,26 @@ z.t.describe "z.update.installation._replace"; {
       z.dir.make path="$dir/current"
       z.dir.make path="$dir/prepared"
       z.file.write path="$dir/current/value" content=old
+
       z.t.mock name=mv behavior="
         if z.is.eq \"\$1\" \"$dir/prepared\" || z.is.eq \"\$1\" \"$dir/previous\"; then return 1; fi
         command mv \"\$@\"
       "
+
       z.update.installation._replace dir="$dir/current" prepared="$dir/prepared" backup="$dir/previous" 2>"$dir/error"
       local replace_status=$?
+
       z.t.expect "$replace_status" 1
+
       z.dir.not.exists "$dir/current"
       z.t.expect.status.is.true
+
       z.file.read path="$dir/previous/value"
       z.t.expect.reply old
+
       z.file.read path="$dir/error"
       z.t.expect.includes "$REPLY" "$dir/previous"
+
       z.dir.remove path=/tmp/z_t/update_replace
     }
   }
@@ -133,11 +169,15 @@ z.t.describe "z.update.installation._replace"; {
       local dir=/tmp/z_t/update_replace/same
       z.dir.make path="$dir/current"
       z.file.write path="$dir/current/value" content=old
+
       z.update.installation._replace dir="$dir/current" prepared="$dir/current" backup="$dir/previous"
       local replace_status=$?
+
       z.t.expect "$replace_status" 1
+
       z.file.read path="$dir/current/value"
       z.t.expect.reply old
+
       z.dir.remove path=/tmp/z_t/update_replace
     }
   }
@@ -147,13 +187,18 @@ z.t.describe "z.update.installation._replace"; {
       local dir=/tmp/z_t/update_replace/missing_prepared
       z.dir.make path="$dir/current"
       z.file.write path="$dir/current/value" content=old
+
       z.update.installation._replace dir="$dir/current" prepared="$dir/missing" backup="$dir/previous"
       local replace_status=$?
+
       z.t.expect "$replace_status" 1
+
       z.file.read path="$dir/current/value"
       z.t.expect.reply old
+
       z.dir.not.exists "$dir/previous"
       z.t.expect.status.is.true
+
       z.dir.remove path=/tmp/z_t/update_replace
     }
   }
@@ -167,21 +212,28 @@ z.t.describe "z.update.installation._reload"; {
       z.dir.remove path=/tmp/z_t/update_reload
       z.dir.make path="$dir"
       z.file.write path="$dir/main.zsh" content="print -r -- load >> \"$dir/events\"; print -rn -- \"\$Z_ROOT\" > \"$dir/loaded_root\""
+
       z.t.mock name="z.completion.cache._cancel" behavior="print -r -- cancel >> \"$dir/events\""
       z.t.mock name="z.completion.enable" behavior="print -r -- enable >> \"$dir/events\""
+
       () {
         local Z_ROOT=$z_root
+
         z.update.installation._reload dir="$dir"
       }
       local reload_status=$?
       local result=$REPLY
+
       z.t.expect "$reload_status" 0
       REPLY=$result
       z.t.expect.reply.is.null
+
       z.file.read path="$dir/events"
       z.t.expect.reply $'cancel\nload\nenable'
+
       z.file.read path="$dir/loaded_root"
       z.t.expect.reply "$dir"
+
       z.dir.remove path=/tmp/z_t/update_reload
     }
   }
@@ -189,6 +241,7 @@ z.t.describe "z.update.installation._reload"; {
   z.t.context "dir引数がない場合"; {
     z.t.it "失敗する"; {
       z.update.installation._reload
+
       z.t.expect.status.is.false
     }
   }
@@ -196,6 +249,7 @@ z.t.describe "z.update.installation._reload"; {
   z.t.context "mainが存在しない場合"; {
     z.t.it "sourceしない"; {
       z.update.installation._reload dir=/tmp/z_t/update_reload_missing
+
       z.t.expect.status.is.false
     }
   }
@@ -205,12 +259,17 @@ z.t.describe "z.update.installation._reload"; {
       local dir=/tmp/z_t/update_reload/cancel_failure
       z.dir.make path="$dir"
       z.file.write path="$dir/main.zsh" content="touch \"$dir/loaded\""
+
       z.t.mock name="z.completion.cache._cancel" behavior="return 1"
+
       z.update.installation._reload dir="$dir"
       local reload_status=$?
+
       z.t.expect "$reload_status" 1
+
       z.file.not.exists "$dir/loaded"
       z.t.expect.status.is.true
+
       z.dir.remove path=/tmp/z_t/update_reload
     }
   }
@@ -220,18 +279,24 @@ z.t.describe "z.update.installation._reload"; {
       local dir=/tmp/z_t/update_reload/source_failure
       z.dir.make path="$dir"
       z.file.write path="$dir/main.zsh" content="return 7"
+
       z.t.mock name="z.completion.cache._cancel" behavior="return 0"
       z.t.mock name="z.completion.enable"
+
       () {
         local Z_ROOT=$z_root
+
         z.update.installation._reload dir="$dir"
       }
       local reload_status=$?
+
       z.t.mock.result name="z.completion.enable"
       local call=$REPLY
+
       z.t.expect "$reload_status" 1
       REPLY=$call
       z.t.expect.reply.is.null
+
       z.dir.remove path=/tmp/z_t/update_reload
     }
   }
@@ -241,14 +306,19 @@ z.t.describe "z.update.installation._reload"; {
       local dir=/tmp/z_t/update_reload/enable_failure
       z.dir.make path="$dir"
       z.file.write path="$dir/main.zsh" content=":"
+
       z.t.mock name="z.completion.cache._cancel" behavior="return 0"
       z.t.mock name="z.completion.enable" behavior="return 1"
+
       () {
         local Z_ROOT=$z_root
+
         z.update.installation._reload dir="$dir"
       }
       local reload_status=$?
+
       z.t.expect "$reload_status" 1
+
       z.dir.remove path=/tmp/z_t/update_reload
     }
   }
@@ -259,12 +329,16 @@ z.t.describe "z.update.installation._reload"; {
       local original_dir=$PWD
       z.dir.make path="$dir/lib"
       z.file.write path="$dir/main.zsh" content=":"
+
       z.t.mock name="z.completion.cache._cancel" behavior="return 0"
       z.t.mock name="z.completion.enable" behavior="return 0"
+
       () {
         local Z_ROOT=$z_root
+
         z.update.installation._reload dir="$dir" previous="$dir/lib"
         local reload_status=$?
+
         z.path.current
         local reloaded_dir=$REPLY
         cd "$original_dir"
@@ -272,9 +346,12 @@ z.t.describe "z.update.installation._reload"; {
         return $reload_status
       }
       local reload_status=$?
+
       z.t.expect "$reload_status" 0
+
       z.file.read path="$dir/cwd"
       z.t.expect.reply "$dir/lib"
+
       z.dir.remove path=/tmp/z_t/update_reload
     }
   }
@@ -285,12 +362,16 @@ z.t.describe "z.update.installation._reload"; {
       local original_dir=$PWD
       z.dir.make path="$dir"
       z.file.write path="$dir/main.zsh" content=":"
+
       z.t.mock name="z.completion.cache._cancel" behavior="return 0"
       z.t.mock name="z.completion.enable" behavior="return 0"
+
       () {
         local Z_ROOT=$z_root
+
         z.update.installation._reload dir="$dir" previous="$dir/removed"
         local reload_status=$?
+
         z.path.current
         local reloaded_dir=$REPLY
         cd "$original_dir"
@@ -298,9 +379,12 @@ z.t.describe "z.update.installation._reload"; {
         return $reload_status
       }
       local reload_status=$?
+
       z.t.expect "$reload_status" 0
+
       z.file.read path="$dir/cwd"
       z.t.expect.reply "$dir"
+
       z.dir.remove path=/tmp/z_t/update_reload
     }
   }
@@ -310,14 +394,19 @@ z.t.describe "z.update.installation._reload"; {
       local dir=/tmp/z_t/update_reload/no_completion
       z.dir.make path="$dir"
       z.file.write path="$dir/main.zsh" content="touch \"$dir/loaded\""
+
       (
         unfunction z.completion.cache._cancel z.completion.enable
+
         z.update.installation._reload dir="$dir"
       )
       local reload_status=$?
+
       z.t.expect "$reload_status" 0
+
       z.file.exists "$dir/loaded"
       z.t.expect.status.is.true
+
       z.dir.remove path=/tmp/z_t/update_reload
     }
   }

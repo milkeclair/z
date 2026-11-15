@@ -7,8 +7,11 @@ z.t.describe "z.update.installation.is._valid"; {
       z.dir.remove path=/tmp/z_t/update_valid
       z.dir.make path="$dir/lib"
       z.file.write path="$dir/main.zsh" content=main
+
       z.update.installation.is._valid dir="$dir"
+
       z.t.expect.status.is.true
+
       z.dir.remove path=/tmp/z_t/update_valid
     }
   }
@@ -16,6 +19,7 @@ z.t.describe "z.update.installation.is._valid"; {
   z.t.context "dir引数がない場合"; {
     z.t.it "失敗する"; {
       z.update.installation.is._valid
+
       z.t.expect.status.is.false
     }
   }
@@ -24,8 +28,11 @@ z.t.describe "z.update.installation.is._valid"; {
     z.t.it "失敗する"; {
       local dir=/tmp/z_t/update_valid/missing_main
       z.dir.make path="$dir/lib"
+
       z.update.installation.is._valid dir="$dir"
+
       z.t.expect.status.is.false
+
       z.dir.remove path=/tmp/z_t/update_valid
     }
   }
@@ -35,8 +42,11 @@ z.t.describe "z.update.installation.is._valid"; {
       local dir=/tmp/z_t/update_valid/missing_lib
       z.dir.make path="$dir"
       z.file.write path="$dir/main.zsh" content=main
+
       z.update.installation.is._valid dir="$dir"
+
       z.t.expect.status.is.false
+
       z.dir.remove path=/tmp/z_t/update_valid
     }
   }
@@ -47,8 +57,11 @@ z.t.describe "z.update.installation.is._valid"; {
       z.dir.make path="$dir/lib"
       z.dir.make path="$dir/.git"
       z.file.write path="$dir/main.zsh" content=main
+
       z.update.installation.is._valid dir="$dir"
+
       z.t.expect.status.is.false
+
       z.dir.remove path=/tmp/z_t/update_valid
     }
   }
@@ -59,8 +72,11 @@ z.t.describe "z.update.installation.is._valid"; {
       z.dir.make path="$dir/lib"
       z.file.write path="$dir/main.zsh" content=main
       z.file.write path="$dir/.git" content="gitdir: elsewhere"
+
       z.update.installation.is._valid dir="$dir"
+
       z.t.expect.status.is.false
+
       z.dir.remove path=/tmp/z_t/update_valid
     }
   }
@@ -68,8 +84,11 @@ z.t.describe "z.update.installation.is._valid"; {
   z.t.context "rootまたはHOMEを指定した場合"; {
     z.t.it "変更対象にしない"; {
       z.update.installation.is._valid dir=/
+
       z.t.expect.status.is.false
+
       z.update.installation.is._valid dir="$HOME"
+
       z.t.expect.status.is.false
     }
   }
