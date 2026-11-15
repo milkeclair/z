@@ -25,6 +25,10 @@ Use `z.install.mod <mod_name>` to update a single mod.
 orange for different contents, and red for not installed. It compares against
 `Z_INSTALL_BRANCH` (default: `main`); local edits also appear orange.
 
+`z.install.mod.all` installs or updates every available mod after one confirmation.
+Local-only mods and files directly under `mod` are preserved. Distribution mods
+are replaced with the selected branch's contents and reloaded.
+
 ### Uninstall
 
 `z.uninstall`
