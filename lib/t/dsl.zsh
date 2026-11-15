@@ -19,8 +19,7 @@ z.is.eq $z_mode "test" && {
 # example:
 #  z.t.mark_not_found_error message="command not found: ls"
 z.t._mark_not_found_error() {
-  z.arg.named message $@
-  local message=$REPLY
+  z.arg.named message $@ && local message=$REPLY
 
   local error_flag_file="/tmp/z_t_error_$$"
   z.file.make path=$error_flag_file with_dir=true

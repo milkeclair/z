@@ -8,8 +8,7 @@
 # example:
 #  z.t.mock.result name=my_func
 z.t.mock.result() {
-  z.arg.named name $@
-  local func_name=$REPLY
+  z.arg.named name $@ && local func_name=$REPLY
 
   if z.is.null $func_name; then
     z.t._state.mock_last_func

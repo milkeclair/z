@@ -28,11 +28,8 @@ z.str.color.strip() {
 # example:
 #  z.str.color.decorate color=red message="Hello" #=> $'\033[31mHello\033[0m'
 z.str.color.decorate() {
-  z.arg.named color $@
-  local color=$REPLY
-
-  z.arg.named message $@
-  local message=$REPLY
+  z.arg.named color $@ && local color=$REPLY
+  z.arg.named message $@ && local message=$REPLY
 
   z.str.color.strip $message
   local plain=$REPLY

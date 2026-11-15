@@ -9,12 +9,8 @@
 # example:
 #  z.io "hello" "world" #=> hello\nworld
 z.io() {
-  z.arg.named color $@
-  local color=$REPLY
-
-  z.arg.named indent $@
-  local indent=$REPLY
-
+  z.arg.named color $@ && local color=$REPLY
+  z.arg.named indent $@ && local indent=$REPLY
   z.arg.named.shift color $@
   z.arg.named.shift indent $REPLY
   local args=($REPLY)
@@ -52,12 +48,8 @@ z.io.empty() {
 #  z.io.oneline "hello"
 #  z.io.oneline "world"         #=> helloworld
 z.io.oneline() {
-  z.arg.named color $@
-  local color=$REPLY
-
-  z.arg.named indent $@
-  local indent=$REPLY
-
+  z.arg.named color $@ && local color=$REPLY
+  z.arg.named indent $@ && local indent=$REPLY
   z.arg.named.shift color $@
   z.arg.named.shift indent $REPLY
   local args=($REPLY)
@@ -111,12 +103,8 @@ z.io.null() {
 #  z.io.line "hello" "world" #=> hello\nworld
 #  z.io.line #=> (empty line)
 z.io.line() {
-  z.arg.named color $@
-  local color=$REPLY
-
-  z.arg.named indent $@
-  local indent=$REPLY
-
+  z.arg.named color $@ && local color=$REPLY
+  z.arg.named indent $@ && local indent=$REPLY
   z.arg.named.shift color $@
   z.arg.named.shift indent $REPLY
   local args=($REPLY)
@@ -159,12 +147,8 @@ z.io.read() {
 # example:
 #  z.io.success "Operation completed successfully."
 z.io.success() {
-  z.arg.named color $@ default=green
-  local color=$REPLY
-
-  z.arg.named indent $@
-  local indent=$REPLY
-
+  z.arg.named color $@ default=green && local color=$REPLY
+  z.arg.named indent $@ && local indent=$REPLY
   z.arg.named.shift color $@
   z.arg.named.shift indent $REPLY
 
@@ -182,12 +166,8 @@ z.io.success() {
 # example:
 #  z.io.warn "This is a warning message."
 z.io.warn() {
-  z.arg.named color $@ default=yellow
-  local color=$REPLY
-
-  z.arg.named indent $@
-  local indent=$REPLY
-
+  z.arg.named color $@ default=yellow && local color=$REPLY
+  z.arg.named indent $@ && local indent=$REPLY
   z.arg.named.shift color $@
   z.arg.named.shift indent $REPLY
 
@@ -205,12 +185,8 @@ z.io.warn() {
 # example:
 #  z.io.error "error message"
 z.io.error() {
-  z.arg.named color $@ default=red
-  local color=$REPLY
-
-  z.arg.named indent $@
-  local indent=$REPLY
-
+  z.arg.named color $@ default=red && local color=$REPLY
+  z.arg.named indent $@ && local indent=$REPLY
   z.arg.named.shift color $@
   z.arg.named.shift indent $REPLY
   local args=($REPLY)

@@ -8,11 +8,8 @@
 # example:
 #  z.arr.join "a" "b" "c" #=> REPLY="a b c"
 z.arr.join() {
-  z.arg.named delimiter $@ default=" "
-  local delimiter=$REPLY
-
-  z.arg.named.shift delimiter $@
-  local arr=($REPLY)
+  z.arg.named delimiter $@ default=" " && local delimiter=$REPLY
+  z.arg.named.shift delimiter $@ && local arr=($REPLY)
 
   local IFS=$delimiter
   z.return "${arr[*]}"
@@ -29,9 +26,7 @@ z.arr.join() {
 #  z.arr.split delimiter="," "a,b,c" #=> REPLY=("a" "b" "c")
 #  z.arr.split "a b c"         #=> REPLY=("a" "b" "c")
 z.arr.split() {
-  z.arg.named delimiter $@ default=" "
-  local delimiter=$REPLY
-
+  z.arg.named delimiter $@ default=" " && local delimiter=$REPLY
   z.arg.named.shift delimiter $@
   local str=$REPLY
   local arr
@@ -54,17 +49,11 @@ z.arr.split() {
 z.arr.gsub() {
   local args=($@)
 
-  z.arg.named search $args
-  local search=${REPLY}
+  z.arg.named search $args && local search=${REPLY}
+  z.arg.named.shift search $args && args=($REPLY)
 
-  z.arg.named.shift search $args
-  args=($REPLY)
-
-  z.arg.named replace $args
-  local replace=${REPLY}
-
-  z.arg.named.shift replace $args
-  args=($REPLY)
+  z.arg.named replace $args && local replace=${REPLY}
+  z.arg.named.shift replace $args && args=($REPLY)
 
   local result=()
 
@@ -88,9 +77,7 @@ z.arr.gsub() {
 z.arr.sort() {
   z.arg.named by $@ default=asc
   local sort_by=$REPLY
-
-  z.arg.named.shift by $@
-  local arr=($REPLY)
+  z.arg.named.shift by $@ && local arr=($REPLY)
 
   case $sort_by in
   asc)
@@ -140,11 +127,8 @@ z.arr.unique() {
 # example:
 #  z.arr.diff base="a b c" other="b c d" #=> REPLY=("a" "d")
 z.arr.diff() {
-  z.arg.named base $@
-  local base=$REPLY
-
-  z.arg.named other $@
-  local other=$REPLY
+  z.arg.named base $@ && local base=$REPLY
+  z.arg.named other $@ && local other=$REPLY
 
   local base_arr=(${=base})
   local other_arr=(${=other})
@@ -189,11 +173,8 @@ z.arr.diff() {
 # example:
 #  z.arr.intersect base="a b c" other="b c d" #=> REPLY=("b" "c")
 z.arr.intersect() {
-  z.arg.named base $@
-  local base=$REPLY
-
-  z.arg.named other $@
-  local other=$REPLY
+  z.arg.named base $@ && local base=$REPLY
+  z.arg.named other $@ && local other=$REPLY
 
   local base_arr=(${=base})
   local other_arr=(${=other})
@@ -232,11 +213,8 @@ z.arr.intersect() {
 # example:
 #  z.arr.union base="a b c" other="b c d e" #=> REPLY=("a" "b" "c" "d" "e")
 z.arr.union() {
-  z.arg.named base $@
-  local base=$REPLY
-
-  z.arg.named other $@
-  local other=$REPLY
+  z.arg.named base $@ && local base=$REPLY
+  z.arg.named other $@ && local other=$REPLY
 
   local base_arr=(${=base})
   local other_arr=(${=other})
@@ -300,17 +278,10 @@ z.arr.reverse() {
 #  z.arr.slice offset=2 to=5 "a" "b" "c" "d" "e" #=> REPLY=("c" "d" "e")
 z.arr.slice() {
   local args=($@)
-  z.arg.named offset $args
-  local offset=$REPLY
-
-  z.arg.named to $args
-  local to=$REPLY
-
-  z.arg.named.shift offset $args
-  args=($REPLY)
-
-  z.arg.named.shift to $args
-  args=($REPLY)
+  z.arg.named offset $args && local offset=$REPLY
+  z.arg.named to $args && local to=$REPLY
+  z.arg.named.shift offset $args && args=($REPLY)
+  z.arg.named.shift to $args && args=($REPLY)
   local arr=($args)
 
   if z.is.not.null "$offset"; then

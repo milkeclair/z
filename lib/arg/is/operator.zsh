@@ -39,11 +39,8 @@ z.arg.is.empty() {
 #  z.arg.is.valid "a" "b" "c" length=2 #=> 0
 #  z.arg.is.valid "a" "b" "c" length=4 #=> 1
 z.arg.is.valid() {
-  z.arg.named length $@
-  local length=$REPLY
-
-  z.arg.named.shift length $@
-  local args=($REPLY)
+  z.arg.named length $@ && local length=$REPLY
+  z.arg.named.shift length $@ && local args=($REPLY)
   local message="Expected at least $length arguments, but got ${#args}"
 
   if z.int.is.lt ${#args} $length; then

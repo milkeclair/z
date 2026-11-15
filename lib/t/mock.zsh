@@ -8,11 +8,8 @@
 # example:
 #  z.t.mock name=my_func behavior=call_original
 z.t.mock() {
-  z.arg.named name $@
-  local func_name=$REPLY
-
-  z.arg.named behavior $@
-  local behavior=$REPLY
+  z.arg.named name $@ && local func_name=$REPLY
+  z.arg.named behavior $@ && local behavior=$REPLY
   local original_func_name="original_$func_name"
   local nonfunctional="_nonfunctional"
 

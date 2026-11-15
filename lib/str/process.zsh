@@ -33,11 +33,8 @@ z.str.color() {
 # example:
 #  z.str.indent level=2 message="Hello" #=> "    Hello"
 z.str.indent() {
-  z.arg.named level $@
-  local level=$REPLY
-
-  z.arg.named message $@
-  local message=$REPLY
+  z.arg.named level $@ && local level=$REPLY
+  z.arg.named message $@ && local message=$REPLY
 
   if z.int.is.not.match $level || z.int.is.lt $level 0; then
     level=0
@@ -61,11 +58,8 @@ z.str.indent() {
 # example:
 #  z.str.split str="apple|banana|cherry" delimiter=| #=> ("apple" "banana" "cherry")
 z.str.split() {
-  z.arg.named str $@
-  local str=$REPLY
-
-  z.arg.named delimiter $@ default="|"
-  local delimiter=$REPLY
+  z.arg.named str $@ && local str=$REPLY
+  z.arg.named delimiter $@ default="|" && local delimiter=$REPLY
 
   local IFS=$delimiter
   REPLY=(${=str})
@@ -83,9 +77,7 @@ z.str.split() {
 #  z.str.partition "p foo bar" "[[:space:]]+" #=> ("p" "foo bar")
 #  z.str.partition "a[0-9]b" "[0-9]" literal=true #=> ("a" "b")
 z.str.partition() {
-  z.arg.named literal $@ default=false
-  local literal=$REPLY
-
+  z.arg.named literal $@ default=false && local literal=$REPLY
   z.arg.named.shift literal $@
   local str=$REPLY[1]
   local delimiter=$REPLY[2]
@@ -161,17 +153,10 @@ z.str.match() {
 #  z.str.gsub str="Hello123World" search="[0-9]" replace="-" #=> "Hello---World"
 #  z.str.gsub str="a[0-9]b" search="[0-9]" replace="X" literal=true #=> "aXb"
 z.str.gsub() {
-  z.arg.named str $@
-  local str=$REPLY
-
-  z.arg.named search $@
-  local search=$REPLY
-
-  z.arg.named replace $@
-  local replace=$REPLY
-
-  z.arg.named literal $@ default=false
-  local literal=$REPLY
+  z.arg.named str $@ && local str=$REPLY
+  z.arg.named search $@ && local search=$REPLY
+  z.arg.named replace $@ && local replace=$REPLY
+  z.arg.named literal $@ default=false && local literal=$REPLY
 
   if z.is.null $str || z.is.null $search; then
     z.return $str
@@ -378,12 +363,8 @@ z.str.kebabize() {
 #  z.str.delimitize delimiter="_" "helloWorld" #=> "hello_world"
 #  z.str.delimitize delimiter="-" replace_chars="[ _]" "hello world_test" #=> "hello-world-test"
 z.str.delimitize() {
-  z.arg.named delimiter $@
-  local delimiter=$REPLY
-
-  z.arg.named replace_chars $@ default="[ _-]"
-  local replace_chars=$REPLY
-
+  z.arg.named delimiter $@ && local delimiter=$REPLY
+  z.arg.named replace_chars $@ default="[ _-]" && local replace_chars=$REPLY
   z.arg.named.shift delimiter $@
   z.arg.named.shift replace_chars $REPLY
 
@@ -447,12 +428,8 @@ z.str.visible() {
 # example:
 #  z.str.ljust width=10 fill="." "Hi" #=> "Hi........"
 z.str.ljust() {
-  z.arg.named width $@
-  local width=$REPLY
-
-  z.arg.named fill $@ default=" "
-  local fill=$REPLY
-
+  z.arg.named width $@ && local width=$REPLY
+  z.arg.named fill $@ default=" " && local fill=$REPLY
   z.arg.named.shift width $@
   z.arg.named.shift fill $REPLY
   local str=$REPLY
@@ -483,12 +460,8 @@ z.str.ljust() {
 # example:
 #  z.str.rjust width=10 fill="." "Hi" #=> "........Hi"
 z.str.rjust() {
-  z.arg.named width $@
-  local width=$REPLY
-
-  z.arg.named fill $@ default=" "
-  local fill=$REPLY
-
+  z.arg.named width $@ && local width=$REPLY
+  z.arg.named fill $@ default=" " && local fill=$REPLY
   z.arg.named.shift width $@
   z.arg.named.shift fill $REPLY
   local str=$REPLY

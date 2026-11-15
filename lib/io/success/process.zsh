@@ -9,12 +9,8 @@
 # example:
 #  z.io.success.oneline "success message"
 z.io.success.oneline() {
-  z.arg.named color $@ default=green
-  local color=$REPLY
-
-  z.arg.named indent $@
-  local indent=$REPLY
-
+  z.arg.named color $@ default=green && local color=$REPLY
+  z.arg.named indent $@ && local indent=$REPLY
   z.arg.named.shift color $@
   z.arg.named.shift indent $REPLY
   local args=($REPLY)
@@ -36,12 +32,8 @@ z.io.success.oneline() {
 # example:
 #  z.io.success.line "success1" "success2"
 z.io.success.line() {
-  z.arg.named color $@ default=green
-  local color=$REPLY
-
-  z.arg.named indent $@
-  local indent=$REPLY
-
+  z.arg.named color $@ default=green && local color=$REPLY
+  z.arg.named indent $@ && local indent=$REPLY
   z.arg.named.shift color $@
   z.arg.named.shift indent $REPLY
   local args=($REPLY)

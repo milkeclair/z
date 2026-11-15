@@ -8,9 +8,7 @@
 # example:
 #  z.arg.get "a" "b" "c" index=2 #=> "b"
 z.arg.get() {
-  z.arg.named index $@
-  local index=$REPLY
-
+  z.arg.named index $@ && local index=$REPLY
   z.arg.named.shift index $@
   local args=($REPLY)
   z.arr.count $args

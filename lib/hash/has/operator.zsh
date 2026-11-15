@@ -11,11 +11,8 @@
 #   z.hash.has.key hash key=name
 #   echo $?  # outputs 0
 z.hash.has.key() {
-  z.arg.named.shift key $@
-  local hash_name=$REPLY
-
-  z.arg.named key $@
-  local key=$REPLY
+  z.arg.named.shift key $@ && local hash_name=$REPLY
+  z.arg.named key $@ && local key=$REPLY
 
   local ref="${hash_name}[$key]"
 
@@ -35,11 +32,8 @@ z.hash.has.key() {
 #   z.hash.has.value hash key=name
 #   echo $?  # outputs 0
 z.hash.has.value() {
-  z.arg.named key $@
-  local key=$REPLY
-
-  z.arg.named.shift key $@
-  local hash_name=$REPLY
+  z.arg.named key $@ && local key=$REPLY
+  z.arg.named.shift key $@ && local hash_name=$REPLY
 
   z.is.not.null ${${(P)hash_name}[$key]}
 }

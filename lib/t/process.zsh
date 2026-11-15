@@ -239,8 +239,7 @@ z.t._setup_temp_dirs() {
 # example:
 #  z.t._show_compact_results $compact_dir $files
 z.t._show_compact_results() {
-  local compact_dir=$1
-  shift
+  local compact_dir=$1 && shift
   local files=($@)
 
   z.io.empty
@@ -270,8 +269,7 @@ z.t._show_compact_results() {
 # example:
 #  z.t._show_totals $count_dir $files
 z.t._show_totals() {
-  local count_dir=$1
-  shift
+  local count_dir=$1 && shift
   local files=($@)
 
   local total_tests=0

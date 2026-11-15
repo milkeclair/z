@@ -8,11 +8,8 @@
 # example:
 #  z.file.make path="/path/to/file.txt" with_dir=true
 z.file.make() {
-  z.arg.named path $@
-  local file=$REPLY
-
-  z.arg.named with_dir $@ default=false
-  local with_dir=$REPLY
+  z.arg.named path $@ && local file=$REPLY
+  z.arg.named with_dir $@ default=false && local with_dir=$REPLY
 
   if z.is.true $with_dir; then
     z.dir.make path=$(dirname $file)
@@ -31,11 +28,8 @@ z.file.make() {
 # example:
 #  z.file.write path="/path/to/file.txt" content="hello world"
 z.file.write() {
-  z.arg.named path $@
-  local file=$REPLY
-
-  z.arg.named content $@
-  local content=$REPLY
+  z.arg.named path $@ && local file=$REPLY
+  z.arg.named content $@ && local content=$REPLY
 
   echo -n "$content" > $file
 }
@@ -49,8 +43,7 @@ z.file.write() {
 # example:
 #  z.file.read path="/path/to/file.txt"
 z.file.read() {
-  z.arg.named path $@
-  local file=$REPLY
+  z.arg.named path $@ && local file=$REPLY
 
   if z.file.exists $file; then
     REPLY=$(cat $file)

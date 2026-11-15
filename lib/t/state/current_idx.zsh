@@ -24,11 +24,8 @@ z.t._state.current_idx() {
 #  z.t._state.current_idx.set "describe" value=1
 z.t._state.current_idx.set() {
   local REPLY
-  z.arg.named value $@
-  local value=$REPLY
-
-  z.arg.named.shift value $@
-  local context=$REPLY
+  z.arg.named value $@ && local value=$REPLY
+  z.arg.named.shift value $@ && local context=$REPLY
 
   z_t_current_idx[$context]=$value
 }

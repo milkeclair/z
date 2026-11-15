@@ -40,8 +40,7 @@ z.t._log.dot.pending() {
 # example:
 #  z.t._log.dot.output char=F
 z.t._log.dot.output() {
-  z.arg.named char $@
-  local char=$REPLY
+  z.arg.named char $@ && local char=$REPLY
   local count_file="${Z_TEST_COMPACT_DIR}/.dot_count"
   local count=0
 

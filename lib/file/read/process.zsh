@@ -7,8 +7,7 @@
 # example:
 #  z.file.read.lines path="/path/to/file.txt"
 z.file.read.lines() {
-  z.arg.named path $@
-  local file=$REPLY
+  z.arg.named path $@ && local file=$REPLY
 
   if z.file.exists $file; then
     REPLY=(${(f)$(cat $file)})
@@ -27,11 +26,8 @@ z.file.read.lines() {
 # example:
 #  z.file.read.pick path="/path/to/file.txt" word="search_word"
 z.file.read.pick() {
-  z.arg.named path $@
-  local file=$REPLY
-
-  z.arg.named word $@
-  local word=$REPLY
+  z.arg.named path $@ && local file=$REPLY
+  z.arg.named word $@ && local word=$REPLY
 
   if z.file.exists $file; then
     REPLY=$(grep $word $file | head -n 1)

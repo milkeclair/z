@@ -31,9 +31,7 @@ z.str.match.rest() {
 #  z.str.match.nth "one two three" "^o" index=1   #=> "one"
 #  z.str.match.nth "apple banana cherry" "^a" index=2 #=> "banana"
 z.str.match.nth() {
-  z.arg.named index $@
-  local index=$REPLY
-
+  z.arg.named index $@ && local index=$REPLY
   z.arg.named.shift index $@
   local str=$REPLY[1]
   local regex=$REPLY[2]

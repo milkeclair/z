@@ -12,8 +12,7 @@ z.t.expect.status() {
   z.status
   local actual=$REPLY
   local expect=$1
-  z.arg.named skip_unmock $@
-  local skip_unmock=$REPLY
+  z.arg.named skip_unmock $@ && local skip_unmock=$REPLY
 
   z.is.eq $expect "true" && expect=0
   z.is.eq $expect "false" && expect=1
