@@ -243,3 +243,190 @@ z.t.describe "z.install.mod._fetch"; {
     }
   }
 }
+
+z.t.describe "z.install.mod.all"; {
+  z.t.context "配布元の全modを導入する場合"; {
+    z.t.it "一度の取得で更新・追加を行い独自modを保持する"; {
+      local fixture=$(mktemp -d "/tmp/z all command.XXXXXX")
+      local z_root="$fixture/installed"
+      local Z_INSTALL_BRANCH=topic/change
+      local all_fetch_count=0
+      local all_confirm_count=0
+      z.dir.make path="$z_root/mod/app"
+      z.dir.make path="$z_root/mod/custom"
+      z.dir.make path="$fixture/source/app"
+      z.dir.make path="$fixture/source/new"
+      z.file.write path="$z_root/main.zsh" content="touch \"$fixture/reloaded\""
+      z.file.write path="$z_root/mod/app/value" content=old
+      z.file.write path="$z_root/mod/custom/value" content=custom
+      z.file.write path="$fixture/source/app/value" content=updated
+      z.file.write path="$fixture/source/new/value" content=added
+      z.t.mock name="z.install.mod._fetch" behavior="((all_fetch_count++)); z.return \"$fixture/source\""
+      z.t.mock name="z.install.mod.all._confirm" behavior="((all_confirm_count++)); return 0"
+      z.t.mock name="z.completion.cache._cancel" behavior="return 0"
+      z.t.mock name="z.completion.enable" behavior="return 0"
+
+      () {
+        local Z_ROOT=$z_root
+        z.install.mod.all > "$fixture/output"
+      }
+      local result_code=$?
+      local fetch_count=$all_fetch_count
+      local confirm_count=$all_confirm_count
+
+      z.t.expect "$result_code" 0
+      z.t.expect "$fetch_count" 1
+      z.t.expect "$confirm_count" 1
+      z.file.read path="$z_root/mod/app/value"
+      z.t.expect.reply updated
+      z.file.read path="$z_root/mod/new/value"
+      z.t.expect.reply added
+      z.file.read path="$z_root/mod/custom/value"
+      z.t.expect.reply custom
+      z.file.exists "$fixture/reloaded"
+      z.t.expect.status.is.true
+      local leftovers=("$z_root"/.z-mod-all.*(N/))
+      z.t.expect "${#leftovers}" 0
+
+      z.dir.remove path="$fixture"
+    }
+  }
+
+  z.t.context "確認を中止した場合"; {
+    z.t.it "現行modを維持して作業領域を除去する"; {
+      local fixture=$(mktemp -d /tmp/z_all_command.XXXXXX)
+      local z_root="$fixture/installed"
+      z.dir.make path="$z_root/mod/app"
+      z.dir.make path="$fixture/source/app"
+      z.file.write path="$z_root/main.zsh" content=":"
+      z.file.write path="$z_root/mod/app/value" content=old
+      z.t.mock name="z.install.mod._fetch" behavior="z.return \"$fixture/source\""
+      z.t.mock name="z.install.mod.all._confirm" behavior="return 1"
+
+      z.install.mod.all > "$fixture/output"
+
+      z.t.expect.status.is.false
+      z.file.read path="$z_root/mod/app/value"
+      z.t.expect.reply old
+      local leftovers=("$z_root"/.z-mod-all.*(N/))
+      z.t.expect "${#leftovers}" 0
+
+      z.dir.remove path="$fixture"
+    }
+  }
+
+  z.t.context "コピーが失敗する場合"; {
+    z.t.it "現行modを維持して作業領域を除去する"; {
+      local fixture=$(mktemp -d /tmp/z_all_command.XXXXXX)
+      local z_root="$fixture/installed"
+      z.dir.make path="$z_root/mod/app"
+      z.dir.make path="$fixture/source/app"
+      z.file.write path="$z_root/main.zsh" content=":"
+      z.file.write path="$z_root/mod/app/value" content=old
+      z.t.mock name="z.install.mod._fetch" behavior="z.return \"$fixture/source\""
+      z.t.mock name="z.install.mod.all._confirm" behavior="return 0"
+      z.t.mock name=cp behavior="return 1"
+
+      z.install.mod.all > "$fixture/output"
+
+      z.t.expect.status.is.false
+      z.file.read path="$z_root/mod/app/value"
+      z.t.expect.reply old
+      local leftovers=("$z_root"/.z-mod-all.*(N/))
+      z.t.expect "${#leftovers}" 0
+
+      z.dir.remove path="$fixture"
+    }
+  }
+
+  z.t.context "再読込に失敗する場合"; {
+    z.t.it "旧modを復旧用に残す"; {
+      local fixture=$(mktemp -d /tmp/z_all_command.XXXXXX)
+      local z_root="$fixture/installed"
+      z.dir.make path="$z_root/mod/app"
+      z.dir.make path="$fixture/source/app"
+      z.file.write path="$z_root/main.zsh" content="return 7"
+      z.file.write path="$z_root/mod/app/value" content=old
+      z.file.write path="$fixture/source/app/value" content=updated
+      z.t.mock name="z.install.mod._fetch" behavior="z.return \"$fixture/source\""
+      z.t.mock name="z.install.mod.all._confirm" behavior="return 0"
+      z.t.mock name="z.completion.cache._cancel" behavior="return 0"
+
+      () {
+        local Z_ROOT=$z_root
+        z.install.mod.all > "$fixture/output" 2>/dev/null
+      }
+      local result_code=$?
+      local leftovers=("$z_root"/.z-mod-all.*(N/))
+
+      z.t.expect "$result_code" 1
+      z.t.expect "${#leftovers}" 1
+      z.file.read path="$leftovers[1]/previous/app/value"
+      z.t.expect.reply old
+      z.file.read path="$z_root/mod/app/value"
+      z.t.expect.reply updated
+
+      z.dir.remove path="$fixture"
+    }
+  }
+
+  z.t.context "配布元にmodがない場合"; {
+    z.t.it "確認を行わず成功しREPLYを空にする"; {
+      local fixture=$(mktemp -d /tmp/z_all_empty.XXXXXX)
+      local z_root="$fixture/installed"
+      local all_confirm_count=0
+      z.dir.make path="$z_root/mod/custom"
+      z.dir.make path="$fixture/source"
+      z.file.write path="$z_root/main.zsh" content=":"
+      z.file.write path="$z_root/mod/custom/value" content=custom
+      z.t.mock name="z.install.mod._fetch" behavior="z.return \"$fixture/source\""
+      z.t.mock name="z.install.mod.all._confirm" behavior="((all_confirm_count++)); return 1"
+
+      z.install.mod.all > "$fixture/output"
+      local result_code=$?
+      local result_reply=$REPLY
+      local calls=$all_confirm_count
+
+      z.t.expect "$result_code" 0
+      z.t.expect "$result_reply" ""
+      z.t.expect "$calls" 0
+      z.file.read path="$z_root/mod/custom/value"
+      z.t.expect.reply custom
+
+      z.dir.remove path="$fixture"
+    }
+  }
+  z.t.context "作業領域の作成に失敗した場合"; {
+    z.t.it "取得前に中断して現行modを維持する"; {
+      local fixture=$(mktemp -d /tmp/z_all_command.XXXXXX)
+      local z_root="$fixture/installed"
+      local -a all_fetch_attempts=()
+      z.dir.make path="$z_root/mod/app"
+      z.file.write path="$z_root/main.zsh" content=":"
+      z.file.write path="$z_root/mod/app/value" content=old
+      z.t.mock name=mktemp behavior="return 1"
+      z.t.mock name="z.install.mod._fetch" behavior='all_fetch_attempts+=(called); return 0'
+
+      z.install.mod.all > "$fixture/output"
+      local result_code=$?
+      local attempts="$all_fetch_attempts"
+
+      z.t.expect "$result_code" 1
+      z.t.expect "$attempts" ""
+      z.file.read path="$z_root/mod/app/value"
+      z.t.expect.reply old
+
+      z.dir.remove path="$fixture"
+    }
+  }
+
+  z.t.context "導入先の情報がない場合"; {
+    z.t.it "失敗する"; {
+      local z_root=""
+
+      z.install.mod.all
+
+      z.t.expect.status.is.false
+    }
+  }
+}

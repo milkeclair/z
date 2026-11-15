@@ -66,3 +66,58 @@ z.install.mod._fetch() {
 
   z.return "$roots[1]/mod"
 }
+
+# install or update every distribution mod after one confirmation
+# local-only mods and files directly under mod are preserved
+#
+# REPLY: null
+# return: 0|1
+#
+# example:
+#  z.install.mod.all
+z.install.mod.all() {
+  z.is.null "$z_root" && return 1
+  local install_dir=$z_root
+  z.str.is.path_like "$install_dir" || install_dir="./$install_dir"
+  z.path.real "$install_dir"
+  install_dir=$REPLY
+  z.file.exists "$install_dir/main.zsh" || return 1
+
+  z.path.real "$PWD"
+  local previous_dir=$REPLY
+  local work_dir=$(mktemp -d "$install_dir/.z-mod-all.XXXXXX")
+  z.dir.exists "$work_dir" || return 1
+
+  {
+    z.install.mod._fetch dir="$work_dir" branch="${Z_INSTALL_BRANCH:-main}" || return 1
+    local source_dir=$REPLY
+    local mod_names=("$source_dir"/*(N/:t))
+
+    if z.int.is.zero ${#mod_names}; then
+      z.io "No mods available."
+      return 0
+    fi
+
+    z.install.mod.all._confirm dir="$install_dir/mod" || return 1
+    z.install.mod.all._prepare source="$source_dir" current="$install_dir/mod" dir="$work_dir/next" || return 1
+
+    if (( ${+functions[z.completion.cache._cancel]} )); then
+      z.completion.cache._cancel
+    fi
+
+    z.install.mod.all._replace current="$install_dir/mod" prepared="$work_dir/next" backup="$work_dir/previous" || return 1
+    z.install.mod.all._reload dir="$install_dir" previous="$previous_dir" || return 1
+
+    z.io "Installed or updated ${#mod_names} mods."
+  } always {
+    local result_code=$?
+
+    if z.int.is.not.zero "$result_code" && z.dir.exists "$work_dir/previous"; then
+      z.io.error "mod recovery files: $work_dir/previous"
+    else
+      z.dir.remove path="$work_dir" || return 1
+    fi
+
+    z.return
+  }
+}
