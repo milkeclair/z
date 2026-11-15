@@ -93,7 +93,7 @@ function declarations(command: SimpleCommandNode, sets: {
 export function collectFileFacts(file: ZshFileHydration): FileFacts {
   const calls: SimpleCommandNode[] = [];
   const usages: Usage[] = [];
-  const classes = createClassState();
+  let classes = createClassState();
   const active: Usage[] = [];
   const sets = { aliases: new Set<string>(), globalAliases: new Set<string>(),
     suffixAliases: new Set<string>(), autoloads: new Set<string>(), builtins: new Set<string>() };
@@ -108,9 +108,9 @@ export function collectFileFacts(file: ZshFileHydration): FileFacts {
     if (node.kind === 'simpleCommand') {
       if (node.commandName) calls.push(node);
       declarations(node, sets);
-      classDeclaration(node, depth, current?.definition, classes);
+      classes = classDeclaration(node, depth, current?.definition, classes);
     }
-    if (!current || classes.pending?.methodDepth !== undefined && classes.pending.scope === current.definition) return;
+    if (!current || (classes.pending?.kind === 'method' && classes.pending.definition.scope === current.definition)) return;
     if (node.kind === 'simpleCommand' && node.commandName && literalWord(node.commandName.word) === 'z.arg.named') {
       const word = node.arguments[0];
       const name = word && literalWord(word);
