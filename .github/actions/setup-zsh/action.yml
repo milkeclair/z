@@ -1,0 +1,60 @@
+name: Set up zsh
+description: Restore or build the CI zsh toolchain on Ubuntu 26.04.
+
+inputs:
+  version:
+    description: Exact zsh version to build and verify.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Cache zsh
+      id: cache
+      uses: actions/cache@v6.1.0
+      with:
+        path: ~/.local
+        key: ubuntu-26.04-${{ runner.arch }}-zsh-${{ inputs.version }}
+
+    - name: Install dependencies
+      shell: bash
+      env:
+        CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
+      run: |
+        set -euo pipefail
+        if [[ "$CACHE_HIT" == true ]] && command -v uuidgen >/dev/null 2>&1; then
+          printf 'Cached zsh and uuidgen are available.\n'
+          exit 0
+        fi
+
+        sudo apt-get update
+        sudo apt-get install -y build-essential libncurses-dev yodl uuid-runtime
+
+    - name: Build and install zsh
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      working-directory: ${{ runner.temp }}
+      env:
+        ZSH_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        wget "https://sourceforge.net/projects/zsh/files/zsh/$ZSH_VERSION/zsh-$ZSH_VERSION.tar.xz/download" -O zsh.tar.xz
+        tar xf zsh.tar.xz
+        cd "zsh-$ZSH_VERSION"
+        ./configure --prefix="$HOME/.local" --with-tcsetpgrp
+        make
+        make install
+
+    - name: Verify installed zsh version
+      shell: bash
+      env:
+        ZSH_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        actual_version=$("$HOME/.local/bin/zsh" -c 'print -r -- "$ZSH_VERSION"')
+        if [[ "$actual_version" != "$ZSH_VERSION" ]]; then
+          printf '::error::Expected zsh %s, installed %s\n' "$ZSH_VERSION" "$actual_version"
+          exit 1
+        fi
+        command -v uuidgen >/dev/null
+        printf '%s\n' "$HOME/.local/bin" >> "$GITHUB_PATH"
