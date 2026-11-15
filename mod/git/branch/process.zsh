@@ -12,7 +12,6 @@ z.git.b() {
 
 # alias for `git branch -a`
 #
-# $@: git branch options and arguments
 # REPLY: null
 # return: null
 #
@@ -36,7 +35,6 @@ z.git.branch() {
 
 # alias for `git branch -a`
 #
-# $@: git branch options and arguments
 # REPLY: null
 # return: null
 #
