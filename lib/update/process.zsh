@@ -69,7 +69,7 @@ z.update() {
 # example:
 #  z.update._confirm dir=~/.z
 z.update._confirm() {
-  z.arg.named dir "$@" || return 1
+  z.arg.named dir "$@"
   local dir=$REPLY
   z.is.null "$dir" && return 1
 

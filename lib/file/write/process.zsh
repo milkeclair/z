@@ -8,8 +8,11 @@
 # example:
 #  z.file.write.last path="/path/to/file.txt" content="hello world"
 z.file.write.last() {
-  z.arg.named path $@ && local file=$REPLY
-  z.arg.named content $@ && local content=$REPLY
+  z.arg.named path $@
+  local file=$REPLY
+
+  z.arg.named content $@
+  local content=$REPLY
 
   echo "$content" >> $file
 }

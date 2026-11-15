@@ -11,7 +11,9 @@
 z.t.expect.reply() {
   local expect=$1
   local reply=$REPLY
-  z.arg.named skip_unmock $@ && local skip_unmock=$REPLY
+
+  z.arg.named skip_unmock $@
+  local skip_unmock=$REPLY
 
   z.t.expect "$reply" "$expect" "skip_unmock=$skip_unmock"
 }

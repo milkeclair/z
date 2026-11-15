@@ -8,10 +8,10 @@
 # example:
 #  z.update.core._copy source=/tmp/source dir=/tmp/update/next
 z.update.core._copy() {
-  z.arg.named source "$@" || return 1
+  z.arg.named source "$@"
   local source_dir=$REPLY
 
-  z.arg.named dir "$@" || return 1
+  z.arg.named dir "$@"
   local dir=$REPLY
   z.is.null "$dir" && return 1
   z.dir.exists "$dir" && return 1

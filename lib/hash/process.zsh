@@ -38,8 +38,11 @@ z.hash.to_arr() {
 #   local -A merged=($REPLY)
 #   echo ${merged[name]}  # outputs "John"
 z.hash.merge() {
-  z.arg.named base $@ && local base=$REPLY
-  z.arg.named other $@ && local other=$REPLY
+  z.arg.named base $@
+  local base=$REPLY
+
+  z.arg.named other $@
+  local other=$REPLY
 
   local -A merged_hash
 

@@ -75,6 +75,17 @@ z.t.describe "z.arg.named"; {
     }
   }
 
+  z.t.context "指定した名前の引数がない場合"; {
+    z.t.it "成功して空の値を返す"; {
+      z.arg.named name other=fuga
+      local result_code=$?
+      local result_reply=$REPLY
+
+      z.t.expect "$result_code" 0
+      z.t.expect "$result_reply" ""
+    }
+  }
+
   z.t.context "defaultが指定されていて、値がない場合"; {
     z.t.it "デフォルト値を返す"; {
       z.arg.named name name="" other=fuga default=default_value

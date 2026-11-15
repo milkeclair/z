@@ -12,11 +12,20 @@
 #  z.arg.as name=$1 as="-h|--help" #=> REPLY=""
 z.arg.as() {
   local args=($@)
-  z.arg.named name $args && local name=$REPLY
-  z.arg.named.shift name $args && args=($REPLY)
-  z.arg.named as $args && local as=$REPLY
-  z.arg.named.shift as $args && args=($REPLY)
-  z.arg.named return $args && local return=$REPLY
+  z.arg.named name $args
+  local name=$REPLY
+
+  z.arg.named.shift name $args
+  args=($REPLY)
+
+  z.arg.named as $args
+  local as=$REPLY
+
+  z.arg.named.shift as $args
+  args=($REPLY)
+
+  z.arg.named return $args
+  local return=$REPLY
 
   z.str.split str=$as
   local split_as=($REPLY[@])

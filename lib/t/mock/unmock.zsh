@@ -8,7 +8,8 @@
 # example:
 #  z.t.mock.unmock name=my_func
 z.t.mock.unmock() {
-  z.arg.named name $@ && local func_name=$REPLY
+  z.arg.named name $@
+  local func_name=$REPLY
   local nonfunctional="_nonfunctional"
 
   if z.is.null $func_name; then
@@ -47,7 +48,8 @@ z.t.mock.unmock() {
 # example:
 #  z.t.mock.unmock.all
 z.t.mock.unmock.all() {
-  z.arg.named skip_unmock $@ && local skip_unmock=$REPLY
+  z.arg.named skip_unmock $@
+  local skip_unmock=$REPLY
 
   if z.t.mock.unmock._is_not_skippable $skip_unmock; then
     z.t._state.mock_originals

@@ -54,8 +54,11 @@ z.perm.dir() {
 # example:
 #  z.perm._apply recursive=false path=/path/to/file mode=600
 z.perm._apply() {
-  z.arg.named recursive $@ default=false && local recursive=$REPLY
-  z.arg.named path $@ && local target_path=$REPLY
+  z.arg.named recursive $@ default=false
+  local recursive=$REPLY
+
+  z.arg.named path $@
+  local target_path=$REPLY
 
   if z.is.null "$target_path"; then
     z.io.error "path is required"
@@ -90,8 +93,11 @@ z.perm._apply() {
 # example:
 #  z.perm._owner_spec owner=user group=group #=> "user:group"
 z.perm._owner_spec() {
-  z.arg.named owner $@ default="" && local owner=$REPLY
-  z.arg.named group $@ default="" && local group=$REPLY
+  z.arg.named owner $@ default=""
+  local owner=$REPLY
+
+  z.arg.named group $@ default=""
+  local group=$REPLY
 
   if z.is.null "$owner" && z.is.null "$group"; then
     z.return
@@ -122,7 +128,8 @@ z.perm._owner_spec() {
 #    mode_group=read,none,none \
 #    mode_other=none,none,none
 z.perm._mode() {
-  z.arg.named mode $@ default="" && local mode=$REPLY
+  z.arg.named mode $@ default=""
+  local mode=$REPLY
   if z.is.not.null "$mode"; then
     z.return "$mode"
     return 0
@@ -140,9 +147,14 @@ z.perm._mode() {
     return 1
   fi
 
-  z.arg.named mode_owner $@ default="none,none,none" && local mode_owner=$REPLY
-  z.arg.named mode_group $@ default="none,none,none" && local mode_group=$REPLY
-  z.arg.named mode_other $@ default="none,none,none" && local mode_other=$REPLY
+  z.arg.named mode_owner $@ default="none,none,none"
+  local mode_owner=$REPLY
+
+  z.arg.named mode_group $@ default="none,none,none"
+  local mode_group=$REPLY
+
+  z.arg.named mode_other $@ default="none,none,none"
+  local mode_other=$REPLY
 
   z.perm._mode_digit "$mode_owner" || return 1
   local owner_digit=$REPLY

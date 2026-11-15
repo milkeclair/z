@@ -38,7 +38,8 @@ z.t._log.failure.remember() {
 # example:
 #  z.t._log.failure.add "red"
 z.t._log.failure.add() {
-  z.arg.named color $@ && local color=$REPLY
+  z.arg.named color $@
+  local color=$REPLY
 
   z.t._state.current_idx "describe"
   local d_idx=$REPLY
@@ -78,7 +79,8 @@ z.t._log.failure.add() {
 # example:
 #  z.t._log.failure.handle "error message"
 z.t._log.failure.handle() {
-  z.arg.named message $@ && local error_message=$REPLY
+  z.arg.named message $@
+  local error_message=$REPLY
 
   z.str.indent level=4 message=$error_message
   z.str.color.red $REPLY

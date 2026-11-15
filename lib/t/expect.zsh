@@ -11,7 +11,8 @@
 z.t.expect() {
   local actual=$1
   local expect=$2
-  z.arg.named skip_unmock $@ && local skip_unmock=$REPLY
+  z.arg.named skip_unmock $@
+  local skip_unmock=$REPLY
 
   z.t._state.skip.it
   if z.is.true $REPLY; then
@@ -43,7 +44,8 @@ z.t.expect() {
 z.t.expect.not() {
   local actual=$1
   local expect=$2
-  z.arg.named skip_unmock $@ && local skip_unmock=$REPLY
+  z.arg.named skip_unmock $@
+  local skip_unmock=$REPLY
 
   z.t._state.skip.it
   if z.is.true $REPLY; then
