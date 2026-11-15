@@ -25,3 +25,44 @@ z.t.describe "z.file.write.last"; {
     }
   }
 }
+
+
+z.t.describe "z.file.write.literal"; {
+  z.t.context "書き込み先がある場合"; {
+    z.t.it "改行とバックスラッシュをそのまま保存する"; {
+      z.dir.make path=/tmp/z_t/literal
+      z.file.write.literal path=/tmp/z_t/literal/value content=$'line\\n\ntrue'
+      z.t.expect.status.is.true
+      z.file.read path=/tmp/z_t/literal/value
+      z.t.expect.reply $'line\\n\ntrue'
+    }
+    z.t.it "null文字列と空文字を書き込める"; {
+      z.dir.make path=/tmp/z_t/literal_empty
+      z.file.write.literal path=/tmp/z_t/literal_empty/value content=null
+      z.file.read path=/tmp/z_t/literal_empty/value
+      local value=$REPLY
+      z.file.write.literal path=/tmp/z_t/literal_empty/value content=
+      z.t.expect.status.is.true
+      z.file.read path=/tmp/z_t/literal_empty/value
+      local empty=$REPLY
+      z.t.expect "$value" null
+      z.t.expect "$empty" ""
+    }
+  }
+  z.t.context "上書きが禁止されている場合"; {
+    z.t.it "既存ファイルを保持して失敗する"; {
+      z.dir.make path=/tmp/z_t/literal_existing
+      z.file.write path=/tmp/z_t/literal_existing/value content=before
+      z.file.write.literal path=/tmp/z_t/literal_existing/value content=after overwrite=false 2>/dev/null
+      z.t.expect.status.is.false
+      z.file.read path=/tmp/z_t/literal_existing/value
+      z.t.expect.reply before
+    }
+  }
+  z.t.context "書き込みに失敗する場合"; {
+    z.t.it "存在しない親directoryを成功として扱わない"; {
+      z.file.write.literal path=/tmp/z_t/literal_missing/dir/value content=value 2>/dev/null
+      z.t.expect.status.is.false
+    }
+  }
+}
