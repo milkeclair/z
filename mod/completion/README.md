@@ -27,6 +27,9 @@ z.completion.enable
 ### Function name completion
 
 When the current word starts with `z.`, completion lists matching public z functions.
+Each candidate is displayed on its own line, both in command and argument positions.
+Aliases and external commands remain available as candidates.
+Other commands use the previously registered command completion.
 
 ```zsh
 z.arg.na<Tab>

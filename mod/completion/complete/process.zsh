@@ -1,3 +1,25 @@
+# list z command names vertically alongside the previous command completion
+#
+# $@: completion arguments
+# REPLY: null
+# return: 0|1
+#
+# example:
+#  z.completion.complete._command
+z.completion.complete._command() {
+  local current_word=${words[$CURRENT]:-}
+  if z.str.start_with "$current_word" z. &&
+    z.int.is.zero ${#precommands:|builtin_precommands}; then
+    _alternative \
+      'commands:external command:_path_commands' \
+      'functions:shell function:z.completion.complete._functions' \
+      'aliases:alias:compadd -Qk aliases'
+    return
+  fi
+
+  "$z_completion_command_function" "$@"
+}
+
 # complete z functions or show docs for the current completion context
 #
 # REPLY: null
@@ -28,7 +50,7 @@ z.completion.complete._functions() {
 
   z.completion.function._candidates "$current_word" || return 1
   local candidates=("${(@f)REPLY}")
-  _describe -t z-functions "z functions" candidates
+  _describe -t z-functions "z functions" candidates -l
 }
 
 # show docs for the function near the current completion word

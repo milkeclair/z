@@ -2,6 +2,7 @@ typeset -gA z_completion_docs=()
 typeset -ga z_completion_function_names=()
 typeset -g z_completion_cache_ready=false
 typeset -g z_completion_cache_job_id=""
+typeset -g z_completion_command_function
 
 # enable z function completion in interactive shells without -c
 #
