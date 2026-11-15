@@ -61,6 +61,24 @@ z.install._decompress_archive() {
   fi
 }
 
+# preserve individually installed mods before replacing the core installation
+#
+# REPLY: null
+# return: 0|1
+#
+# example:
+#  z.install._preserve_mods
+z.install._preserve_mods() {
+  if [[ ! -e "$install_dir/mod" && ! -L "$install_dir/mod" ]]; then
+    return 0
+  fi
+
+  if ! cp -r "$install_dir/mod" "$temp_dir/installed-mods"; then
+    echo "❌ failed to preserve installed mods"
+    return 1
+  fi
+}
+
 z.install._remove_existing_install_dir() {
   if [[ ! -d $install_dir ]]; then
     return 0
@@ -100,6 +118,14 @@ z.install._copy_files() {
   if ! cp -r $test_dir "$install_dir/"; then
     echo "❌ failed to copy: test/"
     return 1
+  fi
+
+  if [[ -e "$temp_dir/installed-mods" || -L "$temp_dir/installed-mods" ]]; then
+    echo "   📁 mod/ (preserved)"
+    if ! cp -r "$temp_dir/installed-mods" "$install_dir/mod"; then
+      echo "❌ failed to restore installed mods"
+      return 1
+    fi
   fi
 
   local files=("main.zsh" "install.zsh" "uninstall.zsh" "version.zsh" "help.zsh" "README.md")
@@ -167,7 +193,7 @@ z.install._add_to_zshrc() {
   echo "   to apply changes: source ~/.zshrc"
 }
 
-# install z
+# install z, preserving individually installed mods on update
 #
 # $1?: install dir (default: $HOME/.z)
 # REPLY: null
@@ -192,6 +218,7 @@ z.install() {
 
   z.install._download_archive || return 1
   z.install._decompress_archive || return 1
+  z.install._preserve_mods || return 1
   z.install._remove_existing_install_dir || return 1
   z.install._copy_files || return 1
   z.install._show_completion
