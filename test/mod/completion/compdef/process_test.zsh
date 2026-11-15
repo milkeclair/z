@@ -1,18 +1,42 @@
 source ${z_main}
 
 z.t.describe "z.completion.compdef._register"; {
-  z.t.context "compdefが利用できる場合"; {
-    z.t.it "候補関数を_z_completionへ紐付ける"; {
-      local calls_file=/tmp/z_t/completion_compdef_register_calls
-      z.dir.make path=${calls_file:h}
-      z.file.write path=$calls_file content=""
-      z_completion_function_names=(z.example.one z.example.two) # zls: ignore
-      z.t.mock name="compdef" behavior="z.file.write.last path=$calls_file content=\"\$1 \$2\""
+  z.t.context "compinit済みの場合"; {
+    z.t.it "コマンド位置とz関数の補完を登録する"; {
+      local actual=$(z_mode=normal zsh -dfc '
+        source "$Z_ROOT/main.zsh"
+        autoload -Uz compinit
+        compinit -D
+        z.completion.cache.build._names
+        z.completion.compdef._register || exit 1
+        print -r -- "${_comps[-command-]}"
+        print -r -- "${_comps[z.arg.named]}"
+      ')
 
-      z.completion.compdef._register
+      z.t.expect "$actual" $'z.completion.complete._command\n_z_completion'
+    }
+  }
 
-      z.file.read path=$calls_file
-      z.t.expect.reply $'_z_completion z.example.one\n_z_completion z.example.two'
+  z.t.context "コマンド補完を繰り返し登録する場合"; {
+    z.t.it "既存の補完関数を引数とともに呼べる"; {
+      local actual=$(z_mode=normal zsh -dfc '
+        source "$Z_ROOT/main.zsh"
+        autoload -Uz compinit
+        compinit -D
+        _fixture_command_completion() { print -r -- "previous: $*"; }
+        compdef _fixture_command_completion -command-
+        z.completion.cache.build._names
+        z.completion.compdef._register || exit 1
+        z.completion.compdef._register || exit 1
+        source "$Z_ROOT/main.zsh"
+        z.completion.cache.build._names
+        z.completion.compdef._register || exit 1
+        words=(printf)
+        CURRENT=1
+        z.completion.complete._command original arguments
+      ')
+
+      z.t.expect "$actual" "previous: original arguments"
     }
   }
 }

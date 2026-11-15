@@ -26,7 +26,12 @@ z.completion.enable
 
 ### Function name completion
 
-When the current word starts with `z.`, completion lists matching public z functions.
+For `z.<Tab>`, completion lists root namespaces such as `z.arg.` and `z.str.` once each.
+Selecting a namespace keeps the trailing dot and does not insert a space, so you can continue completing within it.
+For a deeper prefix such as `z.str.` or `z.str.color.`, completion lists all matching public functions, including deeper descendants.
+Each candidate is displayed on its own line, both in command and argument positions.
+Aliases and external commands remain available as candidates.
+Other commands use the previously registered command completion.
 
 ```zsh
 z.arg.na<Tab>
