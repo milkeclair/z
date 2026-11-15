@@ -50,7 +50,9 @@ z.completion.complete._functions() {
 
   z.completion.function._candidates "$current_word" || return 1
   local candidates=("${(@f)REPLY}")
-  _describe -t z-functions "z functions" candidates -l
+  local suffix_options=()
+  z.is.eq "$current_word" z. && suffix_options=(-S "")
+  _describe -t z-functions "z functions" candidates -l "${suffix_options[@]}"
 }
 
 # show docs for the function near the current completion word

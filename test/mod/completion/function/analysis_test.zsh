@@ -11,6 +11,46 @@ z.t.describe "z.completion.function._candidates"; {
     }
   }
 
+  z.t.context "z.を指定した場合"; {
+    z.t.it "直下のnamespaceを重複なく返す"; {
+      z_completion_function_names=(z.str z.str.split z.str.color.red z.file.read z.file.write)
+
+      z.completion.function._candidates z.
+
+      z.t.expect.reply $'z.str.\nz.file.'
+    }
+  }
+
+  z.t.context "z.でprivate関数しかないnamespaceがある場合"; {
+    z.t.it "public関数を持つnamespaceだけを返す"; {
+      z_completion_function_names=(z.str.split z.hidden._helper z.other)
+
+      z.completion.function._candidates z.
+
+      z.t.expect.reply z.str.
+    }
+  }
+
+  z.t.context "z.str.を指定した場合"; {
+    z.t.it "深い階層も含めてstr配下の関数を返す"; {
+      z_completion_function_names=(z.str.split z.str.color.red z.str.color.rgb.hex z.file.read)
+
+      z.completion.function._candidates z.str.
+
+      z.t.expect.reply $'z.str.split\nz.str.color.red\nz.str.color.rgb.hex'
+    }
+  }
+
+  z.t.context "z.str.color.を指定した場合"; {
+    z.t.it "深い階層も含めてcolor配下の関数を返す"; {
+      z_completion_function_names=(z.str.split z.str.color.red z.str.color.rgb.hex)
+
+      z.completion.function._candidates z.str.color.
+
+      z.t.expect.reply $'z.str.color.red\nz.str.color.rgb.hex'
+    }
+  }
+
   z.t.context "function name cacheが空の場合"; {
     z.t.it "falseを返す"; {
       z_completion_function_names=()

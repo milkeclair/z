@@ -9,6 +9,14 @@ z.t.describe "z.completion.complete._command"; {
     }
   }
 
+  z.t.context "z.からnamespaceを選ぶ場合"; {
+    z.t.it "namespaceを1件にまとめて空白を付けず挿入する"; {
+      local actual=$(zsh "$z_root/test/mod/completion/complete/terminal.zsh" input=z. 'setup=zstyle ":completion:*:z-functions" ignored-patterns "^z.fixture.*"')
+
+      z.t.expect "$actual" $'matches:lines=1:1\nbuffer=z.fixture.'
+    }
+  }
+
   z.t.context "同じ接頭辞のaliasがある場合"; {
     z.t.it "aliasも補完候補として維持する"; {
       local actual=$(zsh "$z_root/test/mod/completion/complete/terminal.zsh" input=z.fixture. "setup=alias z.fixture.alias=:")
@@ -92,6 +100,14 @@ z.t.describe "z.completion.complete._functions"; {
       local actual=$(zsh "$z_root/test/mod/completion/complete/terminal.zsh" "input=z.arg.named z.fixture.")
 
       z.t.expect "$actual" $'matches:lines=2:2\nbuffer=z.arg.named z.fixture.'
+    }
+  }
+
+  z.t.context "引数位置でz.からnamespaceを選ぶ場合"; {
+    z.t.it "namespaceの直後から続けて入力できる"; {
+      local actual=$(zsh "$z_root/test/mod/completion/complete/terminal.zsh" "input=z.arg.named z." 'setup=zstyle ":completion:*:z-functions" ignored-patterns "^z.fixture.*"')
+
+      z.t.expect "$actual" $'matches:lines=1:1\nbuffer=z.arg.named z.fixture.'
     }
   }
 
