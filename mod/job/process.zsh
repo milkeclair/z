@@ -25,7 +25,7 @@ z.job.run() {
     name="$name" \
     command="$command" \
     on_success="$on_success" \
-    on_failure="$on_failure" || return 1
+    on_failure="$on_failure"
   local -a prepared=("${REPLY[@]}")
   local id=$prepared[1]
   local dir=$prepared[2]

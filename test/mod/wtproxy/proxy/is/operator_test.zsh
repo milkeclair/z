@@ -38,4 +38,15 @@ z.t.describe "z.wtproxy._proxy.is.pid"; {
       z.t.expect.status.is.false
     }
   }
+
+  z.t.context "pid確認後にprocessが終了した場合"; {
+    z.t.it "commandを取得できないためfalseを返す"; {
+      z.t.mock name="kill" behavior="return 0"
+      z.t.mock name="ps" behavior="return 1"
+
+      z.wtproxy._proxy.is.pid 12345
+
+      z.t.expect.status.is.false
+    }
+  }
 }

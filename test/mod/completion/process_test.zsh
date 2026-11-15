@@ -58,17 +58,23 @@ z.t.describe "z.completion.enable"; {
   }
 
   z.t.context "private除外設定に失敗した場合"; {
-    z.t.it "jobを起動しない"; {
+    z.t.it "補完登録とcache jobの起動を続ける"; {
+      local z_completion_cache_job_id=""
+      local -a zshexit_functions=()
+      local -a completion_calls=()
       z.t.mock name="z.completion.is._interactive" behavior="return 0"
       z.t.mock name="z.completion.compdef._ignore_private" behavior="return 1"
-      z.t.mock name="z.completion.compdef._register" behavior="return 0"
-      z.t.mock name="z.job.run" behavior="z.return job-id"
+      z.t.mock name="z.completion.compdef._register" behavior='completion_calls+=(register); return 0'
+      z.t.mock name="z.job.run" behavior='completion_calls+=(job); z.return job-id'
 
       z.completion.enable
+      local result_code=$?
+      local result_reply=$REPLY
 
-      z.t.expect.status.is.false skip_unmock=true
-      z.t.mock.result name="z.job.run"
-      z.t.expect.reply ""
+      z.t.expect "$result_code" 0 skip_unmock=true
+      z.t.expect "$result_reply" job-id skip_unmock=true
+      z.t.expect "$completion_calls" "register job" skip_unmock=true
+      z.t.expect "$zshexit_functions" z.completion.cache._cancel
     }
   }
 

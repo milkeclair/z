@@ -10,8 +10,6 @@ z.completion.function._candidates() {
   local prefix=$1
   local function_names=("${z_completion_function_names[@]}")
 
-  z.int.is.zero ${#function_names[@]} && return 1
-
   local candidates=()
   for function_name in $function_names; do
     if z.str.start_with "$function_name" "z." &&

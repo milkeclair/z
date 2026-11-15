@@ -81,6 +81,21 @@ z.t.describe "z.completion.cache._cancel"; {
     }
   }
 
+  z.t.context "jobの取消に失敗した場合"; {
+    z.t.it "補完側のIDを破棄して成功する"; {
+      local z_completion_cache_job_id=cache-job
+      z.t.mock name="z.job.status" behavior="z.return running"
+      z.t.mock name="z.job.cancel" behavior="return 1"
+
+      z.completion.cache._cancel
+      local result_code=$?
+      local remaining_id=$z_completion_cache_job_id
+
+      z.t.expect "$result_code" 0
+      z.t.expect.is.null "$remaining_id"
+    }
+  }
+
   z.t.context "補完jobがない場合"; {
     z.t.it "他のjobに触れず成功する"; {
       local z_completion_cache_job_id=""
