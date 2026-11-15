@@ -1,0 +1,43 @@
+# resolve installed mods and their dependencies from source metadata
+#
+# $source: source directory
+# $@: mod names after the source argument
+# REPLY: dependency-ordered unique mod names
+# return: 0|1
+#
+# example:
+#  z.update.mod._resolve source=/tmp/source completion
+z.update.mod._resolve() {
+  z.arg.named source "$@" || { z.return; return 1; }
+  local source_dir=$REPLY
+  z.dir.exists "$source_dir" || { z.return; return 1; }
+  z.arg.named.shift source "$@"
+  local requested=(${(@)REPLY})
+  z.is.null "$requested" && z.return && return 0
+
+  local -A z_mod_names=()
+  local -A z_mod_depends=()
+  local z_mod_current=$requested[1]
+  for recipe in "$source_dir"/mod/*/mod.zsh(N); do
+    source "$recipe" || { z.return; return 1; }
+  done
+
+  local resolved=()
+  for requested_mod in "${requested[@]}"; do
+    if z.mod.is.registered "$requested_mod"; then
+      z.mod.dependencies.resolve "$requested_mod" || { z.return; return 1; }
+      resolved+=(${(@)REPLY})
+    elif z.dir.exists "$source_dir/mod/$requested_mod"; then
+      resolved+=("$requested_mod")
+    else
+      z.return
+      return 1
+    fi
+  done
+  z.arr.unique "${resolved[@]}"
+  local ordered=(${(@)REPLY})
+  for dependency in "${ordered[@]}"; do
+    z.dir.exists "$source_dir/mod/$dependency" || { z.return; return 1; }
+  done
+  z.return "${ordered[@]}"
+}
