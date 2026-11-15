@@ -44,9 +44,10 @@ and retains normal function resolution.
 ## Argument documentation
 
 Signature help and call-argument hover use `SimpleCommand.arguments`. A quoted
-or multiline argument remains one syntax word. Bare documented `name=value`
-arguments select their named parameter; positional words select their ordinal
-parameter and then a documented rest parameter. This describes syntax words;
+or multiline argument remains one syntax word. Documented `name=value`
+arguments select their named parameter after shell quoting is removed from the
+static key, including `"name=value"` and `"name=$value"`; positional words select
+their ordinal parameter and then a documented rest parameter. This describes syntax words;
 runtime expansion can produce a different number of shell arguments.
 
 Within a function, argument hover recognizes direct positional parameter parts

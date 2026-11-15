@@ -1,4 +1,5 @@
 import type { WordNode } from '../../zshParser/ast';
+import { hereDocDelimiter } from '../../zshParser/lexer/delimiter';
 
 const RESERVED_COMMANDS: readonly string[] = [
   'if', 'then', 'else', 'elif', 'fi', 'for', 'select', 'foreach', 'repeat',
@@ -15,8 +16,11 @@ export function commandInsertion(name: string): string {
   return "'" + name.split("'").join(escapedQuote) + "'";
 }
 
+/** Read a named key from the static word prefix, removing shell quoting without evaluating expansions. */
 export function namedKey(word: WordNode): string | null {
-  const text = word.raw;
+  const prefix = word.parts[0];
+  if (prefix?.kind !== 'stringLiteral') return null;
+  const text = hereDocDelimiter(prefix.value).delimiter;
   let index = 0;
   while (index < text.length) {
     const char = text[index];

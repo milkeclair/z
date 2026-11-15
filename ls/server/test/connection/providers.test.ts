@@ -130,6 +130,10 @@ describe('signature help@AST', () => {
     ['greet ¦', 0], ['greet "hello world" ¦', 1],
     ['greet "hello\nworld" ¦', 1], ['greet a ' + String.fromCharCode(92) + '\n ¦', 1],
     ['greet one=value ¦', 0], ['greet two=val¦ue', 3],
+    ['greet "one=value" ¦', 0], ['greet "two=val¦ue"', 3],
+    ['greet "two=$val¦ue"', 3], ["greet 'two=val¦ue'", 3],
+    ['greet "two=value" one=value ¦', 0], ['greet "two=value" first ¦', 1],
+    ['greet "${key}=val¦ue"', 0], ['greet "tw${key}=val¦ue"', 0],
     ['greet "hello\nworld" ¦', 1], ['greet a ' + String.fromCharCode(92) + '\n ¦', 1],
     ['print "$(greet a ¦)"', 1], ['print x | greet ¦', 0],
     ['greet a; greet ¦', 0],
@@ -174,6 +178,12 @@ describe('argument hover@AST', () => {
   test('呼び出し引数の説明を返す', () => {
     expect(fixture('greet "hello ¦world"').hover()).toMatchObject({
       contents: { value: expect.stringContaining('first') },
+    });
+  });
+  test.each(['greet "two=val¦ue"', 'greet "two=$val¦ue"', "greet 'two=val¦ue'",
+    'greet "one=value" "two=val¦ue"'])('引用した名前付き引数の説明を返す: %s', source => {
+    expect(fixture(source).hover()).toMatchObject({
+      contents: { value: expect.stringContaining('option two') },
     });
   });
   test.each(['print "$¦1"', 'local value="$1"; print "$val¦ue"',

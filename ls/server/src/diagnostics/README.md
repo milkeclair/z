@@ -56,9 +56,11 @@ shell environment was obtained successfully.
 ## Parameter contracts
 
 Required arguments come from `documentationOf(definition).parameters`. Each
-syntax word supplies one positional argument unless it has a documented bare
-`name=value` key. Position numbers, optional parameters and rest parameters are
-read directly from documentation nodes. A required `$3` needs three positional
+syntax word supplies one positional argument unless its static prefix has a
+documented `name=value` key after shell quote removal. This includes
+`name="value"`, `"name=value"` and `"name=$value"`. A key that depends on an
+expansion is not treated as a statically known name. Position numbers, optional
+parameters and rest parameters are read directly from documentation nodes. A required `$3` needs three positional
 words even if `$1` and `$2` are absent from the documentation.
 
 Quoted scalar values count as one word. Words whose expansions or global aliases

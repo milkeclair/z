@@ -74,7 +74,29 @@ describe('call diagnostics@AST', () => {
     const doc = '# $option: value\ngreet() { print "$option" }\n';
     expect(semantic(fixture('greet option=""\n', doc).items)).toEqual([]);
     expect(semantic(fixture('greet option=\n', doc).items)).toEqual([]);
-    expect(semantic(fixture('greet "option=value"\n', doc).items)).toMatchObject([{ code: 'missing-named-argument' }]);
+    expect(semantic(fixture('greet "option=value"\n', doc).items)).toEqual([]);
+  });
+  test.each(['"option=value with spaces"', '"option="', '"option=$value"',
+    "'option=value with spaces'", 'op"tion"=value', '"option"="$value"',
+    'option="value"', 'op\\tion=value'])('引用を除いた静的な名前付き引数を照合する: %s', argument => {
+    const doc = '# $option: value\ngreet() { print "$option" }\n';
+    expect(semantic(fixture('greet ' + argument + '\n', doc).items)).toEqual([]);
+  });
+  test.each(['"other=value"', '"9option=value"', '"option-extra=value"', '"option"'])('引用しても不足した名前付き引数を検出する: %s', argument => {
+    const doc = '# $option: value\ngreet() { print "$option" }\n';
+    expect(semantic(fixture('greet ' + argument + '\n', doc).items))
+      .toMatchObject([{ code: 'missing-named-argument', message: 'Missing required named argument: option' }]);
+  });
+  test('引用した名前付き引数を位置引数へ数えない', () => {
+    const doc = '# $1: first\n# $option: value\ngreet() { print "$1" "$option" }\n';
+    expect(semantic(fixture('greet "option=value"\n', doc).items))
+      .toMatchObject([{ code: 'missing-positional-argument', message: 'Missing required argument(s): $1' }]);
+    expect(semantic(fixture('greet "option=$value" first\n', doc).items)).toEqual([]);
+  });
+  test('失敗ログの実例を名前付き引数として認識する', () => {
+    const doc = '# $message: error message\nz.t._log.failure.handle() { print "$message" }\n';
+    const source = 'z.t._log.failure.handle "message=failed: expected [ $expect_display ] but got [ $actual_display ]"\n';
+    expect(semantic(fixture(source, doc).items)).toEqual([]);
   });
 });
 
