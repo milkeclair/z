@@ -42,7 +42,7 @@ z.t.describe "z.update.core._copy"; {
 
   z.t.context "source引数がない場合"; {
     z.t.it "作業先を作らず失敗する"; {
-      z.update.core._copy dir=/tmp/z_t/update_core_absent
+      z.update.core._copy dir=/tmp/z_t/update_core_absent # zls: ignore missing-named-argument
 
       z.t.expect.status.is.false
 
@@ -53,7 +53,7 @@ z.t.describe "z.update.core._copy"; {
 
   z.t.context "dir引数がない場合"; {
     z.t.it "失敗する"; {
-      z.update.core._copy source=/tmp/source
+      z.update.core._copy source=/tmp/source # zls: ignore missing-named-argument
 
       z.t.expect.status.is.false
     }

@@ -89,7 +89,7 @@ z.t.describe "z.update.mod._copy"; {
 
   z.t.context "source引数がない場合"; {
     z.t.it "失敗する"; {
-      z.update.mod._copy current=/tmp/current dir=/tmp/prepared
+      z.update.mod._copy current=/tmp/current dir=/tmp/prepared # zls: ignore missing-named-argument
 
       z.t.expect.status.is.false
     }
@@ -97,7 +97,7 @@ z.t.describe "z.update.mod._copy"; {
 
   z.t.context "current引数がない場合"; {
     z.t.it "失敗する"; {
-      z.update.mod._copy source=/tmp/source dir=/tmp/prepared
+      z.update.mod._copy source=/tmp/source dir=/tmp/prepared # zls: ignore missing-named-argument
 
       z.t.expect.status.is.false
     }
@@ -105,7 +105,7 @@ z.t.describe "z.update.mod._copy"; {
 
   z.t.context "dir引数がない場合"; {
     z.t.it "失敗する"; {
-      z.update.mod._copy source=/tmp/source current=/tmp/current
+      z.update.mod._copy source=/tmp/source current=/tmp/current # zls: ignore missing-named-argument
 
       z.t.expect.status.is.false
     }

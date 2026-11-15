@@ -20,7 +20,7 @@ z.git.branch._merged.get.excludes() {
 
 # remove symbols like "*", "+" from branch name
 #
-# $@: branch name parts
+# $1: branch name
 # REPLY: normalized branch name
 # return: null
 #

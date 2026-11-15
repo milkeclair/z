@@ -66,7 +66,7 @@ z.t.describe "z.update.archive._download"; {
     z.t.it "curlを実行しない"; {
       z.t.mock name=curl
 
-      z.update.archive._download
+      z.update.archive._download # zls: ignore missing-named-argument
       local download_status=$?
 
       z.t.mock.result name=curl
@@ -166,7 +166,7 @@ z.t.describe "z.update.archive._extract"; {
 
   z.t.context "file引数がない場合"; {
     z.t.it "失敗して展開先を残さない"; {
-      z.update.archive._extract dir=/tmp/z_t/update_extract_absent 2>/dev/null
+      z.update.archive._extract dir=/tmp/z_t/update_extract_absent 2>/dev/null # zls: ignore missing-named-argument
       local extract_status=$?
       local result=$REPLY
 
@@ -181,7 +181,7 @@ z.t.describe "z.update.archive._extract"; {
 
   z.t.context "dir引数がない場合"; {
     z.t.it "失敗する"; {
-      z.update.archive._extract file=/tmp/not-an-archive
+      z.update.archive._extract file=/tmp/not-an-archive # zls: ignore missing-named-argument
 
       z.t.expect.status.is.false
     }

@@ -43,13 +43,14 @@ function shellKnown(name: string, command: SimpleCommandNode, context: Resolutio
   const environment = context.environment;
   if (environment.kind !== 'available') return null;
   const builtin = command.precommandModifiers.some(modifier => modifier.type === 'builtin');
-  if (builtin) return environment.builtins.has(name);
+  const knownBuiltin = environment.builtins.has(name) || context.builtins.has(name);
+  if (builtin) return knownBuiltin;
   const commandOnly = command.precommandModifiers.some(modifier => modifier.type === 'command');
   if (command.precommandModifiers.some(modifier => modifier.type === 'command' &&
     modifier.options.some(option => option.name.includes('p')))) return null;
   if (!commandOnly && environment.functions.has(name)) return true;
   if (name.includes('/')) return executable(name, context);
-  return environment.commands.has(name) || (!commandOnly || environment.commandBuiltins) && environment.builtins.has(name) ||
+  return environment.commands.has(name) || (!commandOnly || environment.commandBuiltins) && knownBuiltin ||
     !commandOnly && (environment.functions.has(name) || context.autoloads.has(name));
 }
 

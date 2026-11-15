@@ -18,7 +18,7 @@ z.t.describe "z.update.installation.is._valid"; {
 
   z.t.context "dir引数がない場合"; {
     z.t.it "失敗する"; {
-      z.update.installation.is._valid
+      z.update.installation.is._valid # zls: ignore missing-named-argument
 
       z.t.expect.status.is.false
     }

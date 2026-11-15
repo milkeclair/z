@@ -270,7 +270,7 @@ z.t.describe "z.update._confirm"; {
     z.t.it "入力を読まない"; {
       z.t.mock name="z.io.read"
 
-      z.update._confirm >/dev/null
+      z.update._confirm >/dev/null # zls: ignore missing-named-argument
       local confirm_status=$?
 
       z.t.mock.result name="z.io.read"

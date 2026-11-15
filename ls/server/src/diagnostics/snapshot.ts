@@ -23,7 +23,7 @@ export type DiagnosticSnapshot = {
 
 export function createDiagnosticSnapshot(): DiagnosticSnapshot {
   return { revision: 0, targets: new Map(), context: { environment: emptyShellEnvironment(), projectRoot: '',
-    aliases: new Set(), globalAliases: new Set(), suffixAliases: new Set(), autoloads: new Set() }, files: new Map() };
+    aliases: new Set(), globalAliases: new Set(), suffixAliases: new Set(), autoloads: new Set(), builtins: new Set() }, files: new Map() };
 }
 
 function sameSet(left: ReadonlySet<string>, right: ReadonlySet<string>): boolean {
@@ -37,10 +37,12 @@ function resolutionContext(facts: readonly FileFacts[], environment: ShellEnviro
     globalAliases: new Set(facts.flatMap(file => [...file.declarations.globalAliases])),
     suffixAliases: new Set(facts.flatMap(file => [...file.declarations.suffixAliases])),
     autoloads: new Set(facts.flatMap(file => [...file.declarations.autoloads])),
+    builtins: new Set(facts.flatMap(file => [...file.declarations.builtins])),
   };
   if (environment === previous.environment && projectRoot === previous.projectRoot &&
     sameSet(declarations.aliases, previous.aliases) && sameSet(declarations.globalAliases, previous.globalAliases) &&
-    sameSet(declarations.suffixAliases, previous.suffixAliases) && sameSet(declarations.autoloads, previous.autoloads)) return previous;
+    sameSet(declarations.suffixAliases, previous.suffixAliases) && sameSet(declarations.autoloads, previous.autoloads) &&
+    sameSet(declarations.builtins, previous.builtins)) return previous;
   return { ...declarations, environment, projectRoot };
 }
 
@@ -93,6 +95,7 @@ export function refreshDiagnosticSnapshot({ snapshot, environment, previous = cr
         globalAliases: new Set([...context.globalAliases, ...local.globalAliases]),
         suffixAliases: new Set([...context.suffixAliases, ...local.suffixAliases]),
         autoloads: new Set([...context.autoloads, ...local.autoloads]),
+        builtins: new Set([...context.builtins, ...local.builtins]),
       };
       files.set(uri, { ...input, facts: current, resultId: String(revision),
         items: suppressed(input.file, [...current.base, ...callDiagnostics(snapshot, input.file, current.calls, effective)])
