@@ -201,7 +201,6 @@ z.io.error() {
   print -u2 -- $args
 }
 
-
 # print literal arguments without interpreting escapes or formatting options
 #
 # $@: literal text arguments

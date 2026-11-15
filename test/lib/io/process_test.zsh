@@ -377,17 +377,19 @@ z.t.describe "z.io.error"; {
   }
 }
 
-
 z.t.describe "z.io.literal"; {
   z.t.context "表示する文字列がある場合"; {
     z.t.it "バックスラッシュやオプション風の文字列を評価しない"; {
       local output=$(z.io.literal 'a\nb' color=red null)
+
       z.t.expect "$output" 'a\nb color=red null'
     }
   }
+
   z.t.context "空文字列の場合"; {
     z.t.it "改行だけを出力する"; {
       local output=$(z.io.literal ''; echo end)
+
       z.t.expect "$output" $'\nend'
     }
   }

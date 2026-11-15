@@ -14,7 +14,6 @@ z.file.write.last() {
   echo "$content" >> $file
 }
 
-
 # write literal content to a file without interpreting escape sequences
 #
 # $path: file path
