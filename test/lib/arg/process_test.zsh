@@ -101,4 +101,31 @@ z.t.describe "z.arg.named"; {
       z.t.expect.reply hoge
     }
   }
+
+  z.t.context "重複した名前と後続のdefault指定がある場合"; {
+    z.t.it "最初の名前付き値がnullなら最後のdefaultを使う"; {
+      z.arg.named name name=null name=second default=first default=last
+      z.t.expect.reply last
+    }
+
+    z.t.it "最初の名前付き値がfalseなら数値の1を返す"; {
+      z.arg.named name name=false name=second default=last
+      z.t.expect.reply 1
+    }
+
+    z.t.it "default自体を取得する場合も既存の既定値規約に従う"; {
+      z.arg.named default default=first default=last
+      z.t.expect.reply last
+    }
+  }
+
+  z.t.context "名前に等号や括弧を含む場合"; {
+    z.t.it "名前全体の接頭辞を除き、値の等号を保持する"; {
+      z.arg.named "a=b" "a=b=value=tail" default=fallback
+      z.t.expect.reply "value=tail"
+
+      z.arg.named "key[0]" "key[0]=value" default=fallback
+      z.t.expect.reply "value"
+    }
+  }
 }

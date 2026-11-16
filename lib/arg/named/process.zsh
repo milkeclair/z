@@ -13,16 +13,10 @@ z.arg.named.shift() {
   shift 2>/dev/null
   local args=($@)
   local result=()
-  local arg_count=${#args[@]}
-  local i=1
 
-  while z.int.is.lteq $i $arg_count; do
-    if z.is.not.null $args[i] && z.str.start_with "$args[i]" "${name}="; then
-      ((i++)) && continue
-    fi
-
-    result+=($args[i])
-    ((i++))
+  for arg in $args; do
+    z.str.start_with "$arg" "${name}=" && continue
+    result+=($arg)
   done
 
   z.return ${result[@]}

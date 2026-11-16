@@ -45,36 +45,20 @@ z.arg.named() {
   local name=$1
   shift 2>/dev/null
   local args=($@)
+  local default=""
+  local value=""
+  local found=false
 
-  z.group "extract default value and filter arguments"; {
-    local default=""
-    local filtered_args=()
-    for arg in $args; do
-      if z.str.start_with "$arg" "default="; then
-        z.str.remove.prefix "$arg" "default="
-        default=$REPLY
-      else
-        filtered_args+=($arg)
-      fi
-    done
-
-    args=($filtered_args)
-  }
-
-  z.arr.count $args
-  local arg_count=$REPLY
-  local i=1
-
-  while z.int.is.lteq $i $arg_count; do
-    if z.is.not.null $args[i] && z.str.start_with "$args[i]" "${name}="; then
-      z.str.remove.prefix "$args[i]" "${name}="
-      local value=$REPLY
-
-      z.return ${value:-$default} && return 0
+  for arg in $args; do
+    if [[ $arg == default=* ]]; then
+      z.return "${arg#default=}"
+      default=$REPLY
+    elif [[ $found == false ]] && z.str.start_with "$arg" "${name}="; then
+      z.return "${arg[${#name} + 2,-1]}"
+      value=$REPLY
+      found=true
     fi
-
-    ((i++))
   done
 
-  z.return $default
+  z.return ${value:-$default}
 }

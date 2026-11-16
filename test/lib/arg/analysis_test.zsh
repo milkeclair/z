@@ -82,6 +82,13 @@ z.t.describe "z.arg.first"; {
       z.t.expect.reply.is.null
     }
   }
+
+  z.t.context "入力にindex指定が含まれる場合"; {
+    z.t.it "既存の指定がfirstの追加するindexより優先される"; {
+      z.arg.first "a" "b" "c" index=2
+      z.t.expect.reply "b"
+    }
+  }
 }
 
 z.t.describe "z.arg.second"; {
