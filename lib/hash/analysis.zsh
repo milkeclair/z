@@ -1,6 +1,7 @@
 # get the keys of a hash
 #
 # $1: name of the hash
+# $literal?: preserve keys without conversion (default: false)
 # REPLY: array of keys
 # return: null
 #
@@ -12,8 +13,13 @@
 #   echo $REPLY  # outputs ("name" "age")
 z.hash.keys() {
   local hash_name=$1
+  z.arg.named literal $@ default=false && local literal=$REPLY
 
-  z.return ${(Pk)hash_name}
+  if z.is.true $literal; then
+    REPLY=("${(@Pk)hash_name}")
+  else
+    z.return ${(Pk)hash_name}
+  fi
 }
 
 # get the values of a hash
@@ -37,6 +43,7 @@ z.hash.values() {
 # get the entries of a hash as key-value pairs
 #
 # $1: name of the hash
+# $literal?: preserve literal keys and values, including empty values (default: false)
 # REPLY: array of key-value pairs
 # return: null
 #
@@ -48,8 +55,13 @@ z.hash.values() {
 #   echo $REPLY  # outputs ("name" "John" "age" "30")
 z.hash.entries() {
   local hash_name=$1
+  z.arg.named literal $@ default=false && local literal=$REPLY
 
-  z.return ${(Pkv)hash_name}
+  if z.is.true $literal; then
+    REPLY=("${(@Pkv)hash_name}")
+  else
+    z.return ${(Pkv)hash_name}
+  fi
 }
 
 # count the number of entries in a hash

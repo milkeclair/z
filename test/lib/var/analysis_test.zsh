@@ -30,4 +30,20 @@ z.t.describe "z.var.get"; {
       z.t.expect.reply "one two three"
     }
   }
+
+  z.t.context "literalがtrueの場合"; {
+    z.t.it "空要素と真偽値風の値を配列のまま返す"; {
+      local input_args=("" "true" "null" "two words" "keep_empty=true")
+
+      z.var.get input_args literal=true
+      local result=("${REPLY[@]}")
+
+      z.t.expect "${#result[@]}" 5
+      z.t.expect "${result[1]}" ""
+      z.t.expect "${result[2]}" "true"
+      z.t.expect "${result[3]}" "null"
+      z.t.expect "${result[4]}" "two words"
+      z.t.expect "${result[5]}" "keep_empty=true"
+    }
+  }
 }

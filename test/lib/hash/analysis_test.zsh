@@ -23,6 +23,27 @@ z.t.describe "z.hash.keys"; {
       z.t.expect.reply.is.null
     }
   }
+
+  z.t.context "literalがtrueの場合"; {
+    z.t.it "単一の真偽値風キーを変換せず配列で返す"; {
+      local -A hash=([true]="value")
+
+      z.hash.keys hash literal=true
+      local result=("${REPLY[@]}")
+
+      z.t.expect "${#result[@]}" 1
+      z.t.expect "${result[1]}" "true"
+    }
+
+    z.t.it "空のハッシュを空配列で返す"; {
+      local -A hash=()
+
+      z.hash.keys hash literal=true
+      local result=("${REPLY[@]}")
+
+      z.t.expect "${#result[@]}" 0
+    }
+  }
 }
 
 z.t.describe "z.hash.values"; {
@@ -73,6 +94,33 @@ z.t.describe "z.hash.entries"; {
 
       z.hash.entries empty_hash
       z.t.expect.reply.is.null
+    }
+  }
+
+  z.t.context "literalがtrueの場合"; {
+    z.t.it "空の値と書式風の値を含む組を保持する"; {
+      local -A hash=([empty]="" [word]="keep_empty=true" [flag]="false")
+
+      z.hash.entries hash literal=true
+      local result=("${REPLY[@]}")
+      local -A entries=("${result[@]}")
+
+      z.t.expect "${#result[@]}" 6
+      z.hash.has.key entries key=empty
+      local result_code=$?
+      z.t.expect "$result_code" 0
+      z.t.expect "${entries[empty]}" ""
+      z.t.expect "${entries[word]}" "keep_empty=true"
+      z.t.expect "${entries[flag]}" "false"
+    }
+
+    z.t.it "空のハッシュを空配列で返す"; {
+      local -A hash=()
+
+      z.hash.entries hash literal=true
+      local result=("${REPLY[@]}")
+
+      z.t.expect "${#result[@]}" 0
     }
   }
 }
