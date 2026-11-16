@@ -1,16 +1,16 @@
 # z.pj
 
-Register named project directories and open them in Visual Studio Code.
+プロジェクトのディレクトリに名前を付けて登録し、Visual Studio Codeで開きます。
 
-## Installation
+## インストール
 
 ```zsh
 z.install.mod pj
 ```
 
-The mod uses the core z library and the `code` command on PATH.
+coreのzライブラリと、PATH上の`code`コマンドを使います。
 
-## Commands
+## コマンド
 
 ```zsh
 z.pj.add name=some_project dir=~/repo/p/some
@@ -21,38 +21,22 @@ z.pj.remove some_project
 z.pj.remove
 ```
 
-`add` stores an existing directory as an absolute, symlink-resolved path. Relative
-paths and a leading `~/` are accepted. Project names start with an ASCII letter,
-digit or underscore and may then contain letters, digits, underscores, hyphens
-and dots. Existing names are rejected; remove a registration before replacing it.
-Names such as `true`, `false` and `null` are kept literally. Directory paths
-containing newlines are rejected.
+`add`は、既存ディレクトリをシンボリックリンク解決済みの絶対パスで保存します。相対パスや先頭の`~/`も使えます。プロジェクト名はASCIIの英字・数字・アンダースコアで始め、以後はそれらに加えてハイフンとドットを使えます。既存の名前は拒否するため、置換する前に登録を削除します。`true`、`false`、`null`などの名前もそのまま保持します。改行を含むディレクトリパスは拒否します。
 
-`list` prints names and directories separated by a tab, sorted by name. An empty
-registry prints `No projects registered.`
+`list`は名前とディレクトリをタブで区切り、名前順で表示します。登録が空なら`No projects registered.`と表示します。
 
-`z.pj <name>` passes the saved directory as one argument to `code`. The caller's
-working directory stays the same. Missing registrations, directories that no
-longer exist and unavailable editor commands fail with an error. The editor's
-exit status is returned.
+`z.pj <name>`は、保存したディレクトリを1つの引数として`code`へ渡し、呼び出し元の作業ディレクトリを保ちます。未登録、存在しなくなったディレクトリ、利用できないエディターコマンドはエラーにし、エディターの終了コードを返します。
 
-`remove <name>` removes only that registration file. With no argument, `remove`
-shows numbered names and asks for a project number. Empty input or end-of-file
-cancels successfully. An invalid number reports an error and preserves the
-registry. Project directories and their contents remain in place.
+`remove <name>`は、その登録ファイルだけを削除します。引数なしの`remove`は名前を番号付きで表示し、プロジェクト番号を入力させます。空入力やEOFは正常なキャンセルとして扱います。不正な番号はエラーにして登録を保持し、プロジェクトのディレクトリと内容は残します。
 
-## Persistence
+## 保存先
 
-Registrations are stored as plain directory paths, one file per project:
+プロジェクトごとに1つのファイルを使い、ディレクトリのパスをそのまま保存します。
 
 ```text
 ${XDG_CONFIG_HOME:-$HOME/.config}/z/pj/<name>
 ```
 
-The mod creates this directory when adding the first project. Reading or opening
-projects and cancelling a selection do not create settings files. Stored paths
-are read as data and never sourced or evaluated. Symbolic links in place of
-registration files are rejected.
+最初のプロジェクトの追加時に保存先ディレクトリを作ります。登録の読み取り、プロジェクトを開く操作、選択のキャンセルでは設定ファイルを作りません。保存したパスはデータとして読み、sourceや評価は行いません。登録ファイルの代わりに置かれたシンボリックリンクは拒否します。
 
-Tests use temporary configuration and project directories. No background process
-or extra package is required.
+テストでは一時的な設定ディレクトリとプロジェクトディレクトリを使います。バックグラウンドプロセスや追加パッケージは不要です。

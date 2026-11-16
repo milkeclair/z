@@ -1,39 +1,16 @@
 # z.wtproxy
 
-A modifier for running Docker Compose projects from multiple git worktrees without port conflicts.
+複数のGit worktreeで、ポートを競合させずDocker Composeプロジェクトを動かすmodです。
 
-## Installation
+## インストール
 
 `z.install.mod wtproxy`
 
-This also installs `git` when it is missing.
+`git`がなければ同時に導入します。
 
-## Overview
+## 概要
 
-Each worktree can run Docker Compose with its own port values.
-
-```zsh
-z.wtproxy.init
-z.wtproxy.start
-z.wtproxy.env docker compose up
-```
-
-For example, if `Z_WTPROXY_PROXY_PORT_1=3000`, each worktree gets its own `Z_WTPROXY_WORKTREE_PORT_1`.
-The proxy daemon listens on the proxy port and forwards requests to the active worktree port.
-
-## Concepts
-
-- proxy port
-  - stable port exposed on localhost
-  - configured as `Z_WTPROXY_PROXY_PORT_N`
-- worktree port
-  - allocated port for each git worktree
-  - exposed to commands as `Z_WTPROXY_WORKTREE_PORT_N`
-- compose project name
-  - generated per worktree
-  - exposed as `COMPOSE_PROJECT_NAME`
-
-## Workflow
+worktreeごとに独立したポート値でDocker Composeを実行できます。
 
 ```zsh
 z.wtproxy.init
@@ -41,27 +18,49 @@ z.wtproxy.start
 z.wtproxy.env docker compose up
 ```
 
-Use `z.wtproxy.use` when switching the active worktree.
+例えば`Z_WTPROXY_PROXY_PORT_1=3000`なら、各worktreeへ固有の`Z_WTPROXY_WORKTREE_PORT_1`を割り当てます。プロキシデーモンはプロキシポートで待ち受け、有効なworktreeのポートへ要求を転送します。
+
+## 用語
+
+- プロキシポート
+  - localhostに公開する固定ポート
+  - `Z_WTPROXY_PROXY_PORT_N`で設定します。
+- worktreeポート
+  - Git worktreeごとに割り当てるポート
+  - コマンドには`Z_WTPROXY_WORKTREE_PORT_N`として渡します。
+- Composeプロジェクト名
+  - worktreeごとに生成します。
+  - `COMPOSE_PROJECT_NAME`として渡します。
+
+## 処理の流れ
+
+```zsh
+z.wtproxy.init
+z.wtproxy.start
+z.wtproxy.env docker compose up
+```
+
+有効なworktreeを切り替えるには`z.wtproxy.use`を使います。
 
 ```zsh
 cd /path/to/another/worktree
 z.wtproxy.use
 ```
 
-## Commands
+## コマンド
 
 ### init
 
 - `z.wtproxy.init`
-  - create the project configuration file
+  - プロジェクトの設定ファイルを作成します。
 
-Arguments:
+引数:
 
 - `proxy_port_N=<port>`
-  - configure a stable proxy port
-  - `N` is a port index such as `1`, `2`, or `3`
+  - 固定のプロキシポートを設定します。
+  - `N`は`1`・`2`・`3`などのポートのインデックスです。
 - `force=true`
-  - overwrite the existing configuration file
+  - 既存の設定ファイルを上書きします。
 
 ```zsh
 z.wtproxy.init
@@ -72,15 +71,15 @@ z.wtproxy.init proxy_port_4=8080 force=true
 ### env
 
 - `z.wtproxy.env`
-  - print Docker Compose environment assignments
+  - Docker Composeの環境変数の代入式を表示します。
 - `z.wtproxy.env <command>`
-  - run a command with Docker Compose environment values
+  - Docker Composeの環境変数を渡してコマンドを実行します。
 
-Arguments:
+引数:
 
 - `<command>...`
-  - command to run with `COMPOSE_PROJECT_NAME` and `Z_WTPROXY_WORKTREE_PORT_N`
-  - if omitted, `z.wtproxy.env` prints the environment assignments
+  - `COMPOSE_PROJECT_NAME`と`Z_WTPROXY_WORKTREE_PORT_N`を渡して実行するコマンド
+  - 省略すると`z.wtproxy.env`は環境変数の代入式を表示します。
 
 ```zsh
 z.wtproxy.env
@@ -90,7 +89,7 @@ z.wtproxy.env docker compose up
 ### use
 
 - `z.wtproxy.use`
-  - activate the current worktree and print its proxy entry
+  - 現在のworktreeを有効にし、そのプロキシエントリを表示します。
 
 ```zsh
 z.wtproxy.use
@@ -99,7 +98,7 @@ z.wtproxy.use
 ### start
 
 - `z.wtproxy.start`
-  - activate the current worktree and start the proxy daemon
+  - 現在のworktreeを有効にし、プロキシデーモンを起動します。
 
 ```zsh
 z.wtproxy.start
@@ -108,7 +107,7 @@ z.wtproxy.start
 ### status
 
 - `z.wtproxy.status`
-  - show the active entry and proxy daemon status
+  - 有効なエントリとプロキシデーモンの状態を表示します。
 
 ```zsh
 z.wtproxy.status
@@ -117,7 +116,7 @@ z.wtproxy.status
 ### stop
 
 - `z.wtproxy.stop`
-  - stop the proxy daemon
+  - プロキシデーモンを停止します。
 
 ```zsh
 z.wtproxy.stop
@@ -126,7 +125,7 @@ z.wtproxy.stop
 ### rm
 
 - `z.wtproxy.rm`
-  - remove the current worktree entry and its Docker images and volumes
+  - 現在のworktreeエントリと、そのDockerイメージ・ボリュームを削除します。
 
 ```zsh
 z.wtproxy.rm
@@ -135,17 +134,17 @@ z.wtproxy.rm
 ### prune
 
 - `z.wtproxy.prune`
-  - remove stale worktree entries and their Docker images and volumes
+  - 古いworktreeエントリと、そのDockerイメージ・ボリュームを削除します。
 
 ```zsh
 z.wtproxy.prune
 ```
 
-## Environment
+## 環境変数
 
-Default proxy ports:
+プロキシポートの既定値:
 
-| key | environment variable | default |
+| キー | 環境変数 | 既定値 |
 | --- | --- | --- |
 | `proxy_port_1` | `Z_WTPROXY_PROXY_PORT_1` | `3000` |
 | `proxy_port_2` | `Z_WTPROXY_PROXY_PORT_2` | `5432` |
@@ -157,7 +156,7 @@ Z_WTPROXY_WORKTREE_PORT_1=13000
 COMPOSE_PROJECT_NAME=project_branch_hash
 ```
 
-In `docker-compose.yml`, use the worktree port values.
+`docker-compose.yml`ではworktreeポートの値を使います。
 
 ```yaml
 services:
@@ -166,10 +165,10 @@ services:
       - "${Z_WTPROXY_WORKTREE_PORT_1}:3000"
 ```
 
-## Files
+## ファイル
 
-- config: `${XDG_CONFIG_HOME:-$HOME/.config}/wtproxy/<project>.env`
-- state: `${XDG_STATE_HOME:-$HOME/.local/state}/wtproxy/<project>.state`
-- lock: `${XDG_STATE_HOME:-$HOME/.local/state}/wtproxy/<project>.lock`
-- pid: `${XDG_STATE_HOME:-$HOME/.local/state}/wtproxy/<project>.pid`
-- log: `${XDG_STATE_HOME:-$HOME/.local/state}/wtproxy/<project>.log`
+- 設定: `${XDG_CONFIG_HOME:-$HOME/.config}/wtproxy/<project>.env`
+- 状態: `${XDG_STATE_HOME:-$HOME/.local/state}/wtproxy/<project>.state`
+- ロック: `${XDG_STATE_HOME:-$HOME/.local/state}/wtproxy/<project>.lock`
+- PID: `${XDG_STATE_HOME:-$HOME/.local/state}/wtproxy/<project>.pid`
+- ログ: `${XDG_STATE_HOME:-$HOME/.local/state}/wtproxy/<project>.log`
