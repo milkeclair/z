@@ -2,7 +2,7 @@
 #
 # $1: 公開済みのクラス名
 # $2: 書込み可能な通常のスカラー変数名
-# REPLY: 変更しない
+# REPLY: null
 # return: 0|1
 z.cls.new._validate() {
   if ! z.int.is.eq $# 2 || z.is.null "${z_cls_classes[$1]:-}" || ! z.cls.is._attribute "$2"; then

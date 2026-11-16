@@ -4,7 +4,7 @@
 # $2: method、get、setのいずれか
 # $3: メンバー名
 # $4: エラーに表示する、元の変数名または参照
-# REPLY: 変更しない
+# REPLY: null
 # return: 0|1
 z.cls.instance.call._validate() {
   local z_cls_instance=$1

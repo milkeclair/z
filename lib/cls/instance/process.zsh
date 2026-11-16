@@ -62,7 +62,7 @@ z.cls.instance._execute() {
 #
 # $1: 実体参照
 # $2: 属性名
-# REPLY: 変更しない
+# REPLY: null
 # return: 保存できた場合は0、typesetの出力が必要な場合は1
 z.cls.instance._snapshot() {
   local z_cls_snapshot_key="$1:$2"
@@ -109,7 +109,7 @@ z.cls.instance._snapshot() {
 # 検証済みの実体について、生成したコマンドと保存済みの属性を解放する。
 #
 # $1: 存在する非実行中の実体参照
-# REPLY: 変更しない
+# REPLY: null
 # return: 0
 z.cls.instance._release() {
   local z_cls_id=$1

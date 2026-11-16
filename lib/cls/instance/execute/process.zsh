@@ -2,7 +2,7 @@
 #
 # $1: 属性名
 # $@?: 新しい値または配列の要素
-# REPLY: 変更しない
+# REPLY: null
 # return: 0|1
 z.cls.instance.execute._set() {
   local z_cls_name=$1

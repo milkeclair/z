@@ -4,7 +4,7 @@
 # $2: 定義元の呼出しスタック
 # $3: 定義元のファイル
 # $4: 1の場合は不正な定義を破棄する
-# REPLY: 変更しない
+# REPLY: null
 # return: 0
 z.cls.capture._start() {
   typeset -g z_cls_capture_discard=${4:-0}
@@ -36,7 +36,7 @@ z.cls.capture._start() {
 
 # 元のDEBUGトラップと実行タイミングの設定を復元する。
 #
-# REPLY: 変更しない
+# REPLY: null
 # return: 0
 z.cls.capture._stop() {
   z.is.not.null "${z_cls_capture_method:-}" || return 0
@@ -60,7 +60,7 @@ z.cls.capture._stop() {
 # 呼出しスタックが変わった場合は、定義元から抜けた未完了の定義を破棄する。
 #
 # $1: Zshが復元したコマンドの文字列
-# REPLY: 変更しない
+# REPLY: null
 # return: 0
 z.cls.capture._debug() {
   z.is.not.null "${z_cls_capture_method:-}" || return 0

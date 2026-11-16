@@ -1,7 +1,7 @@
 # クラス・実体・属性・メソッドの識別子を検証する。
 #
 # $1: 識別子
-# REPLY: 変更しない
+# REPLY: null
 # return: 0|1
 z.cls.is._name() {
   local name=${1:-}
@@ -14,7 +14,7 @@ z.cls.is._name() {
 # 通常のローカル変数として復元できる属性名を検証する。
 #
 # $1: 属性名
-# REPLY: 変更しない
+# REPLY: null
 # return: 0|1
 z.cls.is._attribute() {
   z.cls.is._name "${1:-}" &&

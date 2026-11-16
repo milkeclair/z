@@ -1,7 +1,7 @@
 # z.cls.fnで収集しているメソッド本体を終了する。
 # このマーカーの実行前に、DEBUGトラップが本体を登録する。
 #
-# REPLY: 変更しない
+# REPLY: null
 # return: 0|1
 #
 # example:

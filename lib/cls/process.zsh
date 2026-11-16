@@ -1,7 +1,7 @@
 # 現在のシェルでクラス定義を開始する。
 #
 # $1: クラス名
-# REPLY: 変更しない
+# REPLY: null
 # return: 0|1
 #
 # example:
@@ -31,7 +31,7 @@ z.cls.draw() {
 #
 # $1: 属性名
 # $2: 空文字列を含む属性の初期値
-# REPLY: 変更しない
+# REPLY: null
 # return: 0|1
 #
 # example:
@@ -63,7 +63,7 @@ z.cls.attr() {
 #
 # $1: メソッド名
 # $2?: 引数で指定する本体
-# REPLY: 変更しない
+# REPLY: null
 # return: 0|1
 #
 # example:
@@ -101,7 +101,7 @@ z.cls.fn() {
 
 # メソッドの収集を終えたクラスを公開する。
 #
-# REPLY: 変更しない
+# REPLY: null
 # return: 0|1
 #
 # example:
@@ -123,7 +123,7 @@ z.cls.drew() {
 
 # 未完了の定義を破棄し、元のDEBUGトラップを復元する。
 #
-# REPLY: 変更しない
+# REPLY: null
 # return: 0
 #
 # example:
@@ -208,7 +208,7 @@ z.cls.new() {
 # 実体、生成したコマンド、保存済みの属性を削除する。
 #
 # $1: 実体の変数名または参照
-# REPLY: 変更しない
+# REPLY: null
 # return: 0|1
 #
 # example:
