@@ -28,6 +28,81 @@ z.t.describe "z.arr.join"; {
       z.t.expect.reply "one:two:three:four"
     }
   }
+
+  z.t.context "空要素や名前付き引数に見えるデータが渡された場合"; {
+    z.t.it "従来どおり空要素を除き、未知の名前をデータとして結合する"; {
+      z.arr.join "" "a b" "" "input=value" "named=value" "rest=value" "default=x" ""
+      z.t.expect.reply "a b input=value named=value rest=value default=x"
+    }
+  }
+
+  z.t.context "同じ区切り文字の指定が複数ある場合"; {
+    z.t.it "最初の指定を使い、後の指定も結合対象から除く"; {
+      z.arr.join "a" delimiter=, "b" delimiter=: "c"
+      z.t.expect.reply "a,b,c"
+    }
+  }
+
+  z.t.context "区切り文字が空値またはnullの場合"; {
+    z.t.it "既定のスペースを使う"; {
+      z.arr.join delimiter= "a" "b"
+      z.t.expect.reply "a b"
+
+      z.arr.join delimiter=null "a" "b"
+      z.t.expect.reply "a b"
+    }
+  }
+
+  z.t.context "区切り文字が真偽値の場合"; {
+    z.t.it "従来の数値変換を維持する"; {
+      z.arr.join delimiter=true "a" "b"
+      z.t.expect.reply "a0b"
+
+      z.arr.join delimiter=false "a" "b"
+      z.t.expect.reply "a1b"
+    }
+  }
+
+  z.t.context "区切り文字が複数文字の場合"; {
+    z.t.it "IFSの先頭文字で結合する"; {
+      z.arr.join delimiter="::" "a" "b"
+      z.t.expect.reply "a:b"
+    }
+  }
+
+  z.t.context "残りの引数が単独の真偽値またはnullの場合"; {
+    z.t.it "従来の戻り値変換を維持する"; {
+      z.arr.join true
+      z.t.expect.reply 0
+
+      z.arr.join false
+      z.t.expect.reply 1
+
+      z.arr.join null
+      z.t.expect.reply.is.null
+    }
+  }
+
+  z.t.context "keep_empty指定を含む場合"; {
+    z.t.it "従来どおり戻り値オプションとして扱う"; {
+      z.arr.join keep_empty=true "a" "" "b"
+      z.t.expect.reply "a b"
+    }
+  }
+
+  z.t.context "空白、改行、日本語を含む要素が渡された場合"; {
+    z.t.it "要素の内容と呼び出し元のIFSを保持する"; {
+      local IFS=":"
+      z.arr.join "a b" $'c\nd' 日本語 delimiter=,
+      local result_code=$?
+      local result_reply=$REPLY
+      local result_ifs=$IFS
+
+      z.t.expect "$result_reply" $'a b,c\nd,日本語'
+      z.t.expect "$result_code" 0
+      z.t.expect "$result_ifs" ":"
+    }
+  }
 }
 
 z.t.describe "z.arr.split"; {

@@ -8,10 +8,14 @@
 # example:
 #  z.arr.join "a" "b" "c" #=> REPLY="a b c"
 z.arr.join() {
-  z.arg.named delimiter $@ default=" " && local delimiter=$REPLY
-  z.arg.named.shift delimiter $@ && local arr=($REPLY)
+  local -a input_args=("$@")
+  local -A parsed_named=([delimiter]=" ")
+  local -a parsed_args=()
+  z.arg.parse input=input_args named=parsed_named rest=parsed_args || return 1
 
-  local IFS=$delimiter
+  z.return ${parsed_args[@]}
+  local arr=($REPLY)
+  local IFS=${parsed_named[delimiter]}
   z.return "${arr[*]}"
 }
 
