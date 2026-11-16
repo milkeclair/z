@@ -1,30 +1,33 @@
-type Escape = { readonly value: string; readonly end: number; readonly byte: boolean };
+type Escape = { readonly value: string; readonly end: number; readonly byte: boolean; readonly valid: boolean };
 
 export function doubleEscape(char: string): boolean {
   return '$"\\\n'.includes(char) || char.charCodeAt(0) === 96;
 }
 
 /** Decode one ANSI quoted escape without evaluating shell expansions. */
-function ansiEscape(raw: string, start: number): Escape {
+export function ansiEscape(raw: string, start: number): Escape {
   let index = start + 1;
   let mask = 0;
   let control = false;
+  let escapedCharacter = true;
   while ((raw[index] === 'M' || raw[index] === 'C') && raw[index + 1] === '-') {
     if (raw[index] === 'M') mask = 128;
     else control = true;
     index += 2;
-    if (raw[index] === '\\') index += 1;
+    escapedCharacter = raw[index] === '\\';
+    if (escapedCharacter) index += 1;
   }
   const char = raw[index] ?? '';
   const named: Readonly<Record<string, string>> = {
     a: '\x07', b: '\b', e: '\x1b', E: '\x1b', f: '\f',
     n: '\n', r: '\r', t: '\t', v: '\x0b',
   };
-  let value = named[char] ?? char;
+  let value = escapedCharacter ? named[char] ?? char : char;
   let end = index + 1;
   let byte = false;
+  let valid = true;
   const octal = char >= '0' && char <= '7';
-  if (octal || char === 'x' || char === 'u' || char === 'U') {
+  if (escapedCharacter && (octal || char === 'x' || char === 'u' || char === 'U')) {
     const digits = octal ? '01234567' : '0123456789abcdef';
     const first = octal ? index : index + 1;
     const limit = octal ? 3 : char === 'x' ? 2 : char === 'u' ? 4 : 8;
@@ -33,15 +36,20 @@ function ansiEscape(raw: string, start: number): Escape {
     if (end > first) {
       const code = Number.parseInt(raw.slice(first, end), octal ? 8 : 16);
       byte = octal || char === 'x';
+      valid = byte || code <= 0x10ffff && (code < 0xd800 || code > 0xdfff);
       value = String.fromCodePoint(byte ? code & 255 : Math.min(code, 0x10ffff));
-    } else end = index + 1;
+    } else {
+      value = '\0';
+      byte = true;
+      end = index + 1;
+    }
   }
   if (mask || control) {
     const code = value.charCodeAt(0);
     value = String.fromCharCode((control ? code === 63 ? 127 : code & 31 : code) | mask);
     byte = true;
   }
-  return { value, end, byte };
+  return { value, end, byte, valid };
 }
 
 /** Remove quoting from a here-document delimiter while preserving literal expansions. */
