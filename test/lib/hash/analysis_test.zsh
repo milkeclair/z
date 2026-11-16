@@ -117,9 +117,8 @@ z.t.describe "z.hash.entries"; {
 
       z.t.expect "${#result[@]}" 6
       z.hash.has.key entries key=empty
-      local result_code=$?
-      z.t.expect "$result_code" 0
-      z.t.expect "${entries[empty]}" ""
+      z.t.expect.status.is.true
+      z.t.expect.is.null "${entries[empty]}"
       z.t.expect "${entries[word]}" "keep_empty=true"
       z.t.expect "${entries[flag]}" "false"
     }

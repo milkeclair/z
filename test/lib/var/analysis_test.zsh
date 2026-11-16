@@ -39,7 +39,7 @@ z.t.describe "z.var.get"; {
       local result=("${REPLY[@]}")
 
       z.t.expect "${#result[@]}" 5
-      z.t.expect "${result[1]}" ""
+      z.t.expect.is.null "${result[1]}"
       z.t.expect "${result[2]}" "true"
       z.t.expect "${result[3]}" "null"
       z.t.expect "${result[4]}" "two words"
@@ -63,7 +63,7 @@ z.t.describe "z.var.get"; {
 
       z.t.expect "${#result[@]}" 3
       z.t.expect "${result[1]}" "true"
-      z.t.expect "${result[2]}" ""
+      z.t.expect.is.null "${result[2]}"
       z.t.expect "${result[3]}" "two words"
     }
   }

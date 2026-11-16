@@ -85,15 +85,13 @@ z.t.describe "z.return"; {
     z.t.it "falseの間だけ指定を読み取り、true以降はデータとして残す"; {
       () {
         local REPLY
-        z.return keep_empty=false keep_empty=true keep_empty=false "a" "" "b"
-        local result_code=$?
-        local -a result=("${REPLY[@]}")
-
-        z.t.expect "$result_code" 0
+        z.return keep_empty=false keep_empty=true keep_empty=false "a" "" "b" &&
+          local -a result=("${REPLY[@]}")
+        z.t.expect.status.is.true
         z.t.expect "${#result[@]}" 4
         z.t.expect "${result[1]}" "keep_empty=false"
         z.t.expect "${result[2]}" "a"
-        z.t.expect "${result[3]}" ""
+        z.t.expect.is.null "${result[3]}"
         z.t.expect "${result[4]}" "b"
       }
     }
@@ -122,7 +120,7 @@ z.t.describe "z.return"; {
         local -a dropped=("${REPLY[@]}")
 
         z.t.expect "${#kept[@]}" 3
-        z.t.expect "${kept[2]}" ""
+        z.t.expect.is.null "${kept[2]}"
         z.t.expect "${#dropped[@]}" 2
         z.t.expect "${dropped[1]}" "a"
         z.t.expect "${dropped[2]}" "b"
@@ -134,11 +132,8 @@ z.t.describe "z.return"; {
     z.t.it "空白を含む値と終了ステータスを保持する"; {
       () {
         local REPLY=sentinel
-        z.return "two words"
-        local result_code=$?
-        local result_reply=$REPLY
-
-        z.t.expect "$result_code" 0
+        z.return "two words" && local result_reply=$REPLY
+        z.t.expect.status.is.true
         z.t.expect "$result_reply" "two words"
       }
     }
