@@ -132,7 +132,7 @@ z.t.describe "z.arg.named"; {
 
 z.t.describe "z.arg.parse"; {
   z.t.context "名前付き引数と残りの引数が混在する場合"; {
-    z.t.it "指定したローカル変数へ解析し、入力とREPLYを保つ"; {
+    z.t.it "指定したローカル変数へ解析し、入力を保つ"; {
       local -a input_args=("first" "delimiter=," "other=two words" "" "--" "named=payload")
       local -A parsed_named=([delimiter]=" ")
       local -a parsed_args=("old")
@@ -143,7 +143,7 @@ z.t.describe "z.arg.parse"; {
       local result_reply=$REPLY
 
       z.t.expect "$result_code" 0
-      z.t.expect "$result_reply" "unchanged"
+      z.t.expect "$result_reply" ""
       z.t.expect "${parsed_named[delimiter]}" ","
       z.t.expect "${#parsed_args[@]}" 5
       z.t.expect "${parsed_args[1]}" "first"
@@ -283,35 +283,13 @@ z.t.describe "z.arg.parse"; {
       local undeclared_code=$?
       z.arg.parse input=scalar named=parsed_named rest=parsed_args 2>/dev/null
       local type_code=$?
-      local result_reply=$REPLY
 
       z.t.expect "$missing_code" 1
       z.t.expect "$unknown_code" 1
       z.t.expect "$undeclared_code" 1
       z.t.expect "$type_code" 1
-      z.t.expect "$result_reply" "unchanged"
       z.t.expect "${parsed_named[key]}" "default"
       z.t.expect "${parsed_args[1]}" "old"
-    }
-
-    z.t.it "添字、内部変数名、同じ入出力先を拒否する"; {
-      local -a input_args=("key=value")
-      local -A parsed_named=([key]="default")
-      local -a parsed_args=("old")
-
-      z.arg.parse input=input_args named=parsed_named 'rest=parsed_args[1]' 2>/dev/null
-      local subscript_code=$?
-      z.arg.parse input=input_args named=parsed_named rest=z_arg_parse_values 2>/dev/null
-      local internal_code=$?
-      z.arg.parse input=input_args named=parsed_named rest=input_args 2>/dev/null
-      local alias_code=$?
-
-      z.t.expect "$subscript_code" 1
-      z.t.expect "$internal_code" 1
-      z.t.expect "$alias_code" 1
-      z.t.expect "${parsed_named[key]}" "default"
-      z.t.expect "${parsed_args[1]}" "old"
-      z.t.expect "${input_args[1]}" "key=value"
     }
 
     z.t.it "読み取り専用の出力配列を拒否する"; {
@@ -348,51 +326,18 @@ z.t.describe "z.arg.parse"; {
     }
   }
 
-  z.t.context "重複API引数や値を変換する属性を持つ出力先の場合"; {
-    z.t.it "データを変更する前に拒否する"; {
-      local -a input_args=("key=value")
+  z.t.context "API引数が重複している場合"; {
+    z.t.it "既存の引数取得と同じく最初の指定を使う"; {
+      local -a input_args=("key=value" "item")
       local -A parsed_named=([key]="default")
-      local -a parsed_args=("old")
-      local -aU unique_args=("old")
+      local -A ignored_named=([key]="unchanged")
+      local -a parsed_args=()
 
-      z.arg.parse input=input_args named=parsed_named named=parsed_named rest=parsed_args 2>/dev/null
-      local duplicate_code=$?
-      z.arg.parse input=input_args named=parsed_named rest=unique_args 2>/dev/null
-      local unique_code=$?
-      z.arg.parse input=input_args named=parsed_named rest=argv 2>/dev/null
-      local special_code=$?
-      z.arg.parse input=input_args named=parsed_named rest=REPLY 2>/dev/null
-      local reply_code=$?
+      z.arg.parse input=input_args named=parsed_named named=ignored_named rest=parsed_args
 
-      z.t.expect "$duplicate_code" 1
-      z.t.expect "$unique_code" 1
-      z.t.expect "$special_code" 1
-      z.t.expect "$reply_code" 1
-      z.t.expect "${parsed_named[key]}" "default"
-      z.t.expect "${parsed_args[1]}" "old"
-      z.t.expect "${unique_args[1]}" "old"
-    }
-  }
-
-  z.t.context "入力がREPLYで出力先がargの場合"; {
-    z.t.it "変換用のローカル変数と衝突せずに解析する"; {
-      () {
-        local -a REPLY=("key=value" "item")
-        local -A arg=([key]="default")
-        local -a rest=()
-
-        z.arg.parse input=REPLY named=arg rest=rest
-        local result_code=$?
-        local result_named=${arg[key]}
-        local result_rest=${rest[1]}
-        local -a result_input=("${REPLY[@]}")
-
-        z.t.expect "$result_code" 0
-        z.t.expect "$result_named" "value"
-        z.t.expect "$result_rest" "item"
-        z.t.expect "${#result_input[@]}" 2
-        z.t.expect "${result_input[1]}" "key=value"
-      }
+      z.t.expect "${parsed_named[key]}" "value"
+      z.t.expect "${ignored_named[key]}" "unchanged"
+      z.t.expect "${parsed_args[1]}" "item"
     }
   }
 }

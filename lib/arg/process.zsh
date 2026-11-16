@@ -65,18 +65,16 @@ z.arg.named() {
 
 # parse an input array into named values and remaining literal arguments
 #
-# $input: name of a declared ordinary indexed array (read only)
-# $named: name of a plain writable associative array declaring accepted names and defaults
-# $rest: name of a plain writable indexed array for remaining arguments
-# REPLY: unchanged
-# return: 0 on success, 1 for invalid API arguments or variable declarations
+# $input: name of an indexed input array
+# $named: name of a writable associative array with accepted names and defaults
+# $rest: name of a writable indexed array for remaining arguments
+# REPLY: null
+# return: 0 on success, 1 for missing arrays or invalid array types
 #
-# The three variable names must differ. Output names cannot be REPLY.
-# Variable names starting with z_arg_parse_ are reserved.
-# The first occurrence of each declared name wins; all its occurrences are removed.
-# Named values use z.return conversion; an empty converted value uses its default.
-# Unknown arguments and empty elements are preserved literally in rest.
-# Outputs are unchanged on validation failure. Successful calls print nothing.
+# Use distinct array names, separate from REPLY and this function's locals.
+# The first occurrence wins; all occurrences of accepted names are removed.
+# Named values use z.return conversion; an empty value uses its default.
+# Remaining arguments and the input array retain their literal values.
 #
 # example:
 #  local -a input_args=("a" "delimiter=," "b")
@@ -85,90 +83,57 @@ z.arg.named() {
 #  z.arg.parse input=input_args named=parsed_named rest=parsed_args
 #  # parsed_named[delimiter]=","; parsed_args=("a" "b")
 z.arg.parse() {
-  local z_arg_parse_input z_arg_parse_named z_arg_parse_rest
+  local arg
+  z.arg.named input $@ && local input_name=$REPLY
+  z.arg.named named $@ && local named_name=$REPLY
+  z.arg.named rest $@ && local rest_name=$REPLY
 
-  () {
-    local REPLY arg name MATCH MBEGIN MEND match mbegin mend
-    z.arg.named.literal input "$@" && local input_name=$REPLY
-    z.arg.named.literal named "$@" && local named_name=$REPLY
-    z.arg.named.literal rest "$@" && local rest_name=$REPLY
-
-    z.guard; {
-      z.arr.count "$@"
-      if z.int.is.not.eq $REPLY 3; then
-        z.io.error "z.arg.parse: input, named and rest are required"
-        return 1
-      fi
-
-      for name in "$input_name" "$named_name" "$rest_name"; do
-        if z.str.is.not.match "$name" '^[a-zA-Z_][a-zA-Z0-9_]*$' ||
-          z.str.start_with "$name" "z_arg_parse_"; then
-          z.io.error "z.arg.parse: invalid variable name: $name"
-          return 1
-        fi
-      done
-
-      if z.is.eq "$input_name" "$named_name" || z.is.eq "$input_name" "$rest_name" ||
-        z.is.eq "$named_name" "$rest_name" || z.is.eq "$named_name" REPLY ||
-        z.is.eq "$rest_name" REPLY; then
-        z.io.error "z.arg.parse: use distinct input and output variables"
-        return 1
-      fi
-    }
-
-    z_arg_parse_input=$input_name
-    z_arg_parse_named=$named_name
-    z_arg_parse_rest=$rest_name
-  } "$@" || return 1
-
-  () {
-    local REPLY arg MATCH MBEGIN MEND match mbegin mend
-    if z.str.is.not.match "$1" '^array' || z.str.includes "$1" special ||
-      z.str.is.not.match "$2" '^association(-local)?$' ||
-      z.str.is.not.match "$3" '^array(-local)?$'; then
+  z.guard; {
+    if z.str.is.not.match "${(Pt)input_name}" '^array' ||
+      z.str.includes "${(Pt)input_name}" special ||
+      z.str.is.not.match "${(Pt)named_name}" '^association(-local)?$' ||
+      z.str.is.not.match "${(Pt)rest_name}" '^array(-local)?$'; then
       z.io.error "z.arg.parse: input/rest must be arrays and named an associative array"
       return 1
     fi
-  } "${(Pt)z_arg_parse_input}" "${(Pt)z_arg_parse_named}" "${(Pt)z_arg_parse_rest}" || return 1
-
-  local -a z_arg_parse_args=("${(@P)z_arg_parse_input}")
-  local -A z_arg_parse_values=("${(@Pkv)z_arg_parse_named}")
-  local -a z_arg_parse_remaining=()
-
-  () {
-    local REPLY arg name
-    local names=()
-    local -A found=()
-
-    for name in "${(@k)z_arg_parse_values}"; do
-      z.is.null "$name" && continue
-      z.str.includes "$name" "=" && continue
-      names+=("$name")
-    done
-
-    for arg in "${z_arg_parse_args[@]}"; do
-      for name in "${names[@]}"; do
-        if z.str.start_with "$arg" "${name}="; then
-          if ! z.is.true ${found[$name]}; then
-            z.str.remove.prefix "$arg" "${name}="
-            z.is.null "$REPLY" && z.return "${z_arg_parse_values[$name]}"
-            z_arg_parse_values[$name]=$REPLY
-            found[$name]=true
-          fi
-          continue 2
-        fi
-      done
-
-      z_arg_parse_remaining+=("$arg")
-    done
-
-    for name in "${(@k)z_arg_parse_values}"; do
-      z.is.true ${found[$name]} && continue
-      z.return "${z_arg_parse_values[$name]}"
-      z_arg_parse_values[$name]=$REPLY
-    done
   }
 
-  set -A "$z_arg_parse_named" "${(@kv)z_arg_parse_values}"
-  set -A "$z_arg_parse_rest" "${z_arg_parse_remaining[@]}"
+  local args=("${(@P)input_name}")
+  local -A values=("${(@Pkv)named_name}")
+  local remaining=()
+  local names=()
+  local -A found=()
+  local name
+
+  for name in "${(@k)values}"; do
+    z.is.null "$name" && continue
+    z.str.includes "$name" "=" && continue
+    names+=("$name")
+  done
+
+  for arg in "${args[@]}"; do
+    for name in "${names[@]}"; do
+      if z.str.start_with "$arg" "${name}="; then
+        if ! z.is.true ${found[$name]}; then
+          z.str.remove.prefix "$arg" "${name}="
+          z.is.null "$REPLY" && z.return "${values[$name]}"
+          values[$name]=$REPLY
+          found[$name]=true
+        fi
+        continue 2
+      fi
+    done
+
+    remaining+=("$arg")
+  done
+
+  for name in "${(@k)values}"; do
+    z.is.true ${found[$name]} && continue
+    z.return "${values[$name]}"
+    values[$name]=$REPLY
+  done
+
+  set -A "$named_name" "${(@kv)values}"
+  set -A "$rest_name" "${remaining[@]}"
+  z.return
 }
