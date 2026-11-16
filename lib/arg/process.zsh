@@ -85,89 +85,90 @@ z.arg.named() {
 #  z.arg.parse input=input_args named=parsed_named rest=parsed_args
 #  # parsed_named[delimiter]=","; parsed_args=("a" "b")
 z.arg.parse() {
-  emulate -L zsh
-  local z_arg_parse_option z_arg_parse_key z_arg_parse_name
-  local -A z_arg_parse_targets=()
+  local z_arg_parse_input z_arg_parse_named z_arg_parse_rest
 
-  for z_arg_parse_option in "$@"; do
-    case $z_arg_parse_option in
-    input=*|named=*|rest=*)
-      z_arg_parse_key=${z_arg_parse_option%%=*}
-      if (( ${+z_arg_parse_targets[$z_arg_parse_key]} )); then
-        print -u2 -- "z.arg.parse: duplicate API argument: $z_arg_parse_key"
+  () {
+    local REPLY arg name MATCH MBEGIN MEND match mbegin mend
+    z.arg.named.literal input "$@" && local input_name=$REPLY
+    z.arg.named.literal named "$@" && local named_name=$REPLY
+    z.arg.named.literal rest "$@" && local rest_name=$REPLY
+
+    z.guard; {
+      z.arr.count "$@"
+      if z.int.is.not.eq $REPLY 3; then
+        z.io.error "z.arg.parse: input, named and rest are required"
         return 1
       fi
-      z_arg_parse_targets[$z_arg_parse_key]=${z_arg_parse_option#*=}
-      ;;
-    *)
-      print -u2 -- "z.arg.parse: expected input=, named= and rest= variable names"
-      return 1
-      ;;
-    esac
-  done
 
-  local z_arg_parse_input=${z_arg_parse_targets[input]}
-  local z_arg_parse_named=${z_arg_parse_targets[named]}
-  local z_arg_parse_rest=${z_arg_parse_targets[rest]}
-
-  for z_arg_parse_name in "$z_arg_parse_input" "$z_arg_parse_named" "$z_arg_parse_rest"; do
-    if [[ -z $z_arg_parse_name || $z_arg_parse_name == [0-9]* ||
-      $z_arg_parse_name == *[^a-zA-Z0-9_]* || $z_arg_parse_name == z_arg_parse_* ]]; then
-      print -u2 -- "z.arg.parse: invalid or reserved variable name: $z_arg_parse_name"
-      return 1
-    fi
-  done
-
-  if [[ $z_arg_parse_input == $z_arg_parse_named ||
-    $z_arg_parse_input == $z_arg_parse_rest || $z_arg_parse_named == $z_arg_parse_rest ||
-    $z_arg_parse_named == REPLY || $z_arg_parse_rest == REPLY ]]; then
-    print -u2 -- "z.arg.parse: use distinct variables and output names other than REPLY"
-    return 1
-  fi
-
-  if [[ ${(Pt)z_arg_parse_input} != array* ||
-    ${(Pt)z_arg_parse_input} == *special* ||
-    ( ${(Pt)z_arg_parse_named} != association && ${(Pt)z_arg_parse_named} != association-local ) ||
-    ( ${(Pt)z_arg_parse_rest} != array && ${(Pt)z_arg_parse_rest} != array-local ) ]]; then
-    print -u2 -- "z.arg.parse: input/rest must be indexed arrays and named a writable associative array"
-    return 1
-  fi
-
-  local -a z_arg_parse_values=("${(@P)z_arg_parse_input}")
-  local -A z_arg_parse_result=("${(@Pkv)z_arg_parse_named}")
-  local -A z_arg_parse_found=()
-  local -a z_arg_parse_remaining=()
-  local z_arg_parse_value
-
-  for z_arg_parse_value in "${z_arg_parse_values[@]}"; do
-    z_arg_parse_key=${z_arg_parse_value%%=*}
-    if [[ $z_arg_parse_value == *=* && -n $z_arg_parse_key ]] &&
-      (( ${+z_arg_parse_result[$z_arg_parse_key]} )); then
-      if (( ! ${+z_arg_parse_found[$z_arg_parse_key]} )); then
-        z_arg_parse_found[$z_arg_parse_key]=${z_arg_parse_value#*=}
-      fi
-    else
-      z_arg_parse_remaining+=("$z_arg_parse_value")
-    fi
-  done
-
-  local REPLY
-  # z.returnが使うargは、変換中だけローカルに隔離する。
-  () {
-    local arg
-    for z_arg_parse_key in "${(@k)z_arg_parse_result}"; do
-      if (( ${+z_arg_parse_found[$z_arg_parse_key]} )); then
-        z.return "${z_arg_parse_found[$z_arg_parse_key]}"
-        if [[ -z $REPLY ]]; then
-          z.return ${z_arg_parse_result[$z_arg_parse_key]}
+      for name in "$input_name" "$named_name" "$rest_name"; do
+        if z.str.is.not.match "$name" '^[a-zA-Z_][a-zA-Z0-9_]*$' ||
+          z.str.start_with "$name" "z_arg_parse_"; then
+          z.io.error "z.arg.parse: invalid variable name: $name"
+          return 1
         fi
-      else
-        z.return ${z_arg_parse_result[$z_arg_parse_key]}
+      done
+
+      if z.is.eq "$input_name" "$named_name" || z.is.eq "$input_name" "$rest_name" ||
+        z.is.eq "$named_name" "$rest_name" || z.is.eq "$named_name" REPLY ||
+        z.is.eq "$rest_name" REPLY; then
+        z.io.error "z.arg.parse: use distinct input and output variables"
+        return 1
       fi
-      z_arg_parse_result[$z_arg_parse_key]=$REPLY
+    }
+
+    z_arg_parse_input=$input_name
+    z_arg_parse_named=$named_name
+    z_arg_parse_rest=$rest_name
+  } "$@" || return 1
+
+  () {
+    local REPLY arg MATCH MBEGIN MEND match mbegin mend
+    if z.str.is.not.match "$1" '^array' || z.str.includes "$1" special ||
+      z.str.is.not.match "$2" '^association(-local)?$' ||
+      z.str.is.not.match "$3" '^array(-local)?$'; then
+      z.io.error "z.arg.parse: input/rest must be arrays and named an associative array"
+      return 1
+    fi
+  } "${(Pt)z_arg_parse_input}" "${(Pt)z_arg_parse_named}" "${(Pt)z_arg_parse_rest}" || return 1
+
+  local -a z_arg_parse_args=("${(@P)z_arg_parse_input}")
+  local -A z_arg_parse_values=("${(@Pkv)z_arg_parse_named}")
+  local -a z_arg_parse_remaining=()
+
+  () {
+    local REPLY arg name
+    local names=()
+    local -A found=()
+
+    for name in "${(@k)z_arg_parse_values}"; do
+      z.is.null "$name" && continue
+      z.str.includes "$name" "=" && continue
+      names+=("$name")
+    done
+
+    for arg in "${z_arg_parse_args[@]}"; do
+      for name in "${names[@]}"; do
+        if z.str.start_with "$arg" "${name}="; then
+          if ! z.is.true ${found[$name]}; then
+            z.str.remove.prefix "$arg" "${name}="
+            z.is.null "$REPLY" && z.return "${z_arg_parse_values[$name]}"
+            z_arg_parse_values[$name]=$REPLY
+            found[$name]=true
+          fi
+          continue 2
+        fi
+      done
+
+      z_arg_parse_remaining+=("$arg")
+    done
+
+    for name in "${(@k)z_arg_parse_values}"; do
+      z.is.true ${found[$name]} && continue
+      z.return "${z_arg_parse_values[$name]}"
+      z_arg_parse_values[$name]=$REPLY
     done
   }
 
-  set -A "$z_arg_parse_named" "${(@kv)z_arg_parse_result}"
+  set -A "$z_arg_parse_named" "${(@kv)z_arg_parse_values}"
   set -A "$z_arg_parse_rest" "${z_arg_parse_remaining[@]}"
 }
