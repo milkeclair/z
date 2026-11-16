@@ -1,98 +1,52 @@
-# Releasing z and z-ls
+# zとz-lsのリリース
 
-## Run a release
+## リリースの実行
 
-1. Open Actions → release-draft → Run workflow on main and enter a stable version
-   such as 2.4.0 (without v). This builds and verifies the source archive and VSIX,
-   pushes the version commit/tag, and saves a draft GitHub Release.
-2. Open Releases, edit the prepared draft, write the multiline Markdown in
-   "Release description", and click Save draft. The workflow starts with an
-   empty body so that you can write the release notes yourself.
-3. Open Actions → release-publish → Run workflow on main. Enter the same version
-   and choose whether to publish to Visual Studio Marketplace. It downloads the
-   draft's existing artifacts, validates them and the saved body, and publishes
-   the release without rebuilding. Empty or whitespace-only notes stop publication.
+1. mainのActions → release-draft → Run workflowを開き、2.4.0のような安定版バージョンをvなしで指定します。ソースアーカイブとVSIXのビルド・検証、バージョンコミットとタグのpush、GitHub ReleaseのDraft作成まで実行します。
+2. Releasesで用意されたDraftを編集し、複数行のMarkdownを「Release description」へ記入してSave draftを押します。本文は空で作成されるので、リリースノートを自分で記入できます。
+3. mainのActions → release-publish → Run workflowを開き、同じバージョンとVisual Studio Marketplaceへ公開するかを指定します。Draftの既存成果物と保存済み本文を取得・検証し、再ビルドせず公開します。本文が空または空白だけなら公開を停止します。
 
-Both forms use single-line version fields; the Markdown is edited in GitHub's
-release editor, which supports multiple lines and a preview. No release notes are
-generated. Use Save draft in the editor, then release-publish to run the final
-validation and optional Marketplace publication.
+どちらのフォームもバージョン欄は1行です。Markdownは、複数行入力とプレビューに対応したGitHubのリリース編集画面で記入します。リリースノートの自動生成は行いません。編集画面でSave draftを押し、release-publishで最終検証と必要に応じたMarketplace公開を実行します。
 
-The publishing workflow keeps the filename release.yml because Marketplace's
-Trusted Publishing policy is bound to that filename. The draft workflow is
-release-draft.yml. From the CLI, their display names work as well:
+公開用ワークフローのファイル名はrelease.ymlのままです。MarketplaceのTrusted Publishingポリシーがこの名前に紐付いているためです。Draft作成用はrelease-draft.ymlです。CLIからは表示名でも実行できます。
 
 ```sh
 gh workflow run release-draft --ref main -f version=2.4.0
-# Edit and save the prepared draft body in GitHub.
+# GitHubで準備済みDraftの本文を編集して保存する。
 gh workflow run release-publish --ref main -f version=2.4.0 -F publish_marketplace=false
 ```
 
-The version applies to z.version, ls/package.json and ls/package-lock.json.
-The first unified release must be newer than the existing z-ls version 2.3.0.
-Every new release must advance both component versions. Prereleases and build
-metadata are currently outside this workflow.
+バージョンはz.version、ls/package.json、ls/package-lock.jsonへ適用されます。最初の統一リリースは、既存のz-lsの2.3.0より新しいバージョンにします。以後も両方のバージョンを進めます。現在のワークフローはプレリリースとビルドメタデータには対応していません。
 
-release-draft validates the request, runs the existing Zsh/LSP CI, and creates a
-local version commit and annotated vVERSION tag in a read-only build job. That job
-builds the VSIX and packages all tracked source, including lib, mod, tests and LSP
-source. A separate contents-write job executes no npm install or build code. It
-recreates the three exact metadata edits from trusted source, checks the full
-source archive against that tree, then pushes main and the tag atomically.
-The checked single parent makes this a fast-forward; an explicit lease also
-requires main to retain the dispatched SHA until the push.
+release-draftは入力を検証し、既存のZsh/LSP CIを実行します。読み取り専用のビルドジョブで、ローカルのバージョンコミットと注釈付きvVERSIONタグを作成します。このジョブがVSIXをビルドし、lib・mod・テスト・LSPのソースを含む全追跡対象を梱包します。別のcontents-writeジョブではnpm installやビルドコードを実行せず、信頼済みソースから3つのメタデータ変更を再現し、アーカイブ全体を照合してmainとタグをアトミックにpushします。親が1つであることを検証するためfast-forwardとなり、明示的なleaseによってpushまでmainが実行指定時のSHAを保つことも要求します。
 
-It attaches these assets to a draft GitHub Release, verifies the uploaded SHA256
-digests, and stops with the draft editable. release-publish downloads and verifies
-the same bytes, source/version commit, tag and saved Markdown before publishing.
-VSIX JSON and XML must agree on extension ID, publisher, version and stable channel; source contents must match the trusted Git
-tree. The source tar uses the validated source parent's timestamp and fixed permissions,
-so independently recreated version commits produce the same archive contents:
+次の成果物をGitHub ReleaseのDraftへ添付し、アップロード後のSHA256を検証して、本文を編集できる状態で終了します。release-publishは公開前に同じバイト列、ソースとバージョンコミット、タグ、保存済みMarkdownを取得して検証します。VSIXのJSONとXMLで拡張機能ID・publisher・バージョン・安定版チャネルが一致し、ソース内容が信頼済みGitツリーに一致する必要があります。ソースtarには検証済みのソース親コミットの時刻と固定権限を使うため、独立して再作成したバージョンコミットからも同じ内容のアーカイブを作れます。
 
 - z-VERSION.tar.gz
 - z-ls-VERSION.vsix
 - SHA256SUMS
 
-GitHub's immutable releases setting must stay enabled. It is already enabled for
-milkeclair/z. Publication fixes the tag and asset bytes; the workflow also verifies
-the published release's immutable flag. Correct a published release with a new
-version. Draft-aware publication validation runs in the existing contents-write
-publishing job because GitHub requires push access to see drafts. The read-only preflight
-checks the dispatch branch, locked Actions and optional Marketplace controls.
-The GITHUB_TOKEN needs contents: write for the draft/publishing jobs, and branch
-rules must permit its version commit on main. A rejected atomic push changes
-neither main nor the tag.
+GitHubのimmutable releases設定は有効にしておきます。milkeclair/zでは設定済みです。公開するとタグと成果物のバイト列が固定され、ワークフローも公開後のimmutableフラグを検証します。公開済みの修正は新しいバージョンでリリースします。GitHubではDraftの参照にpush権限が必要なので、Draftを考慮した公開検証は既存のcontents-write公開ジョブで実行します。読み取り専用の事前検証では、実行元ブランチ、固定済みActions、必要に応じたMarketplace設定を確認します。Draft作成・公開ジョブのGITHUB_TOKENにはcontents: writeが必要で、ブランチルールもmainへのバージョンコミットを許可する必要があります。アトミックなpushが拒否されると、mainとタグはどちらも変更されません。
 
-The draft workflow reuses CI from the same commit through a local workflow
-reference. External Actions are pinned by actions.lock.
+Draft作成ワークフローはローカルのワークフロー参照を使い、同じコミットのCIを再利用します。外部Actionsはactions.lockで固定します。
 
-## Optional Marketplace publication
+## Marketplaceへの任意公開
 
-The release-publish checkbox defaults to false. The VSIX is attached to GitHub in
-either case.
-When selected, the publishing job downloads the already-published immutable
-assets, verifies their checksums, versions and extension identity, then runs:
+release-publishのチェックボックスの既定値はfalseです。どちらの場合もVSIXはGitHubへ添付します。選択した場合、公開ジョブは公開済みの変更不能な成果物を取得し、チェックサム・バージョン・拡張機能の識別情報を検証してから、次を実行します。
 
 ```sh
 ./node_modules/.bin/vsce publish --oidc --packagePath /path/to/z-ls-VERSION.vsix
 ```
 
-This publishes the same VSIX without rebuilding it. Only this job requests
-id-token: write. No Marketplace PAT or repository secret is required. The job is
-bound to the marketplace environment, and branch restrictions are enforced by
-GitHub rather than relying only on workflow conditionals.
+同じVSIXを再ビルドせず公開します。id-token: writeを要求するのはこのジョブだけです。MarketplaceのPATやリポジトリのsecretは不要です。ジョブはmarketplace Environmentに紐付き、ブランチ制限はワークフローの条件だけに頼らずGitHub側で強制します。
 
-Before the first Marketplace publication:
+初めてMarketplaceへ公開する前に、次を設定します。
 
-1. In repository Settings → Environments, create marketplace. Under deployment
-   branches and tags, allow exactly one rule: branch main. Use selected branches,
-   with no wildcard, tag rule or additional allowed branch.
-2. Keep these controls in place. Preflight and the publishing job read them with
-   actions: read and reject a missing or broader environment.
-3. An owner of publisher milkeclair creates this Trusted Publishing policy at the
-[Marketplace publisher management page](https://marketplace.visualstudio.com/manage):
+1. リポジトリのSettings → Environmentsでmarketplaceを作成します。デプロイ可能なブランチとタグには、mainブランチだけを許可するルールを1つ設定します。Selected branchesを使い、ワイルドカード・タグのルール・追加のブランチは設定しません。
+2. この制限を維持します。事前検証と公開ジョブはactions: readで設定を読み、Environmentがない場合や許可範囲が広い場合は拒否します。
+3. publisher「milkeclair」の所有者が、[Marketplaceのpublisher管理画面](https://marketplace.visualstudio.com/manage)で次のTrusted Publishingポリシーを作成します。
 
-| Field | Value |
+| 項目 | 値 |
 | --- | --- |
 | Policy name | z release workflow |
 | Repository owner | milkeclair |
@@ -100,50 +54,27 @@ Before the first Marketplace publication:
 | Workflow | release.yml |
 | Environment | marketplace |
 
-The workflow accepts release dispatches only from main. Bind the policy to the
-configured environment; leaving its Environment field empty would also trust
-matching workflow files on other branches.
+ワークフローはmainからのリリース実行だけを受け付けます。ポリシーは設定したEnvironmentに紐付けます。Environment欄を空にすると、別ブランチの一致するワークフローファイルも信頼することになるためです。
 
-## Recover a failed run
+## 失敗した実行の再開
 
-If main advances while release-draft is validating/building, the push is rejected.
-Start a new release-draft dispatch from current main to include the latest changes.
+release-draftの検証・ビルド中にmainが進むとpushが拒否されます。最新の変更を含めるため、現在のmainからrelease-draftを新しく実行します。
 
-If the version commit/tag were pushed but draft preparation failed, run
-release-draft again with the same version. It checks that the tag belongs to main
-and contains matching source/manifest/lock versions, then runs CI against that tag
-and resumes from it. A tag change after validation requires a new dispatch.
-Retrying draft preparation preserves its saved body. The three expected draft
-assets may be replaced before publication; unexpected extra assets cause a failure
-for manual review.
+バージョンコミットとタグのpush後にDraftの準備が失敗した場合は、同じバージョンでrelease-draftを再実行します。タグがmainに属し、ソース・manifest・lockのバージョンが一致することを確認して、そのタグでCIを実行し、処理を再開します。検証後にタグが変わった場合は新しい実行が必要です。Draft準備の再実行では保存済み本文を保持します。予定した3つの成果物は公開前なら置換できますが、予定外の成果物があれば手動確認のため失敗させます。
 
-If release-publish fails, correct the draft notes or reported issue and run it
-again. Publication downloads the existing draft assets; it does not rebuild,
-replace assets or update main. A change to the draft body during validation causes
-a failure so that the next run uses the newly saved text. Publishing an older
-draft preserves a newer release's Latest designation.
+release-publishが失敗した場合は、Draftの本文や報告された問題を修正して再実行します。既存のDraftの成果物を取得して公開するため、再ビルド・成果物の置換・mainの更新は行いません。検証中にDraftの本文が変わると失敗し、次回は新しく保存した本文を使います。古いDraftを公開しても、より新しいリリースのLatest指定を保持します。
 
-Once the GitHub release is immutable, run release-publish with the same version to
-verify and reuse its existing assets. Select the Marketplace checkbox to retry
-that publication or publish a version initially released only on GitHub. The
-existing body, tag and assets are preserved; no notes input is needed on retries.
-Marketplace duplicate-version errors remain errors rather than being silently
-accepted.
+GitHub Releaseが変更不能になった後も、同じバージョンでrelease-publishを実行すると既存成果物を検証して再利用できます。Marketplaceのチェックボックスを選ぶと、公開を再試行するか、当初GitHubだけで公開した版をMarketplaceにも公開できます。既存の本文・タグ・成果物を保持するため、再試行時のリリースノート入力は不要です。Marketplaceの重複バージョンエラーは黙って成功扱いせず、エラーのまま返します。
 
-GitHub and Marketplace are separate services. A Marketplace failure leaves the
-immutable GitHub release published and available for retry.
+GitHubとMarketplaceは別のサービスです。Marketplaceへの公開が失敗しても、変更不能なGitHub Releaseは公開済みのままで、再試行できます。
 
-## Install a versioned release
+## バージョンを指定したリリースの導入
 
-Download the source archive and SHA256SUMS from the GitHub release, verify its
-SHA256 entry, extract the archive, and point Z_ROOT at the extracted z-VERSION
-directory before sourcing main.zsh. Mod source is included in the same archive.
-Install the matching VSIX manually or select the version in Marketplace.
+GitHub ReleaseからソースアーカイブとSHA256SUMSを取得し、SHA256を検証して展開します。main.zshをsourceする前に、展開したz-VERSIONディレクトリをZ_ROOTへ指定します。modのソースも同じアーカイブに含まれます。対応するVSIXを手動で導入するか、Marketplaceでバージョンを選びます。
 
-The existing z.install command continues to install the main branch. Use the
-release assets when you need the fixed contents of a specific version.
+既存のz.installは引き続きmainブランチを導入します。特定バージョンの固定された内容が必要な場合は、リリース成果物を使います。
 
-## Local verification
+## ローカルでの検証
 
 ```sh
 node --test .github/scripts/release.test.mjs
@@ -152,16 +83,10 @@ npm ci
 npm test -- --maxWorkers=2
 ```
 
-Asset validation accepts exactly three regular files, caps source expansion at
-64 MiB, VSIX size at 128 MiB, and VSIX expanded contents at 512 MiB. Metadata is
-limited to 1 MiB per file. Duplicate/unsafe ZIP paths, symlinks, DTDs and unexpected
-identities are rejected before publication. This validates packaging and source
-association; the reviewed main code and locked build toolchain remain trusted.
+成果物の検証では通常ファイル3つだけを受け付けます。ソースの展開後サイズは64 MiB、VSIX本体は128 MiB、VSIXの展開後サイズは512 MiBまで、メタデータは1ファイル1 MiBまでです。ZIP内の重複・安全でないパス、シンボリックリンク、DTD、予定外の識別情報は公開前に拒否します。梱包内容とソースの対応を検証する仕組みであり、レビュー済みのmainのコードと固定済みのビルドツールは信頼する前提です。
 
-The release tests use temporary real Git repositories to verify version updates,
-atomic pushes, conflicting refs and artifact checks. GitHub API states are
-fixtures; these tests do not publish GitHub releases or Marketplace extensions.
+リリースのテストは一時的な実Gitリポジトリを使い、バージョン更新・アトミックなpush・参照の競合・成果物検証を確認します。GitHub APIの状態はテストデータを使い、GitHub ReleaseやMarketplace拡張機能を実際には公開しません。
 
-References:
-[GitHub immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases),
-[Marketplace Trusted Publishing](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#publish-with-github-actions-and-trusted-publishing).
+参照:
+[GitHubの変更不能なリリース](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases)、
+[Marketplace Trusted Publishing](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#publish-with-github-actions-and-trusted-publishing)。
