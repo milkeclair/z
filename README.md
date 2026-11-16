@@ -54,7 +54,8 @@ are replaced with the selected branch's contents and reloaded.
 
 ### Terminate processes
 
-Use exactly one selector to send SIGTERM:
+Install the `kill` mod with `z.install.mod kill`, then use exactly one
+selector to send SIGTERM:
 
 ```zsh
 z.kill pid=12345
