@@ -4,6 +4,7 @@ import type { FunctionDocumentation } from './documentation';
 import { parseFunctionDocumentation } from './documentation';
 import type { ControlComment, HydrationOptions } from './directive';
 import { parseDirective } from './directive';
+import { hydrateClasses } from './classes';
 
 export type HydratedDocBlock = DocBlockNode & { readonly hydration: FunctionDocumentation };
 export type HydratedComment = CommentNode & { readonly hydration: ControlComment };
@@ -33,7 +34,7 @@ export function hydrateAst(ast: FileNode, source: string, options: HydrationOpti
     documents.set(definition.leadingDoc.range.start.offset, result.documentation);
     for (const offset of result.exampleComments) exampleComments.add(offset);
   }
-  return mapAst(ast, (node: AstNode): AstNode => {
+  const enriched = mapAst(ast, (node: AstNode): AstNode => {
     if (node.kind === 'docBlock') {
       const original = documents.get(node.range.start.offset);
       if (original) {
@@ -53,4 +54,5 @@ export function hydrateAst(ast: FileNode, source: string, options: HydrationOpti
     }
     return node;
   });
+  return hydrateClasses(enriched);
 }
