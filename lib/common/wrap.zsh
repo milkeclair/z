@@ -19,26 +19,20 @@
 #  z.return "some string" #=> REPLY="some string"
 #  z.return "a" "b" "c"   #=> REPLY=("a" "b" "c")
 z.return() {
-  if (( $# <= 1 )); then
-    local value=""
-    if (( $# == 1 )); then
-      arg=$1
-      [[ $arg == keep_empty=* ]] || value=$arg
-    fi
-  else
+  if z.int.is.gt $# 1; then
     local keep_empty=false
     local filtered_args=()
 
     for arg in "$@"; do
-      if [[ ( $keep_empty == false || $keep_empty == 1 ) && $arg == keep_empty=* ]]; then
+      if z.is.false $keep_empty && z.str.start_with "$arg" "keep_empty="; then
         keep_empty=${arg#keep_empty=}
       else
         filtered_args+=("$arg")
       fi
     done
 
-    if (( ${#filtered_args[@]} > 1 )); then
-      if [[ $keep_empty == true || $keep_empty == 0 ]]; then
+    if z.int.is.gt ${#filtered_args[@]} 1; then
+      if z.is.true $keep_empty; then
         REPLY=("${filtered_args[@]}")
       else
         REPLY=(${filtered_args[@]})
@@ -47,6 +41,11 @@ z.return() {
     fi
 
     local value=$filtered_args[1]
+  else
+    local value=""
+    for arg in "$@"; do
+      z.str.start_with "$arg" "keep_empty=" || value=$arg
+    done
   fi
 
   case $value in

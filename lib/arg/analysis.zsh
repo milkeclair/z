@@ -11,9 +11,9 @@ z.arg.get() {
   z.arg.named index $@ && local index=$REPLY
   z.arg.named.shift index $@
   local args=($REPLY)
-  local arg_count=${#args[@]}
+  z.arr.count $args
 
-  z.int.is.lteq $index $arg_count && z.return $args[$index] || z.return
+  z.int.is.lteq $index $REPLY && z.return $args[$index] || z.return
 }
 
 # get the first argument

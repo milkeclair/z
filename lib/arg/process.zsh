@@ -50,11 +50,11 @@ z.arg.named() {
   local found=false
 
   for arg in $args; do
-    if [[ $arg == default=* ]]; then
-      z.return "${arg#default=}"
+    if z.str.start_with "$arg" "default="; then
+      z.str.remove.prefix "$arg" "default="
       default=$REPLY
-    elif [[ $found == false ]] && z.str.start_with "$arg" "${name}="; then
-      z.return "${arg[${#name} + 2,-1]}"
+    elif z.is.false $found && z.str.start_with "$arg" "${name}="; then
+      z.str.remove.prefix "$arg" "${name}="
       value=$REPLY
       found=true
     fi
