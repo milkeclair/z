@@ -58,7 +58,7 @@ function messages(state: State, uri: string): string[] {
 describe('diagnostic call contract cache', () => {
   test('本文編集で宣言位置が動いても未編集callerを再利用し、変更ファイルの使用状況は更新する', () => {
     const f = fixture();
-    const spy = vi.spyOn(calls, 'callDiagnostics');
+    const spy = vi.spyOn(calls, 'analyzeCalls');
     const next = update(f, original.replace('print "$1" "$2"', ':'));
     expect(next.snapshot.targets).not.toBe(f.snapshot.targets);
     expect(next.snapshot.targets.get('second')?.[0].nameNode.range.start.offset)

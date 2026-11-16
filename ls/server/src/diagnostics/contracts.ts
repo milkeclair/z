@@ -3,7 +3,10 @@ import { documentationOf } from '../zshHydrator';
 import type { ParameterDoc } from '../zshHydrator/documentation/types';
 
 function sameParameter(left: ParameterDoc, right: ParameterDoc): boolean {
-  if (left.kind !== right.kind || left.optional !== right.optional) return false;
+  if (left.kind !== right.kind || left.optional !== right.optional || left.valueType !== right.valueType) return false;
+  const literals = new Set(left.literalValues ?? []);
+  const otherLiterals = new Set(right.literalValues ?? []);
+  if (literals.size !== otherLiterals.size || ![...literals].every(value => otherLiterals.has(value))) return false;
   switch (left.kind) {
     case 'positionalParameterDoc':
       return right.kind === left.kind && left.position === right.position;
