@@ -1,8 +1,8 @@
-# check if a function does not exist
+# 関数が存在しないか確認する
 #
-# $1: function name
+# $1: 関数名
 # REPLY: null
-# return 0|1
+# 0|1を返す
 #
 # example:
 #  if z.fn.not.exists my_func

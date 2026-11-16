@@ -1,6 +1,6 @@
-# expect that REPLY is not null (not empty string)
+# REPLYがnullでないことを検証する（空文字列でない）
 #
-# $skip_unmock?: skip_unmock
+# $skip_unmock?: モック解除を省略するか
 # REPLY: null
 # return: null
 #

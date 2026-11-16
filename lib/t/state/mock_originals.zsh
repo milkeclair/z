@@ -1,6 +1,6 @@
 typeset -A z_t_mock_originals=()
 
-# mock originals management
+# モック元の定義の管理
 #
 # REPLY: null
 # return: null
@@ -12,11 +12,11 @@ z.t._state.mock_originals() {
   return 0
 }
 
-# get a mock original by function name
+# 関数名に対応するモック元の定義を取得する
 #
-# $1: function name
+# $1: 関数名
 # REPLY: null
-# return: original function definition
+# return: 元の関数定義
 #
 # example:
 #  z.t._state.mock_originals.context "my_func"  #=> "original function definition"
@@ -24,10 +24,10 @@ z.t._state.mock_originals.context() {
   REPLY=${z_t_mock_originals[$1]}
 }
 
-# add a mock original
+# モック元の定義を追加する
 #
-# $name: function name
-# $2: original function definition
+# $name: 関数名
+# $2: 元の関数定義
 # REPLY: null
 # return: null
 #
@@ -41,9 +41,9 @@ z.t._state.mock_originals.add() {
   z_t_mock_originals[$func_name]=$original_func
 }
 
-# unset a mock original
+# モック元の定義を削除する
 #
-# $1: function name
+# $1: 関数名
 # REPLY: null
 # return: null
 #

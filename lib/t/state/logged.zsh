@@ -1,6 +1,6 @@
 z_t_states[logged]="false"
 
-# check if any logs have been recorded
+# ログが記録されているか確認する
 #
 # REPLY: null
 # return: 0|1
@@ -11,7 +11,7 @@ z.t._state.logged() {
   REPLY=${z_t_states[logged]}
 }
 
-# set the logged state
+# loggedの状態を設定する
 #
 # $1: true|false
 # REPLY: null

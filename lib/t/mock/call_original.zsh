@@ -1,6 +1,6 @@
-# call the original function within a mock
+# モック内から元の関数を呼び出す
 #
-# $name: function name
+# $name: 関数名
 # REPLY: null
 # return: null
 #

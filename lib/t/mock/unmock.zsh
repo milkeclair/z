@@ -1,7 +1,7 @@
-# unmock a function
-# function name can be omitted to unmock the last mocked function
+# 関数のモックを解除する
+# 関数名を省略すると、最後にモックした関数のモックを解除する
 #
-# $name?: function name
+# $name?: 関数名
 # REPLY: null
 # return: null
 #
@@ -37,10 +37,10 @@ z.t.mock.unmock() {
   fi
 }
 
-# unmock all mocked functions
-# skip unmocking if the argument is "skip_unmock"
+# すべての関数のモックを解除する
+# 引数が"skip_unmock"ならモック解除を省略する
 #
-# $skip_unmock?: skip unmock
+# $skip_unmock?: モック解除を省略するか
 # REPLY: null
 # return: null
 #
@@ -57,11 +57,11 @@ z.t.mock.unmock.all() {
   fi
 }
 
-# check if unmocking is not skipped
+# モック解除を省略しないか確認する
 #
-# $1?: skip unmock
+# $1?: モック解除を省略するか
 # REPLY: null
-# return 0|1
+# 0|1を返す
 #
 # example:
 #  if z.t.mock.unmock._is_not_skippable true; then ... fi

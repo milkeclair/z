@@ -1,11 +1,11 @@
-# verifies whether the provided value is truthy or not
-# truthy values:
-#   - true or 0
-#   - non-empty string (that doesn't look like a path)
-#   - existing directory path
-#   - existing file path
+# 指定した値を真として扱うか確認する
+# 真として扱う値:
+#   - true または 0
+#   - パスの形式ではない空でない文字列
+#   - 存在するディレクトリのパス
+#   - 存在するファイルのパス
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #
@@ -39,14 +39,14 @@ z.is.truthy() {
   return 1
 }
 
-# verifies whether the provided value is falsy or not
-# falsy values:
-#   - false or 1
-#   - null (empty string)
-#   - non-existing directory path
-#   - non-existing file path
+# 指定した値を偽として扱うか確認する
+# 偽として扱う値:
+#   - false または 1
+#   - null（空文字列）
+#   - 存在しないディレクトリのパス
+#   - 存在しないファイルのパス
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #
@@ -81,11 +81,11 @@ z.is.falsy() {
   return 1
 }
 
-# verifies whether the provided value is true or not
-# true values:
-#   - true or 0
+# 指定した値がtrueか確認する
+# trueとして扱う値:
+#   - true または 0
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #
@@ -106,11 +106,11 @@ z.is.true() {
   return 1
 }
 
-# verifies whether the provided value is false or not
-# false values:
-#   - false or 1
+# 指定した値がfalseか確認する
+# falseとして扱う値:
+#   - false または 1
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #
@@ -131,10 +131,10 @@ z.is.false() {
   return 1
 }
 
-# verifies whether the two values are equal
+# 2つの値が等しいか確認する
 #
-# $1: base value
-# $2: other value
+# $1: 基準値
+# $2: 比較する値
 # REPLY: null
 # return: 0|1
 #
@@ -149,9 +149,9 @@ z.is.eq() {
   [[ $base == $other ]]
 }
 
-# verifies whether the provided value is null or not
+# 指定した値がnullか確認する
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #

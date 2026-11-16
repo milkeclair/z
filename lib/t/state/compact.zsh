@@ -1,6 +1,6 @@
 z_t_states[compact]="${Z_TEST_COMPACT:-false}"
 
-# get the compact state
+# compactの状態を取得する
 #
 # REPLY: null
 # return: true|false
@@ -11,7 +11,7 @@ z.t._state.compact() {
   REPLY=${z_t_states[compact]}
 }
 
-# set the compact state
+# compactの状態を設定する
 #
 # $1: true|false
 # REPLY: null

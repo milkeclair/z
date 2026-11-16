@@ -1,9 +1,9 @@
-# check if string contains substring
+# 文字列に部分文字列が含まれるか確認する
 #
-# $1: string
-# $2: substring
+# $1: 文字列
+# $2: 部分文字列
 # REPLY: null
-# return 0|1
+# 0|1を返す
 #
 # example:
 #  z.str.includes "hello world" "lo wo"  #=> 0 (true)
@@ -15,12 +15,12 @@ z.str.includes() {
   [[ $string == *$substring* ]]
 }
 
-# check if string does not contain substring
+# 文字列に部分文字列が含まれないか確認する
 #
-# $1: string
-# $2: substring
+# $1: 文字列
+# $2: 部分文字列
 # REPLY: null
-# return 0|1
+# 0|1を返す
 #
 # example:
 #  z.str.excludes "hello world" "lo wo"  #=> 1 (false)
@@ -32,12 +32,12 @@ z.str.excludes() {
   [[ $string != *$substring* ]]
 }
 
-# check if string starts with prefix
+# 文字列が接頭辞で始まるか確認する
 #
-# $1: string
-# $2: prefix
+# $1: 文字列
+# $2: 接頭辞
 # REPLY: null
-# return 0|1
+# 0|1を返す
 #
 # example:
 #  z.str.start_with "hello world" "hello"  #=> 0 (true)
@@ -49,12 +49,12 @@ z.str.start_with() {
   [[ $string == $prefix* ]]
 }
 
-# check if string ends with suffix
+# 文字列が接尾辞で終わるか確認する
 #
-# $1: string
-# $2: suffix
+# $1: 文字列
+# $2: 接尾辞
 # REPLY: null
-# return 0|1
+# 0|1を返す
 #
 # example:
 #  z.str.end_with "hello world" "world"  #=> 0 (true)

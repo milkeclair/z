@@ -1,7 +1,7 @@
 typeset -A z_t_mock_calls=()
 typeset z_t_mock_call_sep=$'\x1e'
 
-# mock calls management
+# モックの呼び出しの管理
 #
 # REPLY: null
 # return: null
@@ -12,11 +12,11 @@ z.t._state.mock_calls() {
   REPLY=("${z_t_mock_calls[@]}")
 }
 
-# get mock calls by function name
+# 関数名に対応するモックの呼び出しを取得する
 #
-# $1: function name
+# $1: 関数名
 # REPLY: null
-# return: mock calls
+# return: モックの呼び出し
 #
 # example:
 #  z.t._state.mock_calls.context "my_func"  #=> "mock calls for my_func"
@@ -24,10 +24,10 @@ z.t._state.mock_calls.context() {
   REPLY=${z_t_mock_calls[$1]}
 }
 
-# add a mock call
+# モックの呼び出しを追加する
 #
-# $name: function name
-# $@: arguments
+# $name: 関数名
+# $@: 引数
 # REPLY: null
 # return: null
 #
@@ -45,10 +45,10 @@ z.t._state.mock_calls.add() {
   fi
 }
 
-# set mock calls for a function
+# 関数のモック呼び出しを設定する
 #
-# $name: function name
-# $value: value
+# $name: 関数名
+# $value: 値
 # REPLY: null
 # return: null
 #
@@ -61,9 +61,9 @@ z.t._state.mock_calls.set() {
   z_t_mock_calls[$func_name]=$value
 }
 
-# unset mock calls for a function
+# 関数のモック呼び出しを削除する
 #
-# $1: function name
+# $1: 関数名
 # REPLY: null
 # return: null
 #

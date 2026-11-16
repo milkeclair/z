@@ -1,7 +1,7 @@
-# Interactive mode for executing commands with a given prefix.
+# 指定した接頭辞でコマンドを実行する対話モード。
 #
-# $split?: string to insert between prefix and command (default: " ")
-# $@: prefix command and its arguments
+# $split?: 接頭辞とコマンドの間に挿入する文字列（既定: " "）
+# $@: 接頭辞となるコマンドとその引数
 # REPLY: null
 # return: null
 #

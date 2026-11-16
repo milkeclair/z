@@ -1,6 +1,6 @@
-# it block within a test suite
+# テストスイート内のitブロック
 #
-# $1: it description
+# $1: itの説明
 # REPLY: null
 # return: null
 #
@@ -67,9 +67,9 @@ z.t.it() {
   fi
 }
 
-# xit block within a test suite (marked as pending)
+# テストスイート内のxitブロック（保留扱い）
 #
-# $1: it description
+# $1: itの説明
 # REPLY: null
 # return: null
 #

@@ -1,7 +1,7 @@
-# copy the core distribution into a new installation directory
+# 新しいインストール先へcoreの配布内容をコピーする
 #
-# $source: source directory
-# $dir: new installation directory
+# $source: ソースディレクトリ
+# $dir: 新しいインストール先ディレクトリ
 # REPLY: null
 # return: 0|1
 #

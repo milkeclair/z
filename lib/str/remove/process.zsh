@@ -1,8 +1,8 @@
-# remove a literal prefix from a string
+# 文字列から指定した文字列の接頭辞を取り除く
 #
-# $1: original string
-# $2: prefix
-# REPLY: string without the prefix, or the original string if the prefix is not present
+# $1: 元の文字列
+# $2: 接頭辞
+# REPLY: 接頭辞を除いた文字列。接頭辞がなければ元の文字列
 # return: null
 #
 # example:
@@ -19,11 +19,11 @@ z.str.remove.prefix() {
   fi
 }
 
-# remove a literal suffix from a string
+# 文字列から指定した文字列の接尾辞を取り除く
 #
-# $1: original string
-# $2: suffix
-# REPLY: string without the suffix, or the original string if the suffix is not present
+# $1: 元の文字列
+# $2: 接尾辞
+# REPLY: 接尾辞を除いた文字列。接尾辞がなければ元の文字列
 # return: null
 #
 # example:

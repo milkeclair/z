@@ -1,6 +1,6 @@
-# check if a directory does not exist
+# ディレクトリが存在しないか確認する
 #
-# $1: directory path
+# $1: ディレクトリのパス
 # REPLY: null
 # return: 0|1
 #

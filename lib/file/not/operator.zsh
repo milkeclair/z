@@ -1,6 +1,6 @@
-# check if a file does not exist
+# ファイルが存在しないか確認する
 #
-# $1: file path
+# $1: ファイルのパス
 # REPLY: null
 # return: 0|1
 #

@@ -1,4 +1,4 @@
-# output green dot for successful test
+# 成功したテストを緑のドットで表示する
 #
 # REPLY: null
 # return: null
@@ -9,7 +9,7 @@ z.t._log.dot.success() {
   z.t._log.dot.output char=.
 }
 
-# output red dot for failed test
+# 失敗したテストを赤のドットで表示する
 #
 # REPLY: null
 # return: null
@@ -20,7 +20,7 @@ z.t._log.dot.failure() {
   z.t._log.dot.output char=F
 }
 
-# output yellow dot for pending test
+# 保留したテストを黄のドットで表示する
 #
 # REPLY: null
 # return: null
@@ -31,9 +31,9 @@ z.t._log.dot.pending() {
   z.t._log.dot.output "char=*"
 }
 
-# internal: output colored dot with line wrapping
+# 内部用: 折り返しながら色付きのドットを表示する
 #
-# $char: dot character (. F *)
+# $char: 結果表示用の文字（. F *）
 # REPLY: null
 # return: null
 #

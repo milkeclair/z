@@ -1,7 +1,7 @@
-# get the keys of a hash
+# 連想配列のキーを取得する
 #
-# $1: name of the hash
-# REPLY: array of keys
+# $1: 連想配列名
+# REPLY: キーの配列
 # return: null
 #
 # example:
@@ -16,10 +16,10 @@ z.hash.keys() {
   REPLY=("${(@Pk)hash_name}")
 }
 
-# get the values of a hash
+# 連想配列の値を取得する
 #
-# $1: name of the hash
-# REPLY: array of values
+# $1: 連想配列名
+# REPLY: 値の配列
 # return: null
 #
 # example:
@@ -34,10 +34,10 @@ z.hash.values() {
   REPLY=("${(@Pv)hash_name}")
 }
 
-# get the entries of a hash as key-value pairs
+# 連想配列の要素をキーと値の組で取得する
 #
-# $1: name of the hash
-# REPLY: array of key-value pairs
+# $1: 連想配列名
+# REPLY: キーと値の組の配列
 # return: null
 #
 # example:
@@ -52,10 +52,10 @@ z.hash.entries() {
   REPLY=("${(@Pkv)hash_name}")
 }
 
-# count the number of entries in a hash
+# 連想配列の要素数を数える
 #
-# $1: name of the hash
-# REPLY: number of entries
+# $1: 連想配列名
+# REPLY: エントリ数
 # return: null
 #
 # example:

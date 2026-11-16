@@ -1,7 +1,7 @@
-# get the value of a variable by its name
+# 名前を指定して変数の値を取得する
 #
-# $1: variable name
-# REPLY: array of variable values, empty if not declared
+# $1: 変数名
+# REPLY: 変数の値の配列。未宣言なら空
 # return: null
 #
 # example:

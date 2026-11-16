@@ -1,6 +1,6 @@
-# describe a test suite
+# テストスイートを定義する
 #
-# $1: description
+# $1: 説明
 # REPLY: null
 # return: null
 #
@@ -19,9 +19,9 @@ z.t.describe() {
   z.t._state.skip.it.set "false"
 }
 
-# xdescribe a test suite (marked as pending)
+# テストスイートをxdescribeで定義する（保留扱い）
 #
-# $1: description
+# $1: 説明
 # REPLY: null
 # return: null
 #

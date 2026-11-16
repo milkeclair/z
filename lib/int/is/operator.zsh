@@ -1,6 +1,6 @@
-# check if the value is an integer
+# 値が整数か確認する
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #
@@ -12,10 +12,10 @@ z.int.is.match() {
   [[ $value == <-> || $value == -<-> || $value == +<-> ]]
 }
 
-# compare two integers
+# 2つの整数を比較する
 #
-# $1: base
-# $2: other
+# $1: 基準値
+# $2: 比較する値
 # REPLY: null
 # return: 0|1
 #
@@ -31,9 +31,9 @@ z.int.is.eq() {
   (( a == b ))
 }
 
-# check if the value is zero
+# 値が0か確認する
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #
@@ -45,9 +45,9 @@ z.int.is.zero() {
   z.is.eq $value 0
 }
 
-# check if the value is positive
+# 値が正か確認する
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #
@@ -59,9 +59,9 @@ z.int.is.positive() {
   z.int.is.gt $value 0
 }
 
-# check if the value is negative
+# 値が負か確認する
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #
@@ -73,10 +73,10 @@ z.int.is.negative() {
   z.int.is.lt $value 0
 }
 
-# compare two integers (greater than)
+# 2つの整数を比較する（より大きい）
 #
-# $1: base
-# $2: other
+# $1: 基準値
+# $2: 比較する値
 # REPLY: null
 # return: 0|1
 #
@@ -92,10 +92,10 @@ z.int.is.gt() {
   (( a > b ))
 }
 
-# compare two integers (greater than or equal)
+# 2つの整数を比較する（以上）
 #
-# $1: base
-# $2: other
+# $1: 基準値
+# $2: 比較する値
 # REPLY: null
 # return: 0|1
 #
@@ -111,10 +111,10 @@ z.int.is.gteq() {
   (( a >= b ))
 }
 
-# compare two integers (less than)
+# 2つの整数を比較する（より小さい）
 #
-# $1: base
-# $2: other
+# $1: 基準値
+# $2: 比較する値
 # REPLY: null
 # return: 0|1
 #
@@ -130,10 +130,10 @@ z.int.is.lt() {
   (( a < b ))
 }
 
-# compare two integers (less than or equal)
+# 2つの整数を比較する（以下）
 #
-# $1: base
-# $2: other
+# $1: 基準値
+# $2: 比較する値
 # REPLY: null
 # return: 0|1
 #

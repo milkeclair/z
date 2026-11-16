@@ -1,7 +1,7 @@
 typeset -A z_t_fn_set_originals=()
 typeset -A z_t_fn_source_originals=()
 
-# get saved original function names
+# 保存した元の関数名を取得する
 #
 # REPLY: null
 # return: ("func1" "func2" ...)
@@ -13,7 +13,7 @@ z.t._state.fn_originals() {
   return 0
 }
 
-# save original z_fn_set and z_fn_source
+# 元のz_fn_setとz_fn_sourceを保存する
 #
 # REPLY: null
 # return: null
@@ -29,7 +29,7 @@ z.t._state.fn_originals.save() {
   z_t_fn_source_originals=($REPLY)
 }
 
-# restore original z_fn_set and z_fn_source
+# 元のz_fn_setとz_fn_sourceを復元する
 #
 # REPLY: null
 # return: null

@@ -1,6 +1,6 @@
 typeset z_t_logs=()
 
-# logs array management
+# ログ配列の管理
 #
 # REPLY: null
 # return: null
@@ -11,9 +11,9 @@ z.t._state.logs() {
   REPLY=("${z_t_logs[@]}")
 }
 
-# add a log entry
+# ログを追加する
 #
-# $1: log entry
+# $1: ログ
 # REPLY: null
 # return: null
 #
@@ -23,11 +23,11 @@ z.t._state.logs.add() {
   z_t_logs+=($1)
 }
 
-# get a log entry by context
+# contextごとのログを取得する
 #
-# $1: context index
+# $1: contextのインデックス
 # REPLY: null
-# return: log entry
+# return: ログ
 #
 # example:
 #  z.t._state.logs.context "0"  #=> "log entry at index 0"
@@ -37,10 +37,10 @@ z.t._state.logs.context() {
   REPLY=${z_t_logs[$context]:-""}
 }
 
-# set a log entry by context
+# contextごとのログを設定する
 #
-# $index: context index
-# $@: log entry
+# $index: contextのインデックス
+# $@: ログ
 # REPLY: null
 # return: null
 #

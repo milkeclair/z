@@ -1,7 +1,7 @@
-# convert a hash to an array of "key:value" strings
+# 連想配列を"key:value"形式の文字列の配列へ変換する
 #
-# $1: name of the hash
-# REPLY: array of "key:value" strings
+# $1: 連想配列名
+# REPLY: "key:value"形式の文字列の配列
 # return: null
 #
 # example:
@@ -21,11 +21,11 @@ z.hash.to_arr() {
   REPLY=("${arr[@]}")
 }
 
-# merge two hashes into one
+# 2つの連想配列を1つに統合する
 #
-# $base: name of the base hash
-# $other: name of the other hash
-# REPLY: array of key-value pairs (key1 value1 key2 value2 ...)
+# $base: 基準の連想配列名
+# $other: 比較する連想配列名
+# REPLY: キーと値の組の配列（key1 value1 key2 value2 ...）
 # return: null
 #
 # example:

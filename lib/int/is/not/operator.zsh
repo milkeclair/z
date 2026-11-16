@@ -1,6 +1,6 @@
-# check if the value is not an integer
+# 値が整数でないか確認する
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #
@@ -12,10 +12,10 @@ z.int.is.not.match() {
   [[ $value != <-> && $value != -<-> && $value != +<-> ]]
 }
 
-# compare two integers (not equal)
+# 2つの整数を比較する（等しくない）
 #
-# $1: base
-# $2: other
+# $1: 基準値
+# $2: 比較する値
 # REPLY: null
 # return: 0|1
 #
@@ -31,9 +31,9 @@ z.int.is.not.eq() {
   (( a != b ))
 }
 
-# check if the value is not zero
+# 値が0でないか確認する
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #

@@ -1,14 +1,14 @@
-# change permissions and ownership for a path
+# パスの権限と所有者を変更する
 #
-# $path: target path
-# $owner?: owner name or id
-# $group?: group name or id
-# $mode?: chmod mode
-# $mode_owner?: owner permissions separated by comma
-# $mode_group?: group permissions separated by comma
-# $mode_other?: other permissions separated by comma
+# $path: 対象のパス
+# $owner?: 所有者名またはID
+# $group?: グループ名またはID
+# $mode?: chmodの権限モード
+# $mode_owner?: カンマ区切りの所有者の権限
+# $mode_group?: カンマ区切りのグループ権限
+# $mode_other?: カンマ区切りのその他ユーザーの権限
 # REPLY: null
-# return: 0 if changed or no changes are requested, otherwise 1
+# return: 変更できた場合、または変更指定がない場合は0、それ以外は1
 #
 # example:
 #  z.perm path=/path/to/file mode=600
@@ -20,17 +20,17 @@ z.perm() {
   z.perm._apply recursive=false "$@" # zls: ignore
 }
 
-# change permissions and ownership recursively for a directory
+# ディレクトリの権限と所有者を再帰的に変更する
 #
-# $path: target directory path
-# $owner?: owner name or id
-# $group?: group name or id
-# $mode?: chmod mode
-# $mode_owner?: owner permissions separated by comma
-# $mode_group?: group permissions separated by comma
-# $mode_other?: other permissions separated by comma
+# $path: 対象ディレクトリのパス
+# $owner?: 所有者名またはID
+# $group?: グループ名またはID
+# $mode?: chmodの権限モード
+# $mode_owner?: カンマ区切りの所有者の権限
+# $mode_group?: カンマ区切りのグループ権限
+# $mode_other?: カンマ区切りのその他ユーザーの権限
 # REPLY: null
-# return: 0 if changed or no changes are requested, otherwise 1
+# return: 変更できた場合、または変更指定がない場合は0、それ以外は1
 #
 # example:
 #  z.perm.dir path=/path/to/dir mode=755
@@ -38,18 +38,18 @@ z.perm.dir() {
   z.perm._apply recursive=true "$@" # zls: ignore
 }
 
-# change permissions and ownership with optional recursive flag
+# 再帰指定に応じて権限と所有者を変更する
 #
-# $recursive?: apply changes recursively(default: false)
-# $path: target path
-# $owner?: owner name or id
-# $group?: group name or id
-# $mode?: chmod mode
-# $mode_owner?: owner permissions separated by comma
-# $mode_group?: group permissions separated by comma
-# $mode_other?: other permissions separated by comma
+# $recursive?: 再帰的に変更を適用するか（既定: false）
+# $path: 対象のパス
+# $owner?: 所有者名またはID
+# $group?: グループ名またはID
+# $mode?: chmodの権限モード
+# $mode_owner?: カンマ区切りの所有者の権限
+# $mode_group?: カンマ区切りのグループ権限
+# $mode_other?: カンマ区切りのその他ユーザーの権限
 # REPLY: null
-# return: 0 if changed or no changes are requested, otherwise 1
+# return: 変更できた場合、または変更指定がない場合は0、それ以外は1
 #
 # example:
 #  z.perm._apply recursive=false path=/path/to/file mode=600
@@ -80,12 +80,12 @@ z.perm._apply() {
   fi
 }
 
-# build chown owner spec
+# chown用の所有者指定を組み立てる
 #
-# $owner?: owner name or id
-# $group?: group name or id
-# REPLY: owner spec for chown
-# return: 0 if owner or group is present, otherwise 1
+# $owner?: 所有者名またはID
+# $group?: グループ名またはID
+# REPLY: chown用の所有者指定
+# return: 所有者またはグループの指定がある場合は0、それ以外は1
 #
 # example:
 #  z.perm._owner_spec owner=user group=group #=> "user:group"
@@ -107,14 +107,14 @@ z.perm._owner_spec() {
   fi
 }
 
-# build chmod mode
+# chmodの権限モードを組み立てる
 #
-# $mode?: chmod mode
-# $mode_owner?: owner permissions separated by comma
-# $mode_group?: group permissions separated by comma
-# $mode_other?: other permissions separated by comma
-# REPLY: chmod mode
-# return: 0 if mode can be built, otherwise 1
+# $mode?: chmodの権限モード
+# $mode_owner?: カンマ区切りの所有者の権限
+# $mode_group?: カンマ区切りのグループ権限
+# $mode_other?: カンマ区切りのその他ユーザーの権限
+# REPLY: chmodの権限モード
+# return: 権限モードを組み立てられた場合は0、それ以外は1
 #
 # example:
 #  z.perm._mode \
@@ -154,11 +154,11 @@ z.perm._mode() {
   REPLY="${owner_digit}${group_digit}${other_digit}"
 }
 
-# convert permission names to chmod digit
+# 権限名をchmodの権限値1桁へ変換する
 #
-# $1: comma-separated permissions
-# REPLY: chmod digit
-# return: 0 if permissions are valid, otherwise 1
+# $1: カンマ区切りの権限
+# REPLY: chmodの権限値1桁
+# return: 権限の指定が正しい場合は0、それ以外は1
 #
 # example:
 #  z.perm._mode_digit read,write,none #=> 6

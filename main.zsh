@@ -30,7 +30,7 @@ local z_module_depends_order=(
   debug
   dir
   file
-  var # var are used in fn
+  var # fnはvarを使用する
   fn
   hash
   int

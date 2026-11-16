@@ -96,9 +96,9 @@ z.uninstall._bye() {
   echo "👋"
 }
 
-# uninstall z
+# zをアンインストールする
 #
-# $1: install dir (default: $HOME/.z)
+# $1: インストール先（既定: $HOME/.z）
 # REPLY: null
 # return: null
 #
@@ -184,9 +184,9 @@ z.uninstall.mod._show_completion() {
   echo "✅ mod uninstall completed: $mod_name"
 }
 
-# uninstall z modifier
+# zのmodをアンインストールする
 #
-# $1: mod name
+# $1: mod名
 # REPLY: null
 # return: null
 #

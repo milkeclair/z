@@ -1,4 +1,4 @@
-# ensure that z modifier stores are initialized
+# z modの保存領域が初期化されていることを保証する
 #
 # REPLY: null
 # return: null

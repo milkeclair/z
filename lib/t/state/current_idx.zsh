@@ -1,10 +1,10 @@
 typeset -A z_t_current_idx=([describe]=0 [context]=0 [it]=0)
 
-# get the current index for a context
+# contextの現在のインデックスを取得する
 #
-# $1: context ("describe"|"context"|"it")
+# $1: テストの区分（"describe"|"context"|"it"）
 # REPLY: null
-# return: current index
+# return: 現在のインデックス
 #
 # example:
 #  z.t._state.current_idx "describe"  #=> 0
@@ -13,10 +13,10 @@ z.t._state.current_idx() {
   REPLY=${z_t_current_idx[$context]}
 }
 
-# set the current index for a context
+# contextの現在のインデックスを設定する
 #
-# $value: index value
-# $@: context ("describe"|"context"|"it")
+# $value: インデックス値
+# $@: テストの区分（"describe"|"context"|"it"）
 # REPLY: null
 # return: null
 #
@@ -30,11 +30,11 @@ z.t._state.current_idx.set() {
   z_t_current_idx[$context]=$value
 }
 
-# add to the current index for a context
+# 指定したcontextの現在のインデックスを増やす
 #
-# $1: context ("describe"|"context"|"it")
+# $1: テストの区分（"describe"|"context"|"it"）
 # REPLY: null
-# return: new index value
+# return: 新しいインデックス値
 #
 # example:
 #  z.t._state.current_idx.add "describe"

@@ -1,6 +1,6 @@
-# check if there is any argument
+# 引数があるか確認する
 #
-# $@: target values
+# $@: 対象の値
 # REPLY: null
 # return: 0|1
 #
@@ -13,9 +13,9 @@ z.arg.is.present() {
   z.int.is.gt $#args 0
 }
 
-# check if there is no argument
+# 引数がないか確認する
 #
-# $@: target values
+# $@: 対象の値
 # REPLY: null
 # return: 0|1
 #
@@ -28,10 +28,10 @@ z.arg.is.empty() {
   z.int.is.eq $#args 0
 }
 
-# validate count of arguments
+# 引数の個数を検証する
 #
-# $length: expected minimum count
-# $@: arguments
+# $length: 必要な最小個数
+# $@: 引数
 # REPLY: null
 # return: 0|1
 #

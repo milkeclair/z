@@ -1,9 +1,9 @@
-# format a test heading
+# テストの見出しを整形する
 #
-# $1: indentation
-# $2: color name
-# $3: message
-# REPLY: formatted heading
+# $1: インデント
+# $2: 色名
+# $3: メッセージ
+# REPLY: 整形済みの見出し
 # return: null
 #
 # example:

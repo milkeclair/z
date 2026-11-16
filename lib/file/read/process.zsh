@@ -1,7 +1,7 @@
-# read lines from a file into an array
+# ファイルの各行を配列へ読み込む
 #
-# $path: file path
-# REPLY: array of lines
+# $path: ファイルのパス
+# REPLY: 行の配列
 # return: null
 #
 # example:
@@ -16,11 +16,11 @@ z.file.read.lines() {
   fi
 }
 
-# pick a line containing a specific word from a file
+# 指定した単語を含む行をファイルから取り出す
 #
-# $path: file path
-# $word: word to search for
-# REPLY: line containing the word|null
+# $path: ファイルのパス
+# $word: 検索する単語
+# REPLY: 単語を含む行|null
 # return: null
 #
 # example:

@@ -1,8 +1,8 @@
-# argument value as one of the aliases
+# 引数の値を別名のいずれかとして扱う
 #
-# $name: target argument
-# $as: aliases (| separated)
-# $return?: return value when matched
+# $name: 対象の引数
+# $as: 別名（|区切り）
+# $return?: 一致した場合に返す値
 # REPLY: $return|null
 # return: null
 #
@@ -30,12 +30,12 @@ z.arg.as() {
     REPLY=$return || REPLY=""
 }
 
-# get named argument value
+# 名前付き引数の値を取得する
 #
-# $1: name of the argument (e.g., --option)
-# $default?: default value when the named argument is not found
-# $@: arguments
-# REPLY: value of the named argument|null
+# $1: 引数名（例: --option）
+# $default?: 名前付き引数が見つからない場合の既定値
+# $@: 引数
+# REPLY: 名前付き引数の値|null
 # return: null
 #
 # example:
@@ -64,13 +64,13 @@ z.arg.named() {
   REPLY=${value:-$default}
 }
 
-# parse named arguments and collect the remaining arguments
+# 名前付き引数を解析し、残りの引数を集める
 #
-# $input: name of the input array (read only)
-# $named: name of the hash of defaults, updated with first matching values
-# $rest: name of the output array for remaining literal arguments
+# $input: 入力配列の名前（読み取り専用）
+# $named: 最初に一致した値で更新する、既定値の連想配列名
+# $rest: 残った文字列の引数を受け取る配列名
 # REPLY: null
-# return: 0 if parsed, otherwise 1
+# return: 解析できた場合は0、それ以外は1
 #
 # example:
 #  local -a input_args=("a" "delimiter=," "b")

@@ -1,9 +1,9 @@
 z_t_states[tests]=0
 
-# get the number of tests executed
+# 実行したテスト数を取得する
 #
 # REPLY: null
-# return: number of tests
+# return: テスト数
 #
 # example:
 #  z.t._state.tests  #=> 10
@@ -11,7 +11,7 @@ z.t._state.tests() {
   REPLY=$z_t_states[tests]
 }
 
-# increment the number of tests executed by 1
+# 実行したテスト数を1増やす
 #
 # REPLY: null
 # return: null

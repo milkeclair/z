@@ -1,4 +1,4 @@
-# show all logs with summary
+# 要約付きですべてのログを表示する
 #
 # REPLY: null
 # return: null
@@ -28,7 +28,7 @@ z.t._log.show() {
   fi
 }
 
-# internal: save test counts to file
+# 内部用: テスト件数をファイルへ保存する
 #
 # REPLY: null
 # return: null
@@ -51,9 +51,9 @@ z.t._log.show.save_counts() {
   echo "$tests $failures $pendings" > $count_file
 }
 
-# internal: save compact mode results to files
+# 内部用: 簡潔表示モードの結果をファイルへ保存する
 #
-# $1: failures count
+# $1: 失敗件数
 # REPLY: null
 # return: null
 #
@@ -79,7 +79,7 @@ z.t._log.show.save_compact_results() {
   fi
 }
 
-# check if log should be skipped
+# ログを省略するか確認する
 #
 # REPLY: null
 # return: 0|1
@@ -99,7 +99,7 @@ z.t._log.show.should_skip() {
   return 1
 }
 
-# show failure and pending records in order
+# 失敗と保留の記録を順に表示する
 #
 # REPLY: null
 # return: null
@@ -123,10 +123,10 @@ z.t._log.show.failures_and_pendings() {
   z.t._log.records.display ${sorted_records[@]}
 }
 
-# show summary of logs
+# ログの要約を表示する
 # "<file_path> <num_tests> tests <num_failures> failures <num_pendings> pendings"
 #
-# $1: number of failures
+# $1: 失敗件数
 # REPLY: null
 # return: null
 #
@@ -154,7 +154,7 @@ z.t._log.show.summary() {
   z.io $REPLY
 }
 
-# handle all logs if all_log is true
+# all_logがtrueなら全ログを処理する
 #
 # REPLY: null
 # return: null

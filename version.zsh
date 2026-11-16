@@ -1,4 +1,4 @@
-# echo the current version
+# 現在のバージョンを表示する
 #
 # REPLY: null
 # return: null
@@ -9,7 +9,7 @@ z.version() {
   z.io "v3.1.0"
 }
 
-# echo the latest version from GitHub
+# GitHubから取得した最新バージョンを表示する
 #
 # REPLY: null
 # return: null
@@ -29,7 +29,7 @@ z.version.latest() {
   z.io $tag_name
 }
 
-# echo the release note of the current version
+# 現在のバージョンのリリースノートを表示する
 #
 # REPLY: null
 # return: null
@@ -49,7 +49,7 @@ z.version.latest.note() {
   z.io "$body"
 }
 
-# echo the release note of the current version
+# 現在のバージョンのリリースノートを表示する
 #
 # REPLY: null
 # return: null

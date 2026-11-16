@@ -1,6 +1,6 @@
-# get exit status of last command
+# 直前のコマンドの終了コードを取得する
 #
-# REPLY: exit status of last command
+# REPLY: 直前のコマンドの終了コード
 # return: null
 #
 # example:

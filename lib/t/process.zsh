@@ -1,11 +1,11 @@
-# run tests
-# options:
-#   -l|--log: show all logs
-#   -f|--failed: show only failed tests
-#   -c|--compact: show compact dot output
-#   <test_name>: run specific test(s)
+# テストを実行する
+# オプション:
+#   -l|--log: すべてのログを表示する
+#   -f|--failed: 失敗したテストだけを表示する
+#   -c|--compact: 結果をドットで簡潔に表示する
+#   <test_name>: 指定したテストを実行する
 #
-# $@: options and test names
+# $@: オプションとテスト名
 # REPLY: null
 # return: 0|1
 #
@@ -125,9 +125,9 @@ z.t() {
   return $totals_failed
 }
 
-# resolve test root from current working directory
+# 現在の作業ディレクトリからテストのルートを解決する
 #
-# REPLY: absolute test directory path
+# REPLY: テストディレクトリの絶対パス
 # return: 0|1
 #
 # example:
@@ -144,9 +144,9 @@ z.t._test_root_from_pwd() {
   REPLY="$abs_current_dir"
 }
 
-# extract options from arguments
+# 引数からオプションを取り出す
 #
-# $@: arguments
+# $@: 引数
 # REPLY: "<log> <failed> <compact> <test_names...>"
 # return: null
 #
@@ -196,7 +196,7 @@ z.t._extract_options() {
   REPLY=("${result[@]}")
 }
 
-# remove temporary test directory /tmp/z_t
+# テスト用の一時ディレクトリ/tmp/z_tを削除する
 #
 # REPLY: null
 # return: null
@@ -207,9 +207,9 @@ z.t._remove_tmp_dir() {
   z.dir.remove path="/tmp/z_t"
 }
 
-# internal: setup temporary directories for test execution
+# 内部用: テスト実行用の一時ディレクトリを用意する
 #
-# REPLY: compact_dir (empty string if not compact mode)
+# REPLY: compact_dir（簡潔表示モードでなければ空文字列）
 # return: null
 #
 # example:
@@ -229,10 +229,10 @@ z.t._setup_temp_dirs() {
   REPLY=$compact_dir
 }
 
-# internal: display compact mode results
+# 内部用: 簡潔表示モードの結果を表示する
 #
-# $1: compact_dir
-# $@: files list
+# $1: compact_dir（簡潔表示用のディレクトリ）
+# $@: ファイルの一覧
 # REPLY: null
 # return: null
 #
@@ -259,12 +259,12 @@ z.t._show_compact_results() {
   done
 }
 
-# internal: calculate and display total counts
+# 内部用: 全体の件数を集計して表示する
 #
-# $1: count_dir
-# $@: files list
+# $1: count_dir（件数ファイルの保存先）
+# $@: ファイルの一覧
 # REPLY: null
-# return: 0|1 (0 if no failures, 1 if failures)
+# return: 0|1（失敗がなければ0、あれば1）
 #
 # example:
 #  z.t._show_totals $count_dir $files

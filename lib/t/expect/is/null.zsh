@@ -1,6 +1,6 @@
-# expect that actual is null (empty string)
+# 実際の値がnullであることを検証する（空文字列）
 #
-# $1: actual value
+# $1: 実際の値
 # REPLY: null
 # return: null
 #

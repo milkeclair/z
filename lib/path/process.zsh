@@ -1,7 +1,7 @@
-# get the directory part of a file path
+# ファイルパスのディレクトリ部分を取得する
 #
-# $1: file path
-# REPLY: directory path
+# $1: ファイルのパス
+# REPLY: ディレクトリのパス
 # return: null
 #
 # example:
@@ -15,10 +15,10 @@ z.path.dir() {
   REPLY=${filepath:h}
 }
 
-# get the base name of a file path
+# ファイルパスのベース名を取得する
 #
-# $1: file path
-# REPLY: base name
+# $1: ファイルのパス
+# REPLY: ベース名
 # return: null
 #
 # example:
@@ -32,10 +32,10 @@ z.path.base() {
   REPLY=${filepath:t}
 }
 
-# get the stem (base name without extension) of a file path
+# ファイルパスから拡張子を除いたベース名を取得する
 #
-# $1: file path
-# REPLY: stem
+# $1: ファイルのパス
+# REPLY: 拡張子を除いたベース名
 # return: null
 #
 # example:
@@ -50,10 +50,10 @@ z.path.stem() {
   REPLY=${base:r}
 }
 
-# get the extension of a file path
+# ファイルパスの拡張子を取得する
 #
-# $1: file path
-# REPLY: extension
+# $1: ファイルのパス
+# REPLY: 拡張子
 # return: null
 #
 # example:
@@ -68,10 +68,10 @@ z.path.ext() {
   REPLY=${base:e}
 }
 
-# get the real (absolute and symlink-resolved) path
+# 実パスを取得する（絶対パスにし、シンボリックリンクを解決する）
 #
-# $1: file path
-# REPLY: real path
+# $1: ファイルのパス
+# REPLY: 実パス
 # return: null
 #
 # example:
@@ -85,10 +85,10 @@ z.path.real() {
   REPLY=${filepath:A}
 }
 
-# get the absolute path
+# 絶対パスを取得する
 #
-# $1: file path
-# REPLY: absolute path
+# $1: ファイルのパス
+# REPLY: 絶対パス
 # return: null
 #
 # example:
@@ -102,10 +102,10 @@ z.path.abs() {
   REPLY=${filepath:a}
 }
 
-# convert path to lowercase
+# パスを小文字に変換する
 #
-# $1: file path
-# REPLY: lowercase path
+# $1: ファイルのパス
+# REPLY: 小文字のパス
 # return: null
 #
 # example:
@@ -119,10 +119,10 @@ z.path.downcase() {
   REPLY=${filepath:l}
 }
 
-# convert path to uppercase
+# パスを大文字に変換する
 #
-# $1: file path
-# REPLY: uppercase path
+# $1: ファイルのパス
+# REPLY: 大文字のパス
 # return: null
 #
 # example:

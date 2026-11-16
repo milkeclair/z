@@ -1,6 +1,6 @@
-# get the current working directory
+# 現在の作業ディレクトリを取得する
 #
-# REPLY: current working directory path
+# REPLY: 現在の作業ディレクトリのパス
 # return: null
 #
 # example:
@@ -10,9 +10,9 @@ z.path.current() {
   REPLY=$(pwd)
 }
 
-# get the home directory path
+# ホームディレクトリのパスを取得する
 #
-# REPLY: home directory path
+# REPLY: ホームディレクトリのパス
 # return: null
 #
 # example:

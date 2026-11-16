@@ -1,8 +1,8 @@
-# check if string is empty
+# 文字列が空か確認する
 #
-# $1: string
+# $1: 文字列
 # REPLY: null
-# return 0|1
+# 0|1を返す
 #
 # example:
 #  z.str.is.empty ""
@@ -13,12 +13,12 @@ z.str.is.empty() {
   [[ -z $value ]]
 }
 
-# check if string matches regex
+# 文字列が正規表現に一致するか確認する
 #
-# $1: string
-# $2: regex
+# $1: 文字列
+# $2: 正規表現
 # REPLY: null
-# return 0|1
+# 0|1を返す
 #
 # example:
 #  z.str.is.match "hello" "^h.*o$"  #=> 0 (true)
@@ -30,11 +30,11 @@ z.str.is.match() {
   [[ $string =~ $regex ]]
 }
 
-# check if string is path-like
+# 文字列がパスの形式か確認する
 #
-# $1: string
+# $1: 文字列
 # REPLY: null
-# return 0|1
+# 0|1を返す
 #
 # example:
 #  z.str.is.path_like "/usr/local/bin"  #=> 0 (true)

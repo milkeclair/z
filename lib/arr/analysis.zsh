@@ -1,7 +1,7 @@
-# count the number of elements in an array
+# 配列の要素数を数える
 #
-# $@: array elements
-# REPLY: number of elements
+# $@: 配列の要素
+# REPLY: 要素数
 # return: null
 #
 # example:

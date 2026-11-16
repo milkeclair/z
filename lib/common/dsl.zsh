@@ -1,4 +1,4 @@
-# noop block for grouping
+# 処理をまとめるための何もしないブロック
 #
 # return: 0
 # REPLY: null
@@ -10,7 +10,7 @@ z.group() {
   return 0
 }
 
-# noop block for guarding
+# ガードを記述するための何もしないブロック
 #
 # return: 0
 # REPLY: null

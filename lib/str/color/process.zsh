@@ -1,7 +1,7 @@
-# strip color codes from a string
+# 文字列からカラーコードを取り除く
 #
-# $1: string with color codes
-# REPLY: string without color codes
+# $1: カラーコードを含む文字列
+# REPLY: カラーコードを除いた文字列
 # return: null
 #
 # example:
@@ -18,11 +18,11 @@ z.str.color.strip() {
   REPLY=$stripped
 }
 
-# decorate a string with color codes
+# 文字列にカラーコードを付ける
 #
-# $color: color name
-# $message: string to decorate
-# REPLY: decorated string
+# $color: 色名
+# $message: 装飾する文字列
+# REPLY: 装飾した文字列
 # return: null
 #
 # example:
@@ -46,10 +46,10 @@ z.str.color.decorate() {
   fi
 }
 
-# decorate a string with red color
+# 文字列に赤色を付ける
 #
-# $1: string to decorate
-# REPLY: decorated string
+# $1: 装飾する文字列
+# REPLY: 装飾した文字列
 # return: null
 #
 # example:
@@ -60,10 +60,10 @@ z.str.color.red() {
   z.str.color.decorate color=red message=$message
 }
 
-# decorate a string with green color
+# 文字列に緑色を付ける
 #
-# $1: string to decorate
-# REPLY: decorated string
+# $1: 装飾する文字列
+# REPLY: 装飾した文字列
 # return: null
 #
 # example:
@@ -74,10 +74,10 @@ z.str.color.green() {
   z.str.color.decorate color=green message=$message
 }
 
-# decorate a string with yellow color
+# 文字列に黄色を付ける
 #
-# $1: string to decorate
-# REPLY: decorated string
+# $1: 装飾する文字列
+# REPLY: 装飾した文字列
 # return: null
 #
 # example:
@@ -88,10 +88,10 @@ z.str.color.yellow() {
   z.str.color.decorate color=yellow message=$message
 }
 
-# decorate a string with blue color
+# 文字列に青色を付ける
 #
-# $1: string to decorate
-# REPLY: decorated string
+# $1: 装飾する文字列
+# REPLY: 装飾した文字列
 # return: null
 #
 # example:
@@ -102,10 +102,10 @@ z.str.color.blue() {
   z.str.color.decorate color=blue message=$message
 }
 
-# decorate a string with magenta color
+# 文字列にマゼンタを付ける
 #
-# $1: string to decorate
-# REPLY: decorated string
+# $1: 装飾する文字列
+# REPLY: 装飾した文字列
 # return: null
 #
 # example:
@@ -116,10 +116,10 @@ z.str.color.magenta() {
   z.str.color.decorate color=magenta message=$message
 }
 
-# decorate a string with cyan color
+# 文字列にシアンを付ける
 #
-# $1: string to decorate
-# REPLY: decorated string
+# $1: 装飾する文字列
+# REPLY: 装飾した文字列
 # return: null
 #
 # example:
@@ -130,10 +130,10 @@ z.str.color.cyan() {
   z.str.color.decorate color=cyan message=$message
 }
 
-# decorate a string with white color
+# 文字列に白色を付ける
 #
-# $1: string to decorate
-# REPLY: decorated string
+# $1: 装飾する文字列
+# REPLY: 装飾した文字列
 # return: null
 #
 # example:

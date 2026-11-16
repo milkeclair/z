@@ -1,6 +1,6 @@
 z_t_states[failed_only]="${Z_TEST_FAILED_ONLY:-false}"
 
-# get the failed_only state
+# failed_onlyの状態を取得する
 #
 # REPLY: null
 # return: true|false
@@ -11,7 +11,7 @@ z.t._state.failed_only() {
   REPLY=${z_t_states[failed_only]}
 }
 
-# set the failed_only state
+# failed_onlyの状態を設定する
 #
 # $1: true|false
 # REPLY: null

@@ -1,4 +1,4 @@
-# Logging functions for test framework
+# テストフレームワークのログ関数
 #
 # REPLY: null
 # return: null

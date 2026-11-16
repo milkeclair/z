@@ -1,9 +1,9 @@
 typeset z_t_failure_records=()
 
-# get failure records
+# 失敗の記録を取得する
 #
 # REPLY: null
-# return: failure records array
+# return: 失敗の記録の配列
 #
 # example:
 #  z.t._state.failure_records  #=> ("record1" "record2" ...)
@@ -11,9 +11,9 @@ z.t._state.failure_records() {
   REPLY=("${z_t_failure_records[@]}")
 }
 
-# add a failure record
+# 失敗の記録を追加する
 #
-# $1: failure record
+# $1: 失敗の記録
 # REPLY: null
 # return: null
 #

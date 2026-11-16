@@ -186,9 +186,9 @@ z.install._add_to_zshrc() {
   echo "   to apply changes: source ~/.zshrc"
 }
 
-# install z, preserving individually installed mods on update
+# zを導入し、更新時には個別に導入したmodを保持する
 #
-# $1?: install dir (default: $HOME/.z)
+# $1?: インストール先（既定: $HOME/.z）
 # REPLY: null
 # return: null
 #
@@ -343,9 +343,9 @@ z.install.mod._show_completion() {
   echo "✅ mod installation completed: $mod_name"
 }
 
-# install z modifier
+# zのmodを導入する
 #
-# $1: mod name
+# $1: mod名
 # REPLY: null
 # return: null
 #

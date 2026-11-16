@@ -1,6 +1,6 @@
-# get failure records
+# 失敗の記録を取得する
 #
-# REPLY: failure records
+# REPLY: 失敗の記録
 # return: null
 #
 # example:
@@ -9,7 +9,7 @@ z.t._log.failure() {
   z.t._state.failure_records
 }
 
-# remember failure record
+# 失敗の記録を保存する
 #
 # REPLY: null
 # return: null
@@ -29,9 +29,9 @@ z.t._log.failure.remember() {
   z.t._state.failure_records.add "$d_idx:$c_idx:$i_idx:$error_idx"
 }
 
-# add failure log with color
+# 失敗ログに色を付けて追加する
 #
-# $color: color
+# $color: 色
 # REPLY: null
 # return: null
 #
@@ -69,9 +69,9 @@ z.t._log.failure.add() {
   fi
 }
 
-# process failure log
+# 失敗ログを処理する
 #
-# $message: error message
+# $message: エラーメッセージ
 # REPLY: null
 # return: null
 #

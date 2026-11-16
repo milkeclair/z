@@ -1,6 +1,6 @@
-# create a directory if it does not exist
+# ディレクトリがなければ作成する
 #
-# $path: directory path
+# $path: ディレクトリのパス
 # REPLY: null
 # return: null
 #
@@ -12,9 +12,9 @@ z.dir.make() {
   z.dir.not.exists $dir && mkdir -p $dir
 }
 
-# remove a directory if it exists
+# ディレクトリが存在すれば削除する
 #
-# $path: directory path
+# $path: ディレクトリのパス
 # REPLY: null
 # return: null
 #

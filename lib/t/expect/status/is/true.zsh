@@ -1,6 +1,6 @@
-# expect that last command's exit status is true (0)
+# 直前のコマンドの終了コードがtrue（0）であることを検証する
 #
-# $1?: skip_unmock
+# $1?: モック解除を省略するか
 # REPLY: null
 # return: null
 #

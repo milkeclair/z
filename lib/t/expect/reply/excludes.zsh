@@ -1,7 +1,7 @@
-# expect that REPLY excludes expect
+# REPLYに期待値が含まれないことを検証する
 #
-# $1: expected substring
-# $skip_unmock?: skip_unmock
+# $1: 期待する部分文字列
+# $skip_unmock?: モック解除を省略するか
 # REPLY: null
 # return: null
 #

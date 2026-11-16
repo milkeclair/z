@@ -1,4 +1,4 @@
-# update the loaded installation and its installed mods
+# 読み込み済みのインストール先と導入済みmodを更新する
 #
 # REPLY: null
 # return: 0|1
@@ -60,11 +60,11 @@ z.update() {
   REPLY=""
 }
 
-# confirm an update of an installation
+# インストール済み環境の更新を確認する
 #
-# $dir: installation directory
+# $dir: インストール先ディレクトリ
 # REPLY: null
-# return: 0 for y/Y, otherwise 1
+# return: y/Yなら0、それ以外は1
 #
 # example:
 #  z.update._confirm dir=~/.z

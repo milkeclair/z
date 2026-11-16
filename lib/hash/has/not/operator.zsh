@@ -1,7 +1,7 @@
-# determine if a hash does not have a given key
+# 連想配列に指定したキーがないか確認する
 #
-# $key: key to check
-# $1: name of the hash
+# $key: 確認するキー
+# $1: 連想配列名
 # REPLY: null
 # return: 0\1
 #
@@ -19,10 +19,10 @@ z.hash.has.not.key() {
   (( ! ${(P)+ref} ))
 }
 
-# determine if a hash does not have a value for a given key
+# 連想配列の指定したキーに値がないか確認する
 #
-# $key: key to check
-# $1: name of the hash
+# $key: 確認するキー
+# $1: 連想配列名
 # REPLY: null
 # return: 0\1
 #

@@ -1,7 +1,7 @@
-# expect that REPLY array equals expect array
+# REPLYの配列が期待する配列と等しいことを検証する
 #
-# $@: expected array elements
-# $skip_unmock?: skip_unmock
+# $@: 期待する配列の要素
+# $skip_unmock?: モック解除を省略するか
 # REPLY: null
 # return: null
 #

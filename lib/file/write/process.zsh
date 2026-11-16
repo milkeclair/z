@@ -1,7 +1,7 @@
-# append content to the end of a file
+# ファイルの末尾に内容を追記する
 #
-# $path: file path
-# $content: content to append
+# $path: ファイルのパス
+# $content: 追記する内容
 # REPLY: null
 # return: null
 #

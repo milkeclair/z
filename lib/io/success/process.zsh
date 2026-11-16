@@ -1,8 +1,8 @@
-# printing provided arguments in one line without newline at the end to standard output
+# 渡された引数を改行なしで標準出力へ1行に表示する
 #
-# $@: arguments
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $color?: 色名
+# $indent?: インデントの段階
 # REPLY: null
 # return: null
 #
@@ -21,11 +21,11 @@ z.io.success.oneline() {
   z.io.oneline $args
 }
 
-# printing provided arguments line by line to standard output
+# 渡された引数を標準出力へ1行ずつ表示する
 #
-# $@: arguments
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $color?: 色名
+# $indent?: インデントの段階
 # REPLY: null
 # return: null
 #

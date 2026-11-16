@@ -1,8 +1,8 @@
-# replace an installation with a prepared directory and roll back a failed switch
+# 準備したディレクトリでインストール先を置換し、切り替え失敗時は元に戻す
 #
-# $dir: installation directory
-# $prepared: prepared directory
-# $backup: unused backup path
+# $dir: インストール先ディレクトリ
+# $prepared: 準備済みのディレクトリ
+# $backup: 未使用のバックアップ先パス
 # REPLY: null
 # return: 0|1
 #
@@ -35,10 +35,10 @@ z.update.installation._replace() {
   REPLY=""
 }
 
-# reload the updated installation into the current shell
+# 更新済みのインストール先を現在のシェルで読み直す
 #
-# $dir: installation directory
-# $previous?: working directory before replacement (default: PWD)
+# $dir: インストール先ディレクトリ
+# $previous?: 置換前の作業ディレクトリ（既定: PWD）
 # REPLY: null
 # return: 0|1
 #

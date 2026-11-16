@@ -1,7 +1,7 @@
-# get accepted named argument names
+# 受け付ける名前付き引数の名前を取得する
 #
-# $1: name of the defaults hash
-# REPLY: array of accepted argument names
+# $1: 既定値の連想配列名
+# REPLY: 受け付ける引数名の配列
 # return: null
 #
 # example:

@@ -1,4 +1,4 @@
-# list all defined functions and show their source files
+# 定義済みの関数をすべて一覧し、定義元のファイルを表示する
 #
 # REPLY: null
 # return: null
@@ -17,9 +17,9 @@ z.fn.list() {
   done
 }
 
-# show the definition of a registered function
+# 登録済み関数の定義を表示する
 #
-# $1: function name
+# $1: 関数名
 # REPLY: null
 # return: null
 #

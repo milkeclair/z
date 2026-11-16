@@ -1,9 +1,9 @@
-# printing provided arguments
+# 渡された引数を表示する
 #
-# $@: arguments
-# $message?: explicit message, including empty text and named-argument-like text
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $message?: 空文字列や名前付き引数に似た文字列も含めた、明示的なメッセージ
+# $color?: 色名
+# $indent?: インデントの段階
 # REPLY: null
 # return: null
 #
@@ -34,7 +34,7 @@ z.io() {
   print -r -- "${args[@]}"
 }
 
-# printing empty line
+# 空行を出力する
 #
 # REPLY: null
 # return: null
@@ -45,11 +45,11 @@ z.io.empty() {
   print -- ""
 }
 
-# printing provided arguments in one line without newline at the end
+# 渡された引数を改行なしで1行に表示する
 #
-# $@: arguments
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $color?: 色名
+# $indent?: インデントの段階
 # REPLY: null
 # return: null
 #
@@ -73,7 +73,7 @@ z.io.oneline() {
   print -n -- $args
 }
 
-# clear the terminal screen
+# 端末の画面を消去する
 #
 # REPLY: null
 # return: null
@@ -84,9 +84,9 @@ z.io.clear() {
   print "\033c"
 }
 
-# execute command and redirect both stdout and stderr to /dev/null
+# コマンドを実行し、標準出力と標準エラーを/dev/nullへ送る
 #
-# $@: command and its arguments
+# $@: コマンドとその引数
 # REPLY: null
 # return: null
 #
@@ -101,11 +101,11 @@ z.io.null() {
   fi
 }
 
-# printing provided arguments line by line
+# 渡された引数を1行ずつ表示する
 #
-# $@: arguments
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $color?: 色名
+# $indent?: インデントの段階
 # REPLY: null
 # return: null
 #
@@ -135,9 +135,9 @@ z.io.line() {
   print -l -- $lines
 }
 
-# reading a line from standard input and storing it in REPLY
+# 標準入力から1行を読み、REPLYへ保存する
 #
-# REPLY: input line
+# REPLY: 入力行
 # return: null
 #
 # example:
@@ -146,11 +146,11 @@ z.io.read() {
   read -r REPLY
 }
 
-# printing provided arguments with green color
+# 渡された引数を緑色で表示する
 #
-# $@: arguments
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $color?: 色名
+# $indent?: インデントの段階
 # REPLY: null
 # return: null
 #
@@ -165,11 +165,11 @@ z.io.success() {
   z.io $REPLY color=$color indent=$indent
 }
 
-# printing provided arguments with yellow color
+# 渡された引数を黄色で表示する
 #
-# $@: arguments
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $color?: 色名
+# $indent?: インデントの段階
 # REPLY: null
 # return: null
 #
@@ -184,11 +184,11 @@ z.io.warn() {
   z.io $REPLY color=$color indent=$indent
 }
 
-# printing provided arguments to stderr
+# 渡された引数を標準エラーへ表示する
 #
-# $@: arguments
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $color?: 色名
+# $indent?: インデントの段階
 # REPLY: null
 # return: null
 #

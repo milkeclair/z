@@ -1,8 +1,8 @@
-# resolve dependencies of a z modifier
+# z modの依存関係を解決する
 #
-# $1: mod name
-# REPLY: dependency mod names followed by the requested mod name
-# return: 0 if dependencies can be resolved, otherwise 1
+# $1: mod名
+# REPLY: 依存するmod名に要求されたmod名を続けたもの
+# return: 依存関係を解決できた場合は0、それ以外は1
 #
 # example:
 #  z.mod.dependencies.resolve wtproxy
@@ -18,11 +18,11 @@ z.mod.dependencies.resolve() {
   REPLY=("${resolved_mod_names[@]}")
 }
 
-# resolve dependencies recursively
+# 依存関係を再帰的に解決する
 #
-# $1: mod name
+# $1: mod名
 # REPLY: null
-# return: 0 if dependencies can be resolved, otherwise 1
+# return: 依存関係を解決できた場合は0、それ以外は1
 #
 # example:
 #  z.mod.dependencies._resolve wtproxy

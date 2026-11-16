@@ -1,8 +1,8 @@
-# check whether a z modifier is registered
+# zのmodが登録済みか確認する
 #
-# $1: mod name
+# $1: mod名
 # REPLY: null
-# return: 0 if registered, otherwise 1
+# return: 登録されている場合は0、それ以外は1
 #
 # example:
 #  z.mod.is.registered git

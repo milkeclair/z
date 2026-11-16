@@ -1,4 +1,4 @@
-# Available commands:
+# 使用できるコマンド:
 #  c, continue
 #  p <var>
 #  h, help
@@ -60,7 +60,7 @@ z.debug() {
   print -- ""
 }
 
-# enable interactive debug prompts
+# 対話形式のデバッグ入力を有効にする
 #
 # REPLY: null
 # return: null
@@ -71,7 +71,7 @@ z.debug.enable() {
   Z_DEBUG=0
 }
 
-# disable interactive debug prompts
+# 対話形式のデバッグ入力を無効にする
 #
 # REPLY: null
 # return: null

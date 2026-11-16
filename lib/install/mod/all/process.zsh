@@ -1,8 +1,8 @@
-# confirm installation or replacement of every distribution mod
+# 配布対象の全modの導入または置換を確認する
 #
-# $dir: installed mod directory
+# $dir: 導入済みmodのディレクトリ
 # REPLY: null
-# return: 0 for y/Y, otherwise 1
+# return: y/Yなら0、それ以外は1
 #
 # example:
 #  z.install.mod.all._confirm dir=~/.z/mod
@@ -22,11 +22,11 @@ z.install.mod.all._confirm() {
   return 1
 }
 
-# prepare all distribution mods while preserving local-only mod data
+# ローカルだけのmodデータを保持しながら、配布対象の全modを準備する
 #
-# $source: distribution mod directory
-# $current: installed mod directory, which may not exist
-# $dir: new prepared mod directory
+# $source: 配布対象modのディレクトリ
+# $current: 導入済みmodのディレクトリ。存在しない場合もある
+# $dir: 新しく準備したmodディレクトリ
 # REPLY: null
 # return: 0|1
 #
@@ -55,11 +55,11 @@ z.install.mod.all._prepare() {
   REPLY=""
 }
 
-# switch prepared mods into place, restoring the old directory if switching fails
+# 準備したmodを配置先へ切り替え、失敗時は元のディレクトリに戻す
 #
-# $current: installed mod directory, which may not exist
-# $prepared: prepared mod directory
-# $backup: unused backup path
+# $current: 導入済みmodのディレクトリ。存在しない場合もある
+# $prepared: 準備済みのmodディレクトリ
+# $backup: 未使用のバックアップ先パス
 # REPLY: null
 # return: 0|1
 #
@@ -87,11 +87,11 @@ z.install.mod.all._replace() {
   REPLY=""
 }
 
-# reconnect the working directory and load newly installed mods
-# completion setup does not affect the reload result
+# 作業ディレクトリに接続し直し、新しく導入したmodを読み込む
+# 補完の設定は再読み込み結果に影響しない
 #
-# $dir: loaded z installation
-# $previous?: working directory before switching (default: PWD)
+# $dir: 読み込み済みのzのインストール先
+# $previous?: 切り替え前の作業ディレクトリ（既定: PWD）
 # REPLY: null
 # return: 0|1
 #

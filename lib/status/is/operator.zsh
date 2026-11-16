@@ -1,4 +1,4 @@
-# compare exit status
+# 終了コードを比較する
 #
 # REPLY: null
 # return: 0|1
@@ -10,7 +10,7 @@ z.status.is.true() {
   z.is.true $REPLY
 }
 
-# compare exit status
+# 終了コードを比較する
 #
 # REPLY: null
 # return: 0|1

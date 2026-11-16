@@ -1,8 +1,8 @@
-# expect that actual equals expect
+# 実際の値が期待値と等しいことを検証する
 #
-# $1: actual value
-# $2: expected value
-# $skip_unmock?: skip_unmock
+# $1: 実際の値
+# $2: 期待値
+# $skip_unmock?: モック解除を省略するか
 # REPLY: null
 # return: null
 #
@@ -30,11 +30,11 @@ z.t.expect() {
   z.t.mock.unmock.all skip_unmock=$skip_unmock
 }
 
-# expect that actual does not equal expect
+# 実際の値が期待値と等しくないことを検証する
 #
-# $1: actual value
-# $2: expected value
-# $skip_unmock?: skip_unmock
+# $1: 実際の値
+# $2: 期待値
+# $skip_unmock?: モック解除を省略するか
 # REPLY: null
 # return: null
 #

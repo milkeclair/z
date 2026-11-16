@@ -1,7 +1,7 @@
-# verifies whether the two values are not equal
+# 2つの値が等しくないか確認する
 #
-# $1: base value
-# $2: other value
+# $1: 基準値
+# $2: 比較する値
 # REPLY: null
 # return: 0|1
 #
@@ -16,9 +16,9 @@ z.is.not.eq() {
   [[ $base != $other ]]
 }
 
-# verifies whether the provided value is not null
+# 指定した値がnullでないか確認する
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #

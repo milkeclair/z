@@ -1,8 +1,8 @@
-# get the argument at the specified index (1-based)
+# 指定インデックスの引数を取得する（1始まり）
 #
-# $index: 1-based index
-# $@: arguments
-# REPLY: specified argument|null
+# $index: 1始まりのインデックス
+# $@: 引数
+# REPLY: 指定した引数|null
 # return: null
 #
 # example:
@@ -16,10 +16,10 @@ z.arg.get() {
   z.int.is.lteq $index $REPLY && REPLY=$args[$index] || REPLY=""
 }
 
-# get the first argument
+# 最初の引数を取得する
 #
-# $@: arguments
-# REPLY: first argument|null
+# $@: 引数
+# REPLY: 最初の引数|null
 # return: null
 #
 # example:
@@ -28,10 +28,10 @@ z.arg.first() {
   z.arg.get "$@" index=1
 }
 
-# get the second argument
+# 2番目の引数を取得する
 #
-# $@: arguments
-# REPLY: second argument|null
+# $@: 引数
+# REPLY: 2番目の引数|null
 # return: null
 #
 # example:
@@ -40,10 +40,10 @@ z.arg.second() {
   z.arg.get "$@" index=2
 }
 
-# get the third argument
+# 3番目の引数を取得する
 #
-# $@: arguments
-# REPLY: third argument|null
+# $@: 引数
+# REPLY: 3番目の引数|null
 # return: null
 #
 # example:
@@ -52,10 +52,10 @@ z.arg.third() {
   z.arg.get "$@" index=3
 }
 
-# get the last argument
+# 最後の引数を取得する
 #
-# $@: arguments
-# REPLY: last argument|null
+# $@: 引数
+# REPLY: 最後の引数|null
 # return: null
 #
 # example:

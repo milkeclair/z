@@ -1,6 +1,6 @@
-# collect and sort failure and pending records
+# 失敗と保留の記録を収集して整列する
 #
-# REPLY: sorted records array
+# REPLY: 整列した記録の配列
 # return: null
 #
 # example:
@@ -49,9 +49,9 @@ z.t._log.records.collect() {
   REPLY=("${sorted_records[@]}")
 }
 
-# display sorted records
+# 整列済みの記録を表示する
 #
-# $@: sorted records
+# $@: 整列した記録
 # REPLY: null
 # return: null
 #
@@ -97,10 +97,10 @@ z.t._log.records.display() {
   done
 }
 
-# output log if index has changed
+# インデックスが変わった場合にログを出力する
 #
-# $1: current index
-# $2: previous index
+# $1: 現在のインデックス
+# $2: 前回のインデックス
 # REPLY: null
 # return: 0|1
 #
@@ -122,10 +122,10 @@ z.t._log.records.output_if_changed() {
   return 1
 }
 
-# check if current log is not the same as previous log
+# 現在のログが前回のログと異なるか確認する
 #
-# $1: previous index
-# $2: current index
+# $1: 前回のインデックス
+# $2: 現在のインデックス
 # REPLY: null
 # return: 0|1
 #

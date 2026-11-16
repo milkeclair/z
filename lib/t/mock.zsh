@@ -1,7 +1,7 @@
-# mock a function or external command
+# 関数または外部コマンドをモックする
 #
-# $name: function or command name
-# $behavior? [code | 'call_original']: commands to execute
+# $name: 関数名またはコマンド名
+# $behavior? [code | 'call_original']: 実行するコマンド
 # REPLY: null
 # return: null
 #

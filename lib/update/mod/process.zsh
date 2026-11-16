@@ -1,9 +1,9 @@
-# copy current mod data and replace selected mods in a prepared installation
+# 現在のmodデータをコピーし、準備したインストール先で選択したmodを置換する
 #
-# $source: source directory
-# $current: current installation directory
-# $dir: prepared installation directory
-# $@: selected mod names after the named arguments
+# $source: ソースディレクトリ
+# $current: 現在のインストール先ディレクトリ
+# $dir: 準備済みのインストール先ディレクトリ
+# $@: 名前付き引数の後に続く選択したmod名
 # REPLY: null
 # return: 0|1
 #

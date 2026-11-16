@@ -1,6 +1,6 @@
-# context within a test suite
+# テストスイート内のcontext
 #
-# $1: context description
+# $1: contextの説明
 # REPLY: null
 # return: null
 #
@@ -31,9 +31,9 @@ z.t.context() {
   fi
 }
 
-# xcontext within a test suite (marked as pending)
+# テストスイート内のxcontext（保留扱い）
 #
-# $1: context description
+# $1: contextの説明
 # REPLY: null
 # return: null
 #

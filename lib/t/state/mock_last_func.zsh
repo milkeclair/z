@@ -1,9 +1,9 @@
 z_t_states[mock_last_func]=""
 
-# get the last mocked function name
+# 最後にモックした関数名を取得する
 #
 # REPLY: null
-# return: function name
+# return: 関数名
 #
 # example:
 #  z.t._state.mock_last_func  #=> "my_mocked_function"
@@ -11,9 +11,9 @@ z.t._state.mock_last_func() {
   REPLY=$z_t_states[mock_last_func]
 }
 
-# set the last mocked function name
+# 最後にモックした関数名を設定する
 #
-# $1: function name
+# $1: 関数名
 # REPLY: null
 # return: null
 #

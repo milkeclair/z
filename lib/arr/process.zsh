@@ -1,8 +1,8 @@
-# join array elements with a delimiter
+# 配列の要素を区切り文字で結合する
 #
-# $delimiter?: delimiter, default: space
-# $@: array elements
-# REPLY: joined string
+# $delimiter?: 区切り文字（既定: 空白）
+# $@: 配列の要素
+# REPLY: 結合した文字列
 # return: null
 #
 # example:
@@ -18,11 +18,11 @@ z.arr.join() {
   REPLY="${arr[*]}"
 }
 
-# split a string into an array by a delimiter
+# 文字列を区切りで分割して配列にする
 #
-# $delimiter?: delimiter, default: space
-# $@: string to split
-# REPLY: array elements
+# $delimiter?: 区切り文字（既定: 空白）
+# $@: 分割する文字列
+# REPLY: 配列の要素
 # return: null
 #
 # example:
@@ -39,12 +39,12 @@ z.arr.split() {
   REPLY=("${arr[@]}")
 }
 
-# perform global substitution on array elements
+# 配列の要素を全体的に置換する
 #
-# $search: search string
-# $replace: replace string
-# $@: array elements
-# REPLY: array elements after substitution
+# $search: 検索する文字列
+# $replace: 置換後の文字列
+# $@: 配列の要素
+# REPLY: 置換後の配列の要素
 # return: null
 #
 # example:
@@ -67,11 +67,11 @@ z.arr.gsub() {
   REPLY=("${result[@]}")
 }
 
-# sort array elements
+# 配列の要素を整列する
 #
-# $by?: sort by (asc|desc), default: asc
-# $@: array elements
-# REPLY: sorted array elements
+# $by?: 並び順（asc|desc、既定: asc）
+# $@: 配列の要素
+# REPLY: 整列した配列の要素
 # return: null
 #
 # example:
@@ -97,10 +97,10 @@ z.arr.sort() {
   esac
 }
 
-# remove duplicate elements from an array
+# 配列の重複要素を取り除く
 #
-# $@: array elements
-# REPLY: array elements with duplicates removed
+# $@: 配列の要素
+# REPLY: 重複を除いた配列の要素
 # return: null
 #
 # example:
@@ -120,11 +120,11 @@ z.arr.unique() {
   REPLY=("${result[@]}")
 }
 
-# find differences between two arrays
+# 2つの配列の差分を求める
 #
-# $base: base array (as a single string with spaces)
-# $other: other array (as a single string with spaces)
-# REPLY: array of differences
+# $base: 基準の配列（空白区切りの1つの文字列）
+# $other: 比較する配列（空白区切りの1つの文字列）
+# REPLY: 差分の配列
 # return: null
 #
 # example:
@@ -166,11 +166,11 @@ z.arr.diff() {
   REPLY=("${result[@]}")
 }
 
-# find intersection between two arrays
+# 2つの配列の積集合を求める
 #
-# $base: base array (as a single string with spaces)
-# $other: other array (as a single string with spaces)
-# REPLY: array of intersection elements
+# $base: 基準の配列（空白区切りの1つの文字列）
+# $other: 比較する配列（空白区切りの1つの文字列）
+# REPLY: 積集合の要素の配列
 # return: null
 #
 # example:
@@ -206,11 +206,11 @@ z.arr.intersect() {
   REPLY=("${result[@]}")
 }
 
-# find union of two arrays
+# 2つの配列の和集合を求める
 #
-# $base: base array (as a single string with spaces)
-# $other: other array (as a single string with spaces)
-# REPLY: array of union elements
+# $base: 基準の配列（空白区切りの1つの文字列）
+# $other: 比較する配列（空白区切りの1つの文字列）
+# REPLY: 和集合の要素の配列
 # return: null
 #
 # example:
@@ -250,10 +250,10 @@ z.arr.union() {
   REPLY=("${result[@]}")
 }
 
-# reverse the order of array elements
+# 配列の要素を逆順に並べる
 #
-# $@: array elements
-# REPLY: array elements in reverse order
+# $@: 配列の要素
+# REPLY: 逆順に並べた配列の要素
 # return: null
 #
 # example:
@@ -269,12 +269,12 @@ z.arr.reverse() {
   REPLY=("${result[@]}")
 }
 
-# slice an array
+# 配列の一部を切り出す
 #
-# $offset?: offset to start slicing (0-based index)
-# $to?: index to end slicing (exclusive, 0-based index)
-# $@: array elements
-# REPLY: sliced array elements
+# $offset?: 切り出し開始位置（0始まり）
+# $to?: 切り出し終端のインデックス（その位置を含まない、0始まり）
+# $@: 配列の要素
+# REPLY: 切り出した配列の要素
 # return: null
 #
 # example:

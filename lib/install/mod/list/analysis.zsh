@@ -1,9 +1,9 @@
-# compare an installed mod with the selected distribution
+# インストール済みmodと選択した配布内容を比較する
 #
-# $source: distribution mod directory
-# $installed: installed mod directory
+# $source: 配布対象modのディレクトリ
+# $installed: 導入済みmodのディレクトリ
 # REPLY: installed|update-available|not-installed
-# return: 0 if compared, otherwise 1
+# return: 比較できた場合は0、それ以外は1
 #
 # example:
 #  z.install.mod.list._status source=/tmp/source/git installed=~/.z/mod/git

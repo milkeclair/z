@@ -1,7 +1,7 @@
-# expect that last command's exit status equals expect
+# 直前のコマンドの終了コードが期待値と等しいことを検証する
 #
-# $1: expected status (0 for true, 1 for false, "true" for 0, "false" for 1)
-# $skip_unmock?: skip_unmock
+# $1: 期待する終了コード（trueは0、falseは1。"true"は0、"false"は1）
+# $skip_unmock?: モック解除を省略するか
 # REPLY: null
 # return: null
 #

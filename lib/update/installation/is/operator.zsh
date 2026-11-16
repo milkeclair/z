@@ -1,6 +1,6 @@
-# check whether a directory is an installed copy that can be updated
+# ディレクトリが更新可能なインストール済みコピーか確認する
 #
-# $dir: installation directory
+# $dir: インストール先ディレクトリ
 # REPLY: null
 # return: 0|1
 #

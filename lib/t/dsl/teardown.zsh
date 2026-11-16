@@ -1,4 +1,4 @@
-# teardown function to be called at the end of tests
+# テスト終了時に呼び出す後片付け用の関数
 #
 # REPLY: null
 # return: null

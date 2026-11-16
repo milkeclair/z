@@ -1,9 +1,9 @@
 z_t_states[file_path]=$1
 
-# get the test file path
+# テストファイルのパスを取得する
 #
 # REPLY: null
-# return: file path
+# return: ファイルのパス
 #
 # example:
 #  z.t._state.file_path  #=> "/path/to/test_file.zsh"

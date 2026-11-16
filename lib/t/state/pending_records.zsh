@@ -1,9 +1,9 @@
 typeset z_t_pending_records=()
 
-# get pending records
+# 保留の記録を取得する
 #
 # REPLY: null
-# return: pending records array
+# return: 保留の記録の配列
 #
 # example:
 #  z.t._state.pending_records  #=> ("record1" "record2" ...)
@@ -11,9 +11,9 @@ z.t._state.pending_records() {
   REPLY=("${z_t_pending_records[@]}")
 }
 
-# add a pending record
+# 保留の記録を追加する
 #
-# $1: pending record
+# $1: 保留の記録
 # REPLY: null
 # return: null
 #
