@@ -4,7 +4,9 @@
 # return: null
 #
 # example:
+#  # z.t -c内で実行し、行を折り返す位置でない場合
 #  z.t._log.dot.success
+#  # 出力: .（末尾改行なし）
 z.t._log.dot.success() {
   z.t._log.dot.output char=.
 }
@@ -15,7 +17,9 @@ z.t._log.dot.success() {
 # return: null
 #
 # example:
+#  # z.t -c内で実行し、行を折り返す位置でない場合
 #  z.t._log.dot.failure
+#  # 出力: F（末尾改行なし）
 z.t._log.dot.failure() {
   z.t._log.dot.output char=F
 }
@@ -26,7 +30,9 @@ z.t._log.dot.failure() {
 # return: null
 #
 # example:
+#  # z.t -c内で実行し、行を折り返す位置でない場合
 #  z.t._log.dot.pending
+#  # 出力: *（末尾改行なし）
 z.t._log.dot.pending() {
   z.t._log.dot.output "char=*"
 }
@@ -38,7 +44,10 @@ z.t._log.dot.pending() {
 # return: null
 #
 # example:
+#  # z.t -c内で実行し、.dot_countの値が0である場合
 #  z.t._log.dot.output char=F
+#  # 出力: 赤色のF（末尾に改行なし）
+#  # 変更後: .dot_countの値は1
 z.t._log.dot.output() {
   z.arg.named char $@ && local char=$REPLY
   local count_file="${Z_TEST_COMPACT_DIR}/.dot_count"

@@ -6,7 +6,9 @@
 #
 # example:
 #  z.str.is.not.empty ""
+#  # return: 1
 #  z.str.is.not.empty "hello"
+#  # return: 0
 z.str.is.not.empty() {
   local value=$1
 
@@ -21,8 +23,10 @@ z.str.is.not.empty() {
 # return: 0|1
 #
 # example:
-#  z.str.is.not.match "hello" "^h.*o$"  #=> 1 (false)
-#  z.str.is.not.match "hello" "^H.*O$"  #=> 0 (true, case-sensitive)
+#  z.str.is.not.match "hello" "^h.*o$"
+#  # return: 1
+#  z.str.is.not.match "hello" "^H.*O$"
+#  # return: 0
 z.str.is.not.match() {
   local string=$1
   local regex=$2
@@ -37,13 +41,20 @@ z.str.is.not.match() {
 # return: 0|1
 #
 # example:
-#  z.str.is.not.path_like "/usr/local/bin"  #=> 1 (false)
-#  z.str.is.not.path_like "~/documents"     #=> 1 (false)
-#  z.str.is.not.path_like "./script.sh"     #=> 1 (false)
-#  z.str.is.not.path_like "../config"       #=> 1 (false)
-#  z.str.is.not.path_like "."               #=> 1 (false)
-#  z.str.is.not.path_like ".."              #=> 1 (false)
-#  z.str.is.not.path_like "not/a/path"      #=> 0 (true)
+#  z.str.is.not.path_like "/usr/local/bin"
+#  # return: 1
+#  z.str.is.not.path_like "~/documents"
+#  # return: 1
+#  z.str.is.not.path_like "./script.sh"
+#  # return: 1
+#  z.str.is.not.path_like "../config"
+#  # return: 1
+#  z.str.is.not.path_like "."
+#  # return: 1
+#  z.str.is.not.path_like ".."
+#  # return: 1
+#  z.str.is.not.path_like "not/a/path"
+#  # return: 0
 z.str.is.not.path_like() {
   local value=$1
 

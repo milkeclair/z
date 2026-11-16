@@ -5,7 +5,9 @@
 # return: null
 #
 # example:
-#  z.dir.make path="/path/to/dir"
+#  z.dir.make path=/tmp/z-example
+#  z.dir.exists /tmp/z-example
+#  # return: 0
 z.dir.make() {
   z.arg.named path $@ && local dir=$REPLY
 
@@ -19,7 +21,10 @@ z.dir.make() {
 # return: null
 #
 # example:
-#  z.dir.remove path="/path/to/dir"
+#  # /tmp/z-exampleが存在する場合
+#  z.dir.remove path=/tmp/z-example
+#  z.dir.not.exists /tmp/z-example
+#  # return: 0
 z.dir.remove() {
   z.arg.named path $@ && local dir=$REPLY
 

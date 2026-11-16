@@ -5,9 +5,9 @@
 # return: null
 #
 # example:
-#   local TEST_VAR="Hello, World!"
-#   z.var.get TEST_VAR
-#   echo $REPLY  # outputs "Hello, World!"
+#  local TEST_VAR="Hello, World!"
+#  z.var.get TEST_VAR
+#  # REPLY: "Hello, World!"
 z.var.get() {
   local var_name=$1
 

@@ -5,7 +5,8 @@
 # return: null
 #
 # example:
-#  z.str.color.strip $'\033[31mHello\033[0m' #=> "Hello"
+#  z.str.color.strip $'\033[31mHello\033[0m'
+#  # REPLY: "Hello"
 z.str.color.strip() {
   local message=$1
 
@@ -26,7 +27,8 @@ z.str.color.strip() {
 # return: null
 #
 # example:
-#  z.str.color.decorate color=red message="Hello" #=> $'\033[31mHello\033[0m'
+#  z.str.color.decorate color=red message="Hello"
+#  # REPLY: $'\033[31mHello\033[0m'
 z.str.color.decorate() {
   z.arg.named color $@ && local color=$REPLY
   z.arg.named message $@ && local message=$REPLY
@@ -53,7 +55,8 @@ z.str.color.decorate() {
 # return: null
 #
 # example:
-#  z.str.color.red "Hello" #=> $'\033[31mHello\033[0m'
+#  z.str.color.red "Hello"
+#  # REPLY: $'\033[31mHello\033[0m'
 z.str.color.red() {
   local message=$1
 
@@ -67,7 +70,8 @@ z.str.color.red() {
 # return: null
 #
 # example:
-#  z.str.color.green "Hello" #=> $'\033[32mHello\033[0m'
+#  z.str.color.green "Hello"
+#  # REPLY: $'\033[32mHello\033[0m'
 z.str.color.green() {
   local message=$1
 
@@ -81,7 +85,8 @@ z.str.color.green() {
 # return: null
 #
 # example:
-#  z.str.color.yellow "Hello" #=> $'\033[33mHello\033[0m'
+#  z.str.color.yellow "Hello"
+#  # REPLY: $'\033[33mHello\033[0m'
 z.str.color.yellow() {
   local message=$1
 
@@ -95,7 +100,8 @@ z.str.color.yellow() {
 # return: null
 #
 # example:
-#  z.str.color.blue "Hello" #=> $'\033[34mHello\033[0m'
+#  z.str.color.blue "Hello"
+#  # REPLY: $'\033[34mHello\033[0m'
 z.str.color.blue() {
   local message=$1
 
@@ -109,7 +115,8 @@ z.str.color.blue() {
 # return: null
 #
 # example:
-#  z.str.color.magenta "Hello" #=> $'\033[35mHello\033[0m'
+#  z.str.color.magenta "Hello"
+#  # REPLY: $'\033[35mHello\033[0m'
 z.str.color.magenta() {
   local message=$1
 
@@ -123,7 +130,8 @@ z.str.color.magenta() {
 # return: null
 #
 # example:
-#  z.str.color.cyan "Hello" #=> $'\033[36mHello\033[0m'
+#  z.str.color.cyan "Hello"
+#  # REPLY: $'\033[36mHello\033[0m'
 z.str.color.cyan() {
   local message=$1
 
@@ -137,7 +145,8 @@ z.str.color.cyan() {
 # return: null
 #
 # example:
-#  z.str.color.white "Hello" #=> $'\033[37mHello\033[0m'
+#  z.str.color.white "Hello"
+#  # REPLY: $'\033[37mHello\033[0m'
 z.str.color.white() {
   local message=$1
 

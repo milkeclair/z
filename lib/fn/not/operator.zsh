@@ -5,7 +5,9 @@
 # return: 0|1
 #
 # example:
-#  if z.fn.not.exists my_func
+#  # my_funcが未登録の場合
+#  z.fn.not.exists my_func
+#  # return: 0
 z.fn.not.exists() {
   z.fn._ensure_store
 

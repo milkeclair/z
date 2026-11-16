@@ -5,8 +5,9 @@
 # return: null
 #
 # example:
-#  some_command
+#  true
 #  z.t.expect.status.is.true
+#  # 結果: 検証成功（失敗件数は増えない）
 z.t.expect.status.is.true() {
   z.t.expect.status true $1 # 変数に格納した時点で$?が変わるので、$1を直接渡す
 }

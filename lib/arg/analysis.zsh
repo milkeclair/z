@@ -6,7 +6,8 @@
 # return: null
 #
 # example:
-#  z.arg.get "a" "b" "c" index=2 #=> "b"
+#  z.arg.get "a" "b" "c" index=2
+#  # REPLY: "b"
 z.arg.get() {
   z.arg.named index "$@" && local index=$REPLY
   z.arg.named.shift index "$@"
@@ -23,7 +24,8 @@ z.arg.get() {
 # return: null
 #
 # example:
-#  z.arg.first "a" "b" "c" #=> "a"
+#  z.arg.first "a" "b" "c"
+#  # REPLY: "a"
 z.arg.first() {
   z.arg.get "$@" index=1
 }
@@ -35,7 +37,8 @@ z.arg.first() {
 # return: null
 #
 # example:
-#  z.arg.second "a" "b" "c" #=> "b"
+#  z.arg.second "a" "b" "c"
+#  # REPLY: "b"
 z.arg.second() {
   z.arg.get "$@" index=2
 }
@@ -47,7 +50,8 @@ z.arg.second() {
 # return: null
 #
 # example:
-#  z.arg.third "a" "b" "c" #=> "c"
+#  z.arg.third "a" "b" "c"
+#  # REPLY: "c"
 z.arg.third() {
   z.arg.get "$@" index=3
 }
@@ -59,7 +63,8 @@ z.arg.third() {
 # return: null
 #
 # example:
-#  z.arg.last "a" "b" "c" #=> "c"
+#  z.arg.last "a" "b" "c"
+#  # REPLY: "c"
 z.arg.last() {
   z.arr.count "$@"
 

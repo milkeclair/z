@@ -8,8 +8,10 @@
 # return: null
 #
 # example:
-#  z.io "hello" "world" #=> hello world
-#  z.io message="color=red" #=> color=red
+#  z.io "hello" "world"
+#  # 出力: hello world（末尾に改行）
+#  z.io message="color=red"
+#  # 出力: color=red（末尾に改行）
 z.io() {
   z.arg.named color "$@" && local color=$REPLY
   z.arg.named indent "$@" && local indent=$REPLY
@@ -41,6 +43,7 @@ z.io() {
 #
 # example:
 #  z.io.empty
+#  # 出力: 改行1文字
 z.io.empty() {
   print -- ""
 }
@@ -54,9 +57,11 @@ z.io.empty() {
 # return: null
 #
 # example:
-#  z.io.oneline "hello" "world" #=> hello world
+#  z.io.oneline "hello" "world"
+#  # 出力: hello world（末尾に改行なし）
 #  z.io.oneline "hello"
-#  z.io.oneline "world"         #=> helloworld
+#  z.io.oneline "world"
+#  # 出力: helloworld（末尾に改行なし）
 z.io.oneline() {
   z.arg.named color $@ && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
@@ -80,6 +85,7 @@ z.io.oneline() {
 #
 # example:
 #  z.io.clear
+#  # 出力: $'\033c\n'（端末を初期化する制御文字）
 z.io.clear() {
   print "\033c"
 }
@@ -91,7 +97,9 @@ z.io.clear() {
 # return: null
 #
 # example:
-#  z.io.null ls -la
+#  z.io.null print "hello"
+#  # 出力: なし
+#  # return: 0
 z.io.null() {
   z.arr.count $@
   if z.int.is.eq $REPLY 0; then
@@ -110,8 +118,10 @@ z.io.null() {
 # return: null
 #
 # example:
-#  z.io.line "hello" "world" #=> hello\nworld
-#  z.io.line #=> (empty line)
+#  z.io.line "hello" "world"
+#  # 出力: $'hello\nworld\n'
+#  z.io.line
+#  # 出力: $'\n'
 z.io.line() {
   z.arg.named color $@ && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
@@ -141,7 +151,9 @@ z.io.line() {
 # return: null
 #
 # example:
-#  z.io.read #=> REPLY="input line"
+#  # 標準入力にhelloと入力してEnterを押す場合
+#  z.io.read
+#  # REPLY: "hello"
 z.io.read() {
   read -r REPLY
 }
@@ -156,6 +168,7 @@ z.io.read() {
 #
 # example:
 #  z.io.success "Operation completed successfully."
+#  # 出力: Operation completed successfully.（緑色）
 z.io.success() {
   z.arg.named color $@ default=green && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
@@ -175,6 +188,7 @@ z.io.success() {
 #
 # example:
 #  z.io.warn "This is a warning message."
+#  # 出力: This is a warning message.（黄色）
 z.io.warn() {
   z.arg.named color $@ default=yellow && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
@@ -194,6 +208,7 @@ z.io.warn() {
 #
 # example:
 #  z.io.error "error message"
+#  # 標準エラー: error message（赤色）
 z.io.error() {
   z.arg.named color $@ default=red && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY

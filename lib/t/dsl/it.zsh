@@ -5,7 +5,9 @@
 # return: null
 #
 # example:
-#  z.t.it "should do something"; {test code}
+#  # 通常のdescribe/context内で、失敗件数0から実行する場合
+#  z.t.it "値が一致する"; { z.t.expect 1 1; }
+#  # 変更後の失敗件数: 0
 z.t.it() {
   local REPLY=""
 
@@ -74,7 +76,9 @@ z.t.it() {
 # return: null
 #
 # example:
-#  z.t.xit "should do something"; {test code}
+#  # 通常のdescribe/context内で実行する場合
+#  z.t.xit "後で実装する"; { z.t.expect 1 2; }
+#  # 結果: 検証は保留になり、失敗件数は増えない
 z.t.xit() {
   local REPLY=""
 

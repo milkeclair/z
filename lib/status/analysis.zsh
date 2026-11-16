@@ -4,7 +4,9 @@
 # return: null
 #
 # example:
-#  z.status #=> returns the exit status of the last command
+#  false
+#  z.status
+#  # REPLY: 1
 z.status() {
   REPLY=$?
 }

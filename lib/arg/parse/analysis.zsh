@@ -5,7 +5,9 @@
 # return: null
 #
 # example:
+#  local -A values=(option default)
 #  z.arg.parse._names values
+#  # REPLY: ("option")
 z.arg.parse._names() {
   z.hash.keys $1 && local names=("${REPLY[@]}")
   local accepted_names=()

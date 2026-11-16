@@ -5,9 +5,9 @@
 # return: 0\1
 #
 # example:
-#   local TEST_VAR="Hello, World!"
-#   z.var.exists TEST_VAR
-#   echo $?  # outputs 0
+#  local TEST_VAR="Hello, World!"
+#  z.var.exists TEST_VAR
+#  # return: 0
 z.var.exists() {
   (( ${(P)+1} ))
 }
@@ -19,9 +19,9 @@ z.var.exists() {
 # return: 0\1
 #
 # example:
-#   local TEST_VAR="Hello, World!"
-#   z.var.sets TEST_VAR
-#   echo $?  # outputs 0
+#  local TEST_VAR="Hello, World!"
+#  z.var.sets TEST_VAR
+#  # return: 0
 z.var.sets() {
   z.var.exists $1 && z.is.not.null ${(P)1}
 }

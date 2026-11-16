@@ -4,7 +4,9 @@
 # return: null
 #
 # example:
+#  z_t_failure_records=("1:2:3:4")
 #  z.t._log.failure
+#  # REPLY: ("1:2:3:4")
 z.t._log.failure() {
   z.t._state.failure_records
 }
@@ -15,7 +17,11 @@ z.t._log.failure() {
 # return: null
 #
 # example:
+#  z_t_logs=("Suite" "Context" "Case" "Error")
+#  z_t_current_idx=(describe 1 context 2 it 3)
+#  z_t_failure_records=()
 #  z.t._log.failure.remember
+#  # 変更後: z_t_failure_records=("1:2:3:4")
 z.t._log.failure.remember() {
   local error_idx=${#z_t_logs[@]}
 
@@ -36,7 +42,10 @@ z.t._log.failure.remember() {
 # return: null
 #
 # example:
-#  z.t._log.failure.add "red"
+#  z_t_logs=("Suite")
+#  z_t_current_idx=(describe 1 context 0 it 0)
+#  z.t._log.failure.add color=red
+#  # 変更後: z_t_logs[1]は赤色の"Suite"
 z.t._log.failure.add() {
   z.arg.named color $@ && local color=$REPLY
 
@@ -76,7 +85,10 @@ z.t._log.failure.add() {
 # return: null
 #
 # example:
-#  z.t._log.failure.handle "error message"
+#  # 失敗件数0、compact=falseから実行する場合
+#  z.t._log.failure.handle message="error message"
+#  # 変更後の失敗件数: 1
+#  # 結果: error messageのログと失敗の記録が追加される
 z.t._log.failure.handle() {
   z.arg.named message $@ && local error_message=$REPLY
 

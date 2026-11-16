@@ -8,6 +8,7 @@
 #
 # example:
 #  z.t._log.format "  " green "My Test Suite"
+#  # REPLY: $'\033[32m  My Test Suite\033[0m'
 z.t._log.format() {
   local indentation=$1
   local color_name=$2

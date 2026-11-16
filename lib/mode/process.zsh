@@ -6,7 +6,11 @@
 # return: null
 #
 # example:
-#  z.mode git split=" "   # starts a REPL where commands are executed as "git <command>"
+#  z.mode git split=" "
+#  # 入力例: status
+#  # 実行されるコマンド: git status
+#  # 続けてexitを入力した場合
+#  # return: 1
 z.mode() {
   local REPLY
 

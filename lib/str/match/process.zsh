@@ -6,8 +6,10 @@
 # return: null
 #
 # example:
-#  z.str.match.rest "hello_world" "hello_" #=> "world"
-#  z.str.match.rest "foo-bar-baz" "foo-"   #=> "bar-baz"
+#  z.str.match.rest "hello_world" "hello_"
+#  # REPLY: "world"
+#  z.str.match.rest "foo-bar-baz" "foo-"
+#  # REPLY: "bar-baz"
 z.str.match.rest() {
   local str=$1
   local regex=$2
@@ -28,8 +30,10 @@ z.str.match.rest() {
 # return: null
 #
 # example:
-#  z.str.match.nth "one two three" "^o" index=1   #=> "one"
-#  z.str.match.nth "apple banana cherry" "^a" index=2 #=> "banana"
+#  z.str.match.nth "one two three" "^o" index=1
+#  # REPLY: "one"
+#  z.str.match.nth "apple apricot cherry" "^a" index=2
+#  # REPLY: "apricot"
 z.str.match.nth() {
   z.arg.named index $@ && local index=$REPLY
   z.arg.named.shift index $@

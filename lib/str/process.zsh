@@ -17,7 +17,8 @@ typeset -gA z_color_palette=(
 # return: null
 #
 # example:
-#  z.str.color red #=> "\033[31m"
+#  z.str.color red
+#  # REPLY: $'\033[31m'
 z.str.color() {
   local selected=$1
 
@@ -32,7 +33,8 @@ z.str.color() {
 # return: null
 #
 # example:
-#  z.str.indent level=2 message="Hello" #=> "    Hello"
+#  z.str.indent level=2 message="Hello"
+#  # REPLY: "    Hello"
 z.str.indent() {
   z.arg.named level $@ && local level=$REPLY
   z.arg.named message $@ && local message=$REPLY
@@ -57,7 +59,8 @@ z.str.indent() {
 # return: null
 #
 # example:
-#  z.str.split str="apple|banana|cherry" delimiter=| #=> ("apple" "banana" "cherry")
+#  z.str.split str="apple|banana|cherry" delimiter="|"
+#  # REPLY: ("apple" "banana" "cherry")
 z.str.split() {
   z.arg.named str $@ && local str=$REPLY
   z.arg.named delimiter $@ default="|" && local delimiter=$REPLY
@@ -75,8 +78,10 @@ z.str.split() {
 # return: null
 #
 # example:
-#  z.str.partition "p foo bar" "[[:space:]]+" #=> ("p" "foo bar")
-#  z.str.partition "a[0-9]b" "[0-9]" literal=true #=> ("a" "b")
+#  z.str.partition "p foo bar" "[[:space:]]+"
+#  # REPLY: ("p" "foo bar")
+#  z.str.partition "a[0-9]b" "[0-9]" literal=true
+#  # REPLY: ("a" "b")
 z.str.partition() {
   z.arg.named literal $@ default=false && local literal=$REPLY
   z.arg.named.shift literal $@
@@ -132,7 +137,8 @@ z.str.partition() {
 # return: null
 #
 # example:
-#  z.str.match "helloWorld" "[a-z]+" #=> "hello"
+#  z.str.match "helloWorld" "[a-z]+"
+#  # REPLY: "hello"
 z.str.match() {
   local str=$1
   local regex=$2
@@ -150,9 +156,12 @@ z.str.match() {
 # return: null
 #
 # example:
-#  z.str.gsub str="Hello World" search="World" replace="Zsh" #=> "Hello Zsh"
-#  z.str.gsub str="Hello123World" search="[0-9]" replace="-" #=> "Hello---World"
-#  z.str.gsub str="a[0-9]b" search="[0-9]" replace="X" literal=true #=> "aXb"
+#  z.str.gsub str="Hello World" search="World" replace="Zsh"
+#  # REPLY: "Hello Zsh"
+#  z.str.gsub str="Hello123World" search="[0-9]" replace="-"
+#  # REPLY: "Hello---World"
+#  z.str.gsub str="a[0-9]b" search="[0-9]" replace="X" literal=true
+#  # REPLY: "aXb"
 z.str.gsub() {
   z.arg.named str $@ && local str=$REPLY
   z.arg.named search $@ && local search=$REPLY
@@ -198,7 +207,8 @@ z.str.gsub() {
 # return: null
 #
 # example:
-#  z.str.upcase "hello" #=> "HELLO"
+#  z.str.upcase "hello"
+#  # REPLY: "HELLO"
 z.str.upcase() {
   local str=$1
 
@@ -212,7 +222,8 @@ z.str.upcase() {
 # return: null
 #
 # example:
-#  z.str.downcase "HELLO" #=> "hello"
+#  z.str.downcase "HELLO"
+#  # REPLY: "hello"
 z.str.downcase() {
   local str=$1
 
@@ -226,7 +237,8 @@ z.str.downcase() {
 # return: null
 #
 # example:
-#  z.str.camelize "hello_world" #=> "helloWorld"
+#  z.str.camelize "hello_world"
+#  # REPLY: "helloWorld"
 z.str.camelize() {
   local str=$1
   local result=""
@@ -262,7 +274,8 @@ z.str.camelize() {
 # return: null
 #
 # example:
-#  z.str.pascalize "hello_world" #=> "HelloWorld"
+#  z.str.pascalize "hello_world"
+#  # REPLY: "HelloWorld"
 z.str.pascalize() {
   local str=$1
   local result=""
@@ -298,7 +311,8 @@ z.str.pascalize() {
 # return: null
 #
 # example:
-#  z.str.constantize "helloWorld" #=> "HELLO_WORLD"
+#  z.str.constantize "helloWorld"
+#  # REPLY: "HELLOWORLD"
 z.str.constantize() {
   local str=$1
   local result=""
@@ -331,7 +345,8 @@ z.str.constantize() {
 # return: null
 #
 # example:
-#  z.str.underscore "helloWorld" #=> "hello_world"
+#  z.str.underscore "helloWorld"
+#  # REPLY: "hello_world"
 z.str.underscore() {
   local str=$1
 
@@ -345,7 +360,8 @@ z.str.underscore() {
 # return: null
 #
 # example:
-#  z.str.kebabize "helloWorld" #=> "hello-world"
+#  z.str.kebabize "helloWorld"
+#  # REPLY: "hello-world"
 z.str.kebabize() {
   local str=$1
 
@@ -361,8 +377,10 @@ z.str.kebabize() {
 # return: null
 #
 # example:
-#  z.str.delimitize delimiter="_" "helloWorld" #=> "hello_world"
-#  z.str.delimitize delimiter="-" replace_chars="[ _]" "hello world_test" #=> "hello-world-test"
+#  z.str.delimitize delimiter="_" "helloWorld"
+#  # REPLY: "hello_world"
+#  z.str.delimitize delimiter="-" replace_chars="[ _]" "hello world_test"
+#  # REPLY: "hello-world-test"
 z.str.delimitize() {
   z.arg.named delimiter $@ && local delimiter=$REPLY
   z.arg.named replace_chars $@ default="[ _-]" && local replace_chars=$REPLY
@@ -411,7 +429,8 @@ z.str.delimitize() {
 # return: null
 #
 # example:
-#  z.str.visible $'\nHello\tWorld' #=> '\nHello\tWorld'
+#  z.str.visible $'\nHello\tWorld'
+#  # REPLY: '\nHello\tWorld'
 z.str.visible() {
   local str=$1
 
@@ -427,7 +446,8 @@ z.str.visible() {
 # return: null
 #
 # example:
-#  z.str.ljust width=10 fill="." "Hi" #=> "Hi........"
+#  z.str.ljust width=10 fill="." "Hi"
+#  # REPLY: "Hi........"
 z.str.ljust() {
   z.arg.named width $@ && local width=$REPLY
   z.arg.named fill $@ default=" " && local fill=$REPLY
@@ -459,7 +479,8 @@ z.str.ljust() {
 # return: null
 #
 # example:
-#  z.str.rjust width=10 fill="." "Hi" #=> "........Hi"
+#  z.str.rjust width=10 fill="." "Hi"
+#  # REPLY: "........Hi"
 z.str.rjust() {
   z.arg.named width $@ && local width=$REPLY
   z.arg.named fill $@ default=" " && local fill=$REPLY
@@ -489,7 +510,8 @@ z.str.rjust() {
 # return: null
 #
 # example:
-#  z.str.trim "  Hello World  " #=> "Hello World"
+#  z.str.trim "  Hello World  "
+#  # REPLY: "Hello World"
 z.str.trim() {
   local str=$1
 

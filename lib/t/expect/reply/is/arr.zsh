@@ -8,6 +8,7 @@
 # example:
 #  REPLY=("a" "b" "c")
 #  z.t.expect.reply.is.arr "a" "b" "c"
+#  # 結果: 検証成功（失敗件数は増えない）
 z.t.expect.reply.is.arr() {
   local actual=("${REPLY[@]}")
 

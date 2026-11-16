@@ -7,7 +7,9 @@
 # return: null
 #
 # example:
-#  z.t.expect $actual $expect
+#  # 失敗件数0から実行する場合
+#  z.t.expect "actual" "actual"
+#  # 変更後の失敗件数: 0
 z.t.expect() {
   local actual=$1
   local expect=$2
@@ -39,7 +41,9 @@ z.t.expect() {
 # return: null
 #
 # example:
-#  z.t.expect.not $actual $expect
+#  # 失敗件数0から実行する場合
+#  z.t.expect.not "actual" "expected"
+#  # 変更後の失敗件数: 0
 z.t.expect.not() {
   local actual=$1
   local expect=$2

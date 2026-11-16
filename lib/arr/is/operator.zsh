@@ -6,8 +6,10 @@
 # return: 0|1
 #
 # example:
-#  z.arr.is.eq "apple banana cherry" "apple banana cherry"  #=> 0 (true)
-#  z.arr.is.eq "apple banana cherry" "apple grape cherry"  #=> 1 (false)
+#  z.arr.is.eq "apple banana cherry" "apple banana cherry"
+#  # return: 0
+#  z.arr.is.eq "apple banana cherry" "apple grape cherry"
+#  # return: 1
 z.arr.is.eq() {
   local arr1=($1)
   local arr2=($2)
@@ -34,8 +36,10 @@ z.arr.is.eq() {
 # return: 0|1
 #
 # example:
-#  z.arr.is.all_true "1" "2" "3" operation="z.int.is_positive arg"  #=> 0 (true)
-#  z.arr.is.all_true "1" "-2" "3" operation="z.int.is_positive arg"  #=> 1 (false)
+#  z.arr.is.all_true "1" "2" "3" operation="z.int.is.not.zero"
+#  # return: 0
+#  z.arr.is.all_true "1" "0" "3" operation="z.int.is.not.zero"
+#  # return: 1
 z.arr.is.all_true() {
   z.arg.named operation $@
   z.arr.gsub $REPLY search="arg" replace="\$item"
@@ -59,8 +63,10 @@ z.arr.is.all_true() {
 # return: 0|1
 #
 # example:
-#  z.arr.is.all_false "-1" "-2" "-3" operation="z.int.is_positive arg"  #=> 0 (true)
-#  z.arr.is.all_false "-1" "2" "-3" operation="z.int.is_positive arg"  #=> 1 (false)
+#  z.arr.is.all_false "0" "0" "0" operation="z.int.is.not.zero"
+#  # return: 0
+#  z.arr.is.all_false "0" "2" "0" operation="z.int.is.not.zero"
+#  # return: 1
 z.arr.is.all_false() {
   z.arg.named operation $@
   z.arr.gsub $REPLY search="arg" replace="\$item"

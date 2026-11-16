@@ -6,8 +6,10 @@
 # return: 0|1
 #
 # example:
-#  z.arr.is.not.eq "apple banana cherry" "apple banana cherry"  #=> 1 (false)
-#  z.arr.is.not.eq "apple banana cherry" "apple grape cherry"  #=> 0 (true)
+#  z.arr.is.not.eq "apple banana cherry" "apple banana cherry"
+#  # return: 1
+#  z.arr.is.not.eq "apple banana cherry" "apple grape cherry"
+#  # return: 0
 z.arr.is.not.eq() {
   local arr1=($1)
   local arr2=($2)

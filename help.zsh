@@ -7,8 +7,9 @@
 # return: null
 #
 # example:
-#  z.help #=> display README
-#  z.help z.arr.count #=> display doc comment of z.arr.count
+#  z.help z.arr.count
+#  # 出力の先頭: 配列の要素数を数える
+#  # 続いて引数・REPLY・exampleのドキュメントを表示する
 z.help() {
   local function_name=$1
 
@@ -28,8 +29,9 @@ z.help() {
 # return: null
 #
 # example:
-#  z.help mod git #=> display README of git mod
-#  z.help mod git z.git.commit #=> display doc comment of z.git.commit
+#  z.help.mod git z.git.commit
+#  # 出力の先頭: git commitを実行する
+#  # 続いて引数・exampleのドキュメントを表示する
 z.help.mod() {
   local mod_name=$1
   local function_name=$2

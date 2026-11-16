@@ -6,7 +6,9 @@
 # return: null
 #
 # example:
-#  z.file.make path="/path/to/file.txt" with_dir=true
+#  z.file.make path=/tmp/z-example/file.txt with_dir=true
+#  z.file.exists /tmp/z-example/file.txt
+#  # return: 0
 z.file.make() {
   z.arg.named path $@ && local file=$REPLY
   z.arg.named with_dir $@ default=false && local with_dir=$REPLY
@@ -27,7 +29,11 @@ z.file.make() {
 # return: 書き込めた場合は0、それ以外は1
 #
 # example:
-#  z.file.write path="/path/to/file.txt" content="hello world"
+#  # 親ディレクトリが存在し、書き込める場合
+#  z.file.write path=/tmp/z-example.txt content="hello world"
+#  # return: 0
+#  z.file.read path=/tmp/z-example.txt
+#  # REPLY: "hello world"
 z.file.write() {
   z.arg.named path "$@" && local file=$REPLY
   z.arg.named content "$@" && local content=$REPLY
@@ -51,7 +57,9 @@ z.file.write() {
 # return: null
 #
 # example:
-#  z.file.read path="/path/to/file.txt"
+#  # /tmp/z-example.txtの内容がhello worldの場合
+#  z.file.read path=/tmp/z-example.txt
+#  # REPLY: "hello world"
 z.file.read() {
   z.arg.named path $@ && local file=$REPLY
 

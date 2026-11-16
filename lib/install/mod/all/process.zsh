@@ -5,7 +5,9 @@
 # return: y/Yなら0、それ以外は1
 #
 # example:
+#  # 確認にyを入力した場合
 #  z.install.mod.all._confirm dir=~/.z/mod
+#  # return: 0
 z.install.mod.all._confirm() {
   z.arg.named dir "$@" && local dir=$REPLY
 
@@ -31,7 +33,10 @@ z.install.mod.all._confirm() {
 # return: 0|1
 #
 # example:
+#  # ソースと作業先が有効で、準備に成功した場合
 #  z.install.mod.all._prepare source=/tmp/source/mod current=~/.z/mod dir=/tmp/next
+#  # return: 0
+#  # 結果: /tmp/nextへ導入用のmod一式が用意される
 z.install.mod.all._prepare() {
   z.arg.named source "$@" && local source_dir=$REPLY
   z.arg.named current "$@" && local current_dir=$REPLY
@@ -64,7 +69,10 @@ z.install.mod.all._prepare() {
 # return: 0|1
 #
 # example:
+#  # preparedが用意され、backupが未使用の場合
 #  z.install.mod.all._replace current=~/.z/mod prepared=/tmp/next backup=/tmp/previous
+#  # return: 0
+#  # 結果: ~/.z/modが/tmp/nextの内容へ切り替わる
 z.install.mod.all._replace() {
   z.arg.named current "$@" && local current_dir=$REPLY
   z.arg.named prepared "$@" && local prepared=$REPLY
@@ -96,7 +104,10 @@ z.install.mod.all._replace() {
 # return: 0|1
 #
 # example:
+#  # dirに有効なインストール先がある場合
 #  z.install.mod.all._reload dir=~/.z previous=$PWD
+#  # return: 0
+#  # 結果: 新しいmodの関数が現在のシェルへ読み込まれる
 z.install.mod.all._reload() {
   z.arg.named dir "$@" && local dir=$REPLY
   z.arg.named previous "$@" default="$PWD" && local previous_dir=$REPLY

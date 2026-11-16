@@ -4,7 +4,9 @@
 # return: null
 #
 # example:
+#  # 通常モードで、logged=false、失敗件数0の場合
 #  z.t._log.show
+#  # 結果: 成功の要約が表示され、z_t_states[logged]="true"になる
 z.t._log.show() {
   z.t._log.show.save_counts
 
@@ -34,7 +36,9 @@ z.t._log.show() {
 # return: null
 #
 # example:
+#  # /tmp/countが存在し、Z_TEST_COUNT_DIR=/tmp/count、Z_TEST_COUNT_IDX=1、件数が5/1/0の場合
 #  z.t._log.show.save_counts
+#  # /tmp/count/1_count.txtの内容: 5 1 0
 z.t._log.show.save_counts() {
   local count_dir=${Z_TEST_COUNT_DIR:-}
   z.dir.exists $count_dir || return 0
@@ -58,7 +62,9 @@ z.t._log.show.save_counts() {
 # return: null
 #
 # example:
+#  # /tmp/compactが存在し、Z_TEST_COMPACT_DIR=/tmp/compact、Z_TEST_COMPACT_IDX=1の場合
 #  z.t._log.show.save_compact_results 2
+#  # 結果: /tmp/compact/1_summary.txtと1_failure.txtが作成される
 z.t._log.show.save_compact_results() {
   local failures=$1
   local compact_dir=${Z_TEST_COMPACT_DIR:-}
@@ -85,7 +91,9 @@ z.t._log.show.save_compact_results() {
 # return: 0|1
 #
 # example:
-#  z.t._log.show.should_skip && return 0
+#  z.t._state.logged.set true
+#  z.t._log.show.should_skip
+#  # return: 0
 z.t._log.show.should_skip() {
   z.t._state.logged
   z.is.true $REPLY && return 0
@@ -105,7 +113,9 @@ z.t._log.show.should_skip() {
 # return: null
 #
 # example:
+#  # 失敗件数0、保留件数0の場合
 #  z.t._log.show.failures_and_pendings
+#  # 出力: なし
 z.t._log.show.failures_and_pendings() {
   z.t._state.failures
   local failures=$REPLY
@@ -131,7 +141,9 @@ z.t._log.show.failures_and_pendings() {
 # return: null
 #
 # example:
+#  # file_path=example_test.zsh、テスト数5、保留1の場合
 #  z.t._log.show.summary 3
+#  # 表示例（赤色、余白を省略）: example_test 5 tests 3 failures 1 pendings
 z.t._log.show.summary() {
   local failures=$1
 
@@ -160,7 +172,12 @@ z.t._log.show.summary() {
 # return: null
 #
 # example:
+#  z.t._state.all_log.set true
+#  z_t_logs=("first" "second")
 #  z.t._log.show.all_log_if_enabled
+#  # 出力:
+#  # first
+#  # second
 z.t._log.show.all_log_if_enabled() {
   z.t._state.all_log
   if z.is.true $REPLY; then

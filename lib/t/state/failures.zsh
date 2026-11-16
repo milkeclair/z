@@ -2,11 +2,13 @@ z_t_states[failures]=0
 
 # 失敗したテスト数を取得する
 #
-# REPLY: null
-# return: 失敗したテスト数
+# REPLY: 失敗したテスト数
+# return: null
 #
 # example:
-#  z.t._state.failures  #=> 2
+#  z_t_states[failures]=2
+#  z.t._state.failures
+#  # REPLY: 2
 z.t._state.failures() {
   REPLY=${z_t_states[failures]}
 }
@@ -17,7 +19,10 @@ z.t._state.failures() {
 # return: null
 #
 # example:
+#  # failures=0の場合
 #  z.t._state.failures.increment
+#  z.t._state.failures
+#  # REPLY: 1
 z.t._state.failures.increment() {
   (( z_t_states[failures]++ ))
 }

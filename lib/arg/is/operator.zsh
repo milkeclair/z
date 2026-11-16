@@ -5,8 +5,10 @@
 # return: 0|1
 #
 # example:
-#  z.arg.is.present "a" "b" "c" #=> 0
-#  z.arg.is.present             #=> 1
+#  z.arg.is.present "a" "b" "c"
+#  # return: 0
+#  z.arg.is.present
+#  # return: 1
 z.arg.is.present() {
   local args=($@)
 
@@ -20,8 +22,10 @@ z.arg.is.present() {
 # return: 0|1
 #
 # example:
-#  z.arg.is.empty "a" "b" "c" #=> 1
-#  z.arg.is.empty             #=> 0
+#  z.arg.is.empty "a" "b" "c"
+#  # return: 1
+#  z.arg.is.empty
+#  # return: 0
 z.arg.is.empty() {
   local args=($@)
 
@@ -36,8 +40,10 @@ z.arg.is.empty() {
 # return: 0|1
 #
 # example:
-#  z.arg.is.valid "a" "b" "c" length=2 #=> 0
-#  z.arg.is.valid "a" "b" "c" length=4 #=> 1
+#  z.arg.is.valid "a" "b" "c" length=2
+#  # return: 0
+#  z.arg.is.valid "a" "b" "c" length=4
+#  # return: 1
 z.arg.is.valid() {
   z.arg.named length $@ && local length=$REPLY
   z.arg.named.shift length $@ && local args=($REPLY)

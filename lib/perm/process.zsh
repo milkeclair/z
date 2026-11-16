@@ -11,11 +11,10 @@
 # return: 変更できた場合、または変更指定がない場合は0、それ以外は1
 #
 # example:
-#  z.perm path=/path/to/file mode=600
-#  z.perm path=/path/to/file \
-#    mode_owner=read,write,execute \
-#    mode_group=none,none,none \
-#    mode_other=none,none,none
+#  # 対象ファイルが存在し、権限を変更できる場合
+#  z.perm path=/tmp/z-example.txt mode=600
+#  # return: 0
+#  # 変更後のモード: 600
 z.perm() {
   z.perm._apply recursive=false "$@" # zls: ignore
 }
@@ -33,7 +32,10 @@ z.perm() {
 # return: 変更できた場合、または変更指定がない場合は0、それ以外は1
 #
 # example:
-#  z.perm.dir path=/path/to/dir mode=755
+#  # 対象ディレクトリと配下の権限を変更できる場合
+#  z.perm.dir path=/tmp/z-example mode=755
+#  # return: 0
+#  # 変更後のモード: 755
 z.perm.dir() {
   z.perm._apply recursive=true "$@" # zls: ignore
 }
@@ -52,7 +54,10 @@ z.perm.dir() {
 # return: 変更できた場合、または変更指定がない場合は0、それ以外は1
 #
 # example:
-#  z.perm._apply recursive=false path=/path/to/file mode=600
+#  # 対象ファイルが存在し、権限を変更できる場合
+#  z.perm._apply recursive=false path=/tmp/z-example.txt mode=600
+#  # return: 0
+#  # 変更後のモード: 600
 z.perm._apply() {
   z.arg.named recursive $@ default=false && local recursive=$REPLY
   z.arg.named path $@ && local target_path=$REPLY
@@ -88,7 +93,8 @@ z.perm._apply() {
 # return: 所有者またはグループの指定がある場合は0、それ以外は1
 #
 # example:
-#  z.perm._owner_spec owner=user group=group #=> "user:group"
+#  z.perm._owner_spec owner=user group=group
+#  # REPLY: "user:group"
 z.perm._owner_spec() {
   z.arg.named owner $@ default="" && local owner=$REPLY
   z.arg.named group $@ default="" && local group=$REPLY
@@ -117,10 +123,8 @@ z.perm._owner_spec() {
 # return: 権限モードを組み立てられた場合は0、それ以外は1
 #
 # example:
-#  z.perm._mode \
-#    mode_owner=read,write,none \
-#    mode_group=read,none,none \
-#    mode_other=none,none,none
+#  z.perm._mode mode_owner=read,write,none mode_group=read,none,none mode_other=none,none,none
+#  # REPLY: "640"
 z.perm._mode() {
   z.arg.named mode $@ default="" && local mode=$REPLY
   if z.is.not.null "$mode"; then
@@ -161,7 +165,8 @@ z.perm._mode() {
 # return: 権限の指定が正しい場合は0、それ以外は1
 #
 # example:
-#  z.perm._mode_digit read,write,none #=> 6
+#  z.perm._mode_digit read,write,none
+#  # REPLY: 6
 z.perm._mode_digit() {
   local mode_values=$1
   local digit=0

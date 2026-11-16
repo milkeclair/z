@@ -4,8 +4,9 @@
 # return: null
 #
 # example:
-#   z.path.current
-#   echo $REPLY  # outputs "/home/user"
+#  # カレントディレクトリが/tmp/z-exampleの場合
+#  z.path.current
+#  # REPLY: "/tmp/z-example"
 z.path.current() {
   REPLY=$(pwd)
 }
@@ -16,8 +17,9 @@ z.path.current() {
 # return: null
 #
 # example:
-#   z.path.home
-#   echo $REPLY  # outputs "/home/username"
+#  # HOME=/home/exampleの場合
+#  z.path.home
+#  # REPLY: "/home/example"
 z.path.home() {
   REPLY=$HOME
 }

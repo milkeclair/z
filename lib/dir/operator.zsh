@@ -5,7 +5,9 @@
 # return: 0|1
 #
 # example:
-#  z.dir.exists "/path/to/dir" #=> return 0 if exists
+#  # /tmp/z-example-dirが存在する場合
+#  z.dir.exists "/tmp/z-example-dir"
+#  # return: 0
 z.dir.exists() {
   local dir=$1
 

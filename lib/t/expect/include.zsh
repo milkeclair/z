@@ -7,7 +7,9 @@
 # return: null
 #
 # example:
-#  z.t.expect.includes $actual $expect
+#  # 失敗件数0から実行する場合
+#  z.t.expect.includes "hello world" "world"
+#  # 変更後の失敗件数: 0
 z.t.expect.includes() {
   local actual=$1
   local expect=$2
@@ -35,7 +37,9 @@ z.t.expect.includes() {
 # return: null
 #
 # example:
-#  z.t.expect.excludes $actual $expect
+#  # 失敗件数0から実行する場合
+#  z.t.expect.excludes "hello world" "missing"
+#  # 変更後の失敗件数: 0
 z.t.expect.excludes() {
   local actual=$1
   local expect=$2

@@ -6,9 +6,12 @@
 # return: 0|1
 #
 # example:
-#  z.is.not.eq "a" "b" #=> 0
-#  z.is.not.eq 1 2 #=> 0
-#  z.is.not.eq "" "a" #=> 0
+#  z.is.not.eq "a" "b"
+#  # return: 0
+#  z.is.not.eq 1 2
+#  # return: 0
+#  z.is.not.eq "" "a"
+#  # return: 0
 z.is.not.eq() {
   local base=$1
   local other=$2
@@ -23,8 +26,10 @@ z.is.not.eq() {
 # return: 0|1
 #
 # example:
-#  z.is.not.null "a" #=> 0
-#  z.is.not.null 0 #=> 0
+#  z.is.not.null "a"
+#  # return: 0
+#  z.is.not.null 0
+#  # return: 0
 z.is.not.null() {
   local value=$1
 

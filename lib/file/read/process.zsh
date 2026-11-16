@@ -5,7 +5,9 @@
 # return: null
 #
 # example:
-#  z.file.read.lines path="/path/to/file.txt"
+#  # /tmp/z-example.txtにhelloとworldが1行ずつ書かれている場合
+#  z.file.read.lines path=/tmp/z-example.txt
+#  # REPLY: ("hello" "world")
 z.file.read.lines() {
   z.arg.named path $@ && local file=$REPLY
 
@@ -24,7 +26,9 @@ z.file.read.lines() {
 # return: null
 #
 # example:
-#  z.file.read.pick path="/path/to/file.txt" word="search_word"
+#  # /tmp/z-example.txtにsearch_word hereという行がある場合
+#  z.file.read.pick path=/tmp/z-example.txt word=search_word
+#  # REPLY: "search_word here"
 z.file.read.pick() {
   z.arg.named path $@ && local file=$REPLY
   z.arg.named word $@ && local word=$REPLY

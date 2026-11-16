@@ -4,7 +4,9 @@
 # return: null
 #
 # example:
+#  # テスト終了時に、失敗件数0の場合
 #  z.t.teardown
+#  # 結果: モックと一時ファイルを片付け、成功の要約を表示する
 z.t.teardown() {
   z.t.mock.unmock.all
   z.t._remove_tmp_dir

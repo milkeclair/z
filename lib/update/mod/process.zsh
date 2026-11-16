@@ -8,7 +8,10 @@
 # return: 0|1
 #
 # example:
+#  # 必要なディレクトリが存在し、コピーに成功する場合
 #  z.update.mod._copy source=/tmp/source current=~/.z dir=/tmp/update/next job
+#  # return: 0
+#  # 結果: /tmp/update/next/mod/jobが配布内容へ更新される
 z.update.mod._copy() {
   z.arg.named source "$@"
   local source_dir=$REPLY

@@ -8,6 +8,7 @@
 #
 # example:
 #  z.io.success.oneline "success message"
+#  # 出力: success message（緑色、末尾改行なし）
 z.io.success.oneline() {
   z.arg.named color $@ default=green && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
@@ -31,6 +32,9 @@ z.io.success.oneline() {
 #
 # example:
 #  z.io.success.line "success1" "success2"
+#  # 出力（緑色）:
+#  # success1
+#  # success2
 z.io.success.line() {
   z.arg.named color $@ default=green && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY

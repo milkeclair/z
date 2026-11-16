@@ -6,7 +6,11 @@
 # return: null
 #
 # example:
+#  # my_funcが"hello"を表示する関数の場合
 #  z.t.mock name=my_func behavior=call_original
+#  my_func
+#  # 出力: hello
+#  z.t.mock.unmock name=my_func
 z.t.mock() {
   z.arg.named name $@ && local func_name=$REPLY
   z.arg.named behavior $@ && local behavior=$REPLY

@@ -5,7 +5,9 @@
 # return: 0|1
 #
 # example:
+#  # ~/.zにmain.zshとlibがあり、.gitがない場合
 #  z.update.installation.is._valid dir=~/.z
+#  # return: 0
 z.update.installation.is._valid() {
   z.arg.named dir "$@"
   local dir=$REPLY

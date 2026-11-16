@@ -6,7 +6,10 @@
 # return: 0|1
 #
 # example:
+#  # /tmp/updateが存在し、mainの取得に成功した場合
 #  z.update.archive._download dir=/tmp/update branch=main
+#  # REPLY: "/tmp/update/source.tar.gz"
+#  # return: 0
 z.update.archive._download() {
   z.arg.named dir "$@"
   local dir=$REPLY
@@ -36,7 +39,10 @@ z.update.archive._download() {
 # return: 0|1
 #
 # example:
+#  # アーカイブのルートがz-mainで、展開先が未作成の場合
 #  z.update.archive._extract file=/tmp/source.tar.gz dir=/tmp/update/source
+#  # REPLY: "/tmp/update/source/z-main"
+#  # return: 0
 z.update.archive._extract() {
   z.arg.named file "$@"
 

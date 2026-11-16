@@ -2,11 +2,13 @@ typeset z_t_failure_records=()
 
 # 失敗の記録を取得する
 #
-# REPLY: null
-# return: 失敗の記録の配列
+# REPLY: 失敗の記録の配列
+# return: null
 #
 # example:
-#  z.t._state.failure_records  #=> ("record1" "record2" ...)
+#  z_t_failure_records=("1:2:3:4")
+#  z.t._state.failure_records
+#  # REPLY: ("1:2:3:4")
 z.t._state.failure_records() {
   REPLY=("${z_t_failure_records[@]}")
 }
@@ -18,7 +20,10 @@ z.t._state.failure_records() {
 # return: null
 #
 # example:
-#  z.t._state.failure_records.add "This is a failure record"
+#  z_t_failure_records=()
+#  z.t._state.failure_records.add "1:2:3:4"
+#  z.t._state.failure_records
+#  # REPLY: ("1:2:3:4")
 z.t._state.failure_records.add() {
   z_t_failure_records+=($1)
 }

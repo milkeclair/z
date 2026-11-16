@@ -2,11 +2,13 @@ typeset z_t_pending_records=()
 
 # 保留の記録を取得する
 #
-# REPLY: null
-# return: 保留の記録の配列
+# REPLY: 保留の記録の配列
+# return: null
 #
 # example:
-#  z.t._state.pending_records  #=> ("record1" "record2" ...)
+#  z_t_pending_records=("1:2:3:4")
+#  z.t._state.pending_records
+#  # REPLY: ("1:2:3:4")
 z.t._state.pending_records() {
   REPLY=("${z_t_pending_records[@]}")
 }
@@ -18,7 +20,10 @@ z.t._state.pending_records() {
 # return: null
 #
 # example:
-#  z.t._state.pending_records.add "This is a pending record"
+#  z_t_pending_records=()
+#  z.t._state.pending_records.add "1:2:3"
+#  z.t._state.pending_records
+#  # REPLY: ("1:2:3")
 z.t._state.pending_records.add() {
   z_t_pending_records+=($1)
 }

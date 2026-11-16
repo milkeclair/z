@@ -2,11 +2,13 @@ typeset z_t_logs=()
 
 # ログ配列の管理
 #
-# REPLY: null
+# REPLY: ログの配列
 # return: null
 #
 # example:
-#  z.t._state.logs  #=> ("log1" "log2" ...)
+#  z_t_logs=("Suite" "Case")
+#  z.t._state.logs
+#  # REPLY: ("Suite" "Case")
 z.t._state.logs() {
   REPLY=("${z_t_logs[@]}")
 }
@@ -18,7 +20,10 @@ z.t._state.logs() {
 # return: null
 #
 # example:
+#  z_t_logs=()
 #  z.t._state.logs.add "This is a log entry"
+#  z.t._state.logs
+#  # REPLY: ("This is a log entry")
 z.t._state.logs.add() {
   z_t_logs+=($1)
 }
@@ -26,11 +31,13 @@ z.t._state.logs.add() {
 # contextごとのログを取得する
 #
 # $1: contextのインデックス
-# REPLY: null
-# return: ログ
+# REPLY: ログ
+# return: null
 #
 # example:
-#  z.t._state.logs.context "0"  #=> "log entry at index 0"
+#  z_t_logs=("Suite" "Case")
+#  z.t._state.logs.context 1
+#  # REPLY: "Suite"
 z.t._state.logs.context() {
   local context=$1
   z.is.null $context && { REPLY=""; return 0; }
@@ -45,7 +52,10 @@ z.t._state.logs.context() {
 # return: null
 #
 # example:
-#  z.t._state.logs.context.set index=0 "Updated log entry"
+#  z_t_logs=("Original log entry")
+#  z.t._state.logs.context.set index=1 "Updated log entry"
+#  z.t._state.logs.context 1
+#  # REPLY: "Updated log entry"
 z.t._state.logs.context.set() {
   local REPLY
   z.arg.named index $@ && local context=$REPLY

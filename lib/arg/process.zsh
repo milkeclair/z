@@ -7,9 +7,12 @@
 # return: null
 #
 # example:
-#  z.arg.as name=$1 as="-h|--help" return=0 #=> REPLY=0
-#  z.arg.as name=$1 as="--version|-v" return=1 #=> REPLY=1
-#  z.arg.as name=$1 as="-h|--help" #=> REPLY=""
+#  z.arg.as name=--help as="-h|--help" return=0
+#  # REPLY: 0
+#  z.arg.as name=--version as="--version|-v" return=1
+#  # REPLY: 1
+#  z.arg.as name=unknown as="-h|--help" return=0
+#  # REPLY: ""
 z.arg.as() {
   local args=("$@")
   z.arg.named name "${args[@]}" && local name=$REPLY
@@ -40,7 +43,9 @@ z.arg.as() {
 #
 # example:
 #  z.arg.named option option=value other_arg
-#  REPLY="value"
+#  # REPLY: "value"
+#  z.arg.named option other_arg default=fallback
+#  # REPLY: "fallback"
 z.arg.named() {
   local name=$1
   shift 2>/dev/null
@@ -77,6 +82,8 @@ z.arg.named() {
 #  local -A parsed_named=([delimiter]=" ")
 #  local -a parsed_args=()
 #  z.arg.parse input=input_args named=parsed_named rest=parsed_args
+#  # return: 0
+#  # 変更後: parsed_named[delimiter]=","、parsed_args=("a" "b")
 z.arg.parse() {
   z.arg.named input "$@" && local input_name=$REPLY
   z.arg.named named "$@" && local named_name=$REPLY

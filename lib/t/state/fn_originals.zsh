@@ -3,11 +3,13 @@ typeset -A z_t_fn_source_originals=()
 
 # 保存した元の関数名を取得する
 #
-# REPLY: null
-# return: ("func1" "func2" ...)
+# REPLY: 保存した関数名の配列
+# return: null
 #
 # example:
-#  z.t._state.fn_originals  #=> ("func1" "func2" ...)
+#  local -A z_t_fn_set_originals=(my_func 'REPLY="hello"')
+#  z.t._state.fn_originals
+#  # REPLY: ("my_func")
 z.t._state.fn_originals() {
   z.hash.keys z_t_fn_set_originals
   return 0
@@ -19,7 +21,9 @@ z.t._state.fn_originals() {
 # return: null
 #
 # example:
+#  # z_fn_setとz_fn_sourceが空の場合
 #  z.t._state.fn_originals.save
+#  # 変更後: z_t_fn_set_originals=()、z_t_fn_source_originals=()
 z.t._state.fn_originals.save() {
   z.fn._ensure_store
 
@@ -35,7 +39,10 @@ z.t._state.fn_originals.save() {
 # return: null
 #
 # example:
+#  # 関数登録が空の状態をsaveした後にmy_funcだけを追加した場合
 #  z.t._state.fn_originals.restore
+#  z.fn.exists my_func
+#  # return: 1
 z.t._state.fn_originals.restore() {
   z.fn._ensure_store
 

@@ -5,7 +5,10 @@
 # return: 0|1
 #
 # example:
-#  z.int.is.not.match "123" && z.io "is not integer" || z.io "is integer"
+#  z.int.is.not.match "123"
+#  # return: 1
+#  z.int.is.not.match "abc"
+#  # return: 0
 z.int.is.not.match() {
   local value=$1
 
@@ -20,7 +23,10 @@ z.int.is.not.match() {
 # return: 0|1
 #
 # example:
-#  z.int.is.not.eq 123 456 && z.io "not equal" || z.io "equal"
+#  z.int.is.not.eq 123 456
+#  # return: 0
+#  z.int.is.not.eq 123 123
+#  # return: 1
 z.int.is.not.eq() {
   local a=$1
   local b=$2
@@ -38,7 +44,10 @@ z.int.is.not.eq() {
 # return: 0|1
 #
 # example:
-#  z.int.is.not.zero 123 && z.io "is not zero" || z.io "is zero"
+#  z.int.is.not.zero 123
+#  # return: 0
+#  z.int.is.not.zero 0
+#  # return: 1
 z.int.is.not.zero() {
   local value=$1
 

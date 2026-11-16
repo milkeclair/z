@@ -6,7 +6,11 @@
 # return: null
 #
 # example:
+#  # my_funcが"hello"を表示する関数の場合
+#  z.t.mock name=my_func behavior='z.io "mocked"'
 #  z.t.mock.unmock name=my_func
+#  my_func
+#  # 出力: hello
 z.t.mock.unmock() {
   z.arg.named name $@ && local func_name=$REPLY
   local nonfunctional="_nonfunctional"
@@ -45,7 +49,9 @@ z.t.mock.unmock() {
 # return: null
 #
 # example:
+#  # my_funcとother_funcをモック済みの場合
 #  z.t.mock.unmock.all
+#  # 結果: 両方の関数が元の実装へ戻る
 z.t.mock.unmock.all() {
   z.arg.named skip_unmock $@ && local skip_unmock=$REPLY
 
@@ -64,7 +70,8 @@ z.t.mock.unmock.all() {
 # return: 0|1
 #
 # example:
-#  if z.t.mock.unmock._is_not_skippable true; then ... fi
+#  z.t.mock.unmock._is_not_skippable true
+#  # return: 1
 z.t.mock.unmock._is_not_skippable() {
   local skip_unmock=$1
 

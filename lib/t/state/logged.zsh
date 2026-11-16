@@ -2,11 +2,13 @@ z_t_states[logged]="false"
 
 # ログが記録されているか確認する
 #
-# REPLY: null
-# return: 0|1
+# REPLY: ログ出力済みかを表すtrue|false
+# return: null
 #
 # example:
-#  if z.t._state.logged; then ...; fi
+#  z.t._state.logged.set true
+#  z.t._state.logged
+#  # REPLY: "true"
 z.t._state.logged() {
   REPLY=${z_t_states[logged]}
 }
@@ -18,7 +20,9 @@ z.t._state.logged() {
 # return: null
 #
 # example:
-#  z.t._state.logged.set "true"
+#  z.t._state.logged.set true
+#  z.t._state.logged
+#  # REPLY: "true"
 z.t._state.logged.set() {
   z_t_states[logged]=$1
 }

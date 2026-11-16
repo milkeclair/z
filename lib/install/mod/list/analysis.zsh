@@ -6,7 +6,10 @@
 # return: 比較できた場合は0、それ以外は1
 #
 # example:
+#  # sourceとinstalledの内容が同じ場合
 #  z.install.mod.list._status source=/tmp/source/git installed=~/.z/mod/git
+#  # REPLY: "installed"
+#  # return: 0
 z.install.mod.list._status() {
   z.arg.named source "$@" && local source_dir=$REPLY
   z.arg.named installed "$@" && local installed_dir=$REPLY

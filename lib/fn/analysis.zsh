@@ -4,7 +4,11 @@
 # return: null
 #
 # example:
+#  # PWD=/tmp/exampleでmy_funcだけを登録済みの場合
 #  z.fn.list
+#  # 出力:
+#  # my_func
+#  #   Defined in /tmp/example
 z.fn.list() {
   z.fn._ensure_store
 
@@ -24,7 +28,9 @@ z.fn.list() {
 # return: null
 #
 # example:
+#  # PWD=/tmp/exampleでmy_funcを登録済みの場合
 #  z.fn.show my_func
+#  # 出力例（先頭行）: Defined in: /tmp/example
 z.fn.show() {
   z.fn._ensure_store
 

@@ -6,8 +6,10 @@
 # return: 0|1
 #
 # example:
-#  z.arr.includes target=apple "banana" "apple" "cherry"  #=> 0 (true)
-#  z.arr.includes target=grape "banana" "apple" "cherry"  #=> 1 (false)
+#  z.arr.includes target=apple "banana" "apple" "cherry"
+#  # return: 0
+#  z.arr.includes target=grape "banana" "apple" "cherry"
+#  # return: 1
 z.arr.includes() {
   z.arg.named target $@ && local target=$REPLY
   z.arg.named.shift target $@
@@ -28,8 +30,10 @@ z.arr.includes() {
 # return: 0|1
 #
 # example:
-#  z.arr.excludes target=apple "banana" "apple" "cherry"  #=> 1 (false)
-#  z.arr.excludes target=grape "banana" "apple" "cherry"  #=> 0 (true)
+#  z.arr.excludes target=apple "banana" "apple" "cherry"
+#  # return: 1
+#  z.arr.excludes target=grape "banana" "apple" "cherry"
+#  # return: 0
 z.arr.excludes() {
   z.arg.named target $@ && local target=$REPLY
   z.arg.named.shift target $@

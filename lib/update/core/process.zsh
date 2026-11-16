@@ -6,7 +6,10 @@
 # return: 0|1
 #
 # example:
+#  # sourceに有効な配布内容があり、dirが未作成の場合
 #  z.update.core._copy source=/tmp/source dir=/tmp/update/next
+#  # return: 0
+#  # 結果: /tmp/update/nextにmain.zsh、lib、testなどが配置される
 z.update.core._copy() {
   z.arg.named source "$@"
   local source_dir=$REPLY

@@ -6,7 +6,9 @@
 # return: 0|1
 #
 # example:
+#  # git modが導入済みで配布内容と一致する場合
 #  z.install.mod.list
+#  # 表示例（一部、緑色）: git [installed]
 z.install.mod.list() {
   local work_dir=$(mktemp -d)
   z.dir.exists "$work_dir" || return 1
@@ -47,7 +49,10 @@ z.install.mod.list() {
 # return: 0|1
 #
 # example:
+#  # mainのアーカイブがz-mainへ展開された場合
 #  z.install.mod._fetch dir=/tmp/mod-list branch=main
+#  # REPLY: "/tmp/mod-list/z-main/mod"
+#  # return: 0
 z.install.mod._fetch() {
   z.arg.named dir "$@" && local dir=$REPLY
   z.arg.named branch "$@" default=main && local branch=$REPLY
@@ -74,7 +79,10 @@ z.install.mod._fetch() {
 # return: 0|1
 #
 # example:
+#  # 確認にyを入力し、取得・準備・切替が成功した場合
 #  z.install.mod.all
+#  # return: 0
+#  # 結果: 配布対象の全modが導入・更新される
 z.install.mod.all() {
   z.is.null "$z_root" && return 1
   local install_dir=$z_root

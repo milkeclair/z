@@ -6,10 +6,9 @@
 # return: 0\1
 #
 # example:
-#   local -A hash
-#   hash[name]="John"
-#   z.hash.has.not.key hash key=age
-#   echo $?  # outputs 0
+#  local -A hash=(name "John")
+#  z.hash.has.not.key hash key=age
+#  # return: 0
 z.hash.has.not.key() {
   z.arg.named.shift key $@ && local hash_name=$REPLY
   z.arg.named key $@ && local key=$REPLY
@@ -27,10 +26,9 @@ z.hash.has.not.key() {
 # return: 0\1
 #
 # example:
-#   local -A hash
-#   hash[name]=""
-#   z.hash.has.not.value hash key=name
-#   echo $?  # outputs 0
+#  local -A hash=(name "")
+#  z.hash.has.not.value hash key=name
+#  # return: 0
 z.hash.has.not.value() {
   z.arg.named key $@ && local key=$REPLY
   z.arg.named.shift key $@ && local hash_name=$REPLY

@@ -6,8 +6,10 @@
 # return: 0|1
 #
 # example:
-#  z.str.includes "hello world" "lo wo"  #=> 0 (true)
-#  z.str.includes "hello world" "LO WO"  #=> 1 (false, case-sensitive)
+#  z.str.includes "hello world" "lo wo"
+#  # return: 0
+#  z.str.includes "hello world" "LO WO"
+#  # return: 1
 z.str.includes() {
   local string=$1
   local substring=$2
@@ -23,8 +25,10 @@ z.str.includes() {
 # return: 0|1
 #
 # example:
-#  z.str.excludes "hello world" "lo wo"  #=> 1 (false)
-#  z.str.excludes "hello world" "LO WO"  #=> 0 (true, case-sensitive)
+#  z.str.excludes "hello world" "lo wo"
+#  # return: 1
+#  z.str.excludes "hello world" "LO WO"
+#  # return: 0
 z.str.excludes() {
   local string=$1
   local substring=$2
@@ -40,8 +44,10 @@ z.str.excludes() {
 # return: 0|1
 #
 # example:
-#  z.str.start_with "hello world" "hello"  #=> 0 (true)
-#  z.str.start_with "hello world" "HELLO"  #=> 1 (false, case-sensitive)
+#  z.str.start_with "hello world" "hello"
+#  # return: 0
+#  z.str.start_with "hello world" "HELLO"
+#  # return: 1
 z.str.start_with() {
   local string=$1
   local prefix=$2
@@ -57,8 +63,10 @@ z.str.start_with() {
 # return: 0|1
 #
 # example:
-#  z.str.end_with "hello world" "world"  #=> 0 (true)
-#  z.str.end_with "hello world" "WORLD"  #=> 1 (false, case-sensitive)
+#  z.str.end_with "hello world" "world"
+#  # return: 0
+#  z.str.end_with "hello world" "WORLD"
+#  # return: 1
 z.str.end_with() {
   local string=$1
   local suffix=$2

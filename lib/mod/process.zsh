@@ -6,6 +6,7 @@
 #
 # example:
 #  z.mod git
+#  # 変更後: z_mod_current="git"、z_mod_names[git]=true
 z.mod() {
   z.mod._store.ensure
   z.arg.first "$@"
@@ -26,6 +27,8 @@ z.mod() {
 #  z.mod wtproxy; {
 #    z.mod.depends git
 #  }
+#  z.mod.dependencies wtproxy
+#  # REPLY: ("git")
 z.mod.depends() {
   z.mod._store.ensure
 
@@ -51,6 +54,7 @@ z.mod.depends() {
 #
 # example:
 #  z.mod.reset
+#  # 変更後: z_mod_names=()、z_mod_depends=()、z_mod_current=""
 z.mod.reset() {
   typeset -gA z_mod_names=()
   typeset -gA z_mod_depends=()

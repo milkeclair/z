@@ -6,7 +6,10 @@
 # return: 0|1
 #
 # example:
+#  # sourceにcompletionと、その依存modのjobがある場合
 #  z.update.mod._resolve source=/tmp/source completion
+#  # REPLY: ("job" "completion")
+#  # return: 0
 z.update.mod._resolve() {
   z.arg.named source "$@"
   local source_dir=$REPLY

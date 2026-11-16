@@ -5,7 +5,9 @@
 # return: null
 #
 # example:
+#  # wtproxyがgitに依存する場合
 #  z.mod.dependencies wtproxy
+#  # REPLY: ("git")
 z.mod.dependencies() {
   z.mod._store.ensure
   z.arg.first "$@"

@@ -4,7 +4,12 @@
 # return: 0|1
 #
 # example:
-#  z.status.is.true #=> returns true if the last command exited with status 0
+#  true
+#  z.status.is.true
+#  # return: 0
+#  false
+#  z.status.is.true
+#  # return: 1
 z.status.is.true() {
   z.status
   z.is.true $REPLY
@@ -16,7 +21,12 @@ z.status.is.true() {
 # return: 0|1
 #
 # example:
-#  z.status.is.false #=> returns true if the last command exited with non-zero status
+#  false
+#  z.status.is.false
+#  # return: 0
+#  true
+#  z.status.is.false
+#  # return: 1
 z.status.is.false() {
   z.status
   z.is.false $REPLY

@@ -17,7 +17,10 @@ z.is.eq $z_mode "test" && {
 # return: 127（コマンドが見つからない）
 #
 # example:
-#  z.t.mark_not_found_error message="command not found: ls"
+#  # シェルPIDが100の場合
+#  z.t._mark_not_found_error message="command not found: ls"
+#  # return: 127
+#  # 結果: /tmp/z_t_error_100へメッセージが記録される
 z.t._mark_not_found_error() {
   z.arg.named message $@ && local message=$REPLY
 

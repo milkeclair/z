@@ -5,11 +5,9 @@
 # return: null
 #
 # example:
-#   local -A hash
-#   hash[name]="John"
-#   hash[age]="30"
-#   z.hash.to_arr hash
-#   echo $REPLY  # outputs ("name:John" "age:30")
+#  local -A hash=(name "John")
+#  z.hash.to_arr hash
+#  # REPLY: ("name:John")
 z.hash.to_arr() {
   local hash_name=$1
   local arr=()
@@ -29,14 +27,12 @@ z.hash.to_arr() {
 # return: null
 #
 # example:
-#   local -A hash1
-#   hash1[name]="John"
-#   local -A hash2
-#   hash2[age]="30"
-#   
-#   z.hash.merge base=hash1 other=hash2
-#   local -A merged=($REPLY)
-#   echo ${merged[name]}  # outputs "John"
+#  local -A hash1=(name "John")
+#  local -A hash2=(age "30")
+#  z.hash.merge base=hash1 other=hash2
+#  local -A merged=($REPLY)
+#  # merged[name]: "John"
+#  # merged[age]: "30"
 z.hash.merge() {
   z.arg.named base $@ && local base=$REPLY
   z.arg.named other $@ && local other=$REPLY

@@ -10,11 +10,10 @@
 # return: 0|1
 #
 # example:
-#  z.t
-#  z.t -l
-#  z.t -f
-#  z.t -c
-#  z.t some_test_name
+#  # testディレクトリで、lib/arg/analysisの全テストが成功する場合
+#  z.t lib/arg/analysis
+#  # return: 0
+#  # 表示例（末尾の一部）: 0 failures 0 pendings
 z.t() {
   z.t._extract_options $@
   local z_t_options=($REPLY)
@@ -131,7 +130,10 @@ z.t() {
 # return: 0|1
 #
 # example:
+#  # PWD=/tmp/z-example/testの場合
 #  z.t._test_root_from_pwd
+#  # REPLY: "/tmp/z-example/test"
+#  # return: 0
 z.t._test_root_from_pwd() {
   local current_dir=$PWD
   local abs_current_dir=${current_dir:A}
@@ -152,7 +154,7 @@ z.t._test_root_from_pwd() {
 #
 # example:
 #  z.t._extract_options -l -f -c some_test_name
-#  REPLY="true true true some_test_name"
+#  # REPLY: ("true" "true" "true" "some_test_name")
 z.t._extract_options() {
   z.arr.count $@
   local arg_count=$REPLY
@@ -202,7 +204,9 @@ z.t._extract_options() {
 # return: null
 #
 # example:
+#  # /tmp/z_tが存在する場合
 #  z.t._remove_tmp_dir
+#  # 結果: /tmp/z_tが削除される
 z.t._remove_tmp_dir() {
   z.dir.remove path="/tmp/z_t"
 }
@@ -213,7 +217,11 @@ z.t._remove_tmp_dir() {
 # return: null
 #
 # example:
+#  # シェルPIDが100、compact=falseの場合
+#  local z_t_compact=false
 #  z.t._setup_temp_dirs
+#  # REPLY: ""
+#  # 状態: z_t_count_dir="/tmp/z_t_count_100"
 z.t._setup_temp_dirs() {
   local compact_dir=""
 
@@ -237,7 +245,9 @@ z.t._setup_temp_dirs() {
 # return: null
 #
 # example:
-#  z.t._show_compact_results $compact_dir $files
+#  # /tmp/compact/1_summary.txtの内容がsample summaryの場合
+#  z.t._show_compact_results /tmp/compact example_test.zsh
+#  # 出力の末尾: sample summary
 z.t._show_compact_results() {
   local compact_dir=$1 && shift
   local files=($@)
@@ -267,7 +277,10 @@ z.t._show_compact_results() {
 # return: 0|1（失敗がなければ0、あれば1）
 #
 # example:
-#  z.t._show_totals $count_dir $files
+#  # /tmp/count/1_count.txtの内容が"5 0 1"の場合
+#  z.t._show_totals /tmp/count example_test.zsh
+#  # 表示例（色と余白を省略）: total: 5 tests 0 failures 1 pendings
+#  # return: 0
 z.t._show_totals() {
   local count_dir=$1 && shift
   local files=($@)

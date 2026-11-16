@@ -6,8 +6,10 @@
 # return: null
 #
 # example:
-#  z.str.remove.prefix "pr/123" "pr/" #=> "123"
-#  z.str.remove.prefix "main" "pr/"   #=> "main"
+#  z.str.remove.prefix "pr/123" "pr/"
+#  # REPLY: "123"
+#  z.str.remove.prefix "main" "pr/"
+#  # REPLY: "main"
 z.str.remove.prefix() {
   local str=$1
   local prefix=$2
@@ -27,8 +29,10 @@ z.str.remove.prefix() {
 # return: null
 #
 # example:
-#  z.str.remove.suffix "file.zsh" ".zsh" #=> "file"
-#  z.str.remove.suffix "README" ".md"    #=> "README"
+#  z.str.remove.suffix "file.zsh" ".zsh"
+#  # REPLY: "file"
+#  z.str.remove.suffix "README" ".md"
+#  # REPLY: "README"
 z.str.remove.suffix() {
   local str=$1
   local suffix=$2

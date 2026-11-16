@@ -10,18 +10,20 @@
 # return: 0|1
 #
 # example:
-#  z.is.truthy "true" #=> 0
-#  z.is.truthy 0 #=> 0
-#  z.is.truthy "/path/to/existing/dir" #=> 0
-#  z.is.truthy "/path/to/existing/file" #=> 0
-#  z.is.truthy "some string" #=> 0
-#
-#  z.is.truthy #=> 1
-#  z.is.truthy "" #=> 1
-#  z.is.truthy "false" #=> 1
-#  z.is.truthy 1 #=> 1
-#  z.is.truthy "/path/to/non-existing/dir" #=> 1
-#  z.is.truthy "/path/to/non-existing/file" #=> 1
+#  z.is.truthy "true"
+#  # return: 0
+#  z.is.truthy 0
+#  # return: 0
+#  z.is.truthy "some string"
+#  # return: 0
+#  z.is.truthy
+#  # return: 1
+#  z.is.truthy ""
+#  # return: 1
+#  z.is.truthy "false"
+#  # return: 1
+#  z.is.truthy 1
+#  # return: 1
 z.is.truthy() {
   local value=$1
 
@@ -51,18 +53,20 @@ z.is.truthy() {
 # return: 0|1
 #
 # example:
-#  z.is.falsy #=> 0
-#  z.is.falsy "false" #=> 0
-#  z.is.falsy 1 #=> 0
-#  z.is.falsy "" #=> 0
-#  z.is.falsy "/path/to/non-existing/dir" #=> 0
-#  z.is.falsy "/path/to/non-existing/file" #=> 0
-#
-#  z.is.falsy "true" #=> 1
-#  z.is.falsy 0 #=> 1
-#  z.is.falsy "some string" #=> 1
-#  z.is.falsy "/path/to/existing/dir" #=> 1
-#  z.is.falsy "/path/to/existing/file" #=> 1
+#  z.is.falsy
+#  # return: 0
+#  z.is.falsy "false"
+#  # return: 0
+#  z.is.falsy 1
+#  # return: 0
+#  z.is.falsy ""
+#  # return: 0
+#  z.is.falsy "true"
+#  # return: 1
+#  z.is.falsy 0
+#  # return: 1
+#  z.is.falsy "some string"
+#  # return: 1
 z.is.falsy() {
   local value=$1
 
@@ -90,13 +94,19 @@ z.is.falsy() {
 # return: 0|1
 #
 # example:
-#  z.is.true true #=> 0
-#  z.is.true 0 #=> 0
+#  z.is.true true
+#  # return: 0
+#  z.is.true 0
+#  # return: 0
 #
-#  z.is.true false #=> 1
-#  z.is.true 1 #=> 1
-#  z.is.true "some string" #=> 1
-#  z.is.true "" #=> 1
+#  z.is.true false
+#  # return: 1
+#  z.is.true 1
+#  # return: 1
+#  z.is.true "some string"
+#  # return: 1
+#  z.is.true ""
+#  # return: 1
 z.is.true() {
   local value=$1
 
@@ -115,13 +125,19 @@ z.is.true() {
 # return: 0|1
 #
 # example:
-#  z.is.false false #=> 0
-#  z.is.false 1 #=> 0
+#  z.is.false false
+#  # return: 0
+#  z.is.false 1
+#  # return: 0
 #
-#  z.is.false true #=> 1
-#  z.is.false 0 #=> 1
-#  z.is.false "some string" #=> 1
-#  z.is.false "" #=> 1
+#  z.is.false true
+#  # return: 1
+#  z.is.false 0
+#  # return: 1
+#  z.is.false "some string"
+#  # return: 1
+#  z.is.false ""
+#  # return: 1
 z.is.false() {
   local value=$1
 
@@ -139,9 +155,12 @@ z.is.false() {
 # return: 0|1
 #
 # example:
-#  z.is.eq "a" "a" #=> 0
-#  z.is.eq 1 1 #=> 0
-#  z.is.eq "" "" #=> 0
+#  z.is.eq "a" "a"
+#  # return: 0
+#  z.is.eq 1 1
+#  # return: 0
+#  z.is.eq "" ""
+#  # return: 0
 z.is.eq() {
   local base=$1
   local other=$2
@@ -156,8 +175,10 @@ z.is.eq() {
 # return: 0|1
 #
 # example:
-#  z.is.null "" #=> 0
-#  z.is.null #=> 0
+#  z.is.null ""
+#  # return: 0
+#  z.is.null
+#  # return: 0
 z.is.null() {
   local value=$1
 

@@ -4,7 +4,11 @@
 # return: null
 #
 # example:
+#  z_t_failure_records=("1:2:3:4")
+#  z_t_pending_records=()
+#  z.t._state.failed_only.set false
 #  z.t._log.records.collect
+#  # REPLY: ("001:002:003:failure:1:2:3:4")
 z.t._log.records.collect() {
   z.t._state.failed_only
   local failed_only=$REPLY
@@ -56,7 +60,13 @@ z.t._log.records.collect() {
 # return: null
 #
 # example:
-#  z.t._log.records.display ${records[@]}
+#  z_t_logs=("Suite" "Context" "Case" "Error")
+#  z.t._log.records.display "001:002:003:failure:1:2:3:4"
+#  # 出力:
+#  # Suite
+#  # Context
+#  # Case
+#  # Error
 z.t._log.records.display() {
   local sorted_records=($@)
 
@@ -105,7 +115,13 @@ z.t._log.records.display() {
 # return: 0|1
 #
 # example:
-#  z.t._log.records.output_if_changed $curr $prev
+#  z_t_logs=("Suite")
+#  z.t._log.records.output_if_changed 1 0
+#  # 出力: Suite
+#  # return: 0
+#  z.t._log.records.output_if_changed 1 1
+#  # 出力: なし
+#  # return: 1
 z.t._log.records.output_if_changed() {
   local curr_idx=$1
   local prev_idx=$2
@@ -130,7 +146,10 @@ z.t._log.records.output_if_changed() {
 # return: 0|1
 #
 # example:
-#  if z.t._log.records.not_last_log $prev $current; then ... fi
+#  z.t._log.records.not_last_log 1 2
+#  # return: 0
+#  z.t._log.records.not_last_log 1 1
+#  # return: 1
 z.t._log.records.not_last_log() {
   local prev=$1
   local current=$2

@@ -5,8 +5,8 @@
 # return: null
 #
 # example:
-#   z.path.dir "/usr/local/bin/script.sh"
-#   echo $REPLY  # outputs "/usr/local/bin"
+#  z.path.dir "/usr/local/bin/script.sh"
+#  # REPLY: "/usr/local/bin"
 z.path.dir() {
   local filepath=$1
 
@@ -22,8 +22,8 @@ z.path.dir() {
 # return: null
 #
 # example:
-#   z.path.base "/usr/local/bin/script.sh"
-#   echo $REPLY  # outputs "script.sh"
+#  z.path.base "/usr/local/bin/script.sh"
+#  # REPLY: "script.sh"
 z.path.base() {
   local filepath=$1
 
@@ -39,8 +39,8 @@ z.path.base() {
 # return: null
 #
 # example:
-#   z.path.stem "/usr/local/bin/script.sh"
-#   echo $REPLY  # outputs "script"
+#  z.path.stem "/usr/local/bin/script.sh"
+#  # REPLY: "script"
 z.path.stem() {
   local filepath=$1
 
@@ -57,8 +57,8 @@ z.path.stem() {
 # return: null
 #
 # example:
-#   z.path.ext "/usr/local/bin/script.sh"
-#   echo $REPLY  # outputs "sh"
+#  z.path.ext "/usr/local/bin/script.sh"
+#  # REPLY: "sh"
 z.path.ext() {
   local filepath=$1
 
@@ -75,8 +75,10 @@ z.path.ext() {
 # return: null
 #
 # example:
-#   z.path.real "./script.sh"
-#   echo $REPLY  # outputs "/home/user/current/script.sh"
+#  # /tmp/z-exampleにscript.shがあり、シンボリックリンクを含まない場合
+#  # カレントディレクトリは/tmp/z-example
+#  z.path.real "./script.sh"
+#  # REPLY: "/tmp/z-example/script.sh"
 z.path.real() {
   local filepath=$1
 
@@ -92,8 +94,9 @@ z.path.real() {
 # return: null
 #
 # example:
-#   z.path.abs "./script.sh"
-#   echo $REPLY  # outputs "/home/user/current/script.sh"
+#  # カレントディレクトリが/tmp/z-exampleの場合
+#  z.path.abs "./script.sh"
+#  # REPLY: "/tmp/z-example/script.sh"
 z.path.abs() {
   local filepath=$1
 
@@ -109,8 +112,8 @@ z.path.abs() {
 # return: null
 #
 # example:
-#   z.path.downcase "/UsR/LoCaL/Bin/ScRiPt.Sh"
-#   echo $REPLY  # outputs "/usr/local/bin/script.sh"
+#  z.path.downcase "/UsR/LoCaL/Bin/ScRiPt.Sh"
+#  # REPLY: "/usr/local/bin/script.sh"
 z.path.downcase() {
   local filepath=$1
 
@@ -126,8 +129,8 @@ z.path.downcase() {
 # return: null
 #
 # example:
-#   z.path.upcase "/UsR/LoCaL/Bin/ScRiPt.Sh"
-#   echo $REPLY  # outputs "/USR/LOCAL/BIN/SCRIPT.SH"
+#  z.path.upcase "/UsR/LoCaL/Bin/ScRiPt.Sh"
+#  # REPLY: "/USR/LOCAL/BIN/SCRIPT.SH"
 z.path.upcase() {
   local filepath=$1
 

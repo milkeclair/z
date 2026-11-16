@@ -6,7 +6,8 @@
 # return: null
 #
 # example:
-#  z.arr.join "a" "b" "c" #=> REPLY="a b c"
+#  z.arr.join "a" "b" "c"
+#  # REPLY: "a b c"
 z.arr.join() {
   local -a input_args=("$@")
   local -A parsed_named=([delimiter]=" ")
@@ -26,8 +27,10 @@ z.arr.join() {
 # return: null
 #
 # example:
-#  z.arr.split delimiter="," "a,b,c" #=> REPLY=("a" "b" "c")
-#  z.arr.split "a b c"         #=> REPLY=("a" "b" "c")
+#  z.arr.split delimiter="," "a,b,c"
+#  # REPLY: ("a" "b" "c")
+#  z.arr.split "a b c"
+#  # REPLY: ("a" "b" "c")
 z.arr.split() {
   z.arg.named delimiter "$@" default=" " && local delimiter=$REPLY
   z.arg.named.shift delimiter "$@"
@@ -48,7 +51,8 @@ z.arr.split() {
 # return: null
 #
 # example:
-#  z.arr.gsub search=a replace=x "a b a" "c a d" #=> REPLY=("x b x" "c x d")
+#  z.arr.gsub search=a replace=x "a b a" "c a d"
+#  # REPLY: ("x b x" "c x d")
 z.arr.gsub() {
   local args=("$@")
 
@@ -75,8 +79,10 @@ z.arr.gsub() {
 # return: null
 #
 # example:
-#  z.arr.sort by=asc "b" "c" "a" #=> REPLY=("a" "b" "c")
-#  z.arr.sort by=desc "b" "c" "a" #=> REPLY=("c" "b" "a")
+#  z.arr.sort by=asc "b" "c" "a"
+#  # REPLY: ("a" "b" "c")
+#  z.arr.sort by=desc "b" "c" "a"
+#  # REPLY: ("c" "b" "a")
 z.arr.sort() {
   z.arg.named by "$@" default=asc
   local sort_by=$REPLY
@@ -104,7 +110,8 @@ z.arr.sort() {
 # return: null
 #
 # example:
-#  z.arr.unique "a" "b" "a" "c" "b" #=> REPLY=("a" "b" "c")
+#  z.arr.unique "a" "b" "a" "c" "b"
+#  # REPLY: ("a" "b" "c")
 z.arr.unique() {
   local arr=("$@")
   local -A seen
@@ -128,7 +135,8 @@ z.arr.unique() {
 # return: null
 #
 # example:
-#  z.arr.diff base="a b c" other="b c d" #=> REPLY=("a" "d")
+#  z.arr.diff base="a b c" other="b c d"
+#  # REPLY: ("a" "d")
 z.arr.diff() {
   z.arg.named base "$@" && local base=$REPLY
   z.arg.named other "$@" && local other=$REPLY
@@ -174,7 +182,8 @@ z.arr.diff() {
 # return: null
 #
 # example:
-#  z.arr.intersect base="a b c" other="b c d" #=> REPLY=("b" "c")
+#  z.arr.intersect base="a b c" other="b c d"
+#  # REPLY: ("b" "c")
 z.arr.intersect() {
   z.arg.named base "$@" && local base=$REPLY
   z.arg.named other "$@" && local other=$REPLY
@@ -214,7 +223,8 @@ z.arr.intersect() {
 # return: null
 #
 # example:
-#  z.arr.union base="a b c" other="b c d e" #=> REPLY=("a" "b" "c" "d" "e")
+#  z.arr.union base="a b c" other="b c d e"
+#  # REPLY: ("a" "b" "c" "d" "e")
 z.arr.union() {
   z.arg.named base "$@" && local base=$REPLY
   z.arg.named other "$@" && local other=$REPLY
@@ -257,7 +267,8 @@ z.arr.union() {
 # return: null
 #
 # example:
-#  z.arr.reverse "a" "b" "c" #=> REPLY=("c" "b" "a")
+#  z.arr.reverse "a" "b" "c"
+#  # REPLY: ("c" "b" "a")
 z.arr.reverse() {
   local arr=("$@")
   local result=()
@@ -278,7 +289,8 @@ z.arr.reverse() {
 # return: null
 #
 # example:
-#  z.arr.slice offset=2 to=5 "a" "b" "c" "d" "e" #=> REPLY=("c" "d" "e")
+#  z.arr.slice offset=2 to=5 "a" "b" "c" "d" "e"
+#  # REPLY: ("c" "d" "e")
 z.arr.slice() {
   local args=("$@")
   z.arg.named offset "${args[@]}" && local offset=$REPLY

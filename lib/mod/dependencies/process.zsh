@@ -5,7 +5,10 @@
 # return: 依存関係を解決できた場合は0、それ以外は1
 #
 # example:
+#  # wtproxyがgitだけに依存する場合
 #  z.mod.dependencies.resolve wtproxy
+#  # REPLY: ("git" "wtproxy")
+#  # return: 0
 z.mod.dependencies.resolve() {
   z.mod._store.ensure
   z.arg.first "$@"
@@ -25,7 +28,12 @@ z.mod.dependencies.resolve() {
 # return: 依存関係を解決できた場合は0、それ以外は1
 #
 # example:
-#  z.mod.dependencies._resolve wtproxy
+#  # gitが登録済みで依存を持たない場合
+#  local resolved_mod_names=()
+#  local -A resolving_mod_name_map=() resolved_mod_name_map=()
+#  z.mod.dependencies._resolve git
+#  # return: 0
+#  # 変更後: resolved_mod_names=("git")
 z.mod.dependencies._resolve() {
   z.arg.first "$@"
   local mod_name=$REPLY

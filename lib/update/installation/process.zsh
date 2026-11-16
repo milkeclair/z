@@ -7,7 +7,10 @@
 # return: 0|1
 #
 # example:
-#  z.update.installation._replace dir=~/.z prepared=/tmp/next backup=/tmp/previous
+#  # dirとpreparedが存在し、backupが未使用の場合
+#  z.update.installation._replace dir=/tmp/z-example prepared=/tmp/next backup=/tmp/previous
+#  # return: 0
+#  # 結果: /tmp/z-exampleが/tmp/nextの内容に置き換わる
 z.update.installation._replace() {
   z.arg.named dir "$@"
   local dir=$REPLY
@@ -43,7 +46,10 @@ z.update.installation._replace() {
 # return: 0|1
 #
 # example:
+#  # 新しいインストール先の読み込みが成功する場合
 #  z.update.installation._reload dir=~/.z previous=$PWD
+#  # return: 0
+#  # REPLY: ""
 z.update.installation._reload() {
   z.arg.named dir "$@"
   local dir=$REPLY
