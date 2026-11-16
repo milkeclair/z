@@ -14,7 +14,8 @@ z.t.describe "z.process.kill"; {
       local sent=$REPLY
 
       z.t.expect "$kill_status" 0
-      z.t.expect "${(j: :)pids}" "12345 23456"
+      z.arr.join "${pids[@]}"
+      z.t.expect.reply "12345 23456"
       z.t.expect "$sent" "-TERM -- 12345 -TERM -- 23456"
     }
 
@@ -27,7 +28,8 @@ z.t.describe "z.process.kill"; {
       local pids=($REPLY)
 
       z.t.expect "$kill_status" 1
-      z.t.expect "${(j: :)pids}" "12345 34567"
+      z.arr.join "${pids[@]}"
+      z.t.expect.reply "12345 34567"
     }
 
     z.t.it "送信が失敗するとfalseを返す"; {
@@ -39,7 +41,8 @@ z.t.describe "z.process.kill"; {
       local result=$REPLY
 
       z.t.expect "$kill_status" 1
-      z.t.expect "$result" ""
+      z.is.null "$result"
+      z.t.expect.status.is.true
     }
   }
 
@@ -56,8 +59,10 @@ z.t.describe "z.process.kill"; {
       local sent=$REPLY
 
       z.t.expect "$kill_status" 1
-      z.t.expect "$result" ""
-      z.t.expect "$sent" ""
+      z.is.null "$result"
+      z.t.expect.status.is.true
+      z.is.null "$sent"
+      z.t.expect.status.is.true
     }
   }
 

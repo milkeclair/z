@@ -2,13 +2,107 @@ source ${z_main}
 
 z.t.describe "z.process._pids"; {
   z.t.context "対象の指定を検証する場合"; {
-    local invalid
-    for invalid in "" pid= pid=0 pid=-1 pid=+12 pid=2147483648 pid=99999999999999999999 pid=abc port= port=0 port=65536 port=99999999999999999999 port=-1 port=abc name= unknown=123 3000; do
-      z.t.it "不正な指定[$invalid]を拒否する"; {
-        z.process._pids "$invalid" 2>/dev/null
-        z.t.expect.status.is.false
-      }
-    done
+    z.t.it "空のselectorを拒否する"; {
+      z.process._pids "" 2>/dev/null
+
+      z.t.expect.status.is.false
+    }
+
+    z.t.it "空のPIDを拒否する"; {
+      z.process._pids pid= 2>/dev/null
+
+      z.t.expect.status.is.false
+    }
+
+    z.t.it "PIDの0を拒否する"; {
+      z.process._pids pid=0 2>/dev/null
+
+      z.t.expect.status.is.false
+    }
+
+    z.t.it "負のPIDを拒否する"; {
+      z.process._pids pid=-1 2>/dev/null
+
+      z.t.expect.status.is.false
+    }
+
+    z.t.it "符号付きPIDを拒否する"; {
+      z.process._pids pid=+12 2>/dev/null
+
+      z.t.expect.status.is.false
+    }
+
+    z.t.it "上限を超えるPIDを拒否する"; {
+      z.process._pids pid=2147483648 2>/dev/null
+
+      z.t.expect.status.is.false
+    }
+
+    z.t.it "長すぎるPIDを拒否する"; {
+      z.process._pids pid=99999999999999999999 2>/dev/null
+
+      z.t.expect.status.is.false
+    }
+
+    z.t.it "数値以外のPIDを拒否する"; {
+      z.process._pids pid=abc 2>/dev/null
+
+      z.t.expect.status.is.false
+    }
+
+    z.t.it "空のポートを拒否する"; {
+      z.process._pids port= 2>/dev/null
+
+      z.t.expect.status.is.false
+    }
+
+    z.t.it "ポートの0を拒否する"; {
+      z.process._pids port=0 2>/dev/null
+
+      z.t.expect.status.is.false
+    }
+
+    z.t.it "上限を超えるポートを拒否する"; {
+      z.process._pids port=65536 2>/dev/null
+
+      z.t.expect.status.is.false
+    }
+
+    z.t.it "長すぎるポートを拒否する"; {
+      z.process._pids port=99999999999999999999 2>/dev/null
+
+      z.t.expect.status.is.false
+    }
+
+    z.t.it "負のポートを拒否する"; {
+      z.process._pids port=-1 2>/dev/null
+
+      z.t.expect.status.is.false
+    }
+
+    z.t.it "数値以外のポートを拒否する"; {
+      z.process._pids port=abc 2>/dev/null
+
+      z.t.expect.status.is.false
+    }
+
+    z.t.it "空の名前を拒否する"; {
+      z.process._pids name= 2>/dev/null
+
+      z.t.expect.status.is.false
+    }
+
+    z.t.it "未知のselectorを拒否する"; {
+      z.process._pids unknown=123 2>/dev/null
+
+      z.t.expect.status.is.false
+    }
+
+    z.t.it "位置引数を拒否する"; {
+      z.process._pids 3000 2>/dev/null
+
+      z.t.expect.status.is.false
+    }
 
     z.t.it "指定なしと複数指定を拒否する"; {
       z.process._pids 2>/dev/null
@@ -27,7 +121,8 @@ z.t.describe "z.process._pids"; {
     z.t.it "成功時は標準出力へ書き込まない"; {
       local output=$(z.process._pids pid=12345)
 
-      z.t.expect "$output" ""
+      z.is.null "$output"
+      z.t.expect.status.is.true
     }
 
     z.t.it "正のPIDをそのまま返す"; {
@@ -52,7 +147,8 @@ z.t.describe "z.process._pids"; {
       local pids=($REPLY)
 
       z.t.expect "$lookup_status" 0
-      z.t.expect "${(j: :)pids}" "12345 23456"
+      z.arr.join "${pids[@]}"
+      z.t.expect.reply "12345 23456"
     }
 
     z.t.it "該当なしでは失敗する"; {
@@ -91,7 +187,8 @@ z.t.describe "z.process._pids"; {
       local pids=($REPLY)
 
       z.t.expect "$lookup_status" 0
-      z.t.expect "${(j: :)pids}" "12345 34567"
+      z.arr.join "${pids[@]}"
+      z.t.expect.reply "12345 34567"
     }
 
     z.t.it "特殊文字と空白を含む名前をリテラルとして扱う"; {

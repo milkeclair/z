@@ -27,7 +27,8 @@ z.t.describe "z.process.list._ports"; {
       local result=$REPLY
 
       z.t.expect "$lookup_status" 0
-      z.t.expect "$result" ""
+      z.is.null "$result"
+      z.t.expect.status.is.true
     }
   }
 
@@ -56,18 +57,32 @@ z.t.describe "z.process.list._ports"; {
       local result=$REPLY
 
       z.t.expect "$lookup_status" 1
-      z.t.expect "$result" ""
+      z.is.null "$result"
+      z.t.expect.status.is.true
     }
 
-    local record
-    for record in 'n*:3000' $'p123\nn*:not-a-port' $'p123\nunexpected'; do
-      z.t.it "不正なレコードを拒否する"; {
-        z.t.mock name=lsof behavior="print -r -- ${(q)record}"
+    z.t.it "PIDより前の待受レコードを拒否する"; {
+      z.t.mock name=lsof behavior='print -r -- "n*:3000"'
 
-        z.process.list._ports 2>/dev/null
+      z.process.list._ports 2>/dev/null
 
-        z.t.expect.status.is.false
-      }
-    done
+      z.t.expect.status.is.false
+    }
+
+    z.t.it "数値以外のポートを拒否する"; {
+      z.t.mock name=lsof behavior='print -l -- p123 "n*:not-a-port"'
+
+      z.process.list._ports 2>/dev/null
+
+      z.t.expect.status.is.false
+    }
+
+    z.t.it "未対応のレコードを拒否する"; {
+      z.t.mock name=lsof behavior="print -l -- p123 unexpected"
+
+      z.process.list._ports 2>/dev/null
+
+      z.t.expect.status.is.false
+    }
   }
 }
