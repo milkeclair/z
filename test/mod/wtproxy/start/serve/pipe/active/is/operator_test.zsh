@@ -42,7 +42,7 @@ z.t.describe "z.wtproxy.start._serve.pipe.active.is.current"; {
       z_wtproxy_serve_state_file=""
       z.t.mock name="z.wtproxy._entry.active" behavior="
         local -A entry=(path /tmp/worktree)
-        z.return.hash entry
+        z.hash.entries entry literal=true
       "
 
       z.wtproxy.start._serve.pipe.active.is.current /tmp/worktree

@@ -16,8 +16,8 @@ z.t.describe "z.git.push"; {
   z.t.context "z.git.push._prが成功した場合"; {
     z.t.it "z.git.push._currentを呼ばない"; {
       z.t.mock name="z.git._hp.arg.has.origin" behavior="return 1"
-      z.t.mock name="z.git.push._pr" behavior="z.return called"
-      z.t.mock name="z.git.push._current" behavior="z.return current"
+      z.t.mock name="z.git.push._pr" behavior="REPLY=called"
+      z.t.mock name="z.git.push._current" behavior="REPLY=current"
 
       z.git.push
 
@@ -29,7 +29,7 @@ z.t.describe "z.git.push"; {
     z.t.it "z.git.push._currentを呼ぶ"; {
       z.t.mock name="z.git._hp.arg.has.origin" behavior="return 1"
       z.t.mock name="z.git.push._pr" behavior="return 1"
-      z.t.mock name="z.git.push._current" behavior="z.return called"
+      z.t.mock name="z.git.push._current" behavior="REPLY=called"
 
       z.git.push
 
@@ -56,7 +56,7 @@ z.t.describe "z.git.push._pr"; {
 
   z.t.context "現在のブランチにpr番号が含まれない場合"; {
     z.t.it "falseを返す"; {
-      z.t.mock name="z.git.branch.current._get" behavior="z.return main"
+      z.t.mock name="z.git.branch.current._get" behavior="REPLY=main"
       z.t.mock name="git"
 
       z.git.push._pr
@@ -71,7 +71,7 @@ z.t.describe "z.git.push._pr"; {
 z.t.describe "z.git.push._current"; {
   z.t.context "呼び出した場合"; {
     z.t.it "現在のブランチをupstream付きでpushする"; {
-      z.t.mock name="z.git.branch.current._get" behavior="z.return main"
+      z.t.mock name="z.git.branch.current._get" behavior="REPLY=main"
       z.t.mock name="z.io"
       z.t.mock name="z.io.empty"
       z.t.mock name="git"

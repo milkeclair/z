@@ -86,7 +86,7 @@ z.t.describe "z.git.commit"; {
 
   z.t.context "チケット番号がなく、-ntオプションがない場合"; {
     z.t.it "コミットメッセージに現在のブランチのチケット番号を含める"; {
-      z.t.mock name="z.git.branch.current._get" behavior="z.return branch-456"
+      z.t.mock name="z.git.branch.current._get" behavior="REPLY=branch-456"
       z.t.mock name="z.git.commit._with_committer"
 
       z.git.commit "feat" "commit message"
@@ -155,7 +155,7 @@ z.t.describe "z.git.commit.tdd"; {
 
   z.t.context "チケット番号がなく、-ntオプションがない場合"; {
     z.t.it "コミットメッセージに現在のブランチのチケット番号を含める"; {
-      z.t.mock name="z.git.branch.current._get" behavior="z.return branch-456"
+      z.t.mock name="z.git.branch.current._get" behavior="REPLY=branch-456"
       z.t.mock name="z.git.commit._with_committer"
 
       z.git.commit.tdd "red" "feat" "commit message"

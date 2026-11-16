@@ -17,7 +17,7 @@ z.t.describe "z.git.pull"; {
 		z.t.it "z.git.pull._developを呼び出す"; {
 			z.t.mock name="z.git._hp.arg.has.origin" behavior="return 1"
 			z.t.mock name="z.git._hp.arg.has.develop" behavior="return 0"
-			z.t.mock name="z.git.pull._develop" behavior="z.return called"
+			z.t.mock name="z.git.pull._develop" behavior="REPLY=called"
 
 			z.git.pull dev
 
@@ -29,8 +29,8 @@ z.t.describe "z.git.pull"; {
 		z.t.it "z.git.pull._currentを呼ばない"; {
 			z.t.mock name="z.git._hp.arg.has.origin" behavior="return 1"
 			z.t.mock name="z.git._hp.arg.has.develop" behavior="return 1"
-			z.t.mock name="z.git.pull._pr" behavior="z.return called"
-			z.t.mock name="z.git.pull._current" behavior="z.return current"
+			z.t.mock name="z.git.pull._pr" behavior="REPLY=called"
+			z.t.mock name="z.git.pull._current" behavior="REPLY=current"
 
 			z.git.pull
 
@@ -43,7 +43,7 @@ z.t.describe "z.git.pull"; {
 			z.t.mock name="z.git._hp.arg.has.origin" behavior="return 1"
 			z.t.mock name="z.git._hp.arg.has.develop" behavior="return 1"
 			z.t.mock name="z.git.pull._pr" behavior="return 1"
-			z.t.mock name="z.git.pull._current" behavior="z.return called"
+			z.t.mock name="z.git.pull._current" behavior="REPLY=called"
 
 			z.git.pull
 
@@ -100,7 +100,7 @@ z.t.describe "z.git.pull._pr"; {
 
 	z.t.context "現在のブランチにpr番号が含まれない場合"; {
 		z.t.it "falseを返す"; {
-			z.t.mock name="z.git.branch.current._get" behavior="z.return main"
+			z.t.mock name="z.git.branch.current._get" behavior="REPLY=main"
 			z.t.mock name="git"
 
 			z.git.pull._pr
@@ -115,7 +115,7 @@ z.t.describe "z.git.pull._pr"; {
 z.t.describe "z.git.pull._current"; {
 	z.t.context "呼び出した場合"; {
 		z.t.it "現在のブランチへpullする"; {
-			z.t.mock name="z.git.branch.current._get" behavior="z.return main"
+			z.t.mock name="z.git.branch.current._get" behavior="REPLY=main"
 			z.t.mock name="z.io"
 			z.t.mock name="z.io.empty"
 			z.t.mock name="git"

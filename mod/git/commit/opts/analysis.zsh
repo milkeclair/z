@@ -25,5 +25,5 @@ z.git.commit._opts.extract() {
     fi
   done
 
-  z.return $valid_opts
+  REPLY=("${valid_opts[@]}")
 }

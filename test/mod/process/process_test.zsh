@@ -3,7 +3,7 @@ source ${z_main}
 z.t.describe "z.process.kill"; {
   z.t.context "対象のPIDが得られる場合"; {
     z.t.it "対象へTERMを送りPIDを返す"; {
-      z.t.mock name="z.process._pids" behavior="z.return 12345 23456"
+      z.t.mock name="z.process._pids" behavior="REPLY=(\"12345\" \"23456\")"
       z.t.mock name=kill
 
       z.process.kill port=3000
@@ -20,7 +20,7 @@ z.t.describe "z.process.kill"; {
     }
 
     z.t.it "途中で失敗しても残りに送信し成功したPIDを返す"; {
-      z.t.mock name="z.process._pids" behavior="z.return 12345 23456 34567"
+      z.t.mock name="z.process._pids" behavior="REPLY=(\"12345\" \"23456\" \"34567\")"
       z.t.mock name=kill behavior='if z.is.eq "$3" 23456; then return 1; fi'
 
       z.process.kill name=node
@@ -33,7 +33,7 @@ z.t.describe "z.process.kill"; {
     }
 
     z.t.it "送信が失敗するとfalseを返す"; {
-      z.t.mock name="z.process._pids" behavior="z.return 12345"
+      z.t.mock name="z.process._pids" behavior="REPLY=12345"
       z.t.mock name=kill behavior="return 1"
 
       z.process.kill pid=12345
@@ -47,7 +47,7 @@ z.t.describe "z.process.kill"; {
 
   z.t.context "対象を取得できない場合"; {
     z.t.it "killを実行せずREPLYを空にする"; {
-      z.t.mock name="z.process._pids" behavior="z.return 12345; return 1"
+      z.t.mock name="z.process._pids" behavior="REPLY=12345; return 1"
       z.t.mock name=kill
 
       z.process.kill port=3000

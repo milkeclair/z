@@ -16,11 +16,11 @@ z.t.describe "z.git.stats._author.header"; {
 z.t.describe "z.git.stats._author.body"; {
   z.t.context "呼び出した場合"; {
     z.t.it "authorsの統計のテーブルボディを表示する"; {
-      z.t.mock name="z.git.stats._author.names" behavior='z.return Alice Bob Charlie'
+      z.t.mock name="z.git.stats._author.names" behavior='REPLY=("Alice" "Bob" "Charlie")'
       z.t.mock \
         name="z.git.stats._commit.map" \
-        behavior='z.return "Alice:1000 500:2" "Bob:800 300:1" "Charlie:600 200:1" keep_empty=true'
-      z.t.mock name="z.str.color" behavior='z.return ""'
+        behavior='REPLY=("Alice:1000 500:2" "Bob:800 300:1" "Charlie:600 200:1")'
+      z.t.mock name="z.str.color" behavior='REPLY=""'
       z.t.mock name="z.git.stats._author.border"
       z.t.mock name="printf"
 
@@ -37,10 +37,10 @@ z.t.describe "z.git.stats._author.body"; {
 
   z.t.context "最後のエントリーでない場合"; {
     z.t.it "エントリーの後にボーダーを表示する"; {
-      z.t.mock name="z.git.stats._author.names" behavior='z.return Alice Bob'
+      z.t.mock name="z.git.stats._author.names" behavior='REPLY=("Alice" "Bob")'
       z.t.mock \
         name="z.git.stats._commit.map" \
-        behavior='z.return "Alice:1000 500:2" "Bob:800 300:1" keep_empty=true'
+        behavior='REPLY=("Alice:1000 500:2" "Bob:800 300:1")'
       z.t.mock name="z.git.stats._author.show"
       z.t.mock name="z.git.stats._author.border" behavior='result="called"'
 
@@ -53,10 +53,10 @@ z.t.describe "z.git.stats._author.body"; {
 
   z.t.context "最後のエントリーの場合"; {
     z.t.it "エントリーの後にボーダーを表示しない"; {
-      z.t.mock name="z.git.stats._author.names" behavior='z.return Alice'
+      z.t.mock name="z.git.stats._author.names" behavior='REPLY=("Alice")'
       z.t.mock \
         name="z.git.stats._commit.map" \
-        behavior='z.return "Alice:1000 500:2" keep_empty=true'
+        behavior='REPLY=("Alice:1000 500:2")'
       z.t.mock name="z.git.stats._author.show"
       z.t.mock name="z.git.stats._author.border" behavior='result="called"'
 
@@ -71,7 +71,7 @@ z.t.describe "z.git.stats._author.body"; {
 z.t.describe "z.git.stats._author.show"; {
   z.t.context "呼び出した場合"; {
     z.t.it "作者の統計をテーブルの行として表示する"; {
-      z.t.mock name="z.str.color" behavior='z.return ""'
+      z.t.mock name="z.str.color" behavior='REPLY=""'
       z.t.mock name="printf"
 
       z.git.stats._author.show \
@@ -90,7 +90,7 @@ z.t.describe "z.git.stats._author.show"; {
 
   z.t.context "authorがnullの場合"; {
     z.t.it "authorをEveryoneとして表示する"; {
-      z.t.mock name="z.str.color" behavior='z.return ""'
+      z.t.mock name="z.str.color" behavior='REPLY=""'
       z.t.mock name="printf"
 
       z.git.stats._author.show \

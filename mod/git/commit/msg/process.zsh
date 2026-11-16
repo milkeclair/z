@@ -22,5 +22,5 @@ z.git.commit._msg.build() {
   z.is.not.null $cycle && commit_message+="[$cycle] "
   commit_message+=$message
 
-  z.return $commit_message
+  REPLY=$commit_message
 }

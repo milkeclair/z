@@ -48,7 +48,7 @@ z.t.describe "z.git.merge"; {
   z.t.context "正常にマージできる場合"; {
     z.t.it "z.git.fetchを呼び出す"; {
       z.t.mock name="git"
-      z.t.mock name="z.git.fetch" behavior="z.return called"
+      z.t.mock name="z.git.fetch" behavior="REPLY=called"
 
       z.git.merge main
 
@@ -60,7 +60,7 @@ z.t.describe "z.git.merge"; {
       z.t.mock name="z.git.fetch"
       z.t.mock name="git" behavior='
         if z.str.start_with "$*" "merge main"; then
-          z.return called
+          REPLY=called
         else
           z.io "Unexpected git command: $*"
           return 1

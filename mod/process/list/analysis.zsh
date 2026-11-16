@@ -7,13 +7,13 @@
 #  z.process.list._ports
 z.process.list._ports() {
   local listing="$(lsof -nP -w -iTCP -sTCP:LISTEN -Fpn 2>&1)" lookup_status=$?
-  z.return
+  REPLY=()
   if z.int.is.eq "$lookup_status" 1 && z.is.null "$listing"; then
     return 0
   fi
   if z.int.is.not.zero "$lookup_status"; then
     z.io.error "Unable to list TCP listeners: $listing"
-    z.return
+    REPLY=()
     return 1
   fi
 
@@ -49,7 +49,7 @@ z.process.list._ports() {
 
   if z.is.true "$invalid"; then
     z.io.error "Invalid TCP listener record: $line"
-    z.return
+    REPLY=()
     return 1
   fi
 
@@ -61,5 +61,5 @@ z.process.list._ports() {
     ports[$pid]=$REPLY
   done
 
-  z.return.hash ports
+  z.hash.entries ports literal=true
 }

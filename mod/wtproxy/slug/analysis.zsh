@@ -19,5 +19,5 @@ z.wtproxy._slug() {
   value=$REPLY
   z.is.null $value && value=$z_wtproxy_default_slug
 
-  z.return $value
+  REPLY=$value
 }

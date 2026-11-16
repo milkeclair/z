@@ -20,5 +20,5 @@ z.wtproxy._config.port.env.values() {
     z.is.not.null "$value" && config[$key]=$value
   done
 
-  z.return.hash config
+  z.hash.entries config literal=true
 }

@@ -82,8 +82,8 @@ z.t.describe "z.completion.complete._command"; {
 z.t.describe "z.completion.complete._run"; {
   z.t.context "関数名補完が成功した場合"; {
     z.t.it "docs表示を実行しない"; {
-      z.t.mock name="z.completion.complete._functions" behavior="z.return functions"
-      z.t.mock name="z.completion.complete._docs" behavior="z.return docs"
+      z.t.mock name="z.completion.complete._functions" behavior="REPLY=functions"
+      z.t.mock name="z.completion.complete._docs" behavior="REPLY=docs"
 
       z.completion.complete._run
 
@@ -94,7 +94,7 @@ z.t.describe "z.completion.complete._run"; {
   z.t.context "関数名補完が失敗した場合"; {
     z.t.it "docs表示へfallbackする"; {
       z.t.mock name="z.completion.complete._functions" behavior="return 1"
-      z.t.mock name="z.completion.complete._docs" behavior="z.return docs"
+      z.t.mock name="z.completion.complete._docs" behavior="REPLY=docs"
 
       z.completion.complete._run
 
@@ -122,7 +122,7 @@ z.t.describe "z.completion.complete._functions"; {
 
   z.t.context "current wordがz関数prefixではない場合"; {
     z.t.it "falseを返す"; {
-      z.t.mock name="_describe" behavior="z.return called"
+      z.t.mock name="_describe" behavior="REPLY=called"
       words=(example)
       CURRENT=1
 
@@ -137,7 +137,7 @@ z.t.describe "z.completion.complete._functions"; {
   z.t.context "current wordがz関数prefixだが候補がない場合"; {
     z.t.it "_describeを呼ばずfalseを返す"; {
       z.t.mock name="z.completion.function._candidates" behavior="return 1"
-      z.t.mock name="_describe" behavior="z.return called"
+      z.t.mock name="_describe" behavior="REPLY=called"
       words=(z.unknown) # zls: ignore
       CURRENT=1
 
@@ -156,7 +156,7 @@ z.t.describe "z.completion.complete._docs"; {
       z_completion_docs=()
       z_completion_docs[z.arg.named]=$'get named argument value\n\n$name: name of the argument'
       z_completion_cache_ready=true
-      z.t.mock name="_message" behavior='z.return "$2"'
+      z.t.mock name="_message" behavior='REPLY="$2"'
       words=(z.arg.named "")
       CURRENT=2
 
@@ -173,7 +173,7 @@ z.t.describe "z.completion.complete._docs"; {
 
   z.t.context "wordsから関数名を取得できない場合"; {
     z.t.it "_messageを呼ばずfalseを返す"; {
-      z.t.mock name="_message" behavior='z.return "$*"'
+      z.t.mock name="_message" behavior='REPLY="$*"'
       words=(example "")
       CURRENT=2
 
@@ -189,7 +189,7 @@ z.t.describe "z.completion.complete._docs"; {
     z.t.it "_messageを呼ばずfalseを返す"; {
       z_completion_docs=()
       z_completion_cache_ready=true
-      z.t.mock name="_message" behavior='z.return "$*"'
+      z.t.mock name="_message" behavior='REPLY="$*"'
       words=(z.arg.named "")
       CURRENT=2
 

@@ -9,7 +9,7 @@
 z.wtproxy._port.worktree.key() {
   local port_index=$1
 
-  z.return "$z_wtproxy_worktree_port_key_prefix$port_index"
+  REPLY="$z_wtproxy_worktree_port_key_prefix$port_index"
 }
 
 # get the index from the worktree port key
@@ -25,10 +25,9 @@ z.wtproxy._port.worktree.index() {
 
   if z.str.is.match "$key" "^${z_wtproxy_worktree_port_key_prefix}[0-9]+$"; then
     z.str.remove.prefix "$key" "$z_wtproxy_worktree_port_key_prefix"
-    z.return $REPLY
-    return
+    return 0
   fi
 
-  z.return
+  REPLY=""
   return 1
 }

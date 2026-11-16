@@ -3,9 +3,9 @@ source ${z_main}
 z.t.describe "z.wtproxy._port.allocate"; {
   z.t.context "利用可能なworktree portがある場合"; {
     z.t.it "proxy portと使用済みportを避けて割り当てる"; {
-      z.t.mock name="z.wtproxy._port.proxy" behavior="z.return 3000"
-      z.t.mock name="z.wtproxy._port.used" behavior="z.return 3001"
-      z.t.mock name="z.wtproxy._port.proxies" behavior="z.return 3000"
+      z.t.mock name="z.wtproxy._port.proxy" behavior="REPLY=3000"
+      z.t.mock name="z.wtproxy._port.used" behavior="REPLY=3001"
+      z.t.mock name="z.wtproxy._port.proxies" behavior="REPLY=3000"
       z.t.mock name="z.wtproxy._port.is.free" behavior='
         z.is.eq "$1" 3002
       '
@@ -20,9 +20,9 @@ z.t.describe "z.wtproxy._port.allocate"; {
     z.t.it "falseを返す"; {
       local old_port_range=$z_wtproxy_port_range
       z_wtproxy_port_range=2
-      z.t.mock name="z.wtproxy._port.proxy" behavior="z.return 3000"
-      z.t.mock name="z.wtproxy._port.used" behavior="z.return"
-      z.t.mock name="z.wtproxy._port.proxies" behavior="z.return"
+      z.t.mock name="z.wtproxy._port.proxy" behavior="REPLY=3000"
+      z.t.mock name="z.wtproxy._port.used" behavior="REPLY=\"\""
+      z.t.mock name="z.wtproxy._port.proxies" behavior="REPLY=\"\""
       z.t.mock name="z.wtproxy._port.is.free" behavior="return 1"
       z.t.mock name="z.io.error"
 

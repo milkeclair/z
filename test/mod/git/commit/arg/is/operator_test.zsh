@@ -12,7 +12,7 @@ z.t.describe "z.git.commit._arg.is.enough"; {
 
     z.t.it "helpを表示する"; {
       z.t.mock name="z.io.line"
-      z.t.mock name="z.git.commit.help" behavior="z.return called"
+      z.t.mock name="z.git.commit.help" behavior="REPLY=called"
 
       z.git.commit._arg.is.enough
 

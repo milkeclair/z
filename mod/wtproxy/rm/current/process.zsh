@@ -45,5 +45,5 @@ z.wtproxy.rm._current.locked() {
     removed_project $removed_project
     entries_count ${#z_wtproxy_state_paths[@]}
   )
-  z.return.hash result
+  z.hash.entries result literal=true
 }

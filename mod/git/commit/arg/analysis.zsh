@@ -37,5 +37,5 @@ z.git.commit._arg.extract() {
     ((idx++))
   done
 
-  z.return keep_empty=true "${result[@]}"
+  REPLY=("${result[@]}")
 }

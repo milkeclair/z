@@ -6,7 +6,7 @@
 # example:
 #  z.job.file._root
 z.job.file._root() {
-  z.return "/tmp/z/job/$$"
+  REPLY="/tmp/z/job/$$"
 }
 
 # get the z.job jobs directory
@@ -18,7 +18,7 @@ z.job.file._root() {
 #  z.job.file._jobs
 z.job.file._jobs() {
   z.job.file._root
-  z.return "$REPLY/jobs"
+  REPLY="$REPLY/jobs"
 }
 
 # get a z.job directory path
@@ -34,7 +34,7 @@ z.job.file._dir() {
   z.is.null "$id" && return 1
 
   z.job.file._jobs
-  z.return "$REPLY/$id"
+  REPLY="$REPLY/$id"
 }
 
 # get a z.job file path
@@ -54,5 +54,5 @@ z.job.file._path() {
   z.is.null "$name" && return 1
 
   z.job.file._dir id=$id
-  z.return "$REPLY/$name"
+  REPLY="$REPLY/$name"
 }

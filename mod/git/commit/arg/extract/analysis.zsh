@@ -17,5 +17,5 @@ z.git.commit._arg.extract.opts() {
     ((idx++))
   done
 
-  z.return $opts
+  REPLY=("${opts[@]}")
 }

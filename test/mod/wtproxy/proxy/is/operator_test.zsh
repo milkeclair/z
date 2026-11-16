@@ -6,7 +6,7 @@ z.t.describe "z.wtproxy._proxy.is.running"; {
       local pid_file=/tmp/z_t/wtproxy_pid/project.pid
       z.dir.make path=${pid_file:h}
       print -r -- 12345 > $pid_file
-      z.t.mock name="z.wtproxy._config.value" behavior="z.return $pid_file"
+      z.t.mock name="z.wtproxy._config.value" behavior="REPLY=$pid_file"
       z.t.mock name="z.wtproxy._proxy.is.pid" behavior="return 0"
 
       z.wtproxy._proxy.is.running

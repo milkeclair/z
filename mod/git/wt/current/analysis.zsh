@@ -11,7 +11,7 @@ z.git.wt.current.root() {
   local exit_status=$?
   z.int.is.not.zero $exit_status && return 1
 
-  z.return "${worktree_path:A}"
+  REPLY="${worktree_path:A}"
 }
 
 # get current git worktree common git directory
@@ -27,5 +27,5 @@ z.git.wt.current.common_dir() {
   local exit_status=$?
   z.int.is.not.zero $exit_status && return 1
 
-  z.return "${common_dir:A}"
+  REPLY="${common_dir:A}"
 }

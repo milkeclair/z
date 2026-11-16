@@ -3,7 +3,7 @@ source ${z_main}
 z.t.describe "z.git.commit._tag.is.valid"; {
   z.t.context "有効なタグが渡された場合"; {
     z.t.it "trueを返す"; {
-      z.t.mock name="z.git.commit._tag.list" behavior="z.return 'feat fix docs'"
+      z.t.mock name="z.git.commit._tag.list" behavior="REPLY=('feat fix docs')"
 
       z.git.commit._tag.is.valid "feat"
 
@@ -15,7 +15,7 @@ z.t.describe "z.git.commit._tag.is.valid"; {
     z.t.it "falseを返す"; {
       z.t.mock name="z.io.line"
       z.t.mock name="z.git.commit.help"
-      z.t.mock name="z.git.commit._tag.list" behavior="z.return 'feat fix docs'"
+      z.t.mock name="z.git.commit._tag.list" behavior="REPLY=('feat fix docs')"
 
       z.git.commit._tag.is.valid "invalid_tag"
 

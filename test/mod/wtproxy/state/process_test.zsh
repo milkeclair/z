@@ -30,7 +30,7 @@ z.t.describe "z.wtproxy._state.load"; {
       z.dir.make path=${state_file:h}
       print -r -- "active ${(qqq)worktree_path}" > $state_file
       print -r -- "entry ${(qqq)worktree_path} ${(qqq)branch} ${(qqq)compose} worktree_port_1=3001" >> $state_file
-      z.t.mock name="z.wtproxy._config.value" behavior="z.return $state_file"
+      z.t.mock name="z.wtproxy._config.value" behavior="REPLY=$state_file"
 
       z.wtproxy._state.load
 
@@ -56,7 +56,7 @@ z.t.describe "z.wtproxy._state.load"; {
       print -r -- "active ${(qqq)worktree_path_a}" > $state_file
       print -r -- "entry ${(qqq)worktree_path_a} ${(qqq)branch_a} ${(qqq)compose_a} worktree_port_1=3001 worktree_port_2=5433 worktree_port_3=5174" >> $state_file
       print -r -- "entry ${(qqq)worktree_path_b} ${(qqq)branch_b} ${(qqq)compose_b} worktree_port_1=3002 worktree_port_2=5434 worktree_port_3=5175" >> $state_file
-      z.t.mock name="z.wtproxy._config.value" behavior="z.return $state_file"
+      z.t.mock name="z.wtproxy._config.value" behavior="REPLY=$state_file"
 
       local result=$(z.wtproxy._state.load)
 
@@ -79,9 +79,9 @@ z.t.describe "z.wtproxy._state.save"; {
       z.wtproxy._state.port.set $worktree_path worktree_port_1 3001
       z.t.mock name="z.wtproxy._config" behavior="
         local -A config=(state_dir $state_dir state_file $state_file)
-        z.return.hash config
+        z.hash.entries config literal=true
       "
-      z.t.mock name="z.wtproxy._port.keys" behavior="z.return worktree_port_1"
+      z.t.mock name="z.wtproxy._port.keys" behavior="REPLY=worktree_port_1"
 
       z.wtproxy._state.save
       local content=$(cat $state_file)
@@ -99,10 +99,10 @@ z.t.describe "z.wtproxy._state.with_lock"; {
       local lock_file=$state_dir/project.lock
       z.t.mock name="z.wtproxy._config" behavior="
         local -A config=(state_dir $state_dir lock_file $lock_file)
-        z.return.hash config
+        z.hash.entries config literal=true
       "
       wtproxy_lock_test_fn() {
-        z.return "$1:$2"
+        REPLY="$1:$2"
       }
 
       z.wtproxy._state.with_lock wtproxy_lock_test_fn left right

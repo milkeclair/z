@@ -28,14 +28,14 @@ z.pj.remove._select() {
   z.arr.count "${names[@]}"
   if z.int.is.zero $REPLY; then
     z.io "No projects registered." >&2
-    z.return
+    REPLY=""
     return 0
   fi
 
   z.pj.remove._menu "${names[@]}"
   z.io.oneline "Project number (empty to cancel): " >&2
   if ! z.io.read || z.is.null "$REPLY"; then
-    z.return
+    REPLY=""
     return 0
   fi
 
@@ -50,7 +50,7 @@ z.pj.remove._select() {
     ((index++))
   done
   z.io.error "Invalid project number: $selection"
-  z.return
+  REPLY=""
   return 1
 }
 

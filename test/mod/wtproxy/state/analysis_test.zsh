@@ -8,7 +8,7 @@ z.t.describe "z.wtproxy._state.entry"; {
       z_wtproxy_state_branch[$worktree_path]=feat/example
       z_wtproxy_state_compose[$worktree_path]=project_example
       z.wtproxy._state.port.set $worktree_path worktree_port_1 3001
-      z.t.mock name="z.wtproxy._port.keys" behavior="z.return worktree_port_1"
+      z.t.mock name="z.wtproxy._port.keys" behavior="REPLY=worktree_port_1"
 
       z.wtproxy._state.entry $worktree_path
       local -A entry=("${(@)REPLY}")

@@ -5,9 +5,9 @@ z.t.describe "z.git.stats._commit.map"; {
     z.t.it "authorごとのcommit_count, inserted, deletedを含むエントリーの配列を返す"; {
       z.t.mock name="z.git.stats._commit.details" behavior='
         if z.is.eq "$author" "Alice"; then
-          z.return "1000 500"
+          REPLY="1000 500"
         elif z.is.eq "$author" "Bob"; then
-          z.return "800 300"
+          REPLY="800 300"
         else
           z.io "Unexpected author: $author"
           return 1
@@ -15,9 +15,9 @@ z.t.describe "z.git.stats._commit.map"; {
       '
       z.t.mock name="z.git.stats._commit.count" behavior='
         if z.is.eq "$author" "Alice"; then
-          z.return 50
+          REPLY=50
         elif z.is.eq "$author" "Bob"; then
-          z.return 40
+          REPLY=40
         else
           z.io "Unexpected author: $author"
           return 1
@@ -34,9 +34,9 @@ z.t.describe "z.git.stats._commit.map"; {
     z.t.it "そのauthorのエントリーは返さない"; {
       z.t.mock name="z.git.stats._commit.details" behavior='
         if z.is.eq "$author" "Alice"; then
-          z.return "1000 500"
+          REPLY="1000 500"
         elif z.is.eq "$author" "Bob"; then
-          z.return "800 300"
+          REPLY="800 300"
         else
           z.io "Unexpected author: $author"
           return 1
@@ -44,9 +44,9 @@ z.t.describe "z.git.stats._commit.map"; {
       '
       z.t.mock name="z.git.stats._commit.count" behavior='
         if z.is.eq "$author" "Alice"; then
-          z.return 50
+          REPLY=50
         elif z.is.eq "$author" "Bob"; then
-          z.return 0
+          REPLY=0
         else
           z.io "Unexpected author: $author"
           return 1
@@ -70,7 +70,7 @@ z.t.describe "z.git.stats._commit.map"; {
   z.t.context "exclude_extsとexclude_dirsを渡した場合"; {
     z.t.it "z.git.stats._commit.detailsにexclude_extsとexclude_dirsを渡す"; {
       z.t.mock name="z.git.stats._commit.details"
-      z.t.mock name="z.git.stats._commit.count" behavior="z.return 1"
+      z.t.mock name="z.git.stats._commit.count" behavior="REPLY=1"
 
       z.git.stats._commit.map authors="Alice" exclude_exts="md txt" exclude_dirs="docs tests"
 

@@ -16,5 +16,5 @@ z.git.commit._tag.list() {
     test
   )
 
-  z.return $tags
+  REPLY=("${tags[@]}")
 }

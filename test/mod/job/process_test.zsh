@@ -6,7 +6,7 @@ z.t.describe "z.job.run"; {
       z.job.file._root
       local root=$REPLY
       z.dir.remove path=$root
-      z.t.mock name="z.job.run._spawn" behavior="z.return 999999"
+      z.t.mock name="z.job.run._spawn" behavior="REPLY=999999"
 
       z.job.run name=example command=z.is.not.null # zls: ignore
       local first_id=$REPLY
@@ -42,7 +42,7 @@ z.t.describe "z.job.run"; {
       local root=$REPLY
       z.dir.remove path=$root
       z.t.mock name="z.job.precmd._register" behavior="return 1"
-      z.t.mock name="z.job.run._spawn" behavior="z.return 999999"
+      z.t.mock name="z.job.run._spawn" behavior="REPLY=999999"
 
       z.job.run name=example command=z.is.not.null # zls: ignore
 

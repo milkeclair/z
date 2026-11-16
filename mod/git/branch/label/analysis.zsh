@@ -12,7 +12,7 @@ z.git.branch.label.current() {
   z.int.is.not.zero $exit_status && return 1
 
   if z.is.not.null $branch; then
-    z.return $branch
+    REPLY=$branch
     return
   fi
 
@@ -21,7 +21,7 @@ z.git.branch.label.current() {
   exit_status=$?
   z.int.is.not.zero $exit_status && return 1
 
-  z.return "detached-$head"
+  REPLY="detached-$head"
 }
 
 # get branch label for a path
@@ -40,7 +40,7 @@ z.git.branch.label.for() {
   z.int.is.not.zero $exit_status && return 1
 
   if z.is.not.null $branch; then
-    z.return $branch
+    REPLY=$branch
     return
   fi
 
@@ -49,5 +49,5 @@ z.git.branch.label.for() {
   exit_status=$?
   z.int.is.not.zero $exit_status && return 1
 
-  z.return "detached-$head"
+  REPLY="detached-$head"
 }

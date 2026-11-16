@@ -10,11 +10,11 @@ z.completion.docs._get() {
   local function_name=$1
 
   if z.int.is.positive ${+z_completion_docs[$function_name]}; then
-    z.return "${z_completion_docs[$function_name]}"
+    REPLY="${z_completion_docs[$function_name]}"
     return
   fi
 
-  z.return
+  REPLY=""
   return 1
 }
 
@@ -61,5 +61,5 @@ z.completion.docs._format() {
     fi
   done
 
-  z.return "${(F)formatted}"
+  REPLY="${(F)formatted}"
 }

@@ -21,10 +21,10 @@ z.git._hp.ticket() {
   local last_part=$parts[-1]
 
   if z.int.is.match $last_part; then
-    z.return $last_part
+    REPLY=$last_part
   elif z.int.is.match $first_part; then
-    z.return $first_part
+    REPLY=$first_part
   else
-    z.return ""
+    REPLY=""
   fi
 }

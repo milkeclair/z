@@ -6,11 +6,11 @@
 # example:
 #  z.wtproxy._config.file.path
 z.wtproxy._config.file.path() {
-  z.wtproxy._config.file.default_project || { z.return; return; }
+  z.wtproxy._config.file.default_project || { REPLY=""; return; }
   local project=$REPLY
   local config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
 
-  z.return "$config_home/$z_wtproxy_config_dir_name/$project.$z_wtproxy_config_file_extension"
+  REPLY="$config_home/$z_wtproxy_config_dir_name/$project.$z_wtproxy_config_file_extension"
 }
 
 # get the configuration key for an environment variable name
@@ -24,7 +24,7 @@ z.wtproxy._config.file.path() {
 z.wtproxy._config.file.key() {
   local env_name=$1
 
-  z.wtproxy._port.proxy.env.index $env_name || { z.return; return; }
+  z.wtproxy._port.proxy.env.index $env_name || { REPLY=""; return; }
   local port_index=$REPLY
 
   z.wtproxy._port.proxy.key $port_index
@@ -71,7 +71,7 @@ z.wtproxy._config.file.line() {
 
   z.is.null $key && return 1
 
-  z.return "$key" "$value" keep_empty=true
+  REPLY=("$key" "$value")
 }
 
 # get wtproxy configuration values from the configuration file
@@ -87,7 +87,7 @@ z.wtproxy._config.file.values() {
   z.wtproxy._config.file.path
   local file=$REPLY
   if z.is.null $file || z.file.not.exists $file; then
-    z.return.hash config
+    z.hash.entries config literal=true
     return
   fi
 
@@ -97,7 +97,7 @@ z.wtproxy._config.file.values() {
     config[$entry[1]]=$entry[2]
   done < "$file"
 
-  z.return.hash config
+  z.hash.entries config literal=true
 }
 
 # infer the default wtproxy project name
@@ -109,7 +109,7 @@ z.wtproxy._config.file.values() {
 #  z.wtproxy._config.file.default_project
 z.wtproxy._config.file.default_project() {
   z.git.wt.current.common_dir || {
-    z.return
+    REPLY=""
     return 1
   }
   local common_dir=$REPLY
