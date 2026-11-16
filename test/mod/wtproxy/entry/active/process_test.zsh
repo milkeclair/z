@@ -12,7 +12,7 @@ z.t.describe "z.wtproxy._entry.active.locked"; {
       z.t.mock name="z.wtproxy._state.path.has" behavior="return 0"
       z.t.mock name="z.wtproxy._state.entry" behavior='
         local -A entry=(path "$1" branch feat/example compose_project_name project_feat)
-        z.return.hash entry
+        z.hash.entries entry
       '
 
       z.wtproxy._entry.active.locked

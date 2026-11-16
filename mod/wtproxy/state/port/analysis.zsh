@@ -11,7 +11,7 @@ z.wtproxy._state.port.state_key() {
   local worktree_path=$1
   local port_key=$2
 
-  z.return "${worktree_path}|${port_key}"
+  REPLY="${worktree_path}|${port_key}"
 }
 
 # get a stored worktree port
@@ -30,5 +30,5 @@ z.wtproxy._state.port.get() {
   z.wtproxy._state.port.state_key "$worktree_path" "$port_key"
   local state_key=$REPLY
 
-  z.return $z_wtproxy_state_port[$state_key]
+  REPLY=$z_wtproxy_state_port[$state_key]
 }

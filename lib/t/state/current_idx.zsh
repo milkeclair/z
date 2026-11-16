@@ -10,7 +10,7 @@ typeset -A z_t_current_idx=([describe]=0 [context]=0 [it]=0)
 #  z.t._state.current_idx "describe"  #=> 0
 z.t._state.current_idx() {
   local context=$1
-  z.return ${z_t_current_idx[$context]}
+  REPLY=${z_t_current_idx[$context]}
 }
 
 # set the current index for a context
@@ -58,5 +58,5 @@ z.t._state.current_idx.add() {
     ;;
   esac
 
-  z.return $idx
+  REPLY=$idx
 }

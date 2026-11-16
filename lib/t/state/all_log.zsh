@@ -8,7 +8,7 @@ z_t_states[all_log]="${Z_TEST_ALL_LOG:-false}"
 # example:
 #  z.t._state.all_log  #=> "true"
 z.t._state.all_log() {
-  z.return ${z_t_states[all_log]}
+  REPLY=${z_t_states[all_log]}
 }
 
 # set the all_log state

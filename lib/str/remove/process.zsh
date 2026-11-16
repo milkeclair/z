@@ -13,9 +13,9 @@ z.str.remove.prefix() {
   local prefix=$2
 
   if z.str.start_with "$str" "$prefix"; then
-    z.return "${str[${#prefix} + 1,-1]}"
+    REPLY="${str[${#prefix} + 1,-1]}"
   else
-    z.return "$str"
+    REPLY="$str"
   fi
 }
 
@@ -34,8 +34,8 @@ z.str.remove.suffix() {
   local suffix=$2
 
   if z.str.end_with "$str" "$suffix"; then
-    z.return "${str[1,${#str} - ${#suffix}]}"
+    REPLY="${str[1,${#str} - ${#suffix}]}"
   else
-    z.return "$str"
+    REPLY="$str"
   fi
 }

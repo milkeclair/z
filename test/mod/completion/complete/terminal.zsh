@@ -51,7 +51,7 @@ z92_terminal_start() {
   zpty -w completion_terminal 'source "$Z_ROOT/main.zsh" && source "$Z_ROOT/test/mod/completion/complete/terminal.zsh" initialize && z.io Z92_READY'
   z92_terminal_read "$terminal_fd" $'\r\nZ92_READY\r\n' || return 1
 
-  z.return "$terminal_fd"
+  REPLY="$terminal_fd"
 }
 
 # read terminal output until a marker arrives within five seconds
@@ -80,7 +80,7 @@ z92_terminal_read() {
     done
   done
 
-  z.return "$output"
+  REPLY="$output"
 }
 
 # complete one input using isolated aliases, styles and command search paths

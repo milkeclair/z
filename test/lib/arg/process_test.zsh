@@ -103,18 +103,21 @@ z.t.describe "z.arg.named"; {
   }
 
   z.t.context "重複した名前と後続のdefault指定がある場合"; {
-    z.t.it "最初の名前付き値がnullなら最後のdefaultを使う"; {
+    z.t.it "最初に指定されたnull文字列を返す"; {
       z.arg.named name name=null name=second default=first default=last
-      z.t.expect.reply last
+
+      z.t.expect.reply "null"
     }
 
-    z.t.it "最初の名前付き値がfalseなら数値の1を返す"; {
+    z.t.it "最初の名前付き値がfalseなら文字列のまま返す"; {
       z.arg.named name name=false name=second default=last
-      z.t.expect.reply 1
+
+      z.t.expect.reply "false"
     }
 
     z.t.it "default自体を取得する場合も既存の既定値規約に従う"; {
       z.arg.named default default=first default=last
+
       z.t.expect.reply last
     }
   }
@@ -122,10 +125,41 @@ z.t.describe "z.arg.named"; {
   z.t.context "名前に等号や括弧を含む場合"; {
     z.t.it "名前全体の接頭辞を除き、値の等号を保持する"; {
       z.arg.named "a=b" "a=b=value=tail" default=fallback
+
       z.t.expect.reply "value=tail"
 
       z.arg.named "key[0]" "key[0]=value" default=fallback
+
       z.t.expect.reply "value"
+    }
+  }
+
+  z.t.context "文字列の名前付き引数"; {
+    z.t.it "trueやnullを含む値をそのまま返す"; {
+      local value
+      for value in true false null void 0 1 '/tmp/a b\c'; do
+        z.arg.named name "name=$value"
+
+        z.t.expect.reply "$value"
+      done
+    }
+
+    z.t.it "最初の完全一致を使い値の等号を残す"; {
+      z.arg.named name user_name=other 'name=a=b c' name=second
+
+      z.t.expect.reply 'a=b c'
+    }
+  }
+
+  z.t.context "値がない場合"; {
+    z.t.it "未指定と明示された空文字を空で返す"; {
+      z.arg.named name other=value
+      local missing=$REPLY
+      z.arg.named name name= name=second
+      local empty=$REPLY
+
+      z.t.expect.is.null "$missing"
+      z.t.expect.is.null "$empty"
     }
   }
 }
@@ -136,9 +170,10 @@ z.t.describe "z.arg.parse"; {
       local -a input_args=("first" "delimiter=," "other=two words" "" "--" "named=payload")
       local -A parsed_named=([delimiter]=" ")
       local -a parsed_args=("old")
-      local REPLY="unchanged"
+      REPLY="unchanged"
 
       z.arg.parse input=input_args named=parsed_named rest=parsed_args && local result_reply=$REPLY
+
       z.t.expect.status.is.true
       z.t.expect.is.null "$result_reply"
       z.t.expect "${parsed_named[delimiter]}" ","
@@ -175,8 +210,8 @@ z.t.describe "z.arg.parse"; {
       z.arg.parse input=input_args named=parsed_named rest=parsed_args
 
       z.t.expect "${parsed_named[delimiter]}" " "
-      z.t.expect "${parsed_named[flag]}" 0
-      z.t.expect.is.null "${parsed_named[empty]}"
+      z.t.expect "${parsed_named[flag]}" "true"
+      z.t.expect "${parsed_named[empty]}" "null"
       z.t.expect "${#parsed_args[@]}" 0
     }
   }
@@ -208,16 +243,16 @@ z.t.describe "z.arg.parse"; {
   }
 
   z.t.context "値に真偽値、null、等号を含む場合"; {
-    z.t.it "名前付きの値だけを既存の変換規約に従って扱う"; {
+    z.t.it "名前付きの値と残りの値を文字列のまま保持する"; {
       local -a input_args=("yes=true" "no=false" "empty=null" "text=a=b" "true" "null" "")
       local -A parsed_named=([yes]="" [no]="" [empty]="fallback" [text]="")
       local -a parsed_args=()
 
       z.arg.parse input=input_args named=parsed_named rest=parsed_args
 
-      z.t.expect "${parsed_named[yes]}" 0
-      z.t.expect "${parsed_named[no]}" 1
-      z.t.expect "${parsed_named[empty]}" "fallback"
+      z.t.expect "${parsed_named[yes]}" "true"
+      z.t.expect "${parsed_named[no]}" "false"
+      z.t.expect "${parsed_named[empty]}" "null"
       z.t.expect "${parsed_named[text]}" "a=b"
       z.t.expect "${#parsed_args[@]}" 3
       z.t.expect "${parsed_args[1]}" "true"
@@ -255,6 +290,7 @@ z.t.describe "z.arg.parse"; {
         local -A outer_named=([key]="")
         local -a outer_rest=()
         z.arg.parse input=outer_input named=outer_named rest=outer_rest
+
         z.t.expect "${outer_named[key]}" "inner"
         z.t.expect "${outer_rest[1]}" "inner-item"
       }
@@ -269,13 +305,15 @@ z.t.describe "z.arg.parse"; {
       local -a input_args=("key=value")
       local -A parsed_named=([key]="default")
       local -a parsed_args=("old")
-      local REPLY="unchanged"
 
       z.arg.parse input=input_args named=parsed_named 2>/dev/null
+
       z.t.expect.status.is.false
       z.arg.parse input=input_args named=parsed_named unknown=parsed_args 2>/dev/null
+
       z.t.expect.status.is.false
       z.arg.parse input=missing_array named=parsed_named rest=parsed_args 2>/dev/null
+
       z.t.expect.status.is.false
 
       z.t.expect "${parsed_named[key]}" "default"
@@ -309,7 +347,7 @@ z.t.describe "z.arg.parse"; {
 
       z.arg.parse input=input_args named=parsed_named rest=parsed_args
 
-      z.t.expect "${parsed_named[true]}" 1
+      z.t.expect "${parsed_named[true]}" "false"
       z.t.expect "${parsed_args[1]}" "item"
     }
   }

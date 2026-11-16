@@ -36,7 +36,7 @@ z.install.mod.list() {
     z.dir.remove path="$work_dir" || return 1
   }
 
-  z.return
+  REPLY=""
 }
 
 # fetch the selected distribution's mod directory into a work directory
@@ -64,7 +64,7 @@ z.install.mod._fetch() {
     return 1
   fi
 
-  z.return "$roots[1]/mod"
+  REPLY="$roots[1]/mod"
 }
 
 # install or update every distribution mod after one confirmation
@@ -118,6 +118,6 @@ z.install.mod.all() {
       z.dir.remove path="$work_dir" || return 1
     fi
 
-    z.return
+    REPLY=""
   }
 }

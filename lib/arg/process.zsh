@@ -11,15 +11,15 @@
 #  z.arg.as name=$1 as="--version|-v" return=1 #=> REPLY=1
 #  z.arg.as name=$1 as="-h|--help" #=> REPLY=""
 z.arg.as() {
-  local args=($@)
-  z.arg.named name $args && local name=$REPLY
-  z.arg.named.shift name $args && args=($REPLY)
-  z.arg.named as $args && local as=$REPLY
-  z.arg.named.shift as $args && args=($REPLY)
-  z.arg.named return $args && local return=$REPLY
+  local args=("$@")
+  z.arg.named name "${args[@]}" && local name=$REPLY
+  z.arg.named.shift name "${args[@]}" && args=("${REPLY[@]}")
+  z.arg.named as "${args[@]}" && local as=$REPLY
+  z.arg.named.shift as "${args[@]}" && args=("${REPLY[@]}")
+  z.arg.named return "${args[@]}" && local return=$REPLY
 
   z.str.split str=$as
-  local split_as=($REPLY[@])
+  local split_as=("${REPLY[@]}")
   local matched=false
 
   for alias in $split_as; do
@@ -27,7 +27,7 @@ z.arg.as() {
   done
 
   z.is.eq $matched true &&
-    z.return $return || z.return
+    REPLY=$return || REPLY=""
 }
 
 # get named argument value
@@ -44,12 +44,13 @@ z.arg.as() {
 z.arg.named() {
   local name=$1
   shift 2>/dev/null
-  local args=($@)
+  local args=("$@")
   local default=""
   local value=""
   local found=false
+  local arg
 
-  for arg in $args; do
+  for arg in "${args[@]}"; do
     if z.str.start_with "$arg" "default="; then
       z.str.remove.prefix "$arg" "default="
       default=$REPLY
@@ -60,7 +61,7 @@ z.arg.named() {
     fi
   done
 
-  z.return ${value:-$default}
+  REPLY=${value:-$default}
 }
 
 # parse named arguments and collect the remaining arguments
@@ -78,9 +79,9 @@ z.arg.named() {
 #  z.arg.parse input=input_args named=parsed_named rest=parsed_args
 z.arg.parse() {
   local arg
-  z.arg.named input $@ && local input_name=$REPLY
-  z.arg.named named $@ && local named_name=$REPLY
-  z.arg.named rest $@ && local rest_name=$REPLY
+  z.arg.named input "$@" && local input_name=$REPLY
+  z.arg.named named "$@" && local named_name=$REPLY
+  z.arg.named rest "$@" && local rest_name=$REPLY
 
   z.guard; {
     if ! z.var.exists "$input_name" || ! z.var.exists "$named_name" ||
@@ -90,19 +91,16 @@ z.arg.parse() {
     fi
   }
 
-  z.var.get $input_name literal=true && local args=("${REPLY[@]}")
-  z.hash.entries $named_name literal=true && local -A values=("${REPLY[@]}")
-  z.hash.keys values literal=true && local names=("${REPLY[@]}")
+  z.var.get $input_name && local args=("${REPLY[@]}")
+  z.hash.entries $named_name && local -A values=("${REPLY[@]}")
+  z.hash.keys values && local names=("${REPLY[@]}")
   local accepted_names=()
   local remaining=()
   local -A found
   local name
 
-  z.group "preparing defaults"; {
+  z.group "collecting argument names"; {
     for name in "${names[@]}"; do
-      z.return "${values[$name]}"
-      values[$name]=$REPLY
-
       z.is.null "$name" && continue
       z.str.includes "$name" "=" && continue
       accepted_names+=("$name")
@@ -133,10 +131,10 @@ z.arg.parse() {
   }
 
   z.group "writing results"; {
-    z.hash.entries values literal=true
+    z.hash.entries values
     set -A "$named_name" "${REPLY[@]}"
     set -A "$rest_name" "${remaining[@]}"
   }
 
-  z.return
+  REPLY=""
 }

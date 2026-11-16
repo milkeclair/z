@@ -7,7 +7,7 @@ z.t.describe "z.wtproxy.rm._current.entry.locked"; {
       z.t.mock name="z.wtproxy._state.path.has" behavior="return 0"
       z.t.mock name="z.wtproxy._state.entry" behavior='
         local -A entry=(path "$1")
-        z.return.hash entry
+        z.hash.entries entry
       '
 
       z.wtproxy.rm._current.entry.locked /tmp/worktree

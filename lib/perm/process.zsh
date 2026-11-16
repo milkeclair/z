@@ -94,16 +94,16 @@ z.perm._owner_spec() {
   z.arg.named group $@ default="" && local group=$REPLY
 
   if z.is.null "$owner" && z.is.null "$group"; then
-    z.return
+    REPLY=""
     return 1
   fi
 
   if z.is.not.null "$owner" && z.is.not.null "$group"; then
-    z.return "$owner:$group"
+    REPLY="$owner:$group"
   elif z.is.not.null "$owner"; then
-    z.return "$owner"
+    REPLY="$owner"
   else
-    z.return ":$group"
+    REPLY=":$group"
   fi
 }
 
@@ -124,7 +124,7 @@ z.perm._owner_spec() {
 z.perm._mode() {
   z.arg.named mode $@ default="" && local mode=$REPLY
   if z.is.not.null "$mode"; then
-    z.return "$mode"
+    REPLY="$mode"
     return 0
   fi
 
@@ -136,7 +136,7 @@ z.perm._mode() {
   done
 
   if z.is.false $has_mode_parts; then
-    z.return
+    REPLY=""
     return 1
   fi
 
@@ -151,7 +151,7 @@ z.perm._mode() {
   z.perm._mode_digit "$mode_other" || return 1
   local other_digit=$REPLY
 
-  z.return "${owner_digit}${group_digit}${other_digit}"
+  REPLY="${owner_digit}${group_digit}${other_digit}"
 }
 
 # convert permission names to chmod digit
@@ -189,5 +189,5 @@ z.perm._mode_digit() {
     esac
   done
 
-  z.return $digit
+  REPLY=$digit
 }

@@ -8,7 +8,7 @@ typeset z_t_logs=()
 # example:
 #  z.t._state.logs  #=> ("log1" "log2" ...)
 z.t._state.logs() {
-  z.return ${z_t_logs[@]}
+  REPLY=("${z_t_logs[@]}")
 }
 
 # add a log entry
@@ -33,8 +33,8 @@ z.t._state.logs.add() {
 #  z.t._state.logs.context "0"  #=> "log entry at index 0"
 z.t._state.logs.context() {
   local context=$1
-  z.is.null $context && { z.return ""; return 0; }
-  z.return ${z_t_logs[$context]:-""}
+  z.is.null $context && { REPLY=""; return 0; }
+  REPLY=${z_t_logs[$context]:-""}
 }
 
 # set a log entry by context

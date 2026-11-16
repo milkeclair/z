@@ -8,7 +8,7 @@ z_t_states[failures]=0
 # example:
 #  z.t._state.failures  #=> 2
 z.t._state.failures() {
-  z.return ${z_t_states[failures]}
+  REPLY=${z_t_states[failures]}
 }
 
 # increment the number of failed tests by 1

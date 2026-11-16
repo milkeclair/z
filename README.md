@@ -122,6 +122,9 @@ The following rules apply under lib.
   - Modify the data.
   - If the function has a return value, it is placed in `REPLY` (not `return`).
 
+Return values are assigned directly to `REPLY`. Strings stay unchanged, and array
+results retain their elements, including empty strings.
+
 ### Modules
 
 - arg

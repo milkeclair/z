@@ -11,7 +11,7 @@ z.job.collect._one() {
   z.is.null "$dir" && return 1
 
   z.job.meta._read dir="$dir" || {
-    z.return
+    REPLY=""
     return 0
   }
   local id=$z_job_id
@@ -23,11 +23,11 @@ z.job.collect._one() {
     local pid=""
     z.file.read path="$dir/pid" && pid=$REPLY
     if z.is.eq "$job_status" queued && z.is.null "$pid"; then
-      z.return
+      REPLY=""
       return 0
     fi
     if z.is.not.null "$pid" && kill -0 "$pid" >/dev/null 2>&1; then
-      z.return
+      REPLY=""
       return 0
     fi
 
@@ -40,14 +40,14 @@ z.job.collect._one() {
   fi
 
   if z.is.not.eq "$job_status" "success" && z.is.not.eq "$job_status" "failure"; then
-    z.return
+    REPLY=""
     return 0
   fi
 
   local failed=false
   z.job.collect._callback dir="$dir" status="$job_status" || failed=true
   z.dir.remove path="$dir"
-  z.return "$id"
+  REPLY="$id"
   z.is.true "$failed" && return 1
   return 0
 }

@@ -11,5 +11,5 @@ z.git.commit.tdd._cycle.list() {
     green
   )
 
-  z.return $tdd_cycles
+  REPLY=("${tdd_cycles[@]}")
 }

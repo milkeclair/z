@@ -11,13 +11,14 @@
 z.arg.named.shift() {
   local name=$1
   shift 2>/dev/null
-  local args=($@)
+  local args=("$@")
   local result=()
+  local arg
 
-  for arg in $args; do
+  for arg in "${args[@]}"; do
     z.str.start_with "$arg" "${name}=" && continue
-    result+=($arg)
+    result+=("$arg")
   done
 
-  z.return ${result[@]}
+  REPLY=("${result[@]}")
 }

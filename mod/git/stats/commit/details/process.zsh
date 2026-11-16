@@ -30,5 +30,5 @@ z.git.stats._commit.details.excludes() {
   # e.g. /(node_modules|dist)/
   local exclude_dirs_pattern="($exclude_dirs)/"
 
-  z.return "$exclude_exts_pattern $exclude_dirs_pattern"
+  REPLY="$exclude_exts_pattern $exclude_dirs_pattern"
 }

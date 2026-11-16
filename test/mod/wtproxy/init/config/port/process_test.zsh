@@ -33,7 +33,7 @@ z.t.describe "z.wtproxy.init._config.port.keys"; {
     z.t.it "default keyをindex順で返す"; {
       z.t.mock name="z.wtproxy._config.port.env.values" behavior='
         local -A config=()
-        z.return.hash config
+        z.hash.entries config
       '
 
       z.wtproxy.init._config.port.keys
@@ -46,7 +46,7 @@ z.t.describe "z.wtproxy.init._config.port.keys"; {
     z.t.it "default keyと追加keyをindex順で返す"; {
       z.t.mock name="z.wtproxy._config.port.env.values" behavior='
         local -A config=()
-        z.return.hash config
+        z.hash.entries config
       '
 
       z.wtproxy.init._config.port.keys proxy_port_4=8080 proxy_port_5=9000
@@ -59,7 +59,7 @@ z.t.describe "z.wtproxy.init._config.port.keys"; {
     z.t.it "重複を除外する"; {
       z.t.mock name="z.wtproxy._config.port.env.values" behavior='
         local -A config=()
-        z.return.hash config
+        z.hash.entries config
       '
 
       z.wtproxy.init._config.port.keys proxy_port_4=8080 proxy_port_4=9000
@@ -72,7 +72,7 @@ z.t.describe "z.wtproxy.init._config.port.keys"; {
     z.t.it "proxy port keyだけを返す"; {
       z.t.mock name="z.wtproxy._config.port.env.values" behavior='
         local -A config=()
-        z.return.hash config
+        z.hash.entries config
       '
 
       z.wtproxy.init._config.port.keys force=true worktree_port_4=8080 other=value proxy_port_x=9000 proxy_port_4=8080
@@ -88,7 +88,7 @@ z.t.describe "z.wtproxy.init._config.port.keys"; {
           proxy_port_2 15432
           proxy_port_6 8080
         )
-        z.return.hash config
+        z.hash.entries config
       '
 
       z.wtproxy.init._config.port.keys
@@ -103,7 +103,7 @@ z.t.describe "z.wtproxy.init._config.port.keys"; {
         local -A config=(
           proxy_port_6 8080
         )
-        z.return.hash config
+        z.hash.entries config
       '
 
       z.wtproxy.init._config.port.keys proxy_port_4=4000

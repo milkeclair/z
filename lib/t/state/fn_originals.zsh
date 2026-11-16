@@ -10,7 +10,7 @@ typeset -A z_t_fn_source_originals=()
 #  z.t._state.fn_originals  #=> ("func1" "func2" ...)
 z.t._state.fn_originals() {
   z.hash.keys z_t_fn_set_originals
-  z.return ${REPLY[@]}
+  return 0
 }
 
 # save original z_fn_set and z_fn_source

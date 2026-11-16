@@ -31,5 +31,5 @@ z.wtproxy._port.keys.from_config() {
     keys+=($REPLY)
   done
 
-  z.return ${keys[@]}
+  REPLY=("${keys[@]}")
 }

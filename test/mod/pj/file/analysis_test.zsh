@@ -115,7 +115,7 @@ z.t.describe "z.pj.file._directory"; {
       local XDG_CONFIG_HOME="$fixture_root/read"
       z.dir.make path="$XDG_CONFIG_HOME/z/pj"
       local directory='/tmp/project with spaces\literal $value'
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/example" content="$directory"$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/example" content="$directory"$'\n'
 
       z.pj.file._directory example
 
@@ -150,8 +150,8 @@ z.t.describe "z.pj.file._directory"; {
       z.dir.make path="$fixture_root"
       local XDG_CONFIG_HOME="$fixture_root/invalid"
       z.dir.make path="$XDG_CONFIG_HOME/z/pj"
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/relative" content=relative$'\n'
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/multiple" content=$'/tmp/one\n/tmp/two'$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/relative" content=relative$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/multiple" content=$'/tmp/one\n/tmp/two'$'\n'
       z.t.mock name=z.io.error
 
       z.pj.file._directory relative
@@ -171,7 +171,7 @@ z.t.describe "z.pj.file._directory"; {
       z.dir.make path="$fixture_root"
       local XDG_CONFIG_HOME="$fixture_root/unreadable"
       z.dir.make path="$XDG_CONFIG_HOME/z/pj"
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/example" content=/tmp$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/example" content=/tmp$'\n'
       chmod 000 "$XDG_CONFIG_HOME/z/pj/example"
 
       z.pj.file._directory example 2>/dev/null
@@ -192,7 +192,7 @@ z.t.describe "z.pj.file._directory"; {
       z.dir.make path="$fixture_root"
       local XDG_CONFIG_HOME="$fixture_root/symlink"
       z.dir.make path="$XDG_CONFIG_HOME/z/pj"
-      z.file.write.literal path="$fixture_root/outside" content=/tmp$'\n'
+      z.file.write path="$fixture_root/outside" content=/tmp$'\n'
       ln -s "$fixture_root/outside" "$XDG_CONFIG_HOME/z/pj/example"
       z.t.mock name=z.io.error
 

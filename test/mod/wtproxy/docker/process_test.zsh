@@ -3,8 +3,8 @@ source ${z_main}
 z.t.describe "z.wtproxy._docker.prune"; {
   z.t.context "compose project名を指定した場合"; {
     z.t.it "imageとvolumeを削除する"; {
-      z.t.mock name="z.wtproxy._docker.image.ids" behavior="z.return image_a image_b"
-      z.t.mock name="z.wtproxy._docker.volume.names" behavior="z.return volume_a"
+      z.t.mock name="z.wtproxy._docker.image.ids" behavior="REPLY=(\"image_a\" \"image_b\")"
+      z.t.mock name="z.wtproxy._docker.volume.names" behavior="REPLY=volume_a"
       z.t.mock name="z.wtproxy._docker.image.remove" behavior=":"
       z.t.mock name="z.wtproxy._docker.volume.remove" behavior=":"
 
@@ -19,7 +19,7 @@ z.t.describe "z.wtproxy._docker.prune"; {
 
     z.t.it "image一覧の取得に失敗した場合は削除しない"; {
       z.t.mock name="z.wtproxy._docker.image.ids" behavior="return 1"
-      z.t.mock name="z.wtproxy._docker.volume.names" behavior="z.return volume_a"
+      z.t.mock name="z.wtproxy._docker.volume.names" behavior="REPLY=volume_a"
       z.t.mock name="z.wtproxy._docker.image.remove" behavior=":"
       z.t.mock name="z.wtproxy._docker.volume.remove" behavior=":"
 
@@ -35,7 +35,7 @@ z.t.describe "z.wtproxy._docker.prune"; {
     }
 
     z.t.it "volume一覧の取得に失敗した場合は削除しない"; {
-      z.t.mock name="z.wtproxy._docker.image.ids" behavior="z.return image_a"
+      z.t.mock name="z.wtproxy._docker.image.ids" behavior="REPLY=image_a"
       z.t.mock name="z.wtproxy._docker.volume.names" behavior="return 1"
       z.t.mock name="z.wtproxy._docker.image.remove" behavior=":"
       z.t.mock name="z.wtproxy._docker.volume.remove" behavior=":"

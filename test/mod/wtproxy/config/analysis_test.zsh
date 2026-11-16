@@ -6,9 +6,9 @@ z.t.describe "z.wtproxy._config"; {
       local XDG_STATE_HOME=/tmp/z_t/state_home
       z.t.mock name="z.wtproxy._config.values" behavior='
         local -A config=(proxy_port_1 3000)
-        z.return.hash config
+        z.hash.entries config
       '
-      z.t.mock name="z.wtproxy._config.file.default_project" behavior="z.return sample"
+      z.t.mock name="z.wtproxy._config.file.default_project" behavior="REPLY=sample"
 
       z.wtproxy._config
       local -A config=("${(@)REPLY}")
@@ -25,7 +25,7 @@ z.t.describe "z.wtproxy._config"; {
     z.t.it "falseを返す"; {
       z.t.mock name="z.wtproxy._config.values" behavior='
         local -A config=()
-        z.return.hash config
+        z.hash.entries config
       '
       z.t.mock name="z.wtproxy._config.file.default_project" behavior="return 1"
       z.t.mock name="z.io.error"
@@ -44,7 +44,7 @@ z.t.describe "z.wtproxy._config.value"; {
     z.t.it "configの値を返す"; {
       z.t.mock name="z.wtproxy._config" behavior='
         local -A config=(state_file /tmp/sample.state)
-        z.return.hash config
+        z.hash.entries config
       '
 
       z.wtproxy._config.value state_file
@@ -56,9 +56,9 @@ z.t.describe "z.wtproxy._config.value"; {
   z.t.context "実際のconfigを使う場合"; {
     z.t.it "pid file pathを返す"; {
       local XDG_STATE_HOME=/tmp/z_t/state_home
-      z.t.mock name="z.wtproxy._config.file.default_project" behavior="z.return sample"
-      z.t.mock name="z.wtproxy._config.file.values" behavior="local -A config=(); z.return.hash config"
-      z.t.mock name="z.wtproxy._config.port.env.values" behavior="local -A config=(proxy_port_3 5173); z.return.hash config"
+      z.t.mock name="z.wtproxy._config.file.default_project" behavior="REPLY=sample"
+      z.t.mock name="z.wtproxy._config.file.values" behavior="local -A config=(); z.hash.entries config"
+      z.t.mock name="z.wtproxy._config.port.env.values" behavior="local -A config=(proxy_port_3 5173); z.hash.entries config"
 
       z.wtproxy._config.value pid_file
 
@@ -72,11 +72,11 @@ z.t.describe "z.wtproxy._config.values"; {
     z.t.it "default, file, envの順で上書きする"; {
       z.t.mock name="z.wtproxy._config.file.values" behavior='
         local -A config=(proxy_port_1 3100 proxy_port_4 8080)
-        z.return.hash config
+        z.hash.entries config
       '
       z.t.mock name="z.wtproxy._config.port.env.values" behavior='
         local -A config=(proxy_port_1 3200)
-        z.return.hash config
+        z.hash.entries config
       '
 
       z.wtproxy._config.values

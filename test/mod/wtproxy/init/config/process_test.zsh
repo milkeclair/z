@@ -16,8 +16,8 @@ z.t.describe "z.wtproxy.init._config.file"; {
   z.t.context "config fileが存在しない場合"; {
     z.t.it "config fileを作成する"; {
       local config_file=/tmp/z_t/wtproxy_init_config/sample.env
-      z.t.mock name="z.wtproxy._config.file.path" behavior="z.return $config_file"
-      z.t.mock name="z.wtproxy.init._config.content" behavior="z.return 'Z_WTPROXY_PROXY_PORT_1=3000'"
+      z.t.mock name="z.wtproxy._config.file.path" behavior="REPLY=$config_file"
+      z.t.mock name="z.wtproxy.init._config.content" behavior="REPLY='Z_WTPROXY_PROXY_PORT_1=3000'"
 
       local result=$(z.wtproxy.init._config.file)
       local content=$(cat $config_file)
@@ -32,7 +32,7 @@ z.t.describe "z.wtproxy.init._config.file"; {
       local config_file=/tmp/z_t/wtproxy_init_config_existing/sample.env
       z.dir.make path=${config_file:h}
       z.file.write path=$config_file content=exists
-      z.t.mock name="z.wtproxy._config.file.path" behavior="z.return $config_file"
+      z.t.mock name="z.wtproxy._config.file.path" behavior="REPLY=$config_file"
       z.t.mock name="z.io.error"
 
       z.wtproxy.init._config.file
@@ -48,8 +48,8 @@ z.t.describe "z.wtproxy.init._config.file"; {
       local config_file=/tmp/z_t/wtproxy_init_config_force/sample.env
       z.dir.make path=${config_file:h}
       z.file.write path=$config_file content=exists
-      z.t.mock name="z.wtproxy._config.file.path" behavior="z.return $config_file"
-      z.t.mock name="z.wtproxy.init._config.content" behavior="z.return 'Z_WTPROXY_PROXY_PORT_1=3100'"
+      z.t.mock name="z.wtproxy._config.file.path" behavior="REPLY=$config_file"
+      z.t.mock name="z.wtproxy.init._config.content" behavior="REPLY='Z_WTPROXY_PROXY_PORT_1=3100'"
 
       local result=$(z.wtproxy.init._config.file force=true)
       local content=$(cat $config_file)
@@ -61,7 +61,7 @@ z.t.describe "z.wtproxy.init._config.file"; {
 
   z.t.context "config file pathが取得できない場合"; {
     z.t.it "falseを返す"; {
-      z.t.mock name="z.wtproxy._config.file.path" behavior="z.return"
+      z.t.mock name="z.wtproxy._config.file.path" behavior="REPLY=\"\""
       z.t.mock name="z.io.error"
 
       z.wtproxy.init._config.file

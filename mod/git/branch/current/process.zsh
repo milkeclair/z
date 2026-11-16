@@ -7,8 +7,8 @@
 #   z.git.branch.current._get #=> "main"
 z.git.branch.current._get() {
   if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    z.return $(git branch --show-current)
+    REPLY=$(git branch --show-current)
   else
-    z.return
+    REPLY=""
   fi
 }

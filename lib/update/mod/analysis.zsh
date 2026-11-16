@@ -10,30 +10,30 @@
 z.update.mod._resolve() {
   z.arg.named source "$@"
   local source_dir=$REPLY
-  z.dir.exists "$source_dir" || { z.return; return 1; }
+  z.dir.exists "$source_dir" || { REPLY=""; return 1; }
 
   z.arg.named.shift source "$@"
   local requested=(${(@)REPLY})
-  z.is.null "$requested" && z.return && return 0
+  z.is.null "$requested" && REPLY="" && return 0
 
   local -A z_mod_names=()
   local -A z_mod_depends=()
   local z_mod_current=$requested[1]
 
   for recipe in "$source_dir"/mod/*/mod.zsh(N); do
-    source "$recipe" || { z.return; return 1; }
+    source "$recipe" || { REPLY=""; return 1; }
   done
 
   local resolved=()
 
   for requested_mod in "${requested[@]}"; do
     if z.mod.is.registered "$requested_mod"; then
-      z.mod.dependencies.resolve "$requested_mod" || { z.return; return 1; }
+      z.mod.dependencies.resolve "$requested_mod" || { REPLY=""; return 1; }
       resolved+=(${(@)REPLY})
     elif z.dir.exists "$source_dir/mod/$requested_mod"; then
       resolved+=("$requested_mod")
     else
-      z.return
+      REPLY=""
       return 1
     fi
   done
@@ -42,8 +42,8 @@ z.update.mod._resolve() {
   local ordered=(${(@)REPLY})
 
   for dependency in "${ordered[@]}"; do
-    z.dir.exists "$source_dir/mod/$dependency" || { z.return; return 1; }
+    z.dir.exists "$source_dir/mod/$dependency" || { REPLY=""; return 1; }
   done
 
-  z.return "${ordered[@]}"
+  REPLY=("${ordered[@]}")
 }

@@ -8,7 +8,7 @@ z_t_states[tests]=0
 # example:
 #  z.t._state.tests  #=> 10
 z.t._state.tests() {
-  z.return $z_t_states[tests]
+  REPLY=$z_t_states[tests]
 }
 
 # increment the number of tests executed by 1

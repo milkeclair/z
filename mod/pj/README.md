@@ -8,9 +8,7 @@ Register named project directories and open them in Visual Studio Code.
 z.install.mod pj
 ```
 
-The mod uses the core z library and the `code` command on PATH. Update the core
-with `z.update` before installing this mod when it does not yet provide
-`z.arg.named.literal`, `z.file.write.literal` and `z.io.literal`.
+The mod uses the core z library and the `code` command on PATH.
 
 ## Commands
 

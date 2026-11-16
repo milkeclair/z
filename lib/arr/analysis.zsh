@@ -9,5 +9,5 @@
 z.arr.count() {
   local list=("$@")
 
-  z.return ${#list[@]}
+  REPLY=${#list[@]}
 }

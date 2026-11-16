@@ -17,7 +17,7 @@ z.t.describe "z.pj.add._write"; {
     z.t.it "既存内容を維持して失敗する"; {
       local XDG_CONFIG_HOME=/tmp/z_t/pj_write_existing
       z.dir.make path="$XDG_CONFIG_HOME/z/pj"
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/example" content=before
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/example" content=before
       z.t.mock name=z.io.error
 
       z.pj.add._write name=example dir=/tmp

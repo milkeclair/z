@@ -6,5 +6,5 @@
 # example:
 #  z.status #=> returns the exit status of the last command
 z.status() {
-  z.return $?
+  REPLY=$?
 }

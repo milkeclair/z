@@ -9,7 +9,7 @@ typeset z_t_mock_call_sep=$'\x1e'
 # example:
 #  z.t._state.mock_calls  #=> ("call1" "call2" ...)
 z.t._state.mock_calls() {
-  z.return ${z_t_mock_calls[@]}
+  REPLY=("${z_t_mock_calls[@]}")
 }
 
 # get mock calls by function name
@@ -21,7 +21,7 @@ z.t._state.mock_calls() {
 # example:
 #  z.t._state.mock_calls.context "my_func"  #=> "mock calls for my_func"
 z.t._state.mock_calls.context() {
-  z.return ${z_t_mock_calls[$1]}
+  REPLY=${z_t_mock_calls[$1]}
 }
 
 # add a mock call

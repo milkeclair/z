@@ -8,5 +8,5 @@ z_t_states[file_path]=$1
 # example:
 #  z.t._state.file_path  #=> "/path/to/test_file.zsh"
 z.t._state.file_path() {
-  z.return ${z_t_states[file_path]}
+  REPLY=${z_t_states[file_path]}
 }

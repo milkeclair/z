@@ -35,7 +35,7 @@ z.job.run._prepare() {
   z.file.make path="$dir/stdout"
   z.file.make path="$dir/stderr"
 
-  z.return "$id" "$dir"
+  REPLY=("$id" "$dir")
 }
 
 # spawn a job child process
@@ -57,7 +57,7 @@ z.job.run._spawn() {
   zsh -f -c 'source "$1"; z.job.run._child id="$2" dir="$3"' \
     z_job_child "$z_root/main.zsh" "$id" "$dir" \
     > "$dir/stdout" 2> "$dir/stderr" &!
-  z.return "$!"
+  REPLY="$!"
 }
 
 # execute a job command in the child process

@@ -141,7 +141,7 @@ z.t._test_root_from_pwd() {
     return 1
   fi
 
-  z.return "$abs_current_dir"
+  REPLY="$abs_current_dir"
 }
 
 # extract options from arguments
@@ -193,7 +193,7 @@ z.t._extract_options() {
     result+=($test_names)
   fi
 
-  z.return ${result[@]}
+  REPLY=("${result[@]}")
 }
 
 # remove temporary test directory /tmp/z_t
@@ -226,7 +226,7 @@ z.t._setup_temp_dirs() {
   typeset -g z_t_count_dir="/tmp/z_t_count_$$"
   z.dir.make path=$z_t_count_dir
 
-  z.return $compact_dir
+  REPLY=$compact_dir
 }
 
 # internal: display compact mode results

@@ -21,7 +21,7 @@ z.wtproxy.init._config.port.value() {
     value=$z_wtproxy_default_config_values[$key]
   fi
 
-  z.return "$value"
+  REPLY="$value"
 }
 
 # get configuration keys for the initial file
@@ -73,5 +73,5 @@ z.wtproxy.init._config.port.keys() {
     result+=($REPLY)
   done
 
-  z.return ${result[@]}
+  REPLY=("${result[@]}")
 }
