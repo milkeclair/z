@@ -267,12 +267,11 @@ z.t.describe "z.arg.parse"; {
     }
   }
 
-  z.t.context "API引数や変数の宣言が不正な場合"; {
-    z.t.it "引数不足、未知の指定、未宣言、異なる型を拒否して出力を保持する"; {
+  z.t.context "API引数や変数の宣言が不足する場合"; {
+    z.t.it "引数不足、未知の指定、未宣言を拒否して出力を保持する"; {
       local -a input_args=("key=value")
       local -A parsed_named=([key]="default")
       local -a parsed_args=("old")
-      local scalar="scalar"
       local REPLY="unchanged"
 
       z.arg.parse input=input_args named=parsed_named 2>/dev/null
@@ -281,30 +280,12 @@ z.t.describe "z.arg.parse"; {
       local unknown_code=$?
       z.arg.parse input=missing_array named=parsed_named rest=parsed_args 2>/dev/null
       local undeclared_code=$?
-      z.arg.parse input=scalar named=parsed_named rest=parsed_args 2>/dev/null
-      local type_code=$?
 
       z.t.expect "$missing_code" 1
       z.t.expect "$unknown_code" 1
       z.t.expect "$undeclared_code" 1
-      z.t.expect "$type_code" 1
       z.t.expect "${parsed_named[key]}" "default"
       z.t.expect "${parsed_args[1]}" "old"
-    }
-
-    z.t.it "読み取り専用の出力配列を拒否する"; {
-      () {
-        local -a input_args=("key=value")
-        local -A parsed_named=([key]="default")
-        local -ar parsed_args=("old")
-
-        z.arg.parse input=input_args named=parsed_named rest=parsed_args 2>/dev/null
-        local result_code=$?
-
-        z.t.expect "$result_code" 1
-        z.t.expect "${parsed_named[key]}" "default"
-        z.t.expect "${parsed_args[1]}" "old"
-      }
     }
   }
 
@@ -323,6 +304,19 @@ z.t.describe "z.arg.parse"; {
       z.t.expect "${parsed_args[3]}" ""
       z.t.expect "${parsed_args[4]}" "input=data"
       z.t.expect "${parsed_args[5]}" 'x=$(print literal)'
+    }
+  }
+
+  z.t.context "宣言した名前自体が真偽値風の場合"; {
+    z.t.it "キーを変換せずに名前付き引数を取得する"; {
+      local -a input_args=("true=false" "item")
+      local -A parsed_named=([true]="fallback")
+      local -a parsed_args=()
+
+      z.arg.parse input=input_args named=parsed_named rest=parsed_args
+
+      z.t.expect "${parsed_named[true]}" 1
+      z.t.expect "${parsed_args[1]}" "item"
     }
   }
 

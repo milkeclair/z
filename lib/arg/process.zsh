@@ -69,7 +69,7 @@ z.arg.named() {
 # $named: name of a writable associative array with accepted names and defaults
 # $rest: name of a writable indexed array for remaining arguments
 # REPLY: null
-# return: 0 on success, 1 for missing arrays or invalid array types
+# return: 0 on success, 1 for missing arrays
 #
 # Use distinct array names, separate from REPLY and this function's locals.
 # The first occurrence wins; all occurrences of accepted names are removed.
@@ -89,51 +89,60 @@ z.arg.parse() {
   z.arg.named rest $@ && local rest_name=$REPLY
 
   z.guard; {
-    if z.str.is.not.match "${(Pt)input_name}" '^array' ||
-      z.str.includes "${(Pt)input_name}" special ||
-      z.str.is.not.match "${(Pt)named_name}" '^association(-local)?$' ||
-      z.str.is.not.match "${(Pt)rest_name}" '^array(-local)?$'; then
-      z.io.error "z.arg.parse: input/rest must be arrays and named an associative array"
+    if ! z.var.exists "$input_name" || ! z.var.exists "$named_name" ||
+      ! z.var.exists "$rest_name"; then
+      z.io.error "z.arg.parse: input, named and rest arrays are required"
       return 1
     fi
   }
 
-  local args=("${(@P)input_name}")
-  local -A values=("${(@Pkv)named_name}")
+  z.var.get $input_name literal=true && local args=("${REPLY[@]}")
+  z.hash.entries $named_name literal=true && local -A values=("${REPLY[@]}")
+  z.hash.keys values literal=true && local names=("${REPLY[@]}")
+  local accepted_names=()
   local remaining=()
-  local names=()
-  local -A found=()
+  local -A found
   local name
 
-  for name in "${(@k)values}"; do
-    z.is.null "$name" && continue
-    z.str.includes "$name" "=" && continue
-    names+=("$name")
-  done
-
-  for arg in "${args[@]}"; do
+  z.group "preparing defaults"; {
     for name in "${names[@]}"; do
-      if z.str.start_with "$arg" "${name}="; then
+      z.return "${values[$name]}"
+      values[$name]=$REPLY
+
+      z.is.null "$name" && continue
+      z.str.includes "$name" "=" && continue
+      accepted_names+=("$name")
+    done
+  }
+
+  z.group "parsing arguments"; {
+    for arg in "${args[@]}"; do
+      local matched=false
+
+      for name in "${accepted_names[@]}"; do
+        z.str.start_with "$arg" "${name}=" || continue
+
         if ! z.is.true ${found[$name]}; then
           z.str.remove.prefix "$arg" "${name}="
-          z.is.null "$REPLY" && z.return "${values[$name]}"
-          values[$name]=$REPLY
+          local value=$REPLY
+          z.is.null "$value" && value=${values[$name]}
+          values[$name]=$value
           found[$name]=true
         fi
-        continue 2
-      fi
+
+        matched=true
+        break
+      done
+
+      z.is.false $matched && remaining+=("$arg")
     done
+  }
 
-    remaining+=("$arg")
-  done
+  z.group "writing results"; {
+    z.hash.entries values literal=true
+    set -A "$named_name" "${REPLY[@]}"
+    set -A "$rest_name" "${remaining[@]}"
+  }
 
-  for name in "${(@k)values}"; do
-    z.is.true ${found[$name]} && continue
-    z.return "${values[$name]}"
-    values[$name]=$REPLY
-  done
-
-  set -A "$named_name" "${(@kv)values}"
-  set -A "$rest_name" "${remaining[@]}"
   z.return
 }

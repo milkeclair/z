@@ -145,8 +145,8 @@ APIs, `REPLY` is used as a working return value and is empty after success.
 
 Use distinct, declared arrays with names separate from `REPLY` and the parser's
 local variables, such as the names in the example. The output arrays must be plain
-writable arrays of the shown types. Missing arrays or invalid array types return
-status 1 before either output is changed.
+writable arrays of the shown types; declare them as shown before calling the
+parser. Missing arrays return status 1 before either output is changed.
 
 `z.arr.join` uses this parser while retaining its existing argument and return
 conversion behavior.
