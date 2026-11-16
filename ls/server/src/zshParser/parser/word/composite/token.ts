@@ -8,6 +8,13 @@ export function isProcessSubstitutionStart(tokens: readonly Token[], index: numb
   const token = tokens[index]; const next = tokens[index + 1];
   return Boolean(token && ['<', '>', '='].includes(token.value) && next?.operatorKind === 'leftParen' && areAdjacentTokens(token, next));
 }
+/** A balanced leading parenthesis can be a glob word after a command name. */
+export function isParenthesizedWordStart(tokens: readonly Token[], index: number): boolean {
+  return tokens[index]?.operatorKind === 'leftParen' && findNestedOperatorEnd({
+    tokens, index, depth: 0, startOperatorKind: 'leftParen', endOperatorKind: 'rightParen',
+  }) !== null;
+}
+
 export function readWordTokens({
   tokens, index, collected,
 }: { readonly tokens: readonly Token[]; readonly index: number; readonly collected: readonly Token[] }): TokenReadResult {
@@ -18,6 +25,11 @@ export function readWordTokens({
     if (isProcessSubstitutionStart(tokens, cursor)) {
       const end = findNestedOperatorEnd({ tokens, index: cursor + 1, depth: 0, startOperatorKind: 'leftParen', endOperatorKind: 'rightParen' })
         ?? Math.max(cursor + 1, tokens.length - 2);
+      parts.push(...tokens.slice(cursor, end + 1)); cursor = end + 1;
+    } else if (token.operatorKind === 'leftParen' && isParenthesizedWordStart(tokens, cursor)) {
+      const end = findNestedOperatorEnd({ tokens, index: cursor, depth: 0,
+        startOperatorKind: 'leftParen', endOperatorKind: 'rightParen' });
+      if (end === null) break;
       parts.push(...tokens.slice(cursor, end + 1)); cursor = end + 1;
     } else if (token.kind === 'word') {
       parts.push(token);

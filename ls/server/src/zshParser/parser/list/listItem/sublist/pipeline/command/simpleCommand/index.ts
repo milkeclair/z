@@ -1,4 +1,4 @@
-import { isProcessSubstitutionStart } from '../../../../../../word/composite/token';
+import { isProcessSubstitutionStart, isParenthesizedWordStart } from '../../../../../../word/composite/token';
 import type { SimpleCommandNode, WordNode, AssignNode, RedirectNode } from '../../../../../../../ast';
 import type { Token } from '../../../../../../../lexer';
 import { isCommandBoundary } from '../../../../../../boundary';
@@ -62,7 +62,8 @@ function readSimpleCommandAccumulator(
     const token = currentToken(current.state);
     if (current.state.stopped || isCommandBoundary(token) || token.kind === 'comment') return { ...current, arguments: args, prefixAssignments: assignments, redirects };
     if (isRedirectStart(current.state)) parts = readRedirect(current);
-    else if (token.kind === 'word' || isProcessSubstitutionStart(current.state.tokens, current.state.index)) parts = readSimpleCommandWord(current, token);
+    else if (token.kind === 'word' || isProcessSubstitutionStart(current.state.tokens, current.state.index) ||
+      parts.commandName !== null && isParenthesizedWordStart(current.state.tokens, current.state.index)) parts = readSimpleCommandWord(current, token);
     else parts = readUnexpectedToken(current, token);
     args.push(...parts.arguments); assignments.push(...parts.prefixAssignments); redirects.push(...parts.redirects);
   }
