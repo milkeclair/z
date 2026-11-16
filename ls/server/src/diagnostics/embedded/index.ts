@@ -6,6 +6,7 @@ import type { Diagnostics } from '../type';
 import type { ResolutionContext, CallScope } from '../calls';
 import { analyzeCalls } from '../calls';
 import { collectFileFacts } from '../facts';
+import { classCommands } from '../classes';
 import { DiagnosticSeverity } from '../../vscode_type';
 import { protocolRange } from '../../connection/ast/cursor';
 import { codeArguments } from './arguments';
@@ -69,7 +70,8 @@ export function embeddedCallDiagnostics(snapshot: FunctionSnapshot, file: ZshFil
         const facts = collectFileFacts(child);
         const declarations = facts.declarations;
         const inherited = program.context;
-        const childContext: ResolutionContext = { ...inherited,
+        const classFiles = [...inherited.classFiles, child.classes];
+        const childContext: ResolutionContext = { ...inherited, classFiles, classCommands: classCommands(classFiles),
           aliases: new Set([...inherited.aliases, ...declarations.aliases]),
           globalAliases: new Set([...inherited.globalAliases, ...declarations.globalAliases]),
           suffixAliases: new Set([...inherited.suffixAliases, ...declarations.suffixAliases]),

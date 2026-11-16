@@ -8,8 +8,8 @@ import { protocolRange } from '../connection/ast/cursor';
 import { literalWord } from '../refreshFunctions/word';
 import { formatDiagnostics } from './format';
 import { moduleBuiltins } from './modules';
-import { createClassState, classDeclaration } from './classes';
-import type { ClassDeclarations } from './classes';
+import { classMethodAt } from '../zshHydrator';
+import type { ClassFileHydration } from '../zshHydrator';
 
 export type Declarations = {
   readonly aliases: ReadonlySet<string>; readonly globalAliases: ReadonlySet<string>;
@@ -18,7 +18,7 @@ export type Declarations = {
 };
 export type FileFacts = {
   readonly calls: readonly SimpleCommandNode[]; readonly base: readonly Diagnostics[];
-  readonly declarations: Declarations; readonly classes: ClassDeclarations;
+  readonly declarations: Declarations; readonly classes: ClassFileHydration;
 };
 type Usage = {
   readonly definition: FunctionDefinitionNode; readonly depth: number;
@@ -93,7 +93,6 @@ function declarations(command: SimpleCommandNode, sets: {
 export function collectFileFacts(file: ZshFileHydration): FileFacts {
   const calls: SimpleCommandNode[] = [];
   const usages: Usage[] = [];
-  let classes = createClassState();
   const active: Usage[] = [];
   const sets = { aliases: new Set<string>(), globalAliases: new Set<string>(),
     suffixAliases: new Set<string>(), autoloads: new Set<string>(), builtins: new Set<string>() };
@@ -108,9 +107,8 @@ export function collectFileFacts(file: ZshFileHydration): FileFacts {
     if (node.kind === 'simpleCommand') {
       if (node.commandName) calls.push(node);
       declarations(node, sets);
-      classes = classDeclaration(node, depth, current?.definition, classes);
     }
-    if (!current || (classes.pending?.kind === 'method' && classes.pending.definition.scope === current.definition)) return;
+    if (!current || classMethodAt(file.classes, current.definition, node.range.start.offset)) return;
     if (node.kind === 'simpleCommand' && node.commandName && literalWord(node.commandName.word) === 'z.arg.named') {
       const word = node.arguments[0];
       const name = word && literalWord(word);
@@ -139,5 +137,5 @@ export function collectFileFacts(file: ZshFileHydration): FileFacts {
     code: diagnostic.kind, range: protocolRange(diagnostic.range), message: diagnostic.message, source: 'z-ls/parser' });
   for (const diagnostic of file.hydrationDiagnostics) base.push({ severity: DiagnosticSeverity.Warning,
     code: diagnostic.kind, range: protocolRange(diagnostic.range), message: diagnostic.message, source: 'z-ls/documentation' });
-  return { calls, base, declarations: sets, classes };
+  return { calls, base, declarations: sets, classes: file.classes };
 }

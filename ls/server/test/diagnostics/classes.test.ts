@@ -9,6 +9,9 @@ import { refreshDiagnosticSnapshot } from '../../src/diagnostics/snapshot';
 import { readShellEnvironment, emptyShellEnvironment } from '../../src/diagnostics/environment';
 import type { ShellEnvironment } from '../../src/diagnostics/environment';
 import { validateTextDocument } from '../../src/diagnostics/main';
+import { createZshFileHydration } from '../../src/zshHydrator';
+import { classCommands, sameClassFiles } from '../../src/diagnostics/classes';
+import { analyzeCalls } from '../../src/diagnostics/calls';
 
 const roots: string[] = [];
 const environmentRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'z-class-diag-shell-'));
@@ -36,7 +39,7 @@ function fixture(content: string, definitions: string) {
 const semantic = (items: Readonly<ReturnType<typeof validateTextDocument>>) =>
   items.filter(item => ['missing-positional-argument', 'missing-named-argument', 'undefined-command'].includes(item.code ?? ''));
 
-const classApi = ['z.cls.draw() { : }', 'z.cls.attr() { : }', 'z.cls.fn() { : }',
+const classApi = ['z.cls.draw() { : }', 'z.cls.attr() { : }', '# $1: method name', '# $2? [code]: inline body', 'z.cls.fn() { : \"$@\" }',
   'z.cls.fn.done() { : }', 'z.cls.drew() { : }', 'z.cls.new() { : }'].join('\n') + '\n';
 const counterClass = [
   'z.cls.draw Counter; {',
@@ -49,6 +52,16 @@ const counterClass = [
 ].join('\n');
 
 describe('class DSL command diagnostics', () => {
+  test('inlineメソッド本体はmainのcode引数診断で元位置に報告する', () => {
+    const source = counterClass.replace('z.cls.fn increment\n    (( ++count ))\n  z.cls.fn.done',
+      "z.cls.fn increment 'missing_inline_method'");
+    const f = fixture('', classApi + source);
+    const diagnostics = f.diagnostics.files.get(f.definitionUri)?.items.filter(item => item.code === 'undefined-command') ?? [];
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0].message).toContain('missing_inline_method');
+    expect(diagnostics[0].range.start.line).toBe(10);
+  });
+
   test('別ファイルのクラスから生成されるメソッドと属性を認識し、タイプミスは診断する', () => {
     const f = fixture('z.cls.new Counter counter\ncounter.increment\ncounter.count.get\ncounter.count.set 3\ncounter.typo\n',
       classApi + counterClass);
@@ -61,7 +74,7 @@ describe('class DSL command diagnostics', () => {
     const source = counterClass.replace('(( ++count ))', 'missing_inside_method');
     const f = fixture('', classApi + source);
     expect(semantic(f.diagnostics.files.get(f.definitionUri)?.items ?? [])).toMatchObject([{
-      code: 'undefined-command', range: { start: { line: 9, character: 4 } },
+      code: 'undefined-command', range: { start: { line: 11, character: 4 } },
     }]);
   });
 
@@ -105,5 +118,63 @@ describe('scoped class references', () => {
       counterClass.replace('(( ++count ))', 'z.arg.named option "$@"') + '}\n';
     const f = fixture('', classApi + 'z.arg.named() { : }\n' + source);
     expect(f.diagnostics.files.get(f.definitionUri)?.items.filter(item => item.code === 'unused-argument')).toHaveLength(1);
+  });
+});
+
+describe('hydrated class command targets', () => {
+  test('別ファイルのclassとinstanceを実際のメンバーノードへ結び付ける', () => {
+    const definitions = createZshFileHydration({ sourceFile: '/defs.zsh', file: 'defs.zsh', content: counterClass });
+    const bindings = createZshFileHydration({ sourceFile: '/caller.zsh', file: 'caller.zsh', content: 'z.cls.new Counter object\n' });
+    const targets = classCommands([definitions.classes, bindings.classes]);
+    const method = targets.get('object.increment')?.[0];
+    expect(method?.definition).toBe(definitions.classes.definitions[0]);
+    expect(method?.member).toBe(definitions.classes.definitions[0].methods[0]);
+    expect(method?.instance).toBe(bindings.classes.instances[0]);
+    expect(method?.operation).toBe('method');
+    expect(targets.get('object.count.set')?.[0].member).toBe(definitions.classes.definitions[0].attributes[0]);
+  });
+
+  test('未公開とabortのclassからはターゲットを生成しない', () => {
+    for (const ending of ['', 'z.cls.abort\n']) {
+      const file = createZshFileHydration({ sourceFile: 'x', file: 'x',
+        content: 'z.cls.draw Open\nz.cls.attr count 0\n' + ending + 'z.cls.new Open object\n' });
+      expect(classCommands([file.classes]).size).toBe(0);
+    }
+  });
+
+  test('同じASTを再利用し、変更したclassの参照は古いcontextへ残さない', () => {
+    const file = createZshFileHydration({ sourceFile: 'x', file: 'x', content: counterClass });
+    const next = createZshFileHydration({ sourceFile: 'x', file: 'x', content: counterClass.replace('increment', 'reset') });
+    expect(sameClassFiles([file.classes], [file.classes])).toBe(true);
+    expect(sameClassFiles([file.classes], [next.classes])).toBe(false);
+    const empty = createZshFileHydration({ sourceFile: 'y', file: 'y', content: 'print one\n' });
+    expect(sameClassFiles([empty.classes], [])).toBe(true);
+  });
+
+  test('呼出解析がclassメンバーの解決先を名前の除外だけでなく返す', () => {
+    const f = fixture('z.cls.new Counter object\nobject.increment\n', classApi + counterClass);
+    const report = f.diagnostics.files.get(f.document.uri);
+    if (!report) throw new Error('Expected caller diagnostics');
+    const analysis = analyzeCalls(f.snapshot, report.file, report.facts.calls, f.diagnostics.context);
+    const targets = [...analysis.classTargets.values()].flat();
+    expect(targets).toHaveLength(1);
+    expect(targets[0].member).toMatchObject({ kind: 'classMethod', name: 'increment' });
+    expect(targets[0].member.declaration.commandName?.word.raw).toBe('z.cls.fn');
+  });
+
+  test('code引数内のinstanceは外側のclassを使い、外側へ漏れない', () => {
+    const api = '# $1 [code]: body\nrun() { eval "$1" }\n';
+    const f = fixture("run 'z.cls.new Counter inside; inside.increment'\ninside.increment\n", classApi + counterClass + api);
+    expect(semantic(f.items)).toHaveLength(1);
+    expect(semantic(f.items)[0].range.start.line).toBe(1);
+  });
+
+  test('code引数内のclassはそのcode内で解決し、projectへ漏れない', () => {
+    const api = '# $1 [code]: body\nrun() { eval "$1" }\n';
+    const text = "run 'z.cls.draw Local; z.cls.fn value \"REPLY=1\"; z.cls.drew; z.cls.new Local local_object; local_object.value'\n" +
+      'z.cls.new Local outside\noutside.value\n';
+    const f = fixture(text, classApi + api);
+    expect(semantic(f.items)).toHaveLength(1);
+    expect(semantic(f.items)[0].message).toContain('outside.value');
   });
 });

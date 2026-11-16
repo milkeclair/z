@@ -9,7 +9,7 @@ import { collectFileFacts } from './facts';
 import type { FileFacts, Declarations } from './facts';
 import { embeddedCallDiagnostics } from './embedded';
 import { sameCallContracts } from './contracts';
-import { classCommands } from './classes';
+import { classCommands, sameClassFiles } from './classes';
 import type { ResolutionContext } from './calls';
 import type { Diagnostics } from './type';
 
@@ -24,7 +24,7 @@ export type DiagnosticSnapshot = {
 
 export function createDiagnosticSnapshot(): DiagnosticSnapshot {
   return { revision: 0, targets: new Map(), context: { environment: emptyShellEnvironment(), projectRoot: '',
-    classCommands: new Set(), aliases: new Set(), globalAliases: new Set(), suffixAliases: new Set(),
+    classCommands: new Map(), classFiles: [], aliases: new Set(), globalAliases: new Set(), suffixAliases: new Set(),
     autoloads: new Set(), builtins: new Set() }, files: new Map() };
 }
 
@@ -34,7 +34,8 @@ function sameSet(left: ReadonlySet<string>, right: ReadonlySet<string>): boolean
 
 function resolutionContext(facts: readonly FileFacts[], environment: ShellEnvironment, projectRoot: string,
   previous: ResolutionContext): ResolutionContext {
-  const generated = classCommands(facts.map(file => file.classes));
+  const classFiles = facts.map(file => file.classes);
+  const generated = classCommands(classFiles);
   const declarations: Declarations = {
     aliases: new Set(facts.flatMap(file => [...file.declarations.aliases])),
     globalAliases: new Set(facts.flatMap(file => [...file.declarations.globalAliases])),
@@ -45,8 +46,8 @@ function resolutionContext(facts: readonly FileFacts[], environment: ShellEnviro
   if (environment === previous.environment && projectRoot === previous.projectRoot &&
     sameSet(declarations.aliases, previous.aliases) && sameSet(declarations.globalAliases, previous.globalAliases) &&
     sameSet(declarations.suffixAliases, previous.suffixAliases) && sameSet(declarations.autoloads, previous.autoloads) &&
-    sameSet(declarations.builtins, previous.builtins) && sameSet(generated, previous.classCommands)) return previous;
-  return { ...declarations, environment, projectRoot, classCommands: generated };
+    sameSet(declarations.builtins, previous.builtins) && sameClassFiles(classFiles, previous.classFiles)) return previous;
+  return { ...declarations, environment, projectRoot, classCommands: generated, classFiles };
 }
 
 function suppressed(file: ZshFileHydration, diagnostics: readonly Diagnostics[]): readonly Diagnostics[] {
@@ -84,7 +85,7 @@ export function refreshDiagnosticSnapshot({ snapshot, environment, previous = cr
       const local = input.project ? context : resolutionContext([...projectFacts, current], environment,
         context.projectRoot, context);
       const effective = input.project ? context : {
-        ...context, classCommands: local.classCommands, aliases: new Set([...context.aliases, ...local.aliases]),
+        ...context, classCommands: local.classCommands, classFiles: local.classFiles, aliases: new Set([...context.aliases, ...local.aliases]),
         globalAliases: new Set([...context.globalAliases, ...local.globalAliases]),
         suffixAliases: new Set([...context.suffixAliases, ...local.suffixAliases]),
         autoloads: new Set([...context.autoloads, ...local.autoloads]),

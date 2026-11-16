@@ -16,10 +16,13 @@ import { ignored } from './controls';
 import type { ShellEnvironment } from './environment';
 import type { Declarations } from './facts';
 import { simpleParameter } from './facts';
+import type { ClassFileHydration } from '../zshHydrator';
+import type { ClassCommandTargets, ClassCommandTarget } from './classes';
 
 export type ResolutionContext = Declarations & {
   readonly environment: ShellEnvironment; readonly projectRoot: string;
-  readonly classCommands: ReadonlySet<string>;
+  readonly classCommands: ClassCommandTargets;
+  readonly classFiles: readonly ClassFileHydration[];
 };
 
 function alias(name: string, word: WordNode, context: ResolutionContext): boolean {
@@ -108,6 +111,7 @@ export type CallAnalysisOptions = {
 export type CallAnalysis = {
   readonly diagnostics: readonly Diagnostics[];
   readonly targets: ReadonlyMap<SimpleCommandNode, FunctionDefinitionNode>;
+  readonly classTargets: ReadonlyMap<SimpleCommandNode, readonly ClassCommandTarget[]>;
 };
 
 /** 埋め込みコードやworkspace外の定義はローカルに保ち、workspaceの参照先には追加しない。 */
@@ -137,6 +141,7 @@ export function analyzeCalls(snapshot: FunctionSnapshot, file: ZshFileHydration,
   commands: readonly SimpleCommandNode[], context: ResolutionContext, options: CallAnalysisOptions = {}): CallAnalysis {
   const diagnostics: Diagnostics[] = [];
   const targets = new Map<SimpleCommandNode, FunctionDefinitionNode>();
+  const classTargets = new Map<SimpleCommandNode, readonly ClassCommandTarget[]>();
   const local = localDefinitions(snapshot, file);
   const scopes = (options.scopes ?? []).map(scope => ({ ...scope, definitions: localDefinitions(snapshot, scope.file) }));
   const origin = scopes.at(-1);
@@ -153,6 +158,7 @@ export function analyzeCalls(snapshot: FunctionSnapshot, file: ZshFileHydration,
     const inherited = scopes.map(scope => localDefinition(scope.definitions, name, scope.offset)).find(target => target !== undefined);
     const target = functionCommand(command) ? localDefinition(local, name, word.range.start.offset) ?? inherited ??
       resolveFunction(snapshot, name, { file: origin?.file ?? file, offset: origin?.offset ?? word.range.start.offset })?.definition : null;
+    const generated = functionCommand(command) ? context.classCommands.get(name) : undefined;
     if (target) {
       targets.set(command, target);
       if (!incomplete) {
@@ -160,8 +166,8 @@ export function analyzeCalls(snapshot: FunctionSnapshot, file: ZshFileHydration,
           if (!options.ignores || !ignored(options.ignores, word.range.start.line, diagnostic.code)) diagnostics.push(diagnostic);
         }
       }
-    } else if (functionCommand(command) && context.classCommands.has(name)) {
-      continue;
+    } else if (generated) {
+      classTargets.set(command, generated);
     } else if (context.autoloads.has(name) && functionCommand(command)) {
       continue;
     } else if (shellKnown(name, command, context) === false &&
@@ -171,7 +177,7 @@ export function analyzeCalls(snapshot: FunctionSnapshot, file: ZshFileHydration,
         message: name + ' is not defined in the project or shell environment.' });
     }
   }
-  return { diagnostics, targets };
+  return { diagnostics, targets, classTargets };
 }
 
 /** 関数の参照先を必要としない呼び出し元向けに、既存の診断のみを返すAPIを保つ。 */
