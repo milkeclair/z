@@ -27,8 +27,7 @@ z.t.describe "z.process.list._ports"; {
       local result=$REPLY
 
       z.t.expect "$lookup_status" 0
-      z.is.null "$result"
-      z.t.expect.status.is.true
+      z.t.expect.is.null "$result"
     }
   }
 
@@ -57,8 +56,7 @@ z.t.describe "z.process.list._ports"; {
       local result=$REPLY
 
       z.t.expect "$lookup_status" 1
-      z.is.null "$result"
-      z.t.expect.status.is.true
+      z.t.expect.is.null "$result"
     }
 
     z.t.it "PIDより前の待受レコードを拒否する"; {

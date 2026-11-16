@@ -121,8 +121,7 @@ z.t.describe "z.process._pids"; {
     z.t.it "成功時は標準出力へ書き込まない"; {
       local output=$(z.process._pids pid=12345)
 
-      z.is.null "$output"
-      z.t.expect.status.is.true
+      z.t.expect.is.null "$output"
     }
 
     z.t.it "正のPIDをそのまま返す"; {

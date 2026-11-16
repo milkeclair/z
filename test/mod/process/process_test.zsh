@@ -41,8 +41,7 @@ z.t.describe "z.process.kill"; {
       local result=$REPLY
 
       z.t.expect "$kill_status" 1
-      z.is.null "$result"
-      z.t.expect.status.is.true
+      z.t.expect.is.null "$result"
     }
   }
 
@@ -59,10 +58,8 @@ z.t.describe "z.process.kill"; {
       local sent=$REPLY
 
       z.t.expect "$kill_status" 1
-      z.is.null "$result"
-      z.t.expect.status.is.true
-      z.is.null "$sent"
-      z.t.expect.status.is.true
+      z.t.expect.is.null "$result"
+      z.t.expect.is.null "$sent"
     }
   }
 
