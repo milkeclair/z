@@ -80,7 +80,6 @@ z.process._pids() {
 # $pid?: positive process ID
 # $port?: TCP listening port used to select processes
 # $name?: exact process name from ps comm
-# stdout: tab-separated PID, NAME and PORTS header and rows
 # REPLY: tab-separated rows without the header
 # return: 0 on success, otherwise 1
 #
