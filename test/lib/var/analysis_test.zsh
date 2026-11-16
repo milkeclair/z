@@ -46,4 +46,26 @@ z.t.describe "z.var.get"; {
       z.t.expect "${result[5]}" "keep_empty=true"
     }
   }
+  z.t.context "入力がREPLYの場合"; {
+    z.t.it "名前付き引数を取得する前の値を返す"; {
+      local REPLY="sentinel"
+
+      z.var.get REPLY
+
+      z.t.expect.reply "sentinel"
+    }
+
+    z.t.it "literal指定時も元の配列要素を保持する"; {
+      local REPLY=("true" "" "two words")
+
+      z.var.get REPLY literal=true
+      local result=("${REPLY[@]}")
+
+      z.t.expect "${#result[@]}" 3
+      z.t.expect "${result[1]}" "true"
+      z.t.expect "${result[2]}" ""
+      z.t.expect "${result[3]}" "two words"
+    }
+  }
+
 }

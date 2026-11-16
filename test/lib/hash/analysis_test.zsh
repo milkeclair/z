@@ -44,6 +44,16 @@ z.t.describe "z.hash.keys"; {
       z.t.expect "${#result[@]}" 0
     }
   }
+  z.t.context "ハッシュ名がliteralの場合"; {
+    z.t.it "オプション取得のローカル変数と区別する"; {
+      local -A literal=([key]="value")
+
+      z.hash.keys literal literal=true
+      local result=("${REPLY[@]}")
+
+      z.t.expect "${result[1]}" "key"
+    }
+  }
 }
 
 z.t.describe "z.hash.values"; {
@@ -121,6 +131,16 @@ z.t.describe "z.hash.entries"; {
       local result=("${REPLY[@]}")
 
       z.t.expect "${#result[@]}" 0
+    }
+  }
+  z.t.context "ハッシュ名がliteralの場合"; {
+    z.t.it "オプション取得前のキーと値を返す"; {
+      local -A literal=([key]="value")
+
+      z.hash.entries literal literal=true
+      local -A result=("${REPLY[@]}")
+
+      z.t.expect "${result[key]}" "value"
     }
   }
 }

@@ -11,13 +11,15 @@
 #   echo $REPLY  # outputs "Hello, World!"
 z.var.get() {
   local var_name=$1
-  z.arg.named literal $@ default=false && local literal=$REPLY
 
   if z.var.exists $var_name; then
+    local -a result=("${(@P)var_name}")
+    z.arg.named literal $@ default=false && local literal=$REPLY
+
     if z.is.true $literal; then
-      REPLY=("${(@P)var_name}")
+      REPLY=("${result[@]}")
     else
-      z.return ${(P)var_name}
+      z.return ${result[@]}
     fi
   else
     z.return null
