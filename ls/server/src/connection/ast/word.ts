@@ -16,7 +16,7 @@ export function commandInsertion(name: string): string {
   return "'" + name.split("'").join(escapedQuote) + "'";
 }
 
-/** Read a named key from the static word prefix, removing shell quoting without evaluating expansions. */
+/** 展開を評価せずにシェルの引用を外し、単語の静的な接頭辞から名前付き引数のキーを読む。 */
 export function namedKey(word: WordNode): string | null {
   const prefix = word.parts[0];
   if (prefix?.kind !== 'stringLiteral') return null;

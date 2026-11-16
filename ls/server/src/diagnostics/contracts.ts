@@ -17,9 +17,9 @@ function sameParameter(left: ParameterDoc, right: ParameterDoc): boolean {
   }
 }
 
-// Unedited callers depend on candidate order/URI and parameter contracts. Declaration
-// offsets and descriptions belong to the current provider snapshot, not their diagnostics.
-// If diagnostics gain related definition locations, those must join this comparison.
+// 未編集の呼び出し元は候補の順序・URI・引数の契約に依存する。定義の
+// オフセットと説明文は現在のproviderのsnapshotに属し、診断には含めない。
+// 関連する定義位置を診断に追加する場合は、その位置も比較に含める。
 export function sameCallContracts(left: FunctionTargets, right: FunctionTargets): boolean {
   if (left === right) return true;
   if (left.size !== right.size) return false;

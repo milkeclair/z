@@ -8,7 +8,7 @@ export function isProcessSubstitutionStart(tokens: readonly Token[], index: numb
   const token = tokens[index]; const next = tokens[index + 1];
   return Boolean(token && ['<', '>', '='].includes(token.value) && next?.operatorKind === 'leftParen' && areAdjacentTokens(token, next));
 }
-/** A balanced leading parenthesis can be a glob word after a command name. */
+/** コマンド名の後では、対応する閉じ括弧を持つ先頭の括弧をglobの単語として扱える。 */
 export function isParenthesizedWordStart(tokens: readonly Token[], index: number): boolean {
   return tokens[index]?.operatorKind === 'leftParen' && findNestedOperatorEnd({
     tokens, index, depth: 0, startOperatorKind: 'leftParen', endOperatorKind: 'rightParen',

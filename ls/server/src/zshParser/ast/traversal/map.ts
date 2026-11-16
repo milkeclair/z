@@ -5,7 +5,7 @@ function ofKind<K extends AstNode['kind']>(node: AstNode, kind: K): node is Extr
   return node.kind === kind;
 }
 
-/** Rebuild changed paths once, preserving aliases across syntax and related edges. */
+/** 構文と関連辺をまたぐ別名を保ち、変更されたパスを1回だけ再構築する。 */
 export function mapAst(file: FileNode, transform: (node: AstNode) => AstNode): FileNode {
   const mapped = new WeakMap<AstNode, AstNode>();
   const active = new WeakSet<AstNode>();

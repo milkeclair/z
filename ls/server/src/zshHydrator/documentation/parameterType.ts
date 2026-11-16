@@ -9,7 +9,7 @@ function whitespace(text: string, start: number): number {
   return cursor;
 }
 
-/** Read code/literal alternatives without evaluating their quoted contents. */
+/** 引用内の内容を評価せず、コード型と文字列の選択肢を読む。 */
 export function parseCodeParameterType(text: string, start: number): CodeParameterType | null {
   if (!text.startsWith('[code', start)) return null;
   let cursor = start + 5;

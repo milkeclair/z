@@ -24,7 +24,7 @@ type Program = {
 const MAX_CODE_DEPTH = 32;
 const MAX_CODE_TEXT = 1024 * 1024;
 
-/** Analyze explicit code literals with an iterative worklist and a per-file processing budget. */
+/** 明示スタックとファイルごとの処理上限を使い、コード型を指定した文字列を解析する。 */
 export function embeddedCallDiagnostics(snapshot: FunctionSnapshot, file: ZshFileHydration,
   calls: readonly SimpleCommandNode[], context: ResolutionContext,
   limits: { readonly maxDepth?: number; readonly maxText?: number } = {}): readonly Diagnostics[] {

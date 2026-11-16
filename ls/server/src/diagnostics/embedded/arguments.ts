@@ -11,7 +11,7 @@ export type CodeArgument =
   | { readonly kind: 'code'; readonly word: WordNode; readonly source: DecodedLiteral }
   | { readonly kind: 'limit'; readonly word: WordNode };
 
-/** Bind documented code parameters, deferring uncertain cardinality and charging decoding to the text budget. */
+/** 文書でコード型を指定した引数を対応付け、引数の個数が不確かな場合は保留し、復号量を文字数の上限に計上する。 */
 export function codeArguments(command: SimpleCommandNode, target: FunctionDefinitionNode,
   context: ResolutionContext, maxText = 1024 * 1024): { readonly arguments: readonly CodeArgument[]; readonly inspected: number } {
   const parameters = documentationOf(target)?.parameters ?? [];

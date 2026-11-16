@@ -9,7 +9,7 @@ export type CodeSourceMap = {
   readonly end: number;
 };
 
-/** Flatten each nested mapping to offsets in the original word, avoiding recursive mapper chains. */
+/** 入れ子の位置対応を元の単語内のオフセットへ平坦化し、変換関数の再帰的な連鎖を避ける。 */
 export function createCodeSourceMap(word: WordNode, literal: DecodedLiteral, parent?: CodeSourceMap): CodeSourceMap {
   if (parent) {
     const spans = literal.spans.map(span => {
@@ -28,7 +28,7 @@ export function createCodeSourceMap(word: WordNode, literal: DecodedLiteral, par
   return { word, lineStarts, spans: literal.spans, end: literal.spans.at(-1)?.end ?? word.raw.length };
 }
 
-/** Translate an original spelling offset to a physical UTF-16 position. */
+/** 元の記述内のオフセットを、物理的なUTF-16の位置へ変換する。 */
 function sourcePosition(source: CodeSourceMap, offset: number): SourcePosition {
   let low = 0; let high = source.lineStarts.length;
   while (low + 1 < high) {
@@ -41,7 +41,7 @@ function sourcePosition(source: CodeSourceMap, offset: number): SourcePosition {
     character: low === 0 ? source.word.range.start.character + offset : offset - source.lineStarts[low] };
 }
 
-/** Map a decoded range, including zero-width EOF diagnostics, to the original spelling. */
+/** 長さ0のEOF診断も含め、復号後の範囲を元の記述位置へ変換する。 */
 export function codeRange(source: CodeSourceMap, range: SourceRange): SourceRange {
   const start = source.spans[range.start.offset]?.start ?? source.end;
   const end = range.end.offset > range.start.offset ? source.spans[range.end.offset - 1]?.end ?? source.end : start;
