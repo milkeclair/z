@@ -9,25 +9,25 @@ import { assertVersions, parseVersion } from './release_version.mjs';
 const SOURCE_LIMIT = 64 * 1024 * 1024;
 const VSIX_LIMIT = 128 * 1024 * 1024;
 
-/** Return the complete asset set for one unified version. */
+/** 統一したバージョンに必要な成果物一式を返す。 */
 export function assetNames(version) {
   parseVersion(version);
   return ['z-' + version + '.tar.gz', 'z-ls-' + version + '.vsix', 'SHA256SUMS'];
 }
 
-/** Read a bounded regular file; downloaded symlinks are never followed. */
+/** サイズ上限内の通常ファイルを読む。ダウンロードされたシンボリックリンクは辿らない。 */
 function readBounded(filename, limit) {
   const info = fs.lstatSync(filename);
   if (!info.isFile() || info.size > limit) throw new Error('Expected a bounded regular release file: ' + path.basename(filename));
   return fs.readFileSync(filename);
 }
 
-/** Calculate a release file's SHA256 digest within the maximum asset bound. */
+/** リリース成果物の上限を守りながら、ファイルのSHA256を計算する。 */
 export function digest(filename) {
   return createHash('sha256').update(readBounded(filename, VSIX_LIMIT)).digest('hex');
 }
 
-/** Archive the trusted tree with its validated source parent date, independent of version-commit time. */
+/** バージョンコミットの時刻に依存せず、検証済みのソース親コミットの時刻で信頼済みツリーをアーカイブする。 */
 export function sourceArchive(repository, version, ref = 'HEAD') {
   parseVersion(version);
   const tree = execFileSync('git', ['rev-parse', ref + '^{tree}'], { cwd: repository, encoding: 'utf8' }).trim();
@@ -36,14 +36,14 @@ export function sourceArchive(repository, version, ref = 'HEAD') {
     '--prefix=z-' + version + '/', tree], { cwd: repository, maxBuffer: SOURCE_LIMIT });
 }
 
-/** Verify every source byte against the freshly checked-out trusted tree. */
+/** ソースの全バイトを、新たにcheckoutした信頼済みツリーと照合する。 */
 export function verifySourceArchive(repository, directory, version, ref = 'HEAD') {
   const [archive] = assetNames(version);
   const source = gunzipSync(readBounded(path.join(directory, archive), SOURCE_LIMIT), { maxOutputLength: SOURCE_LIMIT });
   if (!source.equals(sourceArchive(repository, version, ref))) throw new Error('Source archive does not match the validated Git tree.');
 }
 
-/** Check exact regular-file set, bounded metadata, JSON/XML identity and checksums. */
+/** 通常ファイルの集合、メタデータの上限、JSON/XMLの識別情報、チェックサムを照合する。 */
 export function verifyAssets(directory, version) {
   const [archive, vsix, sums] = assetNames(version);
   const names = fs.readdirSync(directory).sort();
@@ -62,7 +62,7 @@ export function verifyAssets(directory, version) {
     path.join(directory, vsix), version], { maxBuffer: 1024 * 1024 });
 }
 
-/** Archive a local prepared tree and checksum the already-built VSIX. */
+/** ローカルで準備したツリーをアーカイブし、ビルド済みVSIXのチェックサムを計算する。 */
 export function packAssets(repository, directory, version) {
   const [archive, vsix, sums] = assetNames(version);
   if (!fs.existsSync(path.join(directory, vsix))) throw new Error('Build the VSIX before packaging release assets.');
@@ -76,7 +76,7 @@ export function packAssets(repository, directory, version) {
   verifySourceArchive(repository, directory, version);
 }
 
-/** Match uploaded names and server-provided digests to verified local files. */
+/** アップロード済みの名前とサーバーのダイジェストを、検証済みのローカルファイルと照合する。 */
 export function verifyRemoteAssets(release, directory, version, published = false) {
   const names = assetNames(version);
   if (!release || release.tag_name !== 'v' + version || release.prerelease ||

@@ -5,28 +5,28 @@ import { fileURLToPath } from 'node:url';
 import { assertVersions, compareVersions, parseVersion, sourceVersion, updateVersions, shouldMakeLatest, VERSION_FILES, versionFiles } from './release_version.mjs';
 import { assetNames, packAssets, verifyAssets, verifyRemoteAssets, verifySourceArchive } from './release_assets.mjs';
 
-/** Read a command result without invoking a shell. */
+/** シェルを起動せず、コマンドの実行結果を読む。 */
 function read(command, args, directory) {
   return execFileSync(command, args, { cwd: directory, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).trim();
 }
 
-/** Run a command while preserving its status and normal terminal output. */
+/** 終了コードと通常の端末出力を保ちながらコマンドを実行する。 */
 function run(command, args, directory) {
   execFileSync(command, args, { cwd: directory, stdio: 'inherit' });
 }
 
-/** Validate a GitHub repository name before forming API paths. */
+/** APIパスを組み立てる前に、GitHubのリポジトリ名を検証する。 */
 function repositoryName(repository) {
   if (!/^[A-Za-z0-9_-]+\/[A-Za-z0-9_.-]+$/.test(repository)) throw new Error('Expected owner/repository.');
   return repository;
 }
 
-/** Supply credentials only through gh's standard Git credential helper. */
+/** ghの標準Git認証ヘルパーだけを通して認証情報を渡す。 */
 function gitAuthentication() {
   return ['-c', 'credential.helper=', '-c', 'credential.helper=!gh auth git-credential'];
 }
 
-/** Read release metadata; authentication and network failures remain errors. */
+/** リリースのメタデータを読む。認証とネットワークの失敗はエラーとして扱う。 */
 function getApi(endpoint) {
   try {
     return JSON.parse(read('gh', ['api', endpoint]));
@@ -36,7 +36,7 @@ function getApi(endpoint) {
   }
 }
 
-/** Resolve pending and published tags through gh's draft-aware release lookup. */
+/** ghのDraftを考慮したリリース検索で、未公開と公開済みのタグを解決する。 */
 function getRelease(repository, version) {
   try {
     const release = JSON.parse(read('gh', ['release', 'view', 'v' + version, '--repo', repositoryName(repository),
@@ -49,7 +49,7 @@ function getRelease(repository, version) {
   }
 }
 
-/** Require a server-enforced, branch-only main policy for the OIDC environment. */
+/** OIDCのEnvironmentには、サーバー側で強制されるmainブランチ限定のポリシーを要求する。 */
 export function assertMarketplaceEnvironment(environment, policies) {
   const policy = environment?.deployment_branch_policy;
   if (!policy || policy.protected_branches !== false || policy.custom_branch_policies !== true ||
@@ -58,7 +58,7 @@ export function assertMarketplaceEnvironment(environment, policies) {
   }
 }
 
-/** Read environment controls without changing any repository settings. */
+/** リポジトリ設定を変更せず、環境から制御設定を読む。 */
 function checkMarketplaceEnvironment(repository) {
   const base = 'repos/' + repositoryName(repository) + '/environments/marketplace';
   const environment = getApi(base);
@@ -67,13 +67,13 @@ function checkMarketplaceEnvironment(repository) {
   assertMarketplaceEnvironment(environment, pages.flatMap(page => page.branch_policies ?? []));
 }
 
-/** Read the three version files from a specific commit. */
+/** 指定したコミットから、3つのバージョンファイルを読む。 */
 function assertCommitVersions(directory, ref, version) {
   const show = filename => read('git', ['show', ref + ':' + filename], directory);
   assertVersions(show('version.zsh'), JSON.parse(show('ls/package.json')), JSON.parse(show('ls/package-lock.json')), version);
 }
 
-/** Require a single-parent commit containing only the exact generated version-file edits. */
+/** 生成されるバージョンファイルの変更だけを含み、親が1つのコミットであることを要求する。 */
 export function assertVersionCommit(directory, version, ref = 'HEAD', expectedParent = null) {
   const parents = read('git', ['rev-list', '--parents', '-n', '1', ref], directory).split(/\s+/);
   if (parents.length !== 2 || (expectedParent && parents[1] !== expectedParent)) {
@@ -94,7 +94,7 @@ export function assertVersionCommit(directory, version, ref = 'HEAD', expectedPa
   }
 }
 
-/** Choose creation, draft/tag recovery, or immutable-asset reuse. */
+/** 新規作成、Draftとタグの復旧、変更不能な成果物の再利用から処理を選ぶ。 */
 export function planRelease(directory, version, repository, sourceSha, action = 'draft') {
   parseVersion(version);
   repositoryName(repository);
@@ -130,7 +130,7 @@ export function planRelease(directory, version, repository, sourceSha, action = 
   return 'new';
 }
 
-/** Create only a local release commit/tag, or select the existing unpublished tag. */
+/** ローカルのリリースコミットとタグだけを作成するか、既存の未公開タグを選ぶ。 */
 export function prepareRelease(directory, version, mode, sourceSha) {
   parseVersion(version);
   if (mode === 'resume') {
@@ -151,7 +151,7 @@ export function prepareRelease(directory, version, mode, sourceSha) {
   run('git', [...identity, 'tag', '--annotate', 'v' + version, '--message', 'Release v' + version], directory);
 }
 
-/** Compare-and-swap main and tag; the checked single parent makes the main update a fast-forward. */
+/** mainとタグをcompare-and-swapで更新する。検証済みの親が1つなので、mainの更新はfast-forwardになる。 */
 export function pushRelease(directory, version, sourceSha) {
   parseVersion(version);
   assertVersionCommit(directory, version, 'HEAD', sourceSha);
@@ -165,7 +165,7 @@ export function pushRelease(directory, version, sourceSha) {
   run('git', [...gitAuthentication(), 'push', '--atomic', '--force-with-lease=refs/heads/main:' + sourceSha, 'origin', 'HEAD:refs/heads/main', 'refs/tags/v' + version], directory);
 }
 
-/** Detect a moved remote tag before and after the publication boundary. */
+/** 公開の前後でリモートタグが移動していないか検出する。 */
 export function assertRemoteTag(directory, version, expectedRef = 'HEAD') {
   parseVersion(version);
   const tag = 'refs/tags/v' + version;
@@ -177,7 +177,7 @@ export function assertRemoteTag(directory, version, expectedRef = 'HEAD') {
   }
 }
 
-/** Download and verify original release assets, requiring immutable state by default. */
+/** 元のリリース成果物をダウンロードして検証する。既定では変更不能な状態を要求する。 */
 export function downloadRelease(repository, version, directory, sourceDirectory = process.cwd(), published = true) {
   parseVersion(version);
   const release = getRelease(repository, version);
@@ -193,13 +193,13 @@ export function downloadRelease(repository, version, directory, sourceDirectory 
   verifyRemoteAssets(release, directory, version, published);
 }
 
-/** Require author-written release notes while preserving their Markdown verbatim. */
+/** 利用者が記入したリリースノートを要求し、Markdownの内容をそのまま保つ。 */
 export function releaseNotes(notes) {
   if (typeof notes !== 'string' || !notes.trim()) throw new Error('Release notes are required; write and save non-empty Markdown in the draft body.');
   return notes;
 }
 
-/** Upload and verify all assets while keeping the draft editable for release notes. */
+/** リリースノートを編集できるDraftを保ち、全成果物をアップロードして検証する。 */
 export function stageRelease(directory, version, repository, assets, mode, sourceSha) {
   parseVersion(version);
   verifySourceArchive(directory, assets, version);
@@ -220,7 +220,7 @@ export function stageRelease(directory, version, repository, assets, mode, sourc
   assertRemoteTag(directory, version);
 }
 
-/** Publish the verified draft assets and saved Markdown without rebuilding or pushing. */
+/** 再ビルドやpushを行わず、検証済みDraftの成果物と保存済みMarkdownを公開する。 */
 export function publishRelease(directory, version, repository, assets, notesFile, sourceSha) {
   parseVersion(version);
   const draft = getRelease(repository, version);
@@ -246,7 +246,7 @@ export function publishRelease(directory, version, repository, assets, notesFile
   assertRemoteTag(directory, version, sourceSha);
 }
 
-/** Dispatch workflow commands using explicit arguments instead of interpolated shell code. */
+/** シェルコードへ埋め込まず、明示的な引数でworkflowコマンドを実行する。 */
 function main(command, version, ...args) {
   const root = process.cwd();
   switch (command) {
