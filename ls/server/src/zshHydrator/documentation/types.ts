@@ -7,6 +7,8 @@ type DocNode<Kind extends string> = {
 };
 type ParameterBase<Kind extends string> = DocNode<Kind> & {
   readonly optional: boolean;
+  readonly valueType?: 'code';
+  readonly literalValues?: readonly string[];
   readonly description: string;
   readonly markerRange: SourceRange;
 };
