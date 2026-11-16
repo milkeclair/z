@@ -14,14 +14,19 @@ z.t.describe "z.cls.instance.commands.validate"; {
   z.t.context "既存の通常関数の場合"; {
     z.t.it "拒否する"; {
       z.cls.store.ensure
-      existing_cls_command.run() { z.return original; }
+      existing_cls_command.run() {
+        z.return original
+      }
       z.t.mock name=z.io.error
 
       z.cls.instance.commands.validate existing_cls_command.run
 
       z.t.expect.status.is.false skip_unmock=true
+
       z.t.mock.result name=z.io.error
+
       z.t.expect.reply "Command existing_cls_command.run already exists."
+
       unfunction existing_cls_command.run
     }
   }
@@ -37,7 +42,9 @@ z.t.describe "z.cls.instance.commands.install"; {
       installed_cls.run one two
 
       z.t.mock.result name=z.cls.instance.call
+
       z.t.expect.reply.is.arr installed_cls method run one two
+
       unfunction installed_cls.run
       unset 'z_cls_wrapper_refs[installed_cls.run]'
     }
@@ -51,6 +58,7 @@ z.t.describe "z.cls.instance.commands.install"; {
       z.cls.instance.commands.install shared_cls.count.get
 
       z.t.expect "$z_cls_wrapper_refs[shared_cls.count.get]" 2
+
       unfunction shared_cls.count.get
       unset 'z_cls_wrapper_refs[shared_cls.count.get]'
     }

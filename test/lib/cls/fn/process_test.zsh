@@ -8,7 +8,9 @@ z.t.describe "z.cls.fn.done"; {
       z.cls.fn.done
 
       z.t.expect.status 7
+
       z.var.exists z_cls_capture_done_result
+
       z.t.expect.status.is.false
     }
   }

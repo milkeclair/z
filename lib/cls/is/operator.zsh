@@ -8,8 +8,7 @@ z.cls.is.name() {
   local pattern='^[A-Za-z_][A-Za-z0-9_]*$'
 
   z.str.is.match "$name" "$pattern" &&
-    ! z.str.start_with "$name" z_cls_ &&
-    ! z.str.start_with "$name" __z_cls_
+    ! z.str.start_with "$name" z_cls_
 }
 
 # Check that an attribute can be restored as an ordinary local parameter.

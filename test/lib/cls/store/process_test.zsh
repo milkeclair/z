@@ -9,6 +9,7 @@ z.t.describe "z.cls.store.ensure"; {
       z.cls.store.ensure
 
       z.t.expect "$z_cls_classes[StorePreserved]" 1
+
       unset 'z_cls_classes[StorePreserved]'
     }
   }
@@ -21,6 +22,7 @@ z.t.describe "z.cls.store.ensure"; {
       z.cls.store.ensure
 
       z.var.exists z_cls_dispatch_programs
+
       z.t.expect.status.is.true
     }
   }

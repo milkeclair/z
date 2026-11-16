@@ -53,7 +53,10 @@ case $1 in
     ;;
   function-trap)
     typeset -i trap_calls=0
-    TRAPDEBUG() { (( ++trap_calls )); return 0; }
+    TRAPDEBUG() {
+      (( ++trap_calls ))
+      return 0
+    }
     before=$functions[TRAPDEBUG]
     source "$Z_ROOT/test/lib/cls/counter.zsh"
     [[ $functions[TRAPDEBUG] == "$before" ]] || scenario.fail "function DEBUG trap changed"

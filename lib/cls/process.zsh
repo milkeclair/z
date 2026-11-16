@@ -160,47 +160,47 @@ z.cls.new() {
     return 1
   fi
 
-  local __z_cls_class=$1
-  local __z_cls_binding=$2
+  local z_cls_class=$1
+  local z_cls_binding=$2
 
-  if [[ ${parameters[$__z_cls_binding]:-} == *readonly* ||
-        ${parameters[$__z_cls_binding]:-} == *array* ||
-        ${parameters[$__z_cls_binding]:-} == *association* ||
-        ${parameters[$__z_cls_binding]:-} == *integer* ||
-        ${parameters[$__z_cls_binding]:-} == *float* ]]; then
-    z.io.error "Instance variable $__z_cls_binding must be a writable scalar."
+  if [[ ${parameters[$z_cls_binding]:-} == *readonly* ||
+        ${parameters[$z_cls_binding]:-} == *array* ||
+        ${parameters[$z_cls_binding]:-} == *association* ||
+        ${parameters[$z_cls_binding]:-} == *integer* ||
+        ${parameters[$z_cls_binding]:-} == *float* ]]; then
+    z.io.error "Instance variable $z_cls_binding must be a writable scalar."
     return 1
   fi
 
-  if z.is.not.null "${z_cls_instances[${(P)__z_cls_binding:-}]:-}"; then
-    z.io.error "Instance variable $__z_cls_binding already holds a reference."
+  if z.is.not.null "${z_cls_instances[${(P)z_cls_binding:-}]:-}"; then
+    z.io.error "Instance variable $z_cls_binding already holds a reference."
     return 1
   fi
 
   (( ++z_cls_next_id ))
 
-  local __z_cls_id="z_cls_${$}_$z_cls_next_id"
+  local z_cls_id="z_cls_${$}_$z_cls_next_id"
 
-  z.cls.instance.commands "$__z_cls_class" "$__z_cls_binding" "$__z_cls_id"
+  z.cls.instance.commands "$z_cls_class" "$z_cls_binding" "$z_cls_id"
 
-  local -a __z_cls_wrappers=("${(@)REPLY}")
+  local -a z_cls_wrappers=("${(@)REPLY}")
 
-  z.cls.instance.commands.validate "${__z_cls_wrappers[@]}" || return 1
+  z.cls.instance.commands.validate "${z_cls_wrappers[@]}" || return 1
 
-  local __z_cls_member
+  local z_cls_member
 
-  for __z_cls_member in ${=z_cls_class_attrs[$__z_cls_class]}; do
-    z_cls_values[$__z_cls_id:$__z_cls_member]="typeset -- $__z_cls_member=${(qq)z_cls_defaults[$__z_cls_class:$__z_cls_member]}"
+  for z_cls_member in ${=z_cls_class_attrs[$z_cls_class]}; do
+    z_cls_values[$z_cls_id:$z_cls_member]="typeset -- $z_cls_member=${(qq)z_cls_defaults[$z_cls_class:$z_cls_member]}"
   done
 
-  z.cls.instance.commands.install "${__z_cls_wrappers[@]}"
+  z.cls.instance.commands.install "${z_cls_wrappers[@]}"
 
-  z_cls_members[$__z_cls_id]="${(j: :)__z_cls_wrappers}"
-  z_cls_instances[$__z_cls_id]=$__z_cls_class
-  : ${(P)__z_cls_binding::=$__z_cls_id}
-  typeset -gr -- "$__z_cls_binding"
+  z_cls_members[$z_cls_id]="${(j: :)z_cls_wrappers}"
+  z_cls_instances[$z_cls_id]=$z_cls_class
+  : ${(P)z_cls_binding::=$z_cls_id}
+  typeset -gr -- "$z_cls_binding"
 
-  REPLY=$__z_cls_id
+  REPLY=$z_cls_id
 }
 
 # Remove an instance, its generated commands, and its saved attributes.
@@ -218,32 +218,35 @@ z.cls.delete() {
 
   z.int.is.eq $# 1 || return 1
 
-  local __z_cls_id=${(P)1:-}
-  local __z_cls_member
+  local z_cls_id=${(P)1:-}
 
-  z.is.not.null "${z_cls_instances[$1]:-}" && __z_cls_id=$1
+  z.is.not.null "${z_cls_instances[$1]:-}" && z_cls_id=$1
 
-  if z.is.null "${z_cls_instances[$__z_cls_id]:-}" || z.is.not.null "${z_cls_active[$__z_cls_id]:-}"; then
+  if z.is.null "${z_cls_instances[$z_cls_id]:-}" || z.is.not.null "${z_cls_active[$z_cls_id]:-}"; then
     z.io.error "Expected an existing, inactive instance reference."
     return 1
   fi
 
-  for __z_cls_member in ${=z_cls_members[$__z_cls_id]}; do
-    z_cls_wrapper_refs[$__z_cls_member]=$(( z_cls_wrapper_refs[$__z_cls_member] - 1 ))
-    if z.int.is.zero $z_cls_wrapper_refs[$__z_cls_member]; then
-      if z.cls.instance.owns "$__z_cls_member"; then
-        unfunction "$__z_cls_member"
+  local z_cls_member
+
+  for z_cls_member in ${=z_cls_members[$z_cls_id]}; do
+    z_cls_wrapper_refs[$z_cls_member]=$(( z_cls_wrapper_refs[$z_cls_member] - 1 ))
+
+    if z.int.is.zero $z_cls_wrapper_refs[$z_cls_member]; then
+      if z.cls.instance.owns "$z_cls_member"; then
+        unfunction "$z_cls_member"
       fi
-      unset "z_cls_wrapper_refs[$__z_cls_member]" "z_cls_wrapper_bodies[$__z_cls_member]"
+
+      unset "z_cls_wrapper_refs[$z_cls_member]" "z_cls_wrapper_bodies[$z_cls_member]"
     fi
   done
 
-  for __z_cls_member in ${=z_cls_class_attrs[${z_cls_instances[$__z_cls_id]}]}; do
-    unset "z_cls_values[$__z_cls_id:$__z_cls_member]"
+  for z_cls_member in ${=z_cls_class_attrs[${z_cls_instances[$z_cls_id]}]}; do
+    unset "z_cls_values[$z_cls_id:$z_cls_member]"
   done
 
   # 未設定の要素参照でも管理ノードが残るため、activeも明示的に削除する。
-  unset "z_cls_instances[$__z_cls_id]" "z_cls_members[$__z_cls_id]" "z_cls_active[$__z_cls_id]"
+  unset "z_cls_instances[$z_cls_id]" "z_cls_members[$z_cls_id]" "z_cls_active[$z_cls_id]"
 
   # IDの解決後に隔離し、argという参照名の動的な参照先を保つ。
   local arg=""

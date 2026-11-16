@@ -7,17 +7,24 @@
 # REPLY: unchanged
 # return: 0
 z.cls.capture.start() {
-  typeset -g z_cls_capture_discard=${4:-0} z_cls_capture_done_result=0
-  typeset -g z_cls_capture_stack=$2 z_cls_capture_file=$3 z_cls_capture_body=''
+  typeset -g z_cls_capture_discard=${4:-0}
+  typeset -g z_cls_capture_done_result=0
+  typeset -g z_cls_capture_stack=$2
+  typeset -g z_cls_capture_file=$3
+  typeset -g z_cls_capture_body=''
   typeset -g z_cls_debug_function="${functions[TRAPDEBUG]-}"
-  typeset -g z_cls_debug_has_function=${+functions[TRAPDEBUG]} z_cls_debug_trap=''
-  typeset -g z_cls_debug_before=$options[debugbeforecmd] z_cls_debug_localtraps=$options[localtraps]
+  typeset -g z_cls_debug_has_function=${+functions[TRAPDEBUG]}
+  typeset -g z_cls_debug_trap=''
+  typeset -g z_cls_debug_before=$options[debugbeforecmd]
+  typeset -g z_cls_debug_localtraps=$options[localtraps]
 
   local trap_line
 
   for trap_line in "${(@f)$(trap)}"; do
     z.str.start_with "$trap_line" 'trap -- ' || continue
+
     local -a trap_words=(${(z)trap_line})
+
     z.is.eq "$trap_words[4]" DEBUG && z_cls_debug_trap=$trap_line
   done
 
@@ -33,6 +40,7 @@ z.cls.capture.start() {
 # return: 0
 z.cls.capture.stop() {
   z.is.not.null "${z_cls_capture_method:-}" || return 0
+
   z_cls_capture_method=''
   trap - DEBUG
 
@@ -60,6 +68,7 @@ z.cls.capture.debug() {
   if z.is.not.eq "${(j:|:)funcstack[3,-1]}" "$z_cls_capture_stack" ||
       z.is.eq "$1" z.cls.drew || z.is.eq "$1" z.cls.abort; then
     z.cls.abort
+
     z.io.error "Unfinished class method in $z_cls_capture_file; definition discarded."
     return 0
   fi

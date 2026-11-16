@@ -24,7 +24,9 @@ z.t.describe "z.cls.capture.stop"; {
     z.t.it "元の関数形式トラップを復元する"; {
       z.cls.store.ensure
       z.t.mock name=z.cls.capture.debug
-      TRAPDEBUG() { return 0; }
+      TRAPDEBUG() {
+        return 0
+      }
       local original_debug=$functions[TRAPDEBUG]
       z.cls.capture.start captured_method test_stack test_file 0
 
@@ -32,6 +34,7 @@ z.t.describe "z.cls.capture.stop"; {
 
       z.t.expect "$functions[TRAPDEBUG]" "$original_debug"
       z.t.expect "$z_cls_capture_method" ''
+
       unfunction TRAPDEBUG
     }
   }
@@ -51,6 +54,7 @@ z.t.describe "z.cls.capture.debug"; {
 
       z.t.expect "$z_cls_capture_body" $'print literal\n'
       z.t.expect "$captured_errexit" on
+
       z_cls_capture_method=''
     }
   }

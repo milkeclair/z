@@ -6,6 +6,7 @@ z.t.describe "z.cls.draw"; {
       z.cls.draw DirectDraw
 
       z.t.expect "$z_cls_drawing" DirectDraw
+
       z.cls.abort
     }
   }
@@ -29,6 +30,7 @@ z.t.describe "z.cls.attr"; {
       z.cls.attr literal false
 
       z.t.expect "$z_cls_defaults[DirectAttr:literal]" false
+
       z.cls.abort
     }
   }
@@ -43,6 +45,7 @@ z.t.describe "z.cls.attr"; {
 
       z.t.expect.status.is.false
       z.t.expect "$z_cls_defaults[DuplicateAttr:count]" 3
+
       z.cls.abort
     }
   }
@@ -56,6 +59,7 @@ z.t.describe "z.cls.fn"; {
       z.cls.fn value 'REPLY=literal'
 
       z.t.expect "$z_cls_bodies[DirectMethod:value]" 'REPLY=literal'
+
       z.cls.abort
     }
   }
@@ -114,15 +118,71 @@ z.t.describe "z.cls.abort"; {
       z.cls.abort
 
       z.t.expect "$z_cls_drawing" ''
+
       z.var.exists 'z_cls_defaults[DirectAbort:count]'
+
       z.t.expect.status.is.false
+
       z.var.exists 'z_cls_bodies[DirectAbort:value]'
+
       z.t.expect.status.is.false
     }
   }
 }
 
 z.t.describe "z.cls.new"; {
+  z.t.context "呼出元に内部変数と同名のlocalがある場合"; {
+    z.t.it "生成・メソッド・削除が呼出元の変数を変更しない"; {
+      () {
+        local -r z_cls_instance=caller_instance
+        local -r z_cls_class=caller_class
+        z.cls.draw ScopedInternals
+        z.cls.attr count 0
+        z.cls.fn increment '(( ++count )); REPLY=$count'
+        z.cls.drew
+
+        local object=""
+        z.cls.new ScopedInternals object
+        object.increment
+
+        z.t.expect.reply 1
+        z.t.expect "$z_cls_instance" caller_instance
+        z.t.expect "$z_cls_class" caller_class
+
+        z.cls.delete object
+
+        z.t.expect.status.is.true
+        z.t.expect "$z_cls_instance" caller_instance
+        z.t.expect "$z_cls_class" caller_class
+      }
+    }
+  }
+
+  z.t.context "二重underscoreから始まる属性を使う場合"; {
+    z.t.it "内部変数と衝突せず状態を保存する"; {
+      () {
+        z.cls.draw FormerPrefix
+        z.cls.attr __z_cls_value 0
+        z.cls.fn increment '(( ++__z_cls_value )); REPLY=$__z_cls_value'
+        z.cls.drew
+        local object=""
+        z.cls.new FormerPrefix object
+
+        object.increment
+
+        z.t.expect.reply 1
+
+        object.__z_cls_value.get
+
+        z.t.expect.reply 1
+
+        z.cls.delete object
+
+        z.t.expect.status.is.true
+      }
+    }
+  }
+
   z.t.context "argを参照名として使う場合"; {
     z.t.it "readonly化した参照を返し、取得と削除ができる"; {
       local -A observations=()
@@ -131,7 +191,7 @@ z.t.describe "z.cls.new"; {
       z.cls.drew
 
       () {
-        local arg
+        local arg=""
         z.cls.new ArgumentBinding arg
         observations[created]=$?
         arg.count.get
@@ -155,7 +215,7 @@ z.t.describe "z.cls.new"; {
 
       () {
         local -r arg=untouched
-        local object
+        local object=""
         z.cls.new ReadonlyArgument object
         observations[created]=$?
         object.count.get
@@ -185,17 +245,20 @@ z.t.describe "z.cls.new"; {
   z.t.context "公開したクラスの場合"; {
     z.t.it "readonly参照を呼出元へ返す"; {
       () {
-        local object
         z.cls.draw DirectNew
         z.cls.attr count 0
         z.cls.drew
 
+        local object=""
         z.cls.new DirectNew object
 
         z.t.expect.reply "$object"
         z.t.expect.includes "$parameters[object]" readonly
+
         object.count.get
+
         z.t.expect.reply 0
+
         z.cls.delete object
       }
     }
@@ -206,10 +269,10 @@ z.t.describe "z.cls.delete"; {
   z.t.context "実行中の実体の場合"; {
     z.t.it "状態を保持して削除を拒否する"; {
       () {
-        local object
         z.cls.draw ActiveDelete
         z.cls.attr count 3
         z.cls.drew
+        local object=""
         z.cls.new ActiveDelete object
         z_cls_active[$object]=1
         z.t.mock name=z.io.error
@@ -217,9 +280,12 @@ z.t.describe "z.cls.delete"; {
         z.cls.delete object
 
         z.t.expect.status.is.false
+
         unset "z_cls_active[$object]"
         object.count.get
+
         z.t.expect.reply 3
+
         z.cls.delete object
       }
     }
@@ -228,19 +294,23 @@ z.t.describe "z.cls.delete"; {
   z.t.context "実体がある場合"; {
     z.t.it "コマンドと状態を解放する"; {
       () {
-        local object
         z.cls.draw DirectDelete
         z.cls.attr count 0
         z.cls.drew
+        local object=""
         z.cls.new DirectDelete object
         REPLY=false
 
         z.cls.delete object
 
         z.t.expect.reply false
+
         z.var.exists 'functions[object.count.get]'
+
         z.t.expect.status.is.false
+
         z.hash.count z_cls_instances
+
         z.t.expect.reply 0
       }
     }

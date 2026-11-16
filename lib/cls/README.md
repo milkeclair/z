@@ -54,7 +54,7 @@ z.cls.new Counter counter
 counter.count.set 10
 
 example() {
-  local counter
+  local counter=""
   z.cls.new Counter counter
   counter.increment
   print -r -- "$REPLY"  # 1
@@ -91,7 +91,7 @@ finished; leaving a variable scope alone does not free their state.
 
 - Use one class definition at a time. Class names are unique in a shell.
 - Names use letters, digits, and underscores, starting with a letter or
-  underscore. The `z_cls_` and `__z_cls_` prefixes are reserved.
+  underscore. The `z_cls_` prefix is reserved.
 - Attribute defaults are scalar values, including empty strings. Attributes
   can become indexed or associative arrays in a method; their type and values
   are preserved between calls. Array setters accept their elements, and

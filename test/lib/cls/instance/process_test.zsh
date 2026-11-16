@@ -4,18 +4,21 @@ z.t.describe "z.cls.instance.call"; {
   z.t.context "既存の実体を参照する場合"; {
     z.t.it "メソッドの更新と結果を保存する"; {
       () {
-        local object
         z.cls.draw DirectCall
         z.cls.attr count 0
         z.cls.fn add '(( count += $1 )); REPLY=$count'
         z.cls.drew
+        local object=""
         z.cls.new DirectCall object
 
         z.cls.instance.call "$object" method add 4
 
         z.t.expect.reply 4
+
         object.count.get
+
         z.t.expect.reply 4
+
         z.cls.delete object
       }
     }
@@ -55,6 +58,7 @@ z.t.describe "z.cls.instance.execute"; {
       z.cls.instance.execute execute_ref method fail
 
       z.t.expect.status 7
+
       unset 'z_cls_instances[execute_ref]' 'z_cls_bodies[Execute:fail]'
     }
   }
@@ -84,6 +88,7 @@ z.t.describe "z.cls.instance.snapshot"; {
         eval "$z_cls_values[snapshot_ref:literal]"
 
         z.t.expect "$literal" null
+
         unset 'z_cls_values[snapshot_ref:literal]'
       }
     }

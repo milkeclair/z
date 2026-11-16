@@ -19,7 +19,7 @@ case $1 in
     outer_id=$counter
     counter.count.set 10
     inner() {
-      local counter
+      local counter=""
       z.cls.new TestCounter counter || scenario.fail "same name in inner scope"
       [[ $counter != "$outer_id" ]] || scenario.fail "instance id reused"
       counter.increment
@@ -40,7 +40,7 @@ case $1 in
     z.cls.new TestCounter counter
     counter.count.set 8
     inner() {
-      local counter
+      local counter=""
       z.cls.new ArrayBox counter || scenario.fail "different class in same name"
       counter.fill
       counter.items.get
@@ -77,7 +77,9 @@ case $1 in
   preserve-overrides)
     source "$Z_ROOT/test/lib/cls/counter.zsh"
     z.cls.new TestCounter first
-    first.value() { REPLY=replacement; }
+    first.value() {
+      REPLY=replacement
+    }
     first.increment
     first.count.get
     [[ $REPLY == 1 ]] || scenario.fail "redefining a copy changed shared code"
@@ -106,11 +108,12 @@ child_instance.increment
   cleanup-recreate)
     source "$Z_ROOT/test/lib/cls/counter.zsh"
     local -a saved_refs=()
-    local index reference
+    local index
+    local reference
     # 同名localの参照をスコープ外に保持し、一部だけを先に削除する。
     for (( index=1; index<=72; index++ )); do
       () {
-        local object
+        local object=""
         z.cls.new TestCounter object || scenario.fail create
         saved_refs+=("$object")
       }
@@ -122,7 +125,9 @@ child_instance.increment
     "$reference.count.set" 42
     "$reference.value"
     [[ $REPLY == 42 ]] || scenario.fail "live state lost during cleanup"
-    object.increment() { REPLY=custom; }
+    object.increment() {
+      REPLY=custom
+    }
     for reference in "${(@)saved_refs[37,72]}"; do
       z.cls.delete "$reference" || scenario.fail "final cleanup"
     done
@@ -130,7 +135,7 @@ child_instance.increment
     [[ $REPLY == custom ]] || scenario.fail "user replacement removed"
     (( ${+functions[$reference.value]} == 0 )) || scenario.fail "deleted reference callable"
     () {
-      local fresh
+      local fresh=""
       z.cls.new TestCounter fresh || scenario.fail "class definition lost"
       fresh.increment
       [[ $REPLY == 1 ]] || scenario.fail "cached program lost or old state reused"
@@ -145,7 +150,7 @@ child_instance.increment
     z.cls.delete first || scenario.fail delete
     (( ${+functions[first.increment]} == 0 && ${+functions[first.count.get]} == 0 && ${+functions[first.count.set]} == 0 )) || scenario.fail "functions leaked"
     recreate() {
-      local first
+      local first=""
       z.cls.new TestCounter first || scenario.fail recreate
       first.value
       [[ $REPLY == 0 ]] || scenario.fail "deleted state leaked"
@@ -156,7 +161,7 @@ child_instance.increment
   reassignment)
     source "$Z_ROOT/test/lib/cls/counter.zsh"
     local_reference() {
-      local counter
+      local counter=""
       z.cls.new TestCounter counter
       [[ $parameters[counter] == *local*readonly* ]] || scenario.fail "caller binding is not readonly"
       (counter=other) 2>/dev/null && scenario.fail "direct reassignment succeeded"
@@ -172,7 +177,9 @@ child_instance.increment
     ;;
   collision)
     source "$Z_ROOT/test/lib/cls/counter.zsh"
-    first.value() { REPLY=original; }
+    first.value() {
+      REPLY=original
+    }
     z.cls.new TestCounter first 2>/dev/null && scenario.fail "function overwritten"
     first.value
     [[ $REPLY == original ]] || scenario.fail "existing function changed"
