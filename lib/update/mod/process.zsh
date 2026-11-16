@@ -47,5 +47,5 @@ z.update.mod._copy() {
     cp -R "$source_dir/mod/$mod_name" "$dir/mod/$mod_name" || return 1
   done
 
-  z.return
+  REPLY=""
 }

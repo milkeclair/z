@@ -26,7 +26,7 @@ z.completion.function.name._declaration() {
     return 1
   fi
 
-  z.return "$function_name"
+  REPLY="$function_name"
 }
 
 # find the z function name from completion words
@@ -46,7 +46,7 @@ z.completion.function.name._words() {
   for ((i=current; i>=1; i--)); do
     local word=${words[$i]}
     if z.str.start_with "$word" "z." && z.int.is.positive ${+functions[$word]}; then
-      z.return "$word"
+      REPLY="$word"
       return
     fi
   done

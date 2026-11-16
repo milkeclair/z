@@ -34,7 +34,7 @@ z.git.stats._commit.map() {
     fi
   done
 
-  z.return ${commit_map[@]} keep_empty=true
+  REPLY=("${commit_map[@]}")
 }
 
 # sum inserted and deleted lines to get total lines changed
@@ -72,7 +72,7 @@ z.git.stats._commit.details() {
     deleted_total=$((deleted_total + deleted))
   done <<< "$log"
 
-  z.return "$inserted_total $deleted_total"
+  REPLY="$inserted_total $deleted_total"
 }
 
 # count the number of lines changed
@@ -93,5 +93,5 @@ z.git.stats._commit.sum_lines() {
   z.is.null "$deleted" && deleted=0
   local result=$((inserted + deleted))
 
-  z.return $result
+  REPLY=$result
 }

@@ -15,7 +15,7 @@ z.str.color.strip() {
     stripped=${stripped//$code/}
   done
 
-  z.return $stripped
+  REPLY=$stripped
 }
 
 # decorate a string with color codes
@@ -40,9 +40,9 @@ z.str.color.decorate() {
   if z.is.not.null $color_prefix; then
     z.str.color reset
     local reset=$REPLY
-    z.return "${color_prefix}${plain}${reset}"
+    REPLY="${color_prefix}${plain}${reset}"
   else
-    z.return $plain
+    REPLY=$plain
   fi
 }
 

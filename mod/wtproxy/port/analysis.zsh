@@ -33,7 +33,7 @@ z.wtproxy._port.proxies() {
     ports+=($config[$config_key])
   done
 
-  z.return ${ports[@]}
+  REPLY=("${ports[@]}")
 }
 
 # get ports already assigned in state
@@ -51,7 +51,7 @@ z.wtproxy._port.used() {
     z.is.not.null $z_wtproxy_state_port[$state_key] && ports+=($z_wtproxy_state_port[$state_key])
   done
 
-  z.return ${ports[@]}
+  REPLY=("${ports[@]}")
 }
 
 # get the proxy port for a worktree port key
@@ -81,5 +81,5 @@ z.wtproxy._port.proxy() {
     return 1
   fi
 
-  z.return $config[$config_key]
+  REPLY=$config[$config_key]
 }

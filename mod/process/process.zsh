@@ -13,7 +13,7 @@
 #  z.process.kill name=node
 z.process.kill() {
   if ! z.process._pids "$@"; then
-    z.return
+    REPLY=""
     return 1
   fi
 
@@ -30,6 +30,6 @@ z.process.kill() {
     fi
   done
 
-  z.return "${sent[@]}"
+  REPLY=("${sent[@]}")
   return $failed
 }

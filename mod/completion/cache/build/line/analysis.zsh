@@ -25,5 +25,5 @@ z.completion.cache.build.line._function_name() {
   declaration_suffix=$REPLY
   z.is.eq "$declaration_suffix" "{" || return 1
 
-  z.return "$function_name"
+  REPLY="$function_name"
 }

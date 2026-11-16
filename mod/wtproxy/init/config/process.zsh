@@ -22,7 +22,7 @@ z.wtproxy.init._config.content() {
     lines+=("$env_name=$value")
   done
 
-  z.return "${(F)lines}"$'\n'
+  REPLY="${(F)lines}"$'\n'
 }
 
 # create the initial wtproxy configuration file

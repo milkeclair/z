@@ -23,7 +23,7 @@ z.completion.cache._build() {
 z.completion.cache._cancel() {
   local id=$z_completion_cache_job_id
   z_completion_cache_job_id=""
-  z.is.null "$id" && z.return && return 0
+  z.is.null "$id" && REPLY="" && return 0
 
   if z.job.status id="$id" >/dev/null; then
     local job_state=$REPLY
@@ -32,5 +32,5 @@ z.completion.cache._cancel() {
     fi
   fi
 
-  z.return
+  REPLY=""
 }

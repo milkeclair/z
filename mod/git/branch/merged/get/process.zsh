@@ -15,7 +15,7 @@ z.git.branch._merged.get.excludes() {
     exclude_branches=($REPLY)
   fi
 
-  z.return $exclude_branches
+  REPLY=("${exclude_branches[@]}")
 }
 
 # remove symbols like "*", "+" from branch name
@@ -30,8 +30,8 @@ z.git.branch._merged.get.remove_symbols() {
   z.str.trim "$1" && local trimmed=$REPLY
   if z.str.start_with "$trimmed" "*" || z.str.start_with "$trimmed" "+"; then
     z.arr.split "$trimmed"
-    z.return $REPLY[2]
+    REPLY=$REPLY[2]
   else
-    z.return "$trimmed"
+    REPLY="$trimmed"
   fi
 }

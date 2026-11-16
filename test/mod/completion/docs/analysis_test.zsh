@@ -19,7 +19,7 @@ z.t.describe "z.completion.docs._get"; {
       z_completion_docs=()
       z_completion_docs[z.example]="cached docs" # zls: ignore
       z_completion_cache_ready=false
-      z.t.mock name="z.help._find_docs" behavior="z.return fallback"
+      z.t.mock name="z.help._find_docs" behavior="REPLY=fallback"
 
       z.completion.docs._get z.example # zls: ignore
 
@@ -33,7 +33,7 @@ z.t.describe "z.completion.docs._get"; {
     z.t.it "doc探索に戻らずfalseを返す"; {
       z_completion_docs=()
       z_completion_cache_ready=true
-      z.t.mock name="z.help._find_docs" behavior="z.return fallback"
+      z.t.mock name="z.help._find_docs" behavior="REPLY=fallback"
 
       REPLY=stale
       z.completion.docs._get z.missing # zls: ignore
@@ -51,7 +51,7 @@ z.t.describe "z.completion.docs._get"; {
     z.t.it "同期doc探索を呼ばず空のREPLYとfalseを返す"; {
       z_completion_docs=()
       z_completion_cache_ready=false
-      z.t.mock name="z.help._find_docs" behavior="z.return fallback"
+      z.t.mock name="z.help._find_docs" behavior="REPLY=fallback"
 
       REPLY=stale
       z.completion.docs._get z.missing # zls: ignore

@@ -73,7 +73,7 @@ z.t.describe "z.pj.remove._entry"; {
     z.t.it "登録だけを削除しdirectoryを残す"; {
       local XDG_CONFIG_HOME=/tmp/z_t/pj_remove_entry
       z.dir.make path="$XDG_CONFIG_HOME/z/pj"
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/example" content=/tmp
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/example" content=/tmp
 
       z.pj.remove._entry example
 

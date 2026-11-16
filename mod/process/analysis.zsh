@@ -16,11 +16,11 @@ z.process._pids() {
 
   case $1 in
   pid=*)
-    z.arg.named.literal pid "$@" && local pid=$REPLY
+    z.arg.named pid "$@" && local pid=$REPLY
     local pids=("$pid")
     ;;
   port=*)
-    z.arg.named.literal port "$@" && local port=$REPLY
+    z.arg.named port "$@" && local port=$REPLY
     if ! z.int.is.lteq ${#port} 5 || [[ $port != <1-65535> ]]; then
       z.io.error "Invalid TCP port: $port"
       return 1
@@ -34,7 +34,7 @@ z.process._pids() {
     fi
     ;;
   name=*)
-    z.arg.named.literal name "$@" && local name=$REPLY
+    z.arg.named name "$@" && local name=$REPLY
     if z.is.null "$name"; then
       z.io.error "Process name is required"
       return 1
@@ -71,7 +71,7 @@ z.process._pids() {
     fi
   done
 
-  z.return "${(@u)pids}"
+  REPLY=("${(@u)pids}")
 }
 
 # print process IDs, names and visible TCP listening ports
@@ -91,7 +91,7 @@ z.process.list() {
   local pid name
   if z.arg.is.present "$@"; then
     if ! z.process._pids "$@"; then
-      z.return
+      REPLY=""
       return 1
     fi
     for pid in "${REPLY[@]}"; do
@@ -102,7 +102,7 @@ z.process.list() {
   local listing="$(ps -A -o pid= -o comm=)" lookup_status=$?
   if z.int.is.not.zero "$lookup_status"; then
     z.io.error "Unable to list processes"
-    z.return
+    REPLY=""
     return 1
   fi
   if ! z.process.list._ports; then
@@ -121,13 +121,13 @@ z.process.list() {
 
   if z.arg.is.present "$@" && z.int.is.zero ${#rows}; then
     z.io.error "No matching process: $1"
-    z.return
+    REPLY=""
     return 1
   fi
 
   z.arr.join.line "${rows[@]}"
   local result=$REPLY
-  z.io.literal $'PID\tNAME\tPORTS'
-  z.is.not.null "$result" && z.io.literal "$result"
-  z.return "$result"
+  z.io message=$'PID\tNAME\tPORTS'
+  z.is.not.null "$result" && z.io message="$result"
+  REPLY="$result"
 }

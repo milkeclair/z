@@ -5,7 +5,7 @@ z.t.describe "z.git.stats"; {
     z.t.it "z.git.stats._showを呼び出す"; {
       z.t.mock name="z.io.line"
       z.t.mock name="z.io"
-      z.t.mock name="z.git.stats._show" behavior="z.return called"
+      z.t.mock name="z.git.stats._show" behavior="REPLY=called"
 
       z.git.stats
 
@@ -22,6 +22,7 @@ z.t.describe "z.git.stats"; {
       z.git.stats exclude_exts="md log" exclude_dirs="docs tests"
 
       z.t.mock.result
+
       z.t.expect.reply.is.arr "exclude_exts=md log" "exclude_dirs=docs tests"
     }
   }
@@ -33,7 +34,7 @@ z.t.describe "z.git.stats._show"; {
       z.t.mock name="z.git.stats._exclude.exts"
       z.t.mock name="z.git.stats._exclude.dirs"
       z.t.mock name="z.git.stats._exclude"
-      z.t.mock name="z.git.stats._author" behavior="z.return called"
+      z.t.mock name="z.git.stats._author" behavior="REPLY=called"
 
       z.git.stats._show
 
@@ -43,26 +44,28 @@ z.t.describe "z.git.stats._show"; {
 
   z.t.context "exclude_extsとexclude_dirsを渡した場合"; {
     z.t.it "z.git.stats._excludeに引数を渡す"; {
-      z.t.mock name="z.git.stats._exclude.exts" behavior='z.return "md log"'
-      z.t.mock name="z.git.stats._exclude.dirs" behavior='z.return "docs tests"'
+      z.t.mock name="z.git.stats._exclude.exts" behavior='REPLY=("md log")'
+      z.t.mock name="z.git.stats._exclude.dirs" behavior='REPLY=("docs tests")'
       z.t.mock name="z.git.stats._exclude"
       z.t.mock name="z.git.stats._author"
 
       z.git.stats._show exclude_exts="md log" exclude_dirs="docs tests"
 
       z.t.mock.result name="z.git.stats._exclude"
+
       z.t.expect.reply.is.arr "exclude_exts=md log" "exclude_dirs=docs tests"
     }
 
     z.t.it "z.git.stats._authorに引数を渡す"; {
-      z.t.mock name="z.git.stats._exclude.exts" behavior='z.return "md log"'
-      z.t.mock name="z.git.stats._exclude.dirs" behavior='z.return "docs tests"'
+      z.t.mock name="z.git.stats._exclude.exts" behavior='REPLY=("md log")'
+      z.t.mock name="z.git.stats._exclude.dirs" behavior='REPLY=("docs tests")'
       z.t.mock name="z.git.stats._exclude"
       z.t.mock name="z.git.stats._author"
 
       z.git.stats._show exclude_exts="md log" exclude_dirs="docs tests"
 
       z.t.mock.result name="z.git.stats._author"
+
       z.t.expect.reply.is.arr "exclude_exts=md log" "exclude_dirs=docs tests"
     }
   }
@@ -76,7 +79,8 @@ z.t.describe "z.git.stats._exclude"; {
       z.git.stats._exclude exclude_exts="md log" exclude_dirs="docs tests"
 
       z.t.mock.result name="z.io.line"
-      z.t.expect.reply.is.arr "exclude_exts: md log" "exclude_dirs: docs tests"
+
+      z.t.expect.reply.is.arr "exclude_exts: md log" "exclude_dirs: docs tests" ""
     }
   }
 }

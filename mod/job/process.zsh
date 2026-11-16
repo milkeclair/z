@@ -42,7 +42,7 @@ z.job.run() {
   local pid=$REPLY
   z.file.write path="$dir/pid" content="$pid"
 
-  z.return "$id"
+  REPLY="$id"
   return 0
 }
 
@@ -56,7 +56,7 @@ z.job.run() {
 z.job.collect() {
   z.job.file._jobs && local jobs_dir=$REPLY
   if z.dir.not.exists "$jobs_dir"; then
-    z.return && return
+    REPLY="" && return
   fi
 
   local collected=()

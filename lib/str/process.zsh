@@ -21,7 +21,7 @@ typeset -gA z_color_palette=(
 z.str.color() {
   local selected=$1
 
-  z.return ${z_color_palette[$selected]}
+  REPLY=${z_color_palette[$selected]}
 }
 
 # indent a string with specified level
@@ -46,7 +46,7 @@ z.str.indent() {
     indent+="  "
   done
 
-  z.return "${indent}${message}"
+  REPLY="${indent}${message}"
 }
 
 # split a string by a delimiter
@@ -84,7 +84,7 @@ z.str.partition() {
   local delimiter=$REPLY[2]
 
   if z.is.null "$delimiter"; then
-    z.return "$str" "" keep_empty=true
+    REPLY=("$str" "")
     return
   fi
 
@@ -100,12 +100,12 @@ z.str.partition() {
       if z.is.eq "$candidate" "$delimiter"; then
         local left=${str[1,delimiter_start - 1]}
         local right=${str[candidate_end + 1,-1]}
-        z.return "$left" "$right" keep_empty=true
+        REPLY=("$left" "$right")
         return
       fi
     done
 
-    z.return "$str" "" keep_empty=true
+    REPLY=("$str" "")
     return
   fi
 
@@ -118,9 +118,9 @@ z.str.partition() {
       right_start=$match_start
     fi
 
-    z.return "${str[1,match_start - 1]}" "${str[right_start,-1]}" keep_empty=true
+    REPLY=("${str[1,match_start - 1]}" "${str[right_start,-1]}")
   else
-    z.return "$str" "" keep_empty=true
+    REPLY=("$str" "")
   fi
 }
 
@@ -137,7 +137,7 @@ z.str.match() {
   local str=$1
   local regex=$2
 
-  [[ $str =~ $regex ]] && z.return "$MATCH" || z.return
+  [[ $str =~ $regex ]] && REPLY="$MATCH" || REPLY=""
 }
 
 # global substitute in a string
@@ -160,9 +160,9 @@ z.str.gsub() {
   z.arg.named literal $@ default=false && local literal=$REPLY
 
   if z.is.null $str || z.is.null $search; then
-    z.return $str
+    REPLY=$str
   elif z.is.true $literal; then
-    z.return ${str//$search/$replace}
+    REPLY=${str//$search/$replace}
   else
     local result=""
     local rest=$str
@@ -177,7 +177,7 @@ z.str.gsub() {
         MATCH=$match
         result+="${(e)replace}"
         result+="${rest[match_start,-1]}"
-        z.return "$result"
+        REPLY="$result"
         return
       fi
 
@@ -187,7 +187,7 @@ z.str.gsub() {
       rest=${rest[match_end + 1,-1]}
     done
 
-    z.return "${result}${rest}"
+    REPLY="${result}${rest}"
   fi
 }
 
@@ -202,7 +202,7 @@ z.str.gsub() {
 z.str.upcase() {
   local str=$1
 
-  z.return ${(U)str}
+  REPLY=${(U)str}
 }
 
 # convert string to lowercase
@@ -216,7 +216,7 @@ z.str.upcase() {
 z.str.downcase() {
   local str=$1
 
-  z.return ${(L)str}
+  REPLY=${(L)str}
 }
 
 # convert string to camelCase
@@ -252,7 +252,7 @@ z.str.camelize() {
     fi
   done
 
-  z.return ${(L)result[1]}${result[2,-1]}
+  REPLY=${(L)result[1]}${result[2,-1]}
 }
 
 # convert string to PascalCase
@@ -288,7 +288,7 @@ z.str.pascalize() {
     fi
   done
 
-  z.return $result
+  REPLY=$result
 }
 
 # convert string to CONSTANTIZE format
@@ -321,7 +321,7 @@ z.str.constantize() {
     fi
   done
 
-  z.return $result
+  REPLY=$result
 }
 
 # convert string to underscore_case
@@ -401,7 +401,7 @@ z.str.delimitize() {
   z.str.remove.prefix "$result" "$delimiter"
   result=$REPLY
 
-  z.return ${(L)result}
+  REPLY=${(L)result}
 }
 
 # make string visible (escape non-printable characters)
@@ -415,7 +415,7 @@ z.str.delimitize() {
 z.str.visible() {
   local str=$1
 
-  z.return ${(V)str}
+  REPLY=${(V)str}
 }
 
 # left-justify a string with specified width and fill character
@@ -437,7 +437,7 @@ z.str.ljust() {
 
   local str_length=${#str}
   if z.int.is.gteq $str_length $width; then
-    z.return $str
+    REPLY=$str
     return
   fi
 
@@ -447,7 +447,7 @@ z.str.ljust() {
     padding+=$fill
   done
 
-  z.return "${str}${padding}"
+  REPLY="${str}${padding}"
 }
 
 # right-justify a string with specified width and fill character
@@ -469,7 +469,7 @@ z.str.rjust() {
 
   local str_length=${#str}
   if z.int.is.gteq $str_length $width; then
-    z.return $str
+    REPLY=$str
     return
   fi
 
@@ -479,7 +479,7 @@ z.str.rjust() {
     padding+=$fill
   done
 
-  z.return "${padding}${str}"
+  REPLY="${padding}${str}"
 }
 
 # trim leading and trailing whitespace from a string
@@ -497,6 +497,6 @@ z.str.trim() {
   str=${str##[[:space:]]##}
   str=${str%%[[:space:]]##}
 
-  z.return "$str"
+  REPLY="$str"
 
 }

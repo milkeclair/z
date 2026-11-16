@@ -12,12 +12,12 @@ z.install.mod.list._status() {
   z.arg.named installed "$@" && local installed_dir=$REPLY
 
   if z.dir.not.exists "$installed_dir"; then
-    z.return not-installed
+    REPLY=not-installed
     return
   fi
 
   if z.dir.not.exists "$source_dir"; then
-    z.return installed
+    REPLY=installed
     return
   fi
 
@@ -25,8 +25,8 @@ z.install.mod.list._status() {
   local result_code=$?
 
   case $result_code in
-  0) z.return installed ;;
-  1) z.return update-available ;;
+  0) REPLY=installed ;;
+  1) REPLY=update-available ;;
   *) return 1 ;;
   esac
 }

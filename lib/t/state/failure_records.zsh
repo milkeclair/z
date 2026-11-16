@@ -8,7 +8,7 @@ typeset z_t_failure_records=()
 # example:
 #  z.t._state.failure_records  #=> ("record1" "record2" ...)
 z.t._state.failure_records() {
-  z.return ${z_t_failure_records[@]}
+  REPLY=("${z_t_failure_records[@]}")
 }
 
 # add a failure record

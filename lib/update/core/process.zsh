@@ -25,5 +25,5 @@ z.update.core._copy() {
     cp -R "$source_dir/$entry" "$dir/$entry" || return 1
   done
 
-  z.return
+  REPLY=""
 }

@@ -9,7 +9,7 @@ typeset -A z_t_mock_originals=()
 #  z.t._state.mock_originals  #=> ("func1" "func2" ...)
 z.t._state.mock_originals() {
   z.hash.keys z_t_mock_originals
-  z.return ${REPLY[@]}
+  return 0
 }
 
 # get a mock original by function name
@@ -21,7 +21,7 @@ z.t._state.mock_originals() {
 # example:
 #  z.t._state.mock_originals.context "my_func"  #=> "original function definition"
 z.t._state.mock_originals.context() {
-  z.return ${z_t_mock_originals[$1]}
+  REPLY=${z_t_mock_originals[$1]}
 }
 
 # add a mock original

@@ -9,7 +9,7 @@ z.t.describe "z.pj"; {
       local directory="$fixture_root/project with spaces"
       z.dir.make path="$XDG_CONFIG_HOME/z/pj"
       z.dir.make path="$directory"
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/example" content="$directory"$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/example" content="$directory"$'\n'
       z.t.mock name="code"
       local before_dir=$PWD
 
@@ -29,7 +29,7 @@ z.t.describe "z.pj"; {
       z.dir.make path="$fixture_root"
       local XDG_CONFIG_HOME="$fixture_root/open_failed"
       z.dir.make path="$XDG_CONFIG_HOME/z/pj"
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/example" content="$fixture_root"$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/example" content="$fixture_root"$'\n'
       z.t.mock name=code behavior='return 23'
 
       z.pj example
@@ -62,7 +62,7 @@ z.t.describe "z.pj"; {
       z.dir.make path="$fixture_root"
       local XDG_CONFIG_HOME="$fixture_root/stale"
       z.dir.make path="$XDG_CONFIG_HOME/z/pj"
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/example" content="$fixture_root/not-there"$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/example" content="$fixture_root/not-there"$'\n'
       z.t.mock name=z.io.error
       z.t.mock name=code
 
@@ -84,7 +84,7 @@ z.t.describe "z.pj"; {
       z.dir.make path="$fixture_root"
       local XDG_CONFIG_HOME="$fixture_root/no_code"
       z.dir.make path="$XDG_CONFIG_HOME/z/pj"
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/example" content="$fixture_root"$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/example" content="$fixture_root"$'\n'
       z.t.mock name=whence behavior='return 1'
       z.t.mock name=z.io.error
 
@@ -187,7 +187,7 @@ z.t.describe "z.pj.add"; {
       z.dir.make path="$fixture_root"
       local XDG_CONFIG_HOME="$fixture_root/duplicate"
       z.dir.make path="$XDG_CONFIG_HOME/z/pj"
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/example" content=/tmp$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/example" content=/tmp$'\n'
       z.t.mock name=z.io.error
 
       z.pj.add name=example dir="$fixture_root" >/dev/null 2>&1
@@ -292,7 +292,7 @@ z.t.describe "z.pj.add"; {
       local fixture_root="/tmp/z_t/pj_process_blocked_$$"
       z.dir.make path="$fixture_root"
       local XDG_CONFIG_HOME="$fixture_root/blocked"
-      z.file.write.literal path="$XDG_CONFIG_HOME" content=blocked$'\n'
+      z.file.write path="$XDG_CONFIG_HOME" content=blocked$'\n'
 
       z.pj.add name=example dir="$fixture_root" >/dev/null 2>&1
 
@@ -350,7 +350,7 @@ z.t.describe "z.pj.add"; {
       z.dir.make path="$fixture_root"
       local XDG_CONFIG_HOME="$fixture_root/add_symlink"
       z.dir.make path="$XDG_CONFIG_HOME/z/pj"
-      z.file.write.literal path="$fixture_root/target" content=preserved$'\n'
+      z.file.write path="$fixture_root/target" content=preserved$'\n'
       ln -s "$fixture_root/target" "$XDG_CONFIG_HOME/z/pj/example"
 
       z.pj.add name=example dir="$fixture_root" >/dev/null 2>&1
@@ -373,8 +373,8 @@ z.t.describe "z.pj.list"; {
       z.dir.make path="$fixture_root"
       local XDG_CONFIG_HOME="$fixture_root/list"
       z.dir.make path="$XDG_CONFIG_HOME/z/pj"
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/zeta" content=/tmp/zeta$'\n'
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/alpha" content='/tmp/alpha space'$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/zeta" content=/tmp/zeta$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/alpha" content='/tmp/alpha space'$'\n'
       local output=$(z.pj.list)
 
       z.t.expect "$output" $'alpha\t/tmp/alpha space\nzeta\t/tmp/zeta'
@@ -408,8 +408,8 @@ z.t.describe "z.pj.remove"; {
       local XDG_CONFIG_HOME="$fixture_root/remove"
       z.dir.make path="$XDG_CONFIG_HOME/z/pj"
       z.dir.make path="$fixture_root/keep_project"
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/example" content="$fixture_root/keep_project"$'\n'
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/other" content=/tmp$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/example" content="$fixture_root/keep_project"$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/other" content=/tmp$'\n'
 
       z.pj.remove example >/dev/null
       local result_code=$?
@@ -431,7 +431,7 @@ z.t.describe "z.pj.remove"; {
       z.dir.make path="$fixture_root"
       local XDG_CONFIG_HOME="$fixture_root/remove_failure"
       z.dir.make path="$XDG_CONFIG_HOME/z/pj"
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/example" content=/tmp$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/example" content=/tmp$'\n'
       chmod 500 "$XDG_CONFIG_HOME/z/pj"
 
       z.pj.remove example > "$fixture_root/remove_failure_output" 2>/dev/null
@@ -454,7 +454,7 @@ z.t.describe "z.pj.remove"; {
       z.dir.make path="$fixture_root"
       local XDG_CONFIG_HOME="$fixture_root/remove_arguments"
       z.dir.make path="$XDG_CONFIG_HOME/z/pj"
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/example" content=/tmp$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/example" content=/tmp$'\n'
 
       z.pj.remove '' >/dev/null 2>&1
       local empty_code=$?
@@ -493,8 +493,8 @@ z.t.describe "z.pj.remove"; {
       z.dir.make path="$fixture_root"
       local XDG_CONFIG_HOME="$fixture_root/select"
       z.dir.make path="$XDG_CONFIG_HOME/z/pj"
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/alpha" content=/tmp$'\n'
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/zeta" content=/tmp$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/alpha" content=/tmp$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/zeta" content=/tmp$'\n'
 
       z.pj.remove <<< '2' >/dev/null 2>&1
       local result_code=$?
@@ -514,7 +514,7 @@ z.t.describe "z.pj.remove"; {
       z.dir.make path="$fixture_root"
       local XDG_CONFIG_HOME="$fixture_root/cancel"
       z.dir.make path="$XDG_CONFIG_HOME/z/pj"
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/example" content=/tmp$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/example" content=/tmp$'\n'
 
       z.pj.remove <<< '' >/dev/null 2>&1
       local blank_code=$?
@@ -538,7 +538,7 @@ z.t.describe "z.pj.remove"; {
       z.dir.make path="$fixture_root"
       local XDG_CONFIG_HOME="$fixture_root/invalid_remove"
       z.dir.make path="$XDG_CONFIG_HOME/z/pj"
-      z.file.write.literal path="$XDG_CONFIG_HOME/z/pj/example" content=/tmp$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/example" content=/tmp$'\n'
 
       z.pj.remove <<< '1+1' >/dev/null 2>&1
       local selection_code=$?

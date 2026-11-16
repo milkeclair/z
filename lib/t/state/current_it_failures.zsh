@@ -8,7 +8,7 @@ z_t_states[current_it_failures]=0
 # example:
 #  z.t._state.current_it_failures  #=> 0
 z.t._state.current_it_failures() {
-  z.return $z_t_states[current_it_failures]
+  REPLY=$z_t_states[current_it_failures]
 }
 
 # increment the current it failures count

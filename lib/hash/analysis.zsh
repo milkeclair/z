@@ -13,7 +13,7 @@
 z.hash.keys() {
   local hash_name=$1
 
-  z.return ${(Pk)hash_name}
+  REPLY=("${(@Pk)hash_name}")
 }
 
 # get the values of a hash
@@ -31,7 +31,7 @@ z.hash.keys() {
 z.hash.values() {
   local hash_name=$1
 
-  z.return ${(Pv)hash_name}
+  REPLY=("${(@Pv)hash_name}")
 }
 
 # get the entries of a hash as key-value pairs
@@ -49,7 +49,7 @@ z.hash.values() {
 z.hash.entries() {
   local hash_name=$1
 
-  z.return ${(Pkv)hash_name}
+  REPLY=("${(@Pkv)hash_name}")
 }
 
 # count the number of entries in a hash
@@ -66,7 +66,7 @@ z.hash.entries() {
 #   echo $REPLY  # outputs 2
 z.hash.count() {
   local hash_name=$1
-  local -A hash_ref=(${(Pkv)hash_name})
+  local -A hash_ref=("${(@Pkv)hash_name}")
 
-  z.return ${#hash_ref}
+  REPLY=${#hash_ref}
 }

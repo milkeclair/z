@@ -16,7 +16,7 @@ z.git.stats._exclude.exts() {
     )
   fi
 
-  z.return $exts
+  REPLY=("${exts[@]}")
 }
 
 # determine which directories to exclude from commit stats analysis
@@ -37,5 +37,5 @@ z.git.stats._exclude.dirs() {
     )
   fi
 
-  z.return $dirs
+  REPLY=("${dirs[@]}")
 }

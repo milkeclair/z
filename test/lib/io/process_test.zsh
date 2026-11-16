@@ -48,6 +48,30 @@ z.t.describe "z.io"; {
       z.t.expect.is.null $output
     }
   }
+
+  z.t.context "表示する文字列がある場合"; {
+    z.t.it "バックスラッシュやオプション風の文字列を評価しない"; {
+      local output=$(z.io message='a\nb color=red null')
+
+      z.t.expect "$output" 'a\nb color=red null'
+    }
+  }
+
+  z.t.context "空文字列の場合"; {
+    z.t.it "改行だけを出力する"; {
+      local output=$(z.io message=''; echo end)
+
+      z.t.expect "$output" $'\nend'
+    }
+  }
+
+  z.t.context "明示したmessageと書式指定がある場合"; {
+    z.t.it "message内の名前付き引数風文字列を保持して装飾する"; {
+      local output=$(z.io message="color=red" color=green indent=1)
+
+      z.t.expect "$output" $'\033[32m  color=red\033[0m'
+    }
+  }
 }
 
 z.t.describe "z.io.empty"; {
@@ -373,24 +397,6 @@ z.t.describe "z.io.error"; {
       local output=$(z.io.error color=magenta indent=3 2>&1 1>/dev/null)
 
       z.t.expect.is.null $output
-    }
-  }
-}
-
-z.t.describe "z.io.literal"; {
-  z.t.context "表示する文字列がある場合"; {
-    z.t.it "バックスラッシュやオプション風の文字列を評価しない"; {
-      local output=$(z.io.literal 'a\nb' color=red null)
-
-      z.t.expect "$output" 'a\nb color=red null'
-    }
-  }
-
-  z.t.context "空文字列の場合"; {
-    z.t.it "改行だけを出力する"; {
-      local output=$(z.io.literal ''; echo end)
-
-      z.t.expect "$output" $'\nend'
     }
   }
 }

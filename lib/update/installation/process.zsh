@@ -32,7 +32,7 @@ z.update.installation._replace() {
     return 1
   fi
 
-  z.return
+  REPLY=""
 }
 
 # reload the updated installation into the current shell
@@ -70,5 +70,5 @@ z.update.installation._reload() {
     z.completion.enable || return 1
   fi
 
-  z.return
+  REPLY=""
 }

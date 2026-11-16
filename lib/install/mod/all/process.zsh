@@ -14,11 +14,11 @@ z.install.mod.all._confirm() {
   local answer=$REPLY
 
   if z.is.eq "$answer" y || z.is.eq "$answer" Y; then
-    z.return
+    REPLY=""
     return 0
   fi
 
-  z.return
+  REPLY=""
   return 1
 }
 
@@ -52,7 +52,7 @@ z.install.mod.all._prepare() {
     done
   fi
 
-  z.return
+  REPLY=""
 }
 
 # switch prepared mods into place, restoring the old directory if switching fails
@@ -84,7 +84,7 @@ z.install.mod.all._replace() {
     return 1
   fi
 
-  z.return
+  REPLY=""
 }
 
 # reconnect the working directory and load newly installed mods
@@ -117,5 +117,5 @@ z.install.mod.all._reload() {
     z.completion.enable
   fi
 
-  z.return
+  REPLY=""
 }

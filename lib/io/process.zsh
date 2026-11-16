@@ -1,27 +1,37 @@
 # printing provided arguments
 #
 # $@: arguments
+# $message?: explicit message, including empty text and named-argument-like text
 # $color?: color name
 # $indent?: indent level
 # REPLY: null
 # return: null
 #
 # example:
-#  z.io "hello" "world" #=> hello\nworld
+#  z.io "hello" "world" #=> hello world
+#  z.io message="color=red" #=> color=red
 z.io() {
-  z.arg.named color $@ && local color=$REPLY
-  z.arg.named indent $@ && local indent=$REPLY
-  z.arg.named.shift color $@
-  z.arg.named.shift indent $REPLY
-  local args=($REPLY)
+  z.arg.named color "$@" && local color=$REPLY
+  z.arg.named indent "$@" && local indent=$REPLY
+  z.arg.named.shift color "$@"
+  z.arg.named.shift indent "${REPLY[@]}"
+  local args=("${REPLY[@]}")
+
+  local arg
+  for arg in "${args[@]}"; do
+    z.str.start_with "$arg" "message=" || continue
+    z.arg.named message "${args[@]}" && args=("$REPLY")
+    break
+  done
 
   z.guard; {
-    z.is.null $args && return
+    z.arr.count "${args[@]}"
+    z.int.is.zero $REPLY && return
   }
 
-  z.is.not.null $indent && z.str.indent level=$indent message="$args" && args=($REPLY)
-  z.is.not.null $color && z.str.color.decorate color=$color message="$args" && args=($REPLY)
-  print -- $args
+  z.is.not.null $indent && z.str.indent level=$indent message="$args" && args=("$REPLY")
+  z.is.not.null $color && z.str.color.decorate color=$color message="$args" && args=("$REPLY")
+  print -r -- "${args[@]}"
 }
 
 # printing empty line
@@ -199,16 +209,4 @@ z.io.error() {
   z.is.not.null $color && z.str.color.decorate color=$color message="$args" && args=($REPLY)
 
   print -u2 -- $args
-}
-
-# print literal arguments without interpreting escapes or formatting options
-#
-# $@: literal text arguments
-# REPLY: null
-# return: output exit status
-#
-# example:
-#  z.io.literal 'a\nb' color=red
-z.io.literal() {
-  print -r -- "$@"
 }

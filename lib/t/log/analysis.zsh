@@ -12,7 +12,7 @@ z.t._log.format() {
   local indentation=$1
   local color_name=$2
 
-  z.return "$3"
+  REPLY="$3"
   local message="$indentation$REPLY"
 
   local code=""

@@ -7,7 +7,7 @@
 #  z.pj.file._root
 z.pj.file._root() {
   local config_home=${XDG_CONFIG_HOME:-$HOME/.config}
-  z.return "$config_home/z/pj"
+  REPLY="$config_home/z/pj"
 }
 
 # get a validated project registration file path
@@ -22,12 +22,12 @@ z.pj.file._path() {
   local name=$1
   if ! z.pj.name.is.valid "$name"; then
     z.io.error "Invalid project name: $name"
-    z.return
+    REPLY=""
     return 1
   fi
 
   z.pj.file._root
-  z.return "$REPLY/$name"
+  REPLY="$REPLY/$name"
 }
 
 # get registered project names in filename order
@@ -63,17 +63,17 @@ z.pj.file._directory() {
   local file=$REPLY
   if ! z.pj.file.is.registration "$file"; then
     z.io.error "Project is not registered: $1"
-    z.return
+    REPLY=""
     return 1
   fi
 
-  z.file.read path="$file" || { z.return; return 1; }
+  z.file.read path="$file" || { REPLY=""; return 1; }
   local dir=$REPLY
   if ! z.str.start_with "$dir" / || z.str.includes "$dir" $'\n'; then
     z.io.error "Invalid project registration: $1"
-    z.return
+    REPLY=""
     return 1
   fi
 
-  z.return "$dir"
+  REPLY="$dir"
 }

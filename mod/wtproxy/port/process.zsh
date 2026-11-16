@@ -25,7 +25,7 @@ z.wtproxy._port.allocate() {
     z.wtproxy._port.is.used $port ${used_ports[@]} && continue
     z.wtproxy._port.is.free $port || continue
 
-    z.return $port
+    REPLY=$port
     return
   done
 

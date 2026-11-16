@@ -8,11 +8,14 @@
 # example:
 #  z.arr.join "a" "b" "c" #=> REPLY="a b c"
 z.arr.join() {
-  z.arg.named delimiter $@ default=" " && local delimiter=$REPLY
-  z.arg.named.shift delimiter $@ && local arr=($REPLY)
+  local -a input_args=("$@")
+  local -A parsed_named=([delimiter]=" ")
+  local -a parsed_args=()
+  z.arg.parse input=input_args named=parsed_named rest=parsed_args || return 1
 
-  local IFS=$delimiter
-  z.return "${arr[*]}"
+  local arr=("${parsed_args[@]}")
+  local IFS=${parsed_named[delimiter]}
+  REPLY="${arr[*]}"
 }
 
 # split a string into an array by a delimiter
@@ -26,14 +29,14 @@ z.arr.join() {
 #  z.arr.split delimiter="," "a,b,c" #=> REPLY=("a" "b" "c")
 #  z.arr.split "a b c"         #=> REPLY=("a" "b" "c")
 z.arr.split() {
-  z.arg.named delimiter $@ default=" " && local delimiter=$REPLY
-  z.arg.named.shift delimiter $@
+  z.arg.named delimiter "$@" default=" " && local delimiter=$REPLY
+  z.arg.named.shift delimiter "$@"
   local str=$REPLY
   local arr
 
   IFS=$delimiter read -rA arr <<<"$str"
 
-  z.return ${arr[@]}
+  REPLY=("${arr[@]}")
 }
 
 # perform global substitution on array elements
@@ -47,21 +50,21 @@ z.arr.split() {
 # example:
 #  z.arr.gsub search=a replace=x "a b a" "c a d" #=> REPLY=("x b x" "c x d")
 z.arr.gsub() {
-  local args=($@)
+  local args=("$@")
 
-  z.arg.named search $args && local search=${REPLY}
-  z.arg.named.shift search $args && args=($REPLY)
+  z.arg.named search "${args[@]}" && local search=${REPLY}
+  z.arg.named.shift search "${args[@]}" && args=("${REPLY[@]}")
 
-  z.arg.named replace $args && local replace=${REPLY}
-  z.arg.named.shift replace $args && args=($REPLY)
+  z.arg.named replace "${args[@]}" && local replace=${REPLY}
+  z.arg.named.shift replace "${args[@]}" && args=("${REPLY[@]}")
 
   local result=()
 
-  for item in ${args[@]}; do
-    result+=(${item//$search/$replace})
+  for item in "${args[@]}"; do
+    result+=("${item//$search/$replace}")
   done
 
-  z.return ${result[@]}
+  REPLY=("${result[@]}")
 }
 
 # sort array elements
@@ -75,19 +78,19 @@ z.arr.gsub() {
 #  z.arr.sort by=asc "b" "c" "a" #=> REPLY=("a" "b" "c")
 #  z.arr.sort by=desc "b" "c" "a" #=> REPLY=("c" "b" "a")
 z.arr.sort() {
-  z.arg.named by $@ default=asc
+  z.arg.named by "$@" default=asc
   local sort_by=$REPLY
-  z.arg.named.shift by $@ && local arr=($REPLY)
+  z.arg.named.shift by "$@" && local arr=("${REPLY[@]}")
 
   case $sort_by in
   asc)
-    z.return ${(@o)arr}
+    REPLY=("${(@o)arr}")
     ;;
   desc)
-    z.return ${(@O)arr}
+    REPLY=("${(@O)arr}")
     ;;
   *)
-    z.return ${arr[@]}
+    REPLY=("${arr[@]}")
     z.io.error "z.arr.sort: invalid sort order: ${sort_by}"
     return 1
     ;;
@@ -103,18 +106,18 @@ z.arr.sort() {
 # example:
 #  z.arr.unique "a" "b" "a" "c" "b" #=> REPLY=("a" "b" "c")
 z.arr.unique() {
-  local arr=($@)
+  local arr=("$@")
   local -A seen
-  local result
+  local result=()
 
-  for item in ${arr[@]}; do
-    if z.is.falsy ${seen[$item]}; then
+  for item in "${arr[@]}"; do
+    if ! z.is.true ${seen[$item]}; then
       seen[$item]=true
-      result+=($item)
+      result+=("$item")
     fi
   done
 
-  z.return ${result[@]}
+  REPLY=("${result[@]}")
 }
 
 # find differences between two arrays
@@ -127,14 +130,14 @@ z.arr.unique() {
 # example:
 #  z.arr.diff base="a b c" other="b c d" #=> REPLY=("a" "d")
 z.arr.diff() {
-  z.arg.named base $@ && local base=$REPLY
-  z.arg.named other $@ && local other=$REPLY
+  z.arg.named base "$@" && local base=$REPLY
+  z.arg.named other "$@" && local other=$REPLY
 
   local base_arr=(${=base})
   local other_arr=(${=other})
   local -A base_set
   local -A other_set
-  local result
+  local result=()
 
   z.group "filling sets"; {
     for item in ${base_arr[@]}; do
@@ -148,19 +151,19 @@ z.arr.diff() {
 
   z.group "finding differences"; {
     for item in ${base_arr[@]}; do
-      if z.is.falsy ${other_set[$item]}; then
-        result+=($item)
+      if ! z.is.true ${other_set[$item]}; then
+        result+=("$item")
       fi
     done
 
     for item in ${other_arr[@]}; do
-      if z.is.falsy ${base_set[$item]}; then
-        result+=($item)
+      if ! z.is.true ${base_set[$item]}; then
+        result+=("$item")
       fi
     done
   }
 
-  z.return ${result[@]}
+  REPLY=("${result[@]}")
 }
 
 # find intersection between two arrays
@@ -173,14 +176,14 @@ z.arr.diff() {
 # example:
 #  z.arr.intersect base="a b c" other="b c d" #=> REPLY=("b" "c")
 z.arr.intersect() {
-  z.arg.named base $@ && local base=$REPLY
-  z.arg.named other $@ && local other=$REPLY
+  z.arg.named base "$@" && local base=$REPLY
+  z.arg.named other "$@" && local other=$REPLY
 
   local base_arr=(${=base})
   local other_arr=(${=other})
   local -A base_set
   local -A other_set
-  local result
+  local result=()
 
   z.group "filling sets"; {
     for item in ${base_arr[@]}; do
@@ -194,13 +197,13 @@ z.arr.intersect() {
 
   z.group "finding intersections"; {
     for item in ${base_arr[@]}; do
-      if z.is.truthy ${other_set[$item]}; then
-        result+=($item)
+      if z.is.true ${other_set[$item]}; then
+        result+=("$item")
       fi
     done
   }
 
-  z.return ${result[@]}
+  REPLY=("${result[@]}")
 }
 
 # find union of two arrays
@@ -213,14 +216,14 @@ z.arr.intersect() {
 # example:
 #  z.arr.union base="a b c" other="b c d e" #=> REPLY=("a" "b" "c" "d" "e")
 z.arr.union() {
-  z.arg.named base $@ && local base=$REPLY
-  z.arg.named other $@ && local other=$REPLY
+  z.arg.named base "$@" && local base=$REPLY
+  z.arg.named other "$@" && local other=$REPLY
 
   local base_arr=(${=base})
   local other_arr=(${=other})
   local -A base_set
   local -A other_set
-  local result
+  local result=()
 
   z.group "filling sets"; {
     for item in ${base_arr[@]}; do
@@ -234,17 +237,17 @@ z.arr.union() {
 
   z.group "finding union"; {
     for item in ${base_arr[@]}; do
-      result+=($item)
+      result+=("$item")
     done
 
     for item in ${other_arr[@]}; do
-      if z.is.falsy ${base_set[$item]}; then
-        result+=($item)
+      if ! z.is.true ${base_set[$item]}; then
+        result+=("$item")
       fi
     done
   }
 
-  z.return ${result[@]}
+  REPLY=("${result[@]}")
 }
 
 # reverse the order of array elements
@@ -256,14 +259,14 @@ z.arr.union() {
 # example:
 #  z.arr.reverse "a" "b" "c" #=> REPLY=("c" "b" "a")
 z.arr.reverse() {
-  local arr=($@)
-  local result
+  local arr=("$@")
+  local result=()
 
   for ((i=${#arr[@]}; i>=1; i--)); do
-    result+=(${arr[i]})
+    result+=("${arr[i]}")
   done
 
-  z.return ${result[@]}
+  REPLY=("${result[@]}")
 }
 
 # slice an array
@@ -277,22 +280,22 @@ z.arr.reverse() {
 # example:
 #  z.arr.slice offset=2 to=5 "a" "b" "c" "d" "e" #=> REPLY=("c" "d" "e")
 z.arr.slice() {
-  local args=($@)
-  z.arg.named offset $args && local offset=$REPLY
-  z.arg.named to $args && local to=$REPLY
-  z.arg.named.shift offset $args && args=($REPLY)
-  z.arg.named.shift to $args && args=($REPLY)
-  local arr=($args)
+  local args=("$@")
+  z.arg.named offset "${args[@]}" && local offset=$REPLY
+  z.arg.named to "${args[@]}" && local to=$REPLY
+  z.arg.named.shift offset "${args[@]}" && args=("${REPLY[@]}")
+  z.arg.named.shift to "${args[@]}" && args=("${REPLY[@]}")
+  local arr=("${args[@]}")
 
   if z.is.not.null "$offset"; then
     if z.is.not.null "$to"; then
-      z.return ${arr[@]:$offset:$((to - offset))}
+      REPLY=("${arr[@]:$offset:$((to - offset))}")
     else
-      z.return ${arr[@]:$offset}
+      REPLY=("${arr[@]:$offset}")
     fi
   elif z.is.not.null "$to"; then
-    z.return ${arr[@]:0:$to}
+    REPLY=("${arr[@]:0:$to}")
   else
-    z.return ${arr[@]}
+    REPLY=("${arr[@]}")
   fi
 }

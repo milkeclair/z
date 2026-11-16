@@ -8,7 +8,7 @@ z_t_states[logged]="false"
 # example:
 #  if z.t._state.logged; then ...; fi
 z.t._state.logged() {
-  z.return ${z_t_states[logged]}
+  REPLY=${z_t_states[logged]}
 }
 
 # set the logged state

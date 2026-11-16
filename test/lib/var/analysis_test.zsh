@@ -30,4 +30,42 @@ z.t.describe "z.var.get"; {
       z.t.expect.reply "one two three"
     }
   }
+
+  z.t.context "値をそのまま取得する場合"; {
+    z.t.it "空要素と真偽値風の値を配列のまま返す"; {
+      local input_args=("" "true" "null" "two words" "keep_empty=true")
+
+      z.var.get input_args
+      local result=("${REPLY[@]}")
+
+      z.t.expect "${#result[@]}" 5
+      z.t.expect.is.null "${result[1]}"
+      z.t.expect "${result[2]}" "true"
+      z.t.expect "${result[3]}" "null"
+      z.t.expect "${result[4]}" "two words"
+      z.t.expect "${result[5]}" "keep_empty=true"
+    }
+  }
+
+  z.t.context "入力がREPLYの場合"; {
+    z.t.it "現在のREPLYの値を返す"; {
+      REPLY="sentinel"
+
+      z.var.get REPLY
+
+      z.t.expect.reply "sentinel"
+    }
+
+    z.t.it "元の配列要素を保持する"; {
+      REPLY=("true" "" "two words")
+
+      z.var.get REPLY
+      local result=("${REPLY[@]}")
+
+      z.t.expect "${#result[@]}" 3
+      z.t.expect "${result[1]}" "true"
+      z.t.expect.is.null "${result[2]}"
+      z.t.expect "${result[3]}" "two words"
+    }
+  }
 }

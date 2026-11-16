@@ -14,5 +14,5 @@ z.git.stats._commit.count() {
     grep -v "Merge branch\|Merge pull request" | \
     wc -l)
 
-  z.return $result
+  REPLY=$result
 }

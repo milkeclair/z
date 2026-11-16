@@ -16,10 +16,10 @@ z.wtproxy.start._serve.remote.host() {
     local remote_host=$words[5]
 
     if z.is.eq $fd $target_fd; then
-      z.return $remote_host
+      REPLY=$remote_host
       return
     fi
   done
 
-  z.return
+  REPLY=""
 }

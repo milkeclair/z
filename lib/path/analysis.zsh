@@ -7,7 +7,7 @@
 #   z.path.current
 #   echo $REPLY  # outputs "/home/user"
 z.path.current() {
-  z.return $(pwd)
+  REPLY=$(pwd)
 }
 
 # get the home directory path
@@ -19,5 +19,5 @@ z.path.current() {
 #   z.path.home
 #   echo $REPLY  # outputs "/home/username"
 z.path.home() {
-  z.return $HOME
+  REPLY=$HOME
 }

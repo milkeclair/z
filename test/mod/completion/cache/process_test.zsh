@@ -40,7 +40,7 @@ z.t.describe "z.completion.cache._cancel"; {
       z.t.it "${job_state}のjobだけを取り消してIDを破棄する"; {
         local z_completion_cache_job_id=cache-job
         local -a cancelled=()
-        z.t.mock name="z.job.status" behavior="z.return $job_state"
+        z.t.mock name="z.job.status" behavior="REPLY=$job_state"
         z.t.mock name="z.job.cancel" behavior='cancelled+=("$*"); return 0'
 
         z.completion.cache._cancel
@@ -58,7 +58,7 @@ z.t.describe "z.completion.cache._cancel"; {
       z.t.it "${job_state}のPIDをkillしない"; {
         local z_completion_cache_job_id=cache-job
         local -a cancelled=()
-        z.t.mock name="z.job.status" behavior="z.return $job_state"
+        z.t.mock name="z.job.status" behavior="REPLY=$job_state"
         z.t.mock name="z.job.cancel" behavior='cancelled+=("$*"); return 0'
 
         z.completion.cache._cancel
@@ -84,7 +84,7 @@ z.t.describe "z.completion.cache._cancel"; {
   z.t.context "jobの取消に失敗した場合"; {
     z.t.it "補完側のIDを破棄して成功する"; {
       local z_completion_cache_job_id=cache-job
-      z.t.mock name="z.job.status" behavior="z.return running"
+      z.t.mock name="z.job.status" behavior="REPLY=running"
       z.t.mock name="z.job.cancel" behavior="return 1"
 
       z.completion.cache._cancel

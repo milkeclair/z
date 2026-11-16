@@ -21,5 +21,5 @@ z.wtproxy._state.entry() {
     entry[$port_key]=$REPLY
   done
 
-  z.return.hash entry
+  z.hash.entries entry
 }

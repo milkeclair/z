@@ -5,7 +5,7 @@ z.t.describe "z.wtproxy._entry.compose.name"; {
     z.t.it "project名とbranch slugとhashからcompose project名を返す"; {
       z.t.mock name="z.wtproxy._config" behavior='
         local -A config=(project sample)
-        z.return.hash config
+        z.hash.entries config
       '
       z.wtproxy._entry.compose.name feat/example
 
@@ -17,7 +17,7 @@ z.t.describe "z.wtproxy._entry.compose.name"; {
     z.t.it "63文字以内に切り詰める"; {
       z.t.mock name="z.wtproxy._config" behavior='
         local -A config=(project very_long_project_name_for_compose)
-        z.return.hash config
+        z.hash.entries config
       '
 
       z.wtproxy._entry.compose.name "feat/very-long-branch-name-for-compose-project-name"

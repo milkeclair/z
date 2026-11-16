@@ -15,12 +15,24 @@ z.t.describe "z.hash.keys"; {
     }
   }
 
-  z.t.context "空のハッシュが渡された場合"; {
-    z.t.it "空の配列を返す"; {
-      local -A empty_hash
+  z.t.context "値をそのまま取得する場合"; {
+    z.t.it "単一の真偽値風キーを変換せず配列で返す"; {
+      local -A hash=([true]="value")
 
-      z.hash.keys empty_hash
-      z.t.expect.reply.is.null
+      z.hash.keys hash
+      local result=("${REPLY[@]}")
+
+      z.t.expect "${#result[@]}" 1
+      z.t.expect "${result[1]}" "true"
+    }
+
+    z.t.it "空のハッシュを空配列で返す"; {
+      local -A hash=()
+
+      z.hash.keys hash
+      local result=("${REPLY[@]}")
+
+      z.t.expect "${#result[@]}" 0
     }
   }
 }
@@ -45,6 +57,7 @@ z.t.describe "z.hash.values"; {
       local -A empty_hash
 
       z.hash.values empty_hash
+
       z.t.expect.reply.is.null
     }
   }
@@ -67,12 +80,30 @@ z.t.describe "z.hash.entries"; {
     }
   }
 
-  z.t.context "空のハッシュが渡された場合"; {
-    z.t.it "空の配列を返す"; {
-      local -A empty_hash
+  z.t.context "値をそのまま取得する場合"; {
+    z.t.it "空の値と書式風の値を含む組を保持する"; {
+      local -A hash=([empty]="" [word]="keep_empty=true" [flag]="false")
 
-      z.hash.entries empty_hash
-      z.t.expect.reply.is.null
+      z.hash.entries hash
+      local result=("${REPLY[@]}")
+      local -A entries=("${result[@]}")
+
+      z.t.expect "${#result[@]}" 6
+      z.hash.has.key entries key=empty
+
+      z.t.expect.status.is.true
+      z.t.expect.is.null "${entries[empty]}"
+      z.t.expect "${entries[word]}" "keep_empty=true"
+      z.t.expect "${entries[flag]}" "false"
+    }
+
+    z.t.it "空のハッシュを空配列で返す"; {
+      local -A hash=()
+
+      z.hash.entries hash
+      local result=("${REPLY[@]}")
+
+      z.t.expect "${#result[@]}" 0
     }
   }
 }
@@ -86,6 +117,7 @@ z.t.describe "z.hash.count"; {
       hash[city]="Tokyo"
 
       z.hash.count hash
+
       z.t.expect.reply "3"
     }
   }
@@ -95,6 +127,7 @@ z.t.describe "z.hash.count"; {
       local -A empty_hash
 
       z.hash.count empty_hash
+
       z.t.expect.reply "0"
     }
   }
@@ -105,6 +138,7 @@ z.t.describe "z.hash.count"; {
       single_hash[key]="value"
 
       z.hash.count single_hash
+
       z.t.expect.reply "1"
     }
   }

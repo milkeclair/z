@@ -42,5 +42,5 @@ z.wtproxy.prune._stale.locked() {
     entries_count ${#z_wtproxy_state_paths[@]}
     pruned_projects "${pruned_projects[*]}"
   )
-  z.return.hash result
+  z.hash.entries result
 }

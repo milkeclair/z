@@ -8,7 +8,7 @@ z_t_states[mock_last_func]=""
 # example:
 #  z.t._state.mock_last_func  #=> "my_mocked_function"
 z.t._state.mock_last_func() {
-  z.return $z_t_states[mock_last_func]
+  REPLY=$z_t_states[mock_last_func]
 }
 
 # set the last mocked function name

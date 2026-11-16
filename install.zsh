@@ -309,7 +309,7 @@ z.install.mod._resolve_names() {
   fi
 
   if [[ -d "$source_dir/mod/$mod_name" ]]; then
-    z.return $mod_name
+    REPLY=$mod_name
     return
   fi
 

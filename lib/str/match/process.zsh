@@ -13,9 +13,9 @@ z.str.match.rest() {
   local regex=$2
 
   if z.str.is.match "$str" "^(${regex})"; then
-    z.return ${str[MEND + 1,-1]}
+    REPLY=${str[MEND + 1,-1]}
   else
-    z.return
+    REPLY=""
   fi
 }
 
@@ -43,11 +43,11 @@ z.str.match.nth() {
     if z.str.is.match "$word" "$regex"; then
       ((count++))
       if z.int.is.eq $count $index; then
-        z.return $word
+        REPLY=$word
         return
       fi
     fi
   done
 
-  z.return
+  REPLY=""
 }

@@ -1,7 +1,7 @@
 # get the value of a variable by its name
 #
 # $1: variable name
-# REPLY: variable value or null if not exists
+# REPLY: array of variable values, empty if not declared
 # return: null
 #
 # example:
@@ -12,8 +12,8 @@ z.var.get() {
   local var_name=$1
 
   if z.var.exists $var_name; then
-    z.return ${(P)var_name}
+    REPLY=("${(@P)var_name}")
   else
-    z.return null
+    REPLY=()
   fi
 }

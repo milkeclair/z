@@ -18,7 +18,7 @@ z.job.status() {
   z.file.read path="$status_file" || return 1
   local result=$REPLY
   z.io "$result"
-  z.return "$result"
+  REPLY="$result"
 }
 
 # print and return queued jobs
@@ -34,7 +34,7 @@ z.job.list() {
   local jobs_dir=$REPLY
 
   if z.dir.not.exists "$jobs_dir"; then
-    z.return && return
+    REPLY="" && return
   fi
 
   local lines=()
@@ -52,5 +52,5 @@ z.job.list() {
   z.is.null "$REPLY" && return 0
   local result=$REPLY
   z.io "$result"
-  z.return "$result"
+  REPLY="$result"
 }

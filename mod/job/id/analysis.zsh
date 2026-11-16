@@ -8,5 +8,5 @@
 #  z.job.id._generate
 z.job.id._generate() {
   local timestamp=$(date +%Y%m%dT%H%M%S%N)
-  z.return "$timestamp.$$.$RANDOM"
+  REPLY="$timestamp.$$.$RANDOM"
 }

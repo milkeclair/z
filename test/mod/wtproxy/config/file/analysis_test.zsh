@@ -4,7 +4,7 @@ z.t.describe "z.wtproxy._config.file.path"; {
   z.t.context "default projectが取得できる場合"; {
     z.t.it "config file pathを返す"; {
       local XDG_CONFIG_HOME=/tmp/z_t/config_home
-      z.t.mock name="z.wtproxy._config.file.default_project" behavior="z.return sample"
+      z.t.mock name="z.wtproxy._config.file.default_project" behavior="REPLY=sample"
 
       z.wtproxy._config.file.path
 
@@ -73,7 +73,7 @@ z.t.describe "z.wtproxy._config.file.values"; {
       local config_file=/tmp/z_t/wtproxy_config_values/sample.env
       z.dir.make path=${config_file:h}
       z.file.write path=$config_file content=$'Z_WTPROXY_PROXY_PORT_1=3000\nUNKNOWN=value\nexport Z_WTPROXY_PROXY_PORT_2=5432'
-      z.t.mock name="z.wtproxy._config.file.path" behavior="z.return $config_file"
+      z.t.mock name="z.wtproxy._config.file.path" behavior="REPLY=$config_file"
 
       z.wtproxy._config.file.values
       local -A config=("${(@)REPLY}")
@@ -89,7 +89,7 @@ z.t.describe "z.wtproxy._config.file.values"; {
       local config_file=/tmp/z_t/wtproxy_config_values_missing/sample.env
       z.file.not.exists $config_file
       z.t.expect.status.is.true
-      z.t.mock name="z.wtproxy._config.file.path" behavior="z.return $config_file"
+      z.t.mock name="z.wtproxy._config.file.path" behavior="REPLY=$config_file"
 
       z.wtproxy._config.file.values
       z.t.expect.status.is.true skip_unmock=true
@@ -102,7 +102,7 @@ z.t.describe "z.wtproxy._config.file.values"; {
 z.t.describe "z.wtproxy._config.file.default_project"; {
   z.t.context "common git directoryが取得できる場合"; {
     z.t.it "repository root名からproject名を返す"; {
-      z.t.mock name="z.git.wt.current.common_dir" behavior="z.return /repo/sample/.git"
+      z.t.mock name="z.git.wt.current.common_dir" behavior="REPLY=/repo/sample/.git"
 
       z.wtproxy._config.file.default_project
 
@@ -112,7 +112,7 @@ z.t.describe "z.wtproxy._config.file.default_project"; {
 
   z.t.context "兄弟worktreeの場合"; {
     z.t.it "同じrepository root名からproject名を返す"; {
-      z.t.mock name="z.git.wt.current.common_dir" behavior="z.return /repo/sample/.git"
+      z.t.mock name="z.git.wt.current.common_dir" behavior="REPLY=/repo/sample/.git"
 
       z.wtproxy._config.file.default_project
 

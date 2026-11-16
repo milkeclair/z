@@ -5,7 +5,7 @@ z.t.describe "z.wtproxy._print.entry"; {
     z.t.it "entryとport mappingを出力する"; {
       z.t.mock name="z.wtproxy._config" behavior='
         local -A config=(host 127.0.0.1 proxy_port_1 3000)
-        z.return.hash config
+        z.hash.entries config
       '
       z.t.mock name="z.io"
 

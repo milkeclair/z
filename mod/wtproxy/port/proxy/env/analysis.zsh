@@ -9,10 +9,10 @@
 z.wtproxy._port.proxy.env.key() {
   local key=$1
 
-  z.wtproxy._port.proxy.index $key || { z.return; return; }
+  z.wtproxy._port.proxy.index $key || { REPLY=""; return; }
   local port_index=$REPLY
 
-  z.return "$z_wtproxy_proxy_port_env_prefix$port_index"
+  REPLY="$z_wtproxy_proxy_port_env_prefix$port_index"
 }
 
 # get the index from the proxy port environment variable name
@@ -28,10 +28,9 @@ z.wtproxy._port.proxy.env.index() {
 
   if z.str.is.match "$env_name" "^${z_wtproxy_proxy_port_env_prefix}[0-9]+$"; then
     z.str.remove.prefix "$env_name" "$z_wtproxy_proxy_port_env_prefix"
-    z.return $REPLY
-    return
+    return 0
   fi
 
-  z.return
+  REPLY=""
   return 1
 }

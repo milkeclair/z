@@ -9,9 +9,9 @@ z.t.describe "z.completion.enable"; {
       z.t.mock name="z.completion.is._interactive" behavior="return 0"
       z.t.mock name="z.completion.compdef._ignore_private" behavior="return 0"
       z.t.mock name="z.completion.compdef._register" behavior="return 0"
-      z.t.mock name="z.job.status" behavior="z.return running"
+      z.t.mock name="z.job.status" behavior="REPLY=running"
       z.t.mock name="z.job.cancel" behavior='cancelled+=("$*"); return 0'
-      z.t.mock name="z.job.run" behavior="z.return new-cache-job"
+      z.t.mock name="z.job.run" behavior="REPLY=new-cache-job"
 
       z.completion.enable
       local returned_id=$REPLY
@@ -45,7 +45,7 @@ z.t.describe "z.completion.enable"; {
       z.t.mock name="z.completion.is._interactive" behavior="return 0"
       z.t.mock name="z.completion.compdef._ignore_private" behavior="return 0"
       z.t.mock name="z.completion.compdef._register" behavior="return 0"
-      z.t.mock name="z.job.run" behavior='z.return "$*"'
+      z.t.mock name="z.job.run" behavior='REPLY="$*"'
 
       z.completion.enable
       local args_text=$REPLY
@@ -65,7 +65,7 @@ z.t.describe "z.completion.enable"; {
       z.t.mock name="z.completion.is._interactive" behavior="return 0"
       z.t.mock name="z.completion.compdef._ignore_private" behavior="return 1"
       z.t.mock name="z.completion.compdef._register" behavior='completion_calls+=(register); return 0'
-      z.t.mock name="z.job.run" behavior='completion_calls+=(job); z.return job-id'
+      z.t.mock name="z.job.run" behavior='completion_calls+=(job); REPLY=job-id'
 
       z.completion.enable
       local result_code=$?
@@ -83,7 +83,7 @@ z.t.describe "z.completion.enable"; {
       z.t.mock name="z.completion.is._interactive" behavior="return 0"
       z.t.mock name="z.completion.compdef._ignore_private" behavior="return 0"
       z.t.mock name="z.completion.compdef._register" behavior="return 1"
-      z.t.mock name="z.job.run" behavior="z.return job-id"
+      z.t.mock name="z.job.run" behavior="REPLY=job-id"
 
       z.completion.enable
 

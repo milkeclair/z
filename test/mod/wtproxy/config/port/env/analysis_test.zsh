@@ -7,8 +7,8 @@ z.t.describe "z.wtproxy._config.port.env.values"; {
       local Z_WTPROXY_PROXY_PORT_3=5173
       z.t.mock name="z.wtproxy._config.file.key" behavior='
         case $1 in
-          Z_WTPROXY_PROXY_PORT_1) z.return proxy_port_1 ;;
-          Z_WTPROXY_PROXY_PORT_3) z.return proxy_port_3 ;;
+          Z_WTPROXY_PROXY_PORT_1) REPLY=proxy_port_1 ;;
+          Z_WTPROXY_PROXY_PORT_3) REPLY=proxy_port_3 ;;
           *) return 1 ;;
         esac
       '
@@ -49,7 +49,7 @@ z.t.describe "z.wtproxy._config.port.env.values"; {
       local Z_WTPROXY_PROXY_PORT_1=""
       z.t.mock name="z.wtproxy._config.file.key" behavior='
         z.is.eq "$1" Z_WTPROXY_PROXY_PORT_1 || return 1
-        z.return proxy_port_1
+        REPLY=proxy_port_1
       '
 
       z.wtproxy._config.port.env.values

@@ -11,9 +11,9 @@ z.t.describe "z.update"; {
 
       z.t.mock name=mktemp behavior="z.dir.make path=\"$dir/.z-update.fixture\"; z.io \"$dir/.z-update.fixture\""
       z.t.mock name="z.update._confirm" behavior="return 0"
-      z.t.mock name="z.update.archive._download" behavior="print download >> \"$dir/events\"; z.return \"$dir/source.tar.gz\""
-      z.t.mock name="z.update.archive._extract" behavior="print extract >> \"$dir/events\"; z.return \"$dir/source\""
-      z.t.mock name="z.update.mod._resolve" behavior="print resolve >> \"$dir/events\"; z.return job completion"
+      z.t.mock name="z.update.archive._download" behavior="print download >> \"$dir/events\"; REPLY=\"$dir/source.tar.gz\""
+      z.t.mock name="z.update.archive._extract" behavior="print extract >> \"$dir/events\"; REPLY=\"$dir/source\""
+      z.t.mock name="z.update.mod._resolve" behavior="print resolve >> \"$dir/events\"; REPLY=(\"job\" \"completion\")"
       z.t.mock name="z.update.core._copy" behavior="print core >> \"$dir/events\""
       z.t.mock name="z.update.mod._copy" behavior="print mods >> \"$dir/events\""
       z.t.mock name="z.update.installation._replace" behavior="print replace >> \"$dir/events\""
@@ -37,12 +37,14 @@ z.t.describe "z.update"; {
 
       z.t.expect "$update_status" 0
       REPLY=$result
+
       z.t.expect.reply.is.null
       z.t.expect "$events" $'download\nextract\nresolve\ncore\nmods\nreplace\nreload'
       z.t.expect "$mod_call" "source=$dir/source current=$dir/installed dir=$dir/.z-update.fixture/next job completion"
       z.t.expect "$download_call" "dir=$dir/.z-update.fixture branch=main"
 
       z.dir.not.exists "$dir/.z-update.fixture"
+
       z.t.expect.status.is.true
 
       z.dir.remove path=/tmp/z_t/update_flow
@@ -80,6 +82,7 @@ z.t.describe "z.update"; {
 
       z.t.expect "$update_status" 1
       REPLY=$call
+
       z.t.expect.reply.is.null
     }
   }
@@ -104,9 +107,11 @@ z.t.describe "z.update"; {
 
       z.t.expect "$update_status" 1
       REPLY=$call
+
       z.t.expect.reply.is.null
 
       local work_dirs=("$dir"/.z-update.*(N/))
+
       z.t.expect "${#work_dirs}" 0
 
       z.dir.remove path=/tmp/z_t/update_flow
@@ -134,9 +139,11 @@ z.t.describe "z.update"; {
 
       z.t.expect "$update_status" 1
       REPLY=$call
+
       z.t.expect.reply.is.null
 
       z.file.read path="$dir/installed/main.zsh"
+
       z.t.expect.reply old
 
       z.dir.remove path=/tmp/z_t/update_flow
@@ -165,12 +172,15 @@ z.t.describe "z.update"; {
 
       z.t.expect "$update_status" 1
       REPLY=$call
+
       z.t.expect.reply.is.null
 
       z.dir.not.exists "$dir/.z-update.fixture"
+
       z.t.expect.status.is.true
 
       z.file.read path="$dir/installed/main.zsh"
+
       z.t.expect.reply old
 
       z.dir.remove path=/tmp/z_t/update_flow
@@ -185,9 +195,9 @@ z.t.describe "z.update"; {
 
       z.t.mock name=mktemp behavior="z.dir.make path=\"$dir/.z-update.fixture\"; z.io \"$dir/.z-update.fixture\""
       z.t.mock name="z.update._confirm" behavior="return 0"
-      z.t.mock name="z.update.archive._download" behavior="z.return \"$dir/archive.tar.gz\""
-      z.t.mock name="z.update.archive._extract" behavior="z.return \"$dir/source\""
-      z.t.mock name="z.update.mod._resolve" behavior="z.return"
+      z.t.mock name="z.update.archive._download" behavior="REPLY=\"$dir/archive.tar.gz\""
+      z.t.mock name="z.update.archive._extract" behavior="REPLY=\"$dir/source\""
+      z.t.mock name="z.update.mod._resolve" behavior="REPLY=\"\""
       z.t.mock name="z.update.core._copy" behavior="return 0"
       z.t.mock name="z.update.mod._copy" behavior="return 0"
       z.t.mock name="z.update.installation._replace" behavior="z.dir.make path=\"$dir/.z-update.fixture/previous\"; z.file.write path=\"$dir/.z-update.fixture/previous/main.zsh\" content=old"
@@ -202,15 +212,16 @@ z.t.describe "z.update"; {
       z.t.expect "$update_status" 1
 
       z.file.read path="$dir/.z-update.fixture/previous/main.zsh"
+
       z.t.expect.reply old
 
       z.file.read path="$dir/error"
+
       z.t.expect.includes "$REPLY" "$dir/.z-update.fixture/previous"
 
       z.dir.remove path=/tmp/z_t/update_flow
     }
   }
-
 }
 
 z.t.describe "z.update._confirm"; {
@@ -225,9 +236,11 @@ z.t.describe "z.update._confirm"; {
 
       z.t.expect "$confirm_status" 0
       REPLY=$result
+
       z.t.expect.reply.is.null
 
       z.file.read path="$dir/prompt"
+
       z.t.expect.includes "$REPLY" "Update /tmp/installed z and its installed mods? (y/n):"
 
       z.dir.remove path="$dir"
@@ -236,7 +249,7 @@ z.t.describe "z.update._confirm"; {
 
   z.t.context "Yを入力した場合"; {
     z.t.it "成功する"; {
-      z.t.mock name="z.io.read" behavior="z.return Y"
+      z.t.mock name="z.io.read" behavior="REPLY=Y"
 
       z.update._confirm dir=/tmp/installed >/dev/null
 
@@ -246,7 +259,7 @@ z.t.describe "z.update._confirm"; {
 
   z.t.context "nを入力した場合"; {
     z.t.it "失敗してREPLYを空にする"; {
-      z.t.mock name="z.io.read" behavior="z.return n"
+      z.t.mock name="z.io.read" behavior="REPLY=n"
 
       z.update._confirm dir=/tmp/installed >/dev/null
       local confirm_status=$?
@@ -254,6 +267,7 @@ z.t.describe "z.update._confirm"; {
 
       z.t.expect "$confirm_status" 1
       REPLY=$result
+
       z.t.expect.reply.is.null
     }
   }
@@ -278,9 +292,8 @@ z.t.describe "z.update._confirm"; {
 
       z.t.expect "$confirm_status" 1
       REPLY=$call
+
       z.t.expect.reply.is.null
     }
   }
-
 }
-

@@ -18,7 +18,7 @@ z.hash.to_arr() {
     arr+=("$key:${${(P)hash_name}[$key]}")
   done
 
-  z.return ${arr[@]}
+  REPLY=("${arr[@]}")
 }
 
 # merge two hashes into one
@@ -53,5 +53,5 @@ z.hash.merge() {
     merged_hash[$key]=${(P)ref}
   done
 
-  z.return.hash merged_hash
+  z.hash.entries merged_hash
 }

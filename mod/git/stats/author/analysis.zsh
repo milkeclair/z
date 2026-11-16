@@ -18,5 +18,5 @@ z.git.stats._author.names() {
     authors+=("$name")
   done <<< "$names"
 
-  z.return keep_empty=true "${authors[@]}"
+  REPLY=("${authors[@]}")
 }

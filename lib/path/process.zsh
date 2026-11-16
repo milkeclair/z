@@ -10,9 +10,9 @@
 z.path.dir() {
   local filepath=$1
 
-  z.str.is.not.path_like "$filepath" && z.return "" && return
+  z.str.is.not.path_like "$filepath" && REPLY="" && return
 
-  z.return ${filepath:h}
+  REPLY=${filepath:h}
 }
 
 # get the base name of a file path
@@ -27,9 +27,9 @@ z.path.dir() {
 z.path.base() {
   local filepath=$1
 
-  z.str.is.not.path_like "$filepath" && z.return "" && return
+  z.str.is.not.path_like "$filepath" && REPLY="" && return
 
-  z.return ${filepath:t}
+  REPLY=${filepath:t}
 }
 
 # get the stem (base name without extension) of a file path
@@ -44,10 +44,10 @@ z.path.base() {
 z.path.stem() {
   local filepath=$1
 
-  z.str.is.not.path_like "$filepath" && z.return "" && return
+  z.str.is.not.path_like "$filepath" && REPLY="" && return
 
   local base=${filepath:t}
-  z.return ${base:r}
+  REPLY=${base:r}
 }
 
 # get the extension of a file path
@@ -62,10 +62,10 @@ z.path.stem() {
 z.path.ext() {
   local filepath=$1
 
-  z.str.is.not.path_like "$filepath" && z.return "" && return
+  z.str.is.not.path_like "$filepath" && REPLY="" && return
 
   local base=${filepath:t}
-  z.return ${base:e}
+  REPLY=${base:e}
 }
 
 # get the real (absolute and symlink-resolved) path
@@ -80,9 +80,9 @@ z.path.ext() {
 z.path.real() {
   local filepath=$1
 
-  z.str.is.not.path_like "$filepath" && z.return "" && return
+  z.str.is.not.path_like "$filepath" && REPLY="" && return
 
-  z.return ${filepath:A}
+  REPLY=${filepath:A}
 }
 
 # get the absolute path
@@ -97,9 +97,9 @@ z.path.real() {
 z.path.abs() {
   local filepath=$1
 
-  z.str.is.not.path_like "$filepath" && z.return "" && return
+  z.str.is.not.path_like "$filepath" && REPLY="" && return
 
-  z.return ${filepath:a}
+  REPLY=${filepath:a}
 }
 
 # convert path to lowercase
@@ -114,9 +114,9 @@ z.path.abs() {
 z.path.downcase() {
   local filepath=$1
 
-  z.str.is.not.path_like "$filepath" && z.return "" && return
+  z.str.is.not.path_like "$filepath" && REPLY="" && return
 
-  z.return ${filepath:l}
+  REPLY=${filepath:l}
 }
 
 # convert path to uppercase
@@ -131,7 +131,7 @@ z.path.downcase() {
 z.path.upcase() {
   local filepath=$1
 
-  z.str.is.not.path_like "$filepath" && z.return "" && return
+  z.str.is.not.path_like "$filepath" && REPLY="" && return
 
-  z.return ${filepath:u}
+  REPLY=${filepath:u}
 }

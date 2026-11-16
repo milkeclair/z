@@ -24,7 +24,7 @@ z.pj() {
     return 1
   fi
 
-  z.return
+  REPLY=""
   code "$dir"
 }
 
@@ -38,15 +38,15 @@ z.pj() {
 # example:
 #  z.pj.add name=some_project dir=~/repo/p/some
 z.pj.add() {
-  z.arg.named.literal name "$@" && local name=$REPLY
-  z.arg.named.literal dir "$@" && local dir=$REPLY
+  z.arg.named name "$@" && local name=$REPLY
+  z.arg.named dir "$@" && local dir=$REPLY
 
   z.pj.add._directory "$dir" || return 1
   local project_dir=$REPLY
   z.pj.add._write name="$name" dir="$project_dir" || return 1
 
-  z.io.literal "Registered: $name -> $project_dir"
-  z.return
+  z.io message="Registered: $name -> $project_dir"
+  REPLY=""
 }
 
 # list registered project names and directories
@@ -62,16 +62,16 @@ z.pj.list() {
   z.arr.count "${names[@]}"
   if z.int.is.zero $REPLY; then
     z.io "No projects registered."
-    z.return
+    REPLY=""
     return 0
   fi
 
   local name
   for name in "${names[@]}"; do
     z.pj.file._directory "$name" || return 1
-    z.io.literal "$name"$'\t'"$REPLY"
+    z.io message="$name"$'\t'"$REPLY"
   done
-  z.return
+  REPLY=""
 }
 
 # remove a project registration by name or numbered selection
@@ -99,5 +99,5 @@ z.pj.remove() {
 
   z.pj.remove._entry "$name" || return 1
   z.io "Removed: $name"
-  z.return
+  REPLY=""
 }

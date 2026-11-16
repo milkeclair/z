@@ -45,7 +45,7 @@ z.t.describe "z.git.branch.all"; {
       local expected="  main\n* current-branch\n  remotes/origin/main\n  remotes/origin/feature-branch"
       z.t.mock name="git" behavior='
         if z.str.start_with "$*" "branch -a"; then
-          z.return "$expected"
+          REPLY="$expected"
         else
           z.io "Unexpected git command: $*"
           return 1
