@@ -3,7 +3,7 @@ source ${z_main}
 z.t.describe "z.completion.is._interactive"; {
   z.t.context "-cを指定しない対話シェルの場合"; {
     z.t.it "trueを返す"; {
-      z_mode=normal zsh -dfis +Z 2>/dev/null <<'ZSH'
+      z_mode=normal zsh -dfis +Z +o promptsp 2>/dev/null <<'ZSH'
 source "$Z_ROOT/main.zsh" || exit 2
 z.completion.is._interactive
 exit $?
