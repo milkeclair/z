@@ -12,6 +12,7 @@ local -A z_modules=(
   [install]="process"
   [int]="operator"
   [io]="process"
+  [kill]="analysis:process"
   [mode]="process"
   [mod]="process"
   [path]="analysis:process"
@@ -35,6 +36,7 @@ local z_module_depends_order=(
   hash
   int
   io
+  kill
   mode
   mod
   path

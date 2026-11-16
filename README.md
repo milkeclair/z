@@ -52,6 +52,23 @@ are replaced with the selected branch's contents and reloaded.
 
 `z.help <function_name>` displays the function docs. If no doc block is found, it displays `Document not found`.
 
+### Terminate processes
+
+Use exactly one selector to send SIGTERM:
+
+```zsh
+z.kill pid=12345
+z.kill port=3000
+z.kill name=node
+```
+
+Port selection requires `lsof` and targets TCP listeners. Name selection
+matches the process name reported by `ps -A -o comm=` exactly, including any
+OS name-length limit. Every matching PID receives SIGTERM. Success means that
+the signal was sent; the command returns immediately without waiting for exit.
+`REPLY` contains successfully signaled PIDs. Invalid selectors, no matches,
+lookup errors and signal failures return status 1.
+
 ### Examples
 
 Script to check if the number of arguments is more than 2.
