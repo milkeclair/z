@@ -38,14 +38,14 @@ z.pj() {
 # example:
 #  z.pj.add name=some_project dir=~/repo/p/some
 z.pj.add() {
-  z.arg.named.literal name "$@" && local name=$REPLY
-  z.arg.named.literal dir "$@" && local dir=$REPLY
+  z.arg.named name "$@" && local name=$REPLY
+  z.arg.named dir "$@" && local dir=$REPLY
 
   z.pj.add._directory "$dir" || return 1
   local project_dir=$REPLY
   z.pj.add._write name="$name" dir="$project_dir" || return 1
 
-  z.io.literal "Registered: $name -> $project_dir"
+  z.io message="Registered: $name -> $project_dir"
   REPLY=""
 }
 
@@ -69,7 +69,7 @@ z.pj.list() {
   local name
   for name in "${names[@]}"; do
     z.pj.file._directory "$name" || return 1
-    z.io.literal "$name"$'\t'"$REPLY"
+    z.io message="$name"$'\t'"$REPLY"
   done
   REPLY=""
 }

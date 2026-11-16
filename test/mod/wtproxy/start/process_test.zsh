@@ -40,7 +40,7 @@ z.t.describe "z.wtproxy.start._daemon"; {
       z.file.write path=$fake_zsh content=$'#!/bin/sh\nprintf "%s\\n" "$@"\n'
       z.perm path=$fake_zsh mode=700
       z.t.mock name="z.wtproxy._proxy.is.running" behavior="return 1"
-      z.t.mock name="z.wtproxy._config" behavior="z.hash.entries config literal=true"
+      z.t.mock name="z.wtproxy._config" behavior="z.hash.entries config"
       z.t.mock name="z.wtproxy._proxy.is.pid" behavior="return 0"
 
       PATH=$fake_bin:$PATH z.wtproxy.start._daemon
@@ -74,7 +74,7 @@ z.t.describe "z.wtproxy.start._daemon"; {
       z.file.write path=$fake_zsh content=$'#!/bin/sh\nexit 0\n'
       z.perm path=$fake_zsh mode=700
       z.t.mock name="z.wtproxy._proxy.is.running" behavior="return 1"
-      z.t.mock name="z.wtproxy._config" behavior="z.hash.entries config literal=true"
+      z.t.mock name="z.wtproxy._config" behavior="z.hash.entries config"
       z.t.mock name="z.wtproxy._proxy.is.pid" behavior="return 1"
       z.t.mock name="kill" behavior="print -r -- \"$*\" >> /tmp/z_t/wtproxy_daemon_failure/kill_calls"
       z.t.mock name="z.io.error" behavior=":"
@@ -116,7 +116,7 @@ z.t.describe "z.wtproxy.start._serve"; {
       disable ztcp 2>/dev/null
       z.t.mock name="zmodload" behavior="return 0"
       z.t.mock name="ztcp" behavior="return 0"
-      z.t.mock name="z.wtproxy._config" behavior="z.hash.entries config literal=true"
+      z.t.mock name="z.wtproxy._config" behavior="z.hash.entries config"
       z.t.mock name="z.wtproxy._port.keys.from_config" behavior="REPLY=worktree_port_1"
       z.t.mock name="z.wtproxy._port.proxy" behavior="return 1"
 
@@ -145,7 +145,7 @@ z.t.describe "z.wtproxy.start._serve"; {
         print -r -- "$*" >> /tmp/z_t/wtproxy_serve_listen_failure/ztcp_calls
         return 1
       '
-      z.t.mock name="z.wtproxy._config" behavior="z.hash.entries config literal=true"
+      z.t.mock name="z.wtproxy._config" behavior="z.hash.entries config"
       z.t.mock name="z.wtproxy._port.keys.from_config" behavior="REPLY=worktree_port_1"
       z.t.mock name="z.wtproxy._port.proxy" behavior="REPLY=3000"
 
@@ -174,7 +174,7 @@ z.t.describe "z.wtproxy.start._serve"; {
       z.t.mock name="zmodload" behavior="return 0"
       z.t.mock name="ztcp" behavior="REPLY=11"
       z.t.mock name="zselect" behavior="return 1"
-      z.t.mock name="z.wtproxy._config" behavior="z.hash.entries config literal=true"
+      z.t.mock name="z.wtproxy._config" behavior="z.hash.entries config"
       z.t.mock name="z.wtproxy._port.keys.from_config" behavior="REPLY=worktree_port_1"
       z.t.mock name="z.wtproxy._port.proxy" behavior="REPLY=3000"
       z.t.mock name="z.wtproxy.start._serve.cleanup" behavior="print -r -- \"\$*\" >> /tmp/z_t/wtproxy_serve_select_failure/cleanup_calls"
@@ -222,7 +222,7 @@ z.t.describe "z.wtproxy.start._serve"; {
           REPLY=12
         fi
       '
-      z.t.mock name="z.wtproxy._config" behavior="z.hash.entries config literal=true"
+      z.t.mock name="z.wtproxy._config" behavior="z.hash.entries config"
       z.t.mock name="z.wtproxy._port.keys.from_config" behavior="REPLY=(\"worktree_port_1\" \"worktree_port_2\")"
       z.t.mock name="z.wtproxy._port.proxy" behavior='
         if z.is.eq "$1" "worktree_port_1"; then

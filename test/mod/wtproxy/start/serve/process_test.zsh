@@ -52,7 +52,7 @@ z.t.describe "z.wtproxy.start._serve.accept"; {
       z.t.mock name="z.wtproxy.start._serve.remote.host" behavior="REPLY=127.0.0.1"
       z.t.mock name="z.wtproxy._entry.active" behavior='
         local -A entry=(path /tmp/worktree worktree_port_1 3001)
-        z.hash.entries entry literal=true
+        z.hash.entries entry
       '
       z.t.mock name="z.wtproxy.start._serve.pipe.pair" behavior="return 0"
 
@@ -85,7 +85,7 @@ z.t.describe "z.wtproxy.start._serve.accept"; {
       z.t.mock name="z.wtproxy.start._serve.remote.host" behavior="REPLY=127.0.0.1"
       z.t.mock name="z.wtproxy._entry.active" behavior='
         local -A entry=(path /tmp/worktree worktree_port_1 3001)
-        z.hash.entries entry literal=true
+        z.hash.entries entry
       '
       z.t.mock name="z.wtproxy.start._serve.pipe.pair" behavior='
         print -r -- "$*" >> /tmp/z_t/wtproxy_accept_success_pipe_calls

@@ -8,8 +8,8 @@
 # example:
 #  z.pj.add._write name=example dir=/repo/example
 z.pj.add._write() {
-  z.arg.named.literal name "$@" && local name=$REPLY
-  z.arg.named.literal dir "$@" && local dir=$REPLY
+  z.arg.named name "$@" && local name=$REPLY
+  z.arg.named dir "$@" && local dir=$REPLY
   z.pj.file._path "$name" || return 1
   local file=$REPLY
 
@@ -24,5 +24,5 @@ z.pj.add._write() {
     z.dir.make path="$registry" || return 1
   fi
 
-  z.file.write.literal path="$file" content="$dir"$'\n' overwrite=false
+  z.file.write path="$file" content="$dir"$'\n' overwrite=false
 }

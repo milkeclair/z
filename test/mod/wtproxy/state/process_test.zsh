@@ -79,7 +79,7 @@ z.t.describe "z.wtproxy._state.save"; {
       z.wtproxy._state.port.set $worktree_path worktree_port_1 3001
       z.t.mock name="z.wtproxy._config" behavior="
         local -A config=(state_dir $state_dir state_file $state_file)
-        z.hash.entries config literal=true
+        z.hash.entries config
       "
       z.t.mock name="z.wtproxy._port.keys" behavior="REPLY=worktree_port_1"
 
@@ -99,7 +99,7 @@ z.t.describe "z.wtproxy._state.with_lock"; {
       local lock_file=$state_dir/project.lock
       z.t.mock name="z.wtproxy._config" behavior="
         local -A config=(state_dir $state_dir lock_file $lock_file)
-        z.hash.entries config literal=true
+        z.hash.entries config
       "
       wtproxy_lock_test_fn() {
         REPLY="$1:$2"

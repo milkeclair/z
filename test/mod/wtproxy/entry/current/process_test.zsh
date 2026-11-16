@@ -7,7 +7,7 @@ z.t.describe "z.wtproxy._entry.current.locked"; {
       z.t.mock name="z.wtproxy._state.load" behavior="z.wtproxy._state.init"
       z.t.mock name="z.wtproxy._entry.ensure" behavior='
         local -A entry=(path "$1" branch "$2" compose_project_name project_feat)
-        z.hash.entries entry literal=true
+        z.hash.entries entry
       '
       z.t.mock name="z.wtproxy._state.save" behavior="return 0"
 
@@ -25,7 +25,7 @@ z.t.describe "z.wtproxy._entry.current.locked"; {
       z.t.mock name="z.wtproxy._state.load" behavior="z.wtproxy._state.init"
       z.t.mock name="z.wtproxy._entry.ensure" behavior='
         local -A entry=(path "$1" branch "$2" compose_project_name project_feat)
-        z.hash.entries entry literal=true
+        z.hash.entries entry
       '
       z.t.mock name="z.wtproxy._state.save" behavior="return 0"
 

@@ -28,7 +28,7 @@ z.git.stats._commit.map.split() {
     [deleted]=$deleted
     [total]=$total
   )
-  z.hash.entries result literal=true
+  z.hash.entries result
 }
 
 # remove duplicate entries from a commit map

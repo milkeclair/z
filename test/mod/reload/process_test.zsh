@@ -7,7 +7,7 @@ z.t.describe "z.reload"; {
       z.dir.make path="$fixture_root"
       local HOME="$fixture_root"
       local reload_value=before
-      z.file.write.literal path="$HOME/.zshrc" content=$'reload_value=loaded\nREPLY=from-config\n'
+      z.file.write path="$HOME/.zshrc" content=$'reload_value=loaded\nREPLY=from-config\n'
 
       z.reload
       local reload_status=$?
@@ -25,12 +25,12 @@ z.t.describe "z.reload"; {
       z.dir.make path="$fixture_root"
       local HOME="$fixture_root"
       local reload_value=""
-      z.file.write.literal path="$HOME/.zshrc" content='reload_value=first'
+      z.file.write path="$HOME/.zshrc" content='reload_value=first'
 
       z.reload
 
       z.t.expect "$reload_value" first
-      z.file.write.literal path="$HOME/.zshrc" content='reload_value=second'
+      z.file.write path="$HOME/.zshrc" content='reload_value=second'
 
       z.reload
 
@@ -43,7 +43,7 @@ z.t.describe "z.reload"; {
       local fixture_root="/tmp/z_t/reload_output_$$"
       z.dir.make path="$fixture_root"
       local HOME="$fixture_root"
-      z.file.write.literal path="$HOME/.zshrc" content=$'print -r -- "reload output"\nprint -r -- "reload error" >&2\n'
+      z.file.write path="$HOME/.zshrc" content=$'print -r -- "reload output"\nprint -r -- "reload error" >&2\n'
 
       z.reload > "$fixture_root/stdout" 2> "$fixture_root/stderr"
 
@@ -63,7 +63,7 @@ z.t.describe "z.reload"; {
       z.dir.make path="$fixture_root"
       local HOME="$fixture_root"
       local reload_value=""
-      z.file.write.literal path="$HOME/.zshrc" content='reload_value=loaded'
+      z.file.write path="$HOME/.zshrc" content='reload_value=loaded'
 
       z.reload
 
@@ -81,8 +81,8 @@ z.t.describe "z.reload"; {
       local HOME="$fixture_root"
       local ZDOTDIR="$fixture_root/zdotdir"
       local reload_value=""
-      z.file.write.literal path="$HOME/.zshrc" content='reload_value=home'
-      z.file.write.literal path="$ZDOTDIR/.zshrc" content='reload_value=zdotdir'
+      z.file.write path="$HOME/.zshrc" content='reload_value=home'
+      z.file.write path="$ZDOTDIR/.zshrc" content='reload_value=zdotdir'
 
       z.reload
 
@@ -97,7 +97,7 @@ z.t.describe "z.reload"; {
       local fixture_root="/tmp/z_t/reload_failed_$$"
       z.dir.make path="$fixture_root"
       local HOME="$fixture_root"
-      z.file.write.literal path="$HOME/.zshrc" content='return 23'
+      z.file.write path="$HOME/.zshrc" content='return 23'
 
       z.reload
 

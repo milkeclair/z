@@ -61,5 +61,5 @@ z.process.list._ports() {
     ports[$pid]=$REPLY
   done
 
-  z.hash.entries ports literal=true
+  z.hash.entries ports
 }

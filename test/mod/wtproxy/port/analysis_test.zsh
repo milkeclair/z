@@ -5,7 +5,7 @@ z.t.describe "z.wtproxy._port.keys"; {
     z.t.it "configからworktree port keyを返す"; {
       z.t.mock name="z.wtproxy._config" behavior='
         local -A config=(proxy_port_1 3000 proxy_port_2 5432)
-        z.hash.entries config literal=true
+        z.hash.entries config
       '
 
       z.wtproxy._port.keys
@@ -20,7 +20,7 @@ z.t.describe "z.wtproxy._port.proxies"; {
     z.t.it "proxy portをindex順で返す"; {
       z.t.mock name="z.wtproxy._config" behavior='
         local -A config=(proxy_port_2 5432 proxy_port_1 3000)
-        z.hash.entries config literal=true
+        z.hash.entries config
       '
 
       z.wtproxy._port.proxies
@@ -51,7 +51,7 @@ z.t.describe "z.wtproxy._port.proxy"; {
     z.t.it "対応するproxy portを返す"; {
       z.t.mock name="z.wtproxy._config" behavior='
         local -A config=(proxy_port_1 3000)
-        z.hash.entries config literal=true
+        z.hash.entries config
       '
 
       z.wtproxy._port.proxy worktree_port_1
@@ -64,7 +64,7 @@ z.t.describe "z.wtproxy._port.proxy"; {
     z.t.it "falseを返す"; {
       z.t.mock name="z.wtproxy._config" behavior='
         local -A config=(proxy_port_1 3000)
-        z.hash.entries config literal=true
+        z.hash.entries config
       '
       z.t.mock name="z.io.error"
 

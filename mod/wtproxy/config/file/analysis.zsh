@@ -87,7 +87,7 @@ z.wtproxy._config.file.values() {
   z.wtproxy._config.file.path
   local file=$REPLY
   if z.is.null $file || z.file.not.exists $file; then
-    z.hash.entries config literal=true
+    z.hash.entries config
     return
   fi
 
@@ -97,7 +97,7 @@ z.wtproxy._config.file.values() {
     config[$entry[1]]=$entry[2]
   done < "$file"
 
-  z.hash.entries config literal=true
+  z.hash.entries config
 }
 
 # infer the default wtproxy project name

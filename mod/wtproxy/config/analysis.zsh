@@ -24,7 +24,7 @@ z.wtproxy._config() {
   config[pid_file]="$state_dir/$config[project].pid"
   config[log_file]="$state_dir/$config[project].log"
 
-  z.hash.entries config literal=true
+  z.hash.entries config
 }
 
 # get a single wtproxy configuration value
@@ -66,5 +66,5 @@ z.wtproxy._config.values() {
   z.hash.merge base=config other=env_config
   config=("${(@)REPLY}")
 
-  z.hash.entries config literal=true
+  z.hash.entries config
 }

@@ -59,7 +59,7 @@ z.t.describe "z.wtproxy.start._serve.pipe.pair"; {
       "
       z.t.mock name="z.wtproxy._entry.active" behavior="
         local -A entry=(path /tmp/worktree)
-        z.hash.entries entry literal=true
+        z.hash.entries entry
       "
       z.t.mock name="sysread" behavior="
         print -r -- \"\$*\" >> /tmp/z_t/wtproxy_pipe_active_same_sysread_calls
@@ -89,7 +89,7 @@ z.t.describe "z.wtproxy.start._serve.pipe.pair"; {
       "
       z.t.mock name="z.wtproxy._entry.active" behavior="
         local -A entry=(path /tmp/other-worktree)
-        z.hash.entries entry literal=true
+        z.hash.entries entry
       "
       z.t.mock name="sysread" behavior="
         print -r -- \"sysread \$*\" >> /tmp/z_t/wtproxy_pipe_active_changed_calls

@@ -20,5 +20,5 @@ z.wtproxy._entry.current.locked() {
   z.is.true $activate && z_wtproxy_state_active_path=$worktree_path
   z.wtproxy._state.save || return 1
 
-  z.hash.entries entry literal=true
+  z.hash.entries entry
 }

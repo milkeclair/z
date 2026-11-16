@@ -42,7 +42,7 @@ z.t.describe "z.wtproxy.env"; {
     z.t.it "worktree用のenvを出力する"; {
       z.t.mock name="z.wtproxy._entry.current" behavior='
         local -A entry=(compose_project_name project_feat worktree_port_1 3001)
-        z.hash.entries entry literal=true
+        z.hash.entries entry
       '
       z.t.mock name="z.wtproxy._port.keys" behavior="REPLY=worktree_port_1"
 
@@ -56,7 +56,7 @@ z.t.describe "z.wtproxy.env"; {
     z.t.it "worktree用のenvを付けてcommandを実行する"; {
       z.t.mock name="z.wtproxy._entry.current" behavior='
         local -A entry=(compose_project_name project_feat worktree_port_1 3001)
-        z.hash.entries entry literal=true
+        z.hash.entries entry
       '
       z.t.mock name="z.wtproxy._port.keys" behavior="REPLY=worktree_port_1"
 
@@ -70,7 +70,7 @@ z.t.describe "z.wtproxy.env"; {
     z.t.it "worktree用のenvを付けてfunctionを実行する"; {
       z.t.mock name="z.wtproxy._entry.current" behavior="
         local -A entry=(compose_project_name project_feat worktree_port_1 3001)
-        z.hash.entries entry literal=true
+        z.hash.entries entry
       "
       z.t.mock name="z.wtproxy._port.keys" behavior="REPLY=worktree_port_1"
       wtproxy_test_dev() {
@@ -98,7 +98,7 @@ z.t.describe "z.wtproxy.env"; {
     z.t.it "falseを返す"; {
       z.t.mock name="z.wtproxy._entry.current" behavior='
         local -A entry=(compose_project_name project_feat)
-        z.hash.entries entry literal=true
+        z.hash.entries entry
       '
       z.t.mock name="z.wtproxy._port.keys" behavior="return 1"
 
@@ -112,7 +112,7 @@ z.t.describe "z.wtproxy.env"; {
     z.t.it "commandのstatusを返す"; {
       z.t.mock name="z.wtproxy._entry.current" behavior='
         local -A entry=(compose_project_name project_feat worktree_port_1 3001)
-        z.hash.entries entry literal=true
+        z.hash.entries entry
       '
       z.t.mock name="z.wtproxy._port.keys" behavior="REPLY=worktree_port_1"
 
@@ -128,7 +128,7 @@ z.t.describe "z.wtproxy.use"; {
     z.t.it "entryを出力する"; {
       z.t.mock name="z.wtproxy._entry.current" behavior='
         local -A entry=(path /tmp/worktree)
-        z.hash.entries entry literal=true
+        z.hash.entries entry
       '
       z.t.mock name="z.wtproxy._print.entry"
 
@@ -157,7 +157,7 @@ z.t.describe "z.wtproxy.start"; {
     z.t.it "entryを出力する"; {
       z.t.mock name="z.wtproxy._entry.current" behavior='
         local -A entry=(path /tmp/worktree)
-        z.hash.entries entry literal=true
+        z.hash.entries entry
       '
       z.t.mock name="z.wtproxy.start._daemon" behavior="return 0"
       z.t.mock name="z.wtproxy._print.entry"
@@ -184,7 +184,7 @@ z.t.describe "z.wtproxy.start"; {
     z.t.it "falseを返す"; {
       z.t.mock name="z.wtproxy._entry.current" behavior='
         local -A entry=(path /tmp/worktree)
-        z.hash.entries entry literal=true
+        z.hash.entries entry
       '
       z.t.mock name="z.wtproxy.start._daemon" behavior="return 1"
 
@@ -222,7 +222,7 @@ z.t.describe "z.wtproxy.rm"; {
     z.t.it "Docker resourceを削除してentry削除結果を出力する"; {
       z.t.mock name="z.wtproxy.rm._current.entry" behavior='
         local -A entry=(compose_project_name project_feat)
-        z.hash.entries entry literal=true
+        z.hash.entries entry
       '
       z.t.mock name="z.wtproxy._docker.prune" behavior='
         z.is.eq "$1" project_feat
@@ -230,7 +230,7 @@ z.t.describe "z.wtproxy.rm"; {
       z.t.mock name="z.wtproxy.rm._current" behavior='
         z.is.eq "$1" expected_project=project_feat || return 1
         local -A result=(removed_path /tmp/worktree entries_count 1 removed_project project_feat)
-        z.hash.entries result literal=true
+        z.hash.entries result
       '
 
       local result=$(z.wtproxy.rm)
@@ -255,7 +255,7 @@ z.t.describe "z.wtproxy.rm"; {
     z.t.it "falseを返す"; {
       z.t.mock name="z.wtproxy.rm._current.entry" behavior='
         local -A entry=(compose_project_name project_feat)
-        z.hash.entries entry literal=true
+        z.hash.entries entry
       '
       z.t.mock name="z.wtproxy._docker.prune" behavior="return 1"
 
@@ -269,13 +269,13 @@ z.t.describe "z.wtproxy.rm"; {
     z.t.it "Docker resourceを削除せずentry削除結果を出力する"; {
       z.t.mock name="z.wtproxy.rm._current.entry" behavior='
         local -A entry=()
-        z.hash.entries entry literal=true
+        z.hash.entries entry
       '
       z.t.mock name="z.wtproxy._docker.prune" behavior="return 1"
       z.t.mock name="z.wtproxy.rm._current" behavior='
         z.is.eq "$1" expected_project= || return 1
         local -A result=(removed_path /tmp/worktree entries_count 0)
-        z.hash.entries result literal=true
+        z.hash.entries result
       '
 
       local result=$(z.wtproxy.rm)
@@ -292,7 +292,7 @@ z.t.describe "z.wtproxy.prune"; {
     z.t.it "Docker resourceを削除して結果を出力する"; {
       z.t.mock name="z.wtproxy.prune._stale" behavior='
         local -A result=(entries_count 1 pruned_projects "project_a project_b")
-        z.hash.entries result literal=true
+        z.hash.entries result
       '
       z.t.mock name="z.wtproxy._docker.prune" behavior="return 0"
 
@@ -307,7 +307,7 @@ z.t.describe "z.wtproxy.prune"; {
     z.t.it "Docker resourceを削除せず結果を出力する"; {
       z.t.mock name="z.wtproxy.prune._stale" behavior='
         local -A result=(entries_count 1)
-        z.hash.entries result literal=true
+        z.hash.entries result
       '
       z.t.mock name="z.wtproxy._docker.prune" behavior="return 1"
 
@@ -334,7 +334,7 @@ z.t.describe "z.wtproxy.status"; {
     z.t.it "entryとrunningを出力する"; {
       z.t.mock name="z.wtproxy._entry.active" behavior='
         local -A entry=(path /tmp/worktree)
-        z.hash.entries entry literal=true
+        z.hash.entries entry
       '
       z.t.mock name="z.wtproxy._print.entry" behavior="print -r -- entry"
       z.t.mock name="z.wtproxy._proxy.is.running" behavior="return 0"
