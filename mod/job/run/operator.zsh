@@ -1,9 +1,9 @@
-# validate job run arguments
+# ジョブ実行の引数を検証する
 #
-# $name: job name
-# $command: child function name
-# $on_success?: parent success callback function name
-# $on_failure?: parent failure callback function name
+# $name: ジョブ名
+# $command: 子で実行する関数名
+# $on_success?: 親プロセスの成功時コールバック関数名
+# $on_failure?: 親プロセスの失敗時コールバック関数名
 # REPLY: null
 # return: 0|1
 #

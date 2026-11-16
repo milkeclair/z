@@ -1,11 +1,11 @@
-# send SIGTERM to processes selected by exactly one named argument
-# name matches ps comm exactly; port selects TCP listeners and requires lsof
+# 名前付き引数で1つ指定した対象のプロセスへSIGTERMを送る
+# 名前はps commに完全一致させる。ポート指定はTCP待受を対象とし、lsofが必要
 #
-# $pid?: positive process ID
-# $port?: TCP listening port
-# $name?: exact process name
-# REPLY: successfully signaled PIDs
-# return: 0 if all selected PIDs were signaled, otherwise 1
+# $pid?: 正のプロセスID
+# $port?: TCP待受ポート
+# $name?: 完全一致で照合するプロセス名
+# REPLY: シグナルを送信できたPID
+# return: 対象の全PIDへシグナルを送信できた場合は0、それ以外は1
 #
 # example:
 #  z.process.kill pid=12345

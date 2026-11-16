@@ -8,17 +8,17 @@ if z.is.eq "$1" initialize; then
   autoload -Uz compinit
   compinit -D
 
-  # first real function used as a completion candidate
+  # 補完候補として使われる最初の実関数
   z.fixture.alpha() { :; }
 
-  # second real function used as a completion candidate
+  # 補完候補として使われる2つ目の実関数
   z.fixture.beta() { :; }
 
   z.completion.cache.build._names
   z.completion.compdef._register || return 1
   z.completion.compdef._register || return 1
 
-  # run the real completion system and report its match and display counts
+  # 実際の補完処理を実行し、一致件数と表示件数を報告する
   z92_complete() {
     _main_complete
     z.io "Z92_RESULT:${compstate[nmatches]}:${compstate[list_lines]}:Z92_END"
@@ -26,7 +26,7 @@ if z.is.eq "$1" initialize; then
   zle -C z92-complete complete-word z92_complete
   bindkey '^I' z92-complete
 
-  # report literal buffer text, then clear the input for the next case
+  # バッファの文字列をそのまま報告し、次のケースのために入力を消去する
   z92_buffer() {
     print -r -- "Z92_BUFFER:${BUFFER}:Z92_END"
     BUFFER=""
@@ -37,9 +37,9 @@ if z.is.eq "$1" initialize; then
   return 0
 fi
 
-# start the real completion terminal shared by this test file
+# このテストファイルで共有する実際の補完端末を起動する
 #
-# REPLY: terminal file descriptor
+# REPLY: 端末のファイルディスクリプタ
 # return: 0|1
 z92_terminal_start() {
   zmodload zsh/zpty || return 1
@@ -54,11 +54,11 @@ z92_terminal_start() {
   REPLY="$terminal_fd"
 }
 
-# read terminal output until a marker arrives within five seconds
+# 5秒以内に目印が届くまで端末の出力を読む
 #
-# $1: terminal file descriptor
-# $2: marker
-# REPLY: terminal output including the marker
+# $1: 端末のファイルディスクリプタ
+# $2: 目印
+# REPLY: 目印を含む端末の出力
 # return: 0|1
 z92_terminal_read() {
   local terminal_fd=$1
@@ -83,12 +83,12 @@ z92_terminal_read() {
   REPLY="$output"
 }
 
-# complete one input using isolated aliases, styles and command search paths
+# 別名・スタイル・コマンド検索パスを隔離して、1つの入力を補完する
 #
-# $1: terminal file descriptor
-# $input: command line to complete
-# $setup?: shell commands to prepare this case
-# $command_path?: external command fixture directory
+# $1: 端末のファイルディスクリプタ
+# $input: 補完するコマンド行
+# $setup?: このケースを準備するシェルコマンド
+# $command_path?: 外部コマンドのテスト用ディレクトリ
 # REPLY: null
 # return: 0|1
 z92_terminal() {

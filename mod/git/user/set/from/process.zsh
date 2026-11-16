@@ -1,4 +1,4 @@
-# copy global git user.name and user.email into the current repository
+# Gitのグローバルなuser.nameとuser.emailを現在のリポジトリへコピーする
 #
 # REPLY: null
 # return: 0|1

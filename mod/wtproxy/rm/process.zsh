@@ -1,8 +1,8 @@
-# remove the current worktree entry from state
+# 現在のworktreeエントリを状態から削除する
 #
-# $expected_project?: expected compose project name
-# REPLY: remove result hash as key-value pairs
-# return: 0 if current entry is removed, otherwise 1
+# $expected_project?: 期待するComposeプロジェクト名
+# REPLY: 削除結果のキーと値の組
+# return: 現在のエントリを削除できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy.rm._current expected_project=project_branch_hash

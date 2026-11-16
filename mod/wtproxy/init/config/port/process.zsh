@@ -1,8 +1,8 @@
-# get a wtproxy configuration value for the initial file
+# 初期ファイル用のwtproxy設定値を取得する
 #
-# $1: configuration key
-# $@: named configuration values
-# REPLY: configuration value|null
+# $1: 設定キー
+# $@: 名前付きの設定値
+# REPLY: 設定値|null
 # return: null
 #
 # example:
@@ -24,10 +24,10 @@ z.wtproxy.init._config.port.value() {
   REPLY="$value"
 }
 
-# get configuration keys for the initial file
+# 初期ファイル用の設定キーを取得する
 #
-# $@: named configuration values
-# REPLY: configuration keys
+# $@: 名前付きの設定値
+# REPLY: 設定キーの一覧
 # return: null
 #
 # example:

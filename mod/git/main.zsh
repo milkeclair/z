@@ -1,4 +1,4 @@
-# delegate to z.git.mode
+# z.git.modeへ委譲する
 #
 # REPLY: null
 # return: null

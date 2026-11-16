@@ -1,8 +1,8 @@
-# pipe data between two TCP file descriptors
+# 2つのTCPファイルディスクリプタ間でデータを中継する
 #
-# $1: left file descriptor
-# $2: right file descriptor
-# $3: active worktree path
+# $1: 左側のファイルディスクリプタ
+# $2: 右側のファイルディスクリプタ
+# $3: 有効なworktreeのパス
 # REPLY: null
 # return: null
 #
@@ -17,7 +17,7 @@ z.wtproxy.start._serve.pipe.pair() {
   zmodload zsh/zselect
   zmodload zsh/system
 
-  # close left and right conns
+  # 左右の接続を閉じる
   trap "z.io.null ztcp -c $left_fd; z.io.null ztcp -c $right_fd; exit 0" INT TERM EXIT
 
   while true; do

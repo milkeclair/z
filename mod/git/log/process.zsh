@@ -1,4 +1,4 @@
-# show git log with pretty format
+# 整形したGitのログを表示する
 #
 # REPLY: null
 # return: null
@@ -13,7 +13,7 @@ z.git.log() {
   z.git.log._pretty
 }
 
-# show git log with pretty format
+# 整形したGitのログを表示する
 #
 # REPLY: null
 # return: null

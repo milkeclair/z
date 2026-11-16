@@ -1,10 +1,10 @@
-# ensure current entry while state lock is held
+# 状態のロックを保持しながら現在のエントリを用意する
 #
-# $1: worktree path
-# $2: branch label
-# $3: activate flag
-# REPLY: entry hash as key-value pairs
-# return: 0 if entry is available, otherwise 1
+# $1: worktreeのパス
+# $2: ブランチのラベル
+# $3: 有効化フラグ
+# REPLY: エントリのキーと値の組
+# return: エントリを取得できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy._entry.current.locked "$path" "$branch" true

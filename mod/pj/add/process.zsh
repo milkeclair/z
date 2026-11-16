@@ -1,7 +1,7 @@
-# write a project registration while preserving existing entries
+# 既存の登録を保持しながらプロジェクトの登録を書き込む
 #
-# $name: validated project name
-# $dir: normalized absolute project directory
+# $name: 検証済みのプロジェクト名
+# $dir: 正規化したプロジェクトディレクトリの絶対パス
 # REPLY: null
 # return: 0|1
 #

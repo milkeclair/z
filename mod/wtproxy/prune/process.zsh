@@ -1,7 +1,7 @@
-# prune stale worktree entries from state
+# 古いworktreeエントリを状態から削除する
 #
-# REPLY: prune result hash as key-value pairs
-# return: 0 if state is updated, otherwise 1
+# REPLY: 削除した古いエントリのキーと値の組
+# return: 状態を更新できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy.prune._stale

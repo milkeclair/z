@@ -1,8 +1,8 @@
-# accept a client connection and start piping to upstream
+# クライアント接続を受け付け、上流との中継を開始する
 #
-# $1: listener file descriptor
-# $2: target port key
-# $@?: listener file descriptors to close in the pipe child
+# $1: 待受ファイルディスクリプタ
+# $2: 対象のポートキー
+# $@?: 中継の子プロセスで閉じる待受ファイルディスクリプタ
 # REPLY: null
 # return: null
 #
@@ -61,9 +61,9 @@ z.wtproxy.start._serve.accept() {
   z.io.null ztcp -c $upstream_fd
 }
 
-# clean up proxy listener file descriptors and pid file
+# プロキシの待受ファイルディスクリプタとPIDファイルを片付ける
 #
-# $@: listener file descriptors
+# $@: 待受ファイルディスクリプタの一覧
 # REPLY: null
 # return: null
 #

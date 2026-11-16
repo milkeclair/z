@@ -1,6 +1,6 @@
-# git branch alias
+# git branchの別名
 #
-# $@: git branch options and arguments
+# $@: git branchのオプションと引数
 # REPLY: null
 # return: null
 #
@@ -10,7 +10,7 @@ z.git.b() {
   z.git.branch "$@"
 }
 
-# alias for `git branch -a`
+# git branch -aの別名
 #
 # REPLY: null
 # return: null
@@ -21,9 +21,9 @@ z.git.b.a() {
   z.git.branch.all
 }
 
-# git branch alias
+# git branchの別名
 #
-# $@: git branch options and arguments
+# $@: git branchのオプションと引数
 # REPLY: null
 # return: null
 #
@@ -33,7 +33,7 @@ z.git.branch() {
   git branch "$@"
 }
 
-# alias for `git branch -a`
+# git branch -aの別名
 #
 # REPLY: null
 # return: null

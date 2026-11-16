@@ -1,9 +1,9 @@
-# process commit stats for a list of authors
+# 作成者の一覧に対してコミット統計を処理する
 #
-# $authors: an array of author names
-# $exclude_exts?: array of file extensions to exclude (e.g. "md" "txt")
-# $exclude_dirs?: array of directories to exclude (e.g. "docs" "tests")
-# REPLY: an array of commit map entries (strings in the format "author:details:commit_count")
+# $authors: 作成者名の配列
+# $exclude_exts?: 除外する拡張子の配列（例: "md" "txt"）
+# $exclude_dirs?: 除外するディレクトリの配列（例: "docs" "tests"）
+# REPLY: コミット情報の配列（各要素は"author:details:commit_count"形式）
 # return: null
 #
 # example:
@@ -37,12 +37,12 @@ z.git.stats._commit.map() {
   REPLY=("${commit_map[@]}")
 }
 
-# sum inserted and deleted lines to get total lines changed
+# 追加行数と削除行数を合計して変更行数を求める
 #
-# $author: author name
-# $exclude_exts?: array of file extensions to exclude (e.g. "md" "txt")
-# $exclude_dirs?: array of directories to exclude (e.g. "docs" "tests")
-# REPLY: total number of lines changed by the author
+# $author: 作成者名
+# $exclude_exts?: 除外する拡張子の配列（例: "md" "txt"）
+# $exclude_dirs?: 除外するディレクトリの配列（例: "docs" "tests"）
+# REPLY: 作成者の変更行数の合計
 # return: null
 #
 # example:
@@ -75,11 +75,11 @@ z.git.stats._commit.details() {
   REPLY="$inserted_total $deleted_total"
 }
 
-# count the number of lines changed
+# 変更行数を数える
 #
-# $inserted: number of lines inserted
-# $deleted: number of lines deleted
-# REPLY: total number of lines changed
+# $inserted: 追加行数
+# $deleted: 削除行数
+# REPLY: 変更行数の合計
 # return: null
 #
 # example:

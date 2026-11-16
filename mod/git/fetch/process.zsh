@@ -1,4 +1,4 @@
-# Fetches all branches and tags from the remote repository, pruning any deleted branches.
+# リモートから全ブランチとタグを取得し、削除済みのブランチを追跡対象から取り除く。
 #
 # REPLY: null
 # return: null

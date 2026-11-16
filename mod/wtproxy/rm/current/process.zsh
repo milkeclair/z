@@ -1,7 +1,7 @@
-# get the current worktree entry before removing it
+# 現在のworktreeのエントリを削除前に取得する
 #
-# REPLY: entry hash as key-value pairs
-# return: 0 if current entry exists, otherwise 1
+# REPLY: エントリのキーと値の組
+# return: 現在のエントリが存在する場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy.rm._current.entry
@@ -12,12 +12,12 @@ z.wtproxy.rm._current.entry() {
   z.wtproxy._state.with_lock z.wtproxy.rm._current.entry.locked "$worktree_path"
 }
 
-# remove the current worktree entry while state lock is held
+# 状態のロックを保持しながら現在のworktreeエントリを削除する
 #
-# $1: worktree path
-# $2: expected compose project name
-# REPLY: remove result hash as key-value pairs
-# return: 0 if current entry is removed, otherwise 1
+# $1: worktreeのパス
+# $2: 期待するComposeプロジェクト名
+# REPLY: 削除結果のキーと値の組
+# return: 現在のエントリを削除できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy.rm._current.locked /path/to/worktree project_branch_hash

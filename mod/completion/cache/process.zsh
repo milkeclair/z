@@ -1,4 +1,4 @@
-# build completion caches for function names and docs
+# 関数名とドキュメントの補完キャッシュを作成する
 #
 # REPLY: null
 # return: null
@@ -13,7 +13,7 @@ z.completion.cache._build() {
   z_completion_cache_ready=true
 }
 
-# cancel unfinished completion work owned by the current shell
+# 現在のシェルが所有する未完了の補完処理をキャンセルする
 #
 # REPLY: null
 # return: 0

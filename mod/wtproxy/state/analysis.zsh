@@ -1,7 +1,7 @@
-# build an entry hash from state for a worktree path
+# worktreeパスに対応するエントリの連想配列を状態から組み立てる
 #
-# $1: worktree path
-# REPLY: entry hash as key-value pairs
+# $1: worktreeのパス
+# REPLY: エントリのキーと値の組
 # return: null
 #
 # example:

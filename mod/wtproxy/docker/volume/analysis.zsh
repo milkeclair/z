@@ -1,7 +1,7 @@
-# get docker volume names for a compose project
+# ComposeプロジェクトのDockerボリューム名を取得する
 #
-# $1: compose project name
-# REPLY: docker volume names
+# $1: Composeのプロジェクト名
+# REPLY: Dockerボリューム名
 # return: null
 #
 # example:

@@ -1,6 +1,6 @@
-# display numbered registration names on standard error
+# 登録名を番号付きで標準エラーへ表示する
 #
-# $@: project names in display order
+# $@: 表示順に並べたプロジェクト名
 # REPLY: null
 # return: null
 #
@@ -15,9 +15,9 @@ z.pj.remove._menu() {
   done
 }
 
-# select a registered project without modifying the registry
+# 登録内容を変更せず、登録済みのプロジェクトを選ぶ
 #
-# REPLY: selected name, or empty when cancelled
+# REPLY: 選択した名前。キャンセル時は空
 # return: 0|1
 #
 # example:
@@ -54,9 +54,9 @@ z.pj.remove._select() {
   return 1
 }
 
-# delete only the plain registration file for a validated name
+# 検証済みの名前に対応する通常の登録ファイルだけを削除する
 #
-# $1: project name
+# $1: プロジェクト名
 # REPLY: null
 # return: 0|1
 #

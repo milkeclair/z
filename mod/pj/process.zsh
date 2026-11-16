@@ -1,8 +1,8 @@
-# open a registered project in Visual Studio Code
+# 登録済みプロジェクトをVisual Studio Codeで開く
 #
-# $1: project name
+# $1: プロジェクト名
 # REPLY: null
-# return: code exit status, or 1 for invalid input or a missing project
+# return: codeの終了コード。入力不正または未登録のプロジェクトなら1
 #
 # example:
 #  z.pj some_project
@@ -28,10 +28,10 @@ z.pj() {
   code "$dir"
 }
 
-# register a project directory without overwriting an existing name
+# 既存の名前を上書きせず、プロジェクトのディレクトリを登録する
 #
-# $name: project name
-# $dir: existing project directory
+# $name: プロジェクト名
+# $dir: 存在するプロジェクトディレクトリ
 # REPLY: null
 # return: 0|1
 #
@@ -49,7 +49,7 @@ z.pj.add() {
   REPLY=""
 }
 
-# list registered project names and directories
+# 登録済みのプロジェクト名とディレクトリを一覧する
 #
 # REPLY: null
 # return: 0|1
@@ -74,11 +74,11 @@ z.pj.list() {
   REPLY=""
 }
 
-# remove a project registration by name or numbered selection
+# 名前または番号で選び、プロジェクトの登録を削除する
 #
-# $1?: project name; when omitted, select from registered names
+# $1?: プロジェクト名。省略すると登録済みの名前から選ぶ
 # REPLY: null
-# return: 0 if removed or cancelled, otherwise 1
+# return: 削除またはキャンセルした場合は0、それ以外は1
 #
 # example:
 #  z.pj.remove some_project

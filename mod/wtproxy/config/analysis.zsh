@@ -1,6 +1,6 @@
-# get wtproxy configuration
+# wtproxyの設定を取得する
 #
-# REPLY: configuration hash as key-value pairs
+# REPLY: 設定のキーと値の組
 # return: null
 #
 # example:
@@ -27,11 +27,11 @@ z.wtproxy._config() {
   z.hash.entries config
 }
 
-# get a single wtproxy configuration value
+# wtproxyの設定値を1つ取得する
 #
-# $1: configuration key
-# REPLY: configuration value
-# return: 0 if configuration is available, otherwise 1
+# $1: 設定キー
+# REPLY: 設定値
+# return: 設定を取得できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy._config.value state_file
@@ -43,9 +43,9 @@ z.wtproxy._config.value() {
   REPLY="${config[$config_key]}"
 }
 
-# get wtproxy configuration values from defaults, file settings, and environment
+# 既定値・ファイル設定・環境変数からwtproxyの設定値を取得する
 #
-# REPLY: configuration hash as key-value pairs
+# REPLY: 設定のキーと値の組
 # return: null
 #
 # example:

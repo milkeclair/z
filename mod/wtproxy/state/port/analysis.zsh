@@ -1,8 +1,8 @@
-# get a composite state key for a worktree port
+# worktreeポートの複合状態キーを取得する
 #
-# $1: worktree path
-# $2: port key
-# REPLY: composite state key
+# $1: worktreeのパス
+# $2: ポートキー
+# REPLY: 複合状態キー
 # return: null
 #
 # example:
@@ -14,11 +14,11 @@ z.wtproxy._state.port.state_key() {
   REPLY="${worktree_path}|${port_key}"
 }
 
-# get a stored worktree port
+# 保存済みのworktreeポートを取得する
 #
-# $1: worktree path
-# $2: port key
-# REPLY: stored port|null
+# $1: worktreeのパス
+# $2: ポートキー
+# REPLY: 保存したポート|null
 # return: null
 #
 # example:

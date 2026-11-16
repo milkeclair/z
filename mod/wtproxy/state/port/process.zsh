@@ -1,8 +1,8 @@
-# set a stored worktree port
+# worktreeポートを保存する
 #
-# $1: worktree path
-# $2: port key
-# $3: port
+# $1: worktreeのパス
+# $2: ポートキー
+# $3: ポート
 # REPLY: null
 # return: null
 #
@@ -19,9 +19,9 @@ z.wtproxy._state.port.set() {
   z_wtproxy_state_port[$state_key]=$port
 }
 
-# unset stored ports for a worktree path
+# worktreeパスに保存したポートを削除する
 #
-# $1: worktree path
+# $1: worktreeのパス
 # REPLY: null
 # return: null
 #

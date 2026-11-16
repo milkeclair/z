@@ -1,8 +1,8 @@
-# remove docker images by actual image IDs
+# 実際のイメージIDを指定してDockerイメージを削除する
 #
-# $@: docker image IDs
+# $@: DockerイメージID
 # REPLY: null
-# return: 0 if all removals succeed, otherwise 1
+# return: すべて削除できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy._docker.image.remove image_id

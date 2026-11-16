@@ -1,7 +1,7 @@
-# convert a value to a Docker Compose friendly slug
+# 値をDocker Composeで使用できるスラッグへ変換する
 #
-# $1: source value
-# REPLY: slug value
+# $1: 元の値
+# REPLY: スラッグの値
 # return: null
 #
 # example:

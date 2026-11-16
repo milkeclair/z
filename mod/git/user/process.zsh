@@ -1,4 +1,4 @@
-# display git user info (name and email) for both local and global configurations
+# Gitのローカル設定とグローバル設定のユーザー名・メールアドレスを表示する
 #
 # REPLY: null
 # return: null
@@ -14,7 +14,7 @@ z.git.user() {
   z.git.user.global
 }
 
-# display local git user info (name and email)
+# Gitのローカル設定のユーザー名・メールアドレスを表示する
 #
 # REPLY: null
 # return: null
@@ -31,7 +31,7 @@ z.git.user.local() {
   z.io "user.email: $user_email"
 }
 
-# display global git user info (name and email)
+# Gitのグローバル設定のユーザー名・メールアドレスを表示する
 #
 # REPLY: null
 # return: null

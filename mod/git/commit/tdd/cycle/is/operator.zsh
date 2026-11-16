@@ -1,6 +1,6 @@
-# check if commit cycle is valid
+# コミットサイクルが有効か確認する
 #
-# $1: commit cycle
+# $1: コミットサイクル
 # REPLY: null
 # return: 0|1
 #

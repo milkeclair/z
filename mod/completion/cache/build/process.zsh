@@ -1,4 +1,4 @@
-# build function name cache only
+# 関数名だけのキャッシュを作成する
 #
 # REPLY: null
 # return: null
@@ -14,7 +14,7 @@ z.completion.cache.build._names() {
   done
 }
 
-# build function docs cache
+# 関数ドキュメントのキャッシュを作成する
 #
 # REPLY: null
 # return: null
@@ -34,9 +34,9 @@ z.completion.cache.build._docs() {
   done
 }
 
-# build completion cache and write it to a job result file
+# 補完キャッシュを作成し、ジョブの結果ファイルへ書き込む
 #
-# $result: result file path
+# $result: 結果ファイルのパス
 # REPLY: null
 # return: 0|1
 #

@@ -1,7 +1,7 @@
-# extract worktree port keys from a configuration hash
+# 設定の連想配列からworktreeポートキーを取り出す
 #
-# $1: configuration hash name
-# REPLY: numbered port keys
+# $1: 設定の連想配列名
+# REPLY: 連番のポートキー
 # return: null
 #
 # example:

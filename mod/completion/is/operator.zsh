@@ -1,4 +1,4 @@
-# check whether completion can be used in the current shell
+# 現在のシェルで補完を利用できるか確認する
 #
 # REPLY: null
 # return: 0|1

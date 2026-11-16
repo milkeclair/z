@@ -1,7 +1,7 @@
-# collect one job directory
+# 1つのジョブディレクトリを回収する
 #
-# $dir: job directory
-# REPLY: collected job id|null
+# $dir: ジョブのディレクトリ
+# REPLY: 回収したジョブID|null
 # return: 0|1
 #
 # example:
@@ -52,10 +52,10 @@ z.job.collect._one() {
   return 0
 }
 
-# run a callback for a collected job
+# 回収したジョブのコールバックを実行する
 #
-# $dir: job directory
-# $status: collected status
+# $dir: ジョブのディレクトリ
+# $status: 回収した状態
 # REPLY: null
 # return: 0|1
 #

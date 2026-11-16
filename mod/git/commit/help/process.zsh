@@ -1,4 +1,4 @@
-# show commit help
+# コミットのヘルプを表示する
 #
 # REPLY: null
 # return: null

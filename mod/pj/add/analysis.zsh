@@ -1,7 +1,7 @@
-# resolve an existing project directory to its absolute physical path
+# 既存のプロジェクトディレクトリを、シンボリックリンクを解決した絶対パスにする
 #
-# $1: directory, including a relative path or a leading tilde
-# REPLY: absolute directory path
+# $1: ディレクトリ。相対パスと先頭のチルダにも対応する
+# REPLY: ディレクトリの絶対パス
 # return: 0|1
 #
 # example:

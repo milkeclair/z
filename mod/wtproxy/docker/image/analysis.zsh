@@ -1,7 +1,7 @@
-# get docker image IDs for a compose project
+# ComposeプロジェクトのDockerイメージIDを取得する
 #
-# $1: compose project name
-# REPLY: docker image IDs
+# $1: Composeのプロジェクト名
+# REPLY: DockerイメージID
 # return: null
 #
 # example:

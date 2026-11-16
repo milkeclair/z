@@ -1,7 +1,7 @@
-# prune stale entries while state lock is held
+# 状態のロックを保持しながら古いエントリを削除する
 #
-# REPLY: prune result hash as key-value pairs
-# return: 0 if state is updated, otherwise 1
+# REPLY: 削除した古いエントリのキーと値の組
+# return: 状態を更新できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy.prune._stale.locked

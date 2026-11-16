@@ -1,4 +1,4 @@
-# check if git status is dirty
+# Gitの作業ツリーに変更があるか確認する
 #
 # REPLY: null
 # return: 0|1

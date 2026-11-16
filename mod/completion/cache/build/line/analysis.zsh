@@ -1,8 +1,8 @@
-# extract a function name from a cache source line
+# キャッシュのソース行から関数名を取り出す
 #
-# $1: source line
-# $2?: source line with leading whitespace already removed
-# REPLY: function name|null
+# $1: ソース行
+# $2?: 先頭の空白を取り除いたソース行
+# REPLY: 関数名|null
 # return: 0|1
 #
 # example:

@@ -1,7 +1,7 @@
-# get root namespaces for z. or public function candidates for a deeper prefix
+# z.ではルートの名前空間を取得し、深い接頭辞では公開関数の候補を取得する
 #
-# $1: function name prefix
-# REPLY: matching namespace or function names|null
+# $1: 関数名の接頭辞
+# REPLY: 一致する名前空間名または関数名|null
 # return: 0|1
 #
 # example:

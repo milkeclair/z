@@ -1,7 +1,7 @@
-# check if commit args are enough to create a commit
-# if not, show help
+# コミット作成に必要な引数が揃っているか確認する
+# それ以外はヘルプを表示する
 #
-# $@: commit args
+# $@: コミット引数
 # REPLY: null
 # return: 0|1
 #

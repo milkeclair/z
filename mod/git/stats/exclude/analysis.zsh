@@ -1,8 +1,8 @@
-# determine which file extensions and directories to exclude from commit stats analysis
-# if not specified, use default values(log, lock)
+# コミット統計で除外する拡張子とディレクトリを決める
+# 指定がなければ既定値（log、lock）を使う
 #
-# $exclude_exts?: array of file extensions to exclude (e.g. "md" "txt")
-# REPLY: array of file extensions to exclude
+# $exclude_exts?: 除外する拡張子の配列（例: "md" "txt"）
+# REPLY: 除外する拡張子の配列
 # return: null
 #
 # example:
@@ -19,11 +19,11 @@ z.git.stats._exclude.exts() {
   REPLY=("${exts[@]}")
 }
 
-# determine which directories to exclude from commit stats analysis
-# if not specified, use default values(node_modules, dist)
+# コミット統計で除外するディレクトリを決める
+# 指定がなければ既定値（node_modules、dist）を使う
 #
-# $exclude_dirs?: array of directories to exclude (e.g. "docs" "tests")
-# REPLY: array of directories to exclude
+# $exclude_dirs?: 除外するディレクトリの配列（例: "docs" "tests"）
+# REPLY: 除外するディレクトリの配列
 # return: null
 #
 # example:

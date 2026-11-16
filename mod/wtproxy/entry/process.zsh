@@ -1,8 +1,8 @@
-# ensure entry for the current worktree
+# 現在のworktreeのエントリを用意する
 #
-# $activate?: set current worktree as active(default: false)
-# REPLY: entry hash as key-value pairs
-# return: 0 if entry is available, otherwise 1
+# $activate?: 現在のworktreeを有効にするか（既定: false）
+# REPLY: エントリのキーと値の組
+# return: エントリを取得できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy._entry.current activate=true
@@ -17,10 +17,10 @@ z.wtproxy._entry.current() {
   z.wtproxy._state.with_lock z.wtproxy._entry.current.locked "$worktree_path" "$branch" "$activate"
 }
 
-# read active worktree entry
+# 有効なworktreeエントリを読む
 #
-# REPLY: entry hash as key-value pairs
-# return: 0 if active entry is available, otherwise 1
+# REPLY: エントリのキーと値の組
+# return: 有効なエントリを取得できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy._entry.active
@@ -28,12 +28,12 @@ z.wtproxy._entry.active() {
   z.wtproxy._state.with_lock z.wtproxy._entry.active.locked
 }
 
-# ensure an entry exists in loaded state
+# 読み込み済みの状態にエントリがあることを保証する
 #
-# $1: worktree path
-# $2: branch label
-# REPLY: entry hash as key-value pairs
-# return: 0 if entry is available, otherwise 1
+# $1: worktreeのパス
+# $2: ブランチのラベル
+# REPLY: エントリのキーと値の組
+# return: エントリを取得できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy._entry.ensure /path/to/worktree feat/example

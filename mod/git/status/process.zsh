@@ -1,4 +1,4 @@
-# show git status with upstream info
+# upstream情報とともにGitの状態を表示する
 #
 # REPLY: null
 # return: null

@@ -1,7 +1,7 @@
-# check if the required arguments for setting git user config are provided
+# Gitのユーザー設定に必要な引数が揃っているか確認する
 #
-# $1: user.name value
-# $2: user.email value
+# $1: user.nameの値
+# $2: user.emailの値
 # REPLY: null
 # return: 0|1
 #

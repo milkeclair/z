@@ -1,6 +1,6 @@
-# check if commit tag is valid
+# コミットタグが有効か確認する
 #
-# $1: commit tag
+# $1: コミットタグ
 # REPLY: null
 # return: 0|1
 #

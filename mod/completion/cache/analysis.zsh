@@ -1,6 +1,6 @@
-# dump completion cache as sourceable zsh
+# sourceできるZshコードとして補完キャッシュを出力する
 #
-# REPLY: sourceable zsh cache
+# REPLY: sourceできるZshのキャッシュ
 # return: null
 #
 # example:

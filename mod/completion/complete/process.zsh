@@ -1,6 +1,6 @@
-# list z command names vertically alongside the previous command completion
+# 直前のコマンド補完の隣に、zのコマンド名を縦に表示する
 #
-# $@: completion arguments
+# $@: 補完用の引数
 # REPLY: null
 # return: 0|1
 #
@@ -20,7 +20,7 @@ z.completion.complete._command() {
   "$z_completion_command_function" "$@"
 }
 
-# complete z functions or show docs for the current completion context
+# 現在の補完位置に応じて、zの関数を補完するかドキュメントを表示する
 #
 # REPLY: null
 # return: 0|1
@@ -35,7 +35,7 @@ z.completion.complete._run() {
   z.completion.complete._docs
 }
 
-# complete z function names for the current word
+# 現在の単語に対してzの関数名を補完する
 #
 # REPLY: null
 # return: 0|1
@@ -55,7 +55,7 @@ z.completion.complete._functions() {
   _describe -t z-functions "z functions" candidates -l "${suffix_options[@]}"
 }
 
-# show docs for the function near the current completion word
+# 現在の補完単語付近の関数のドキュメントを表示する
 #
 # REPLY: null
 # return: 0|1

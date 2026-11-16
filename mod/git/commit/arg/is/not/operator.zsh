@@ -1,6 +1,6 @@
-# check if commit args do not contain -nt (no ticket)
+# 引数に-nt（チケットなし）が含まれないか確認する
 #
-# $@: commit args
+# $@: コミット引数
 # REPLY: null
 # return: 0|1
 #

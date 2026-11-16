@@ -1,6 +1,6 @@
-# load completion cache from a job result file
+# ジョブの結果ファイルから補完キャッシュを読み込む
 #
-# $result: result file path
+# $result: 結果ファイルのパス
 # REPLY: null
 # return: 0|1
 #

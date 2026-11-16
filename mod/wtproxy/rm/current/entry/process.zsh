@@ -1,8 +1,8 @@
-# get the current removable entry while state lock is held
+# 状態のロックを保持しながら、現在の削除可能なエントリを取得する
 #
-# $1: worktree path
-# REPLY: entry hash as key-value pairs
-# return: 0 if current entry exists, otherwise 1
+# $1: worktreeのパス
+# REPLY: エントリのキーと値の組
+# return: 現在のエントリが存在する場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy.rm._current.entry.locked /path/to/worktree

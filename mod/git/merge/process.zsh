@@ -1,6 +1,6 @@
-# safer merge
+# 安全性を高めたmerge
 #
-# $1: target branch to merge into current branch
+# $1: 現在のブランチへマージする対象のブランチ
 # REPLY: null
 # return: null
 #

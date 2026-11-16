@@ -1,6 +1,6 @@
-# check if arguments contain origin
+# 引数にoriginが含まれるか確認する
 #
-# $@: arguments
+# $@: 引数
 # REPLY: null
 # return: 0|1
 #
@@ -16,9 +16,9 @@ z.git._hp.arg.has.origin() {
   return 1
 }
 
-# check if arguments contain develop or dev
+# 引数にdevelopまたはdevが含まれるか確認する
 #
-# $@: arguments
+# $@: 引数
 # REPLY: null
 # return: 0|1
 #

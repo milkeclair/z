@@ -1,6 +1,6 @@
-# list of valid commit tags
+# 有効なコミットタグの一覧
 #
-# REPLY: array of valid commit tags
+# REPLY: 有効なコミットタグの配列
 # return: null
 #
 # example:

@@ -1,7 +1,7 @@
-# generate a job id
+# ジョブIDを生成する
 # timestamp.pid.random
 #
-# REPLY: job id
+# REPLY: ジョブID
 # return: null
 #
 # example:

@@ -1,7 +1,7 @@
-# check whether a cache source line is a comment line
+# キャッシュのソース行がコメント行か確認する
 #
-# $1: source line
-# REPLY: source line with leading whitespace removed
+# $1: ソース行
+# REPLY: 先頭の空白を取り除いたソース行
 # return: 0|1
 #
 # example:

@@ -1,6 +1,6 @@
-# check whether a z function name is private
+# zの関数名が非公開か確認する
 #
-# $1: function name
+# $1: 関数名
 # REPLY: null
 # return: 0|1
 #

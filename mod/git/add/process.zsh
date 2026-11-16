@@ -1,7 +1,7 @@
-# git add
-# prevent "git add ." to encourage users to specify files explicitly
+# git addを実行する
+# ファイルを明示的に指定するよう、"git add ."を禁止する
 #
-# $@: files
+# $@: ファイル
 # REPLY: null
 # return: null
 #

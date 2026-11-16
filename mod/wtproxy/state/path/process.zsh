@@ -1,6 +1,6 @@
-# remove a worktree path from state
+# 状態からworktreeパスを削除する
 #
-# $1: worktree path
+# $1: worktreeのパス
 # REPLY: null
 # return: null
 #

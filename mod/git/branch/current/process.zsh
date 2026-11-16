@@ -1,6 +1,6 @@
-# get current branch name
+# 現在のブランチ名を取得する
 #
-# REPLY: current branch name
+# REPLY: 現在のブランチ名
 # return: null
 #
 # example:

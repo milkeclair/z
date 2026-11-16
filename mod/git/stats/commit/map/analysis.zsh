@@ -1,7 +1,7 @@
-# split a commit map entry into its components
+# コミット情報のエントリを構成要素に分割する
 #
-# $entry: a string in the format "author:details:commit_count"
-# REPLY: an associative array with keys "author", "commit_count", "inserted", "deleted", "total"
+# $entry: "author:details:commit_count"形式の文字列
+# REPLY: "author"、"commit_count"、"inserted"、"deleted"、"total"をキーとする連想配列
 # return: null
 #
 # example:
@@ -31,11 +31,11 @@ z.git.stats._commit.map.split() {
   z.hash.entries result
 }
 
-# remove duplicate entries from a commit map
-# based on their commit count, inserted, and deleted lines
+# コミット情報の重複するエントリを取り除く
+# コミット数・追加行数・削除行数を基にする
 #
-# $@: an array of commit map entries (strings in the format "author:details:commit_count")
-# REPLY: an array of unique commit map entries
+# $@: コミット情報の配列（各要素は"author:details:commit_count"形式）
+# REPLY: 重複を除いたコミット情報の配列
 # return: null
 #
 # example:

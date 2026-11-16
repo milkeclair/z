@@ -1,7 +1,7 @@
-# get the worktree port key from the index
+# インデックスからworktreeポートキーを取得する
 #
-# $1: port index
-# REPLY: worktree port key
+# $1: ポートのインデックス
+# REPLY: worktreeポートキー
 # return: null
 #
 # example:
@@ -12,11 +12,11 @@ z.wtproxy._port.worktree.key() {
   REPLY="$z_wtproxy_worktree_port_key_prefix$port_index"
 }
 
-# get the index from the worktree port key
+# worktreeポートキーからインデックスを取得する
 #
-# $1: worktree port key
-# REPLY: port index|null
-# return: 0 if the key is a numbered worktree port key, otherwise 1
+# $1: worktreeポートキー
+# REPLY: ポートのインデックス|null
+# return: 連番のworktreeポートキーの場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy._port.worktree.index worktree_port_1

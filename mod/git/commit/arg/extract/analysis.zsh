@@ -1,7 +1,7 @@
-# extract commit args
+# コミット引数を取り出す
 #
-# $@: commit args
-# REPLY: array of commit options
+# $@: コミット引数
+# REPLY: コミットオプションの配列
 # return: null
 #
 # example:

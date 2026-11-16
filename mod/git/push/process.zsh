@@ -1,6 +1,6 @@
-# push latest changes for current branch
-# if current branch is pr/123, push latest changes for that PR
-# if arguments contain "origin", push with those arguments
+# 現在のブランチの最新の変更をpushする
+# 現在のブランチがpr/123なら、そのPRの最新の変更をpushする
+# 引数に"origin"があれば、その引数でpushする
 #
 # REPLY: null
 # return: null
@@ -16,7 +16,7 @@ z.git.push() {
   z.git.push._pr || z.git.push._current
 }
 
-# push latest changes for PR branch
+# PRブランチの最新の変更をpushする
 #
 # REPLY: null
 # return: null
@@ -48,7 +48,7 @@ z.git.push._pr() {
   fi
 }
 
-# push latest changes for current branch
+# 現在のブランチの最新の変更をpushする
 #
 # REPLY: null
 # return: null

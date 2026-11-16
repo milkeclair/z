@@ -1,4 +1,4 @@
-# register z completion definitions for current candidates
+# 現在の候補に対するzの補完定義を登録する
 #
 # REPLY: null
 # return: 0|1
@@ -24,7 +24,7 @@ z.completion.compdef._register() {
   done
 }
 
-# hide private z functions from command position completion
+# コマンド位置の補完から非公開のz関数を隠す
 #
 # REPLY: null
 # return: 0|1

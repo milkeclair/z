@@ -1,6 +1,6 @@
-# get the z.job queue root
+# z.jobのキュールートを取得する
 #
-# REPLY: queue root path
+# REPLY: キュールートのパス
 # return: null
 #
 # example:
@@ -9,9 +9,9 @@ z.job.file._root() {
   REPLY="/tmp/z/job/$$"
 }
 
-# get the z.job jobs directory
+# z.jobのジョブ保存ディレクトリを取得する
 #
-# REPLY: jobs directory path
+# REPLY: ジョブ保存ディレクトリのパス
 # return: null
 #
 # example:
@@ -21,10 +21,10 @@ z.job.file._jobs() {
   REPLY="$REPLY/jobs"
 }
 
-# get a z.job directory path
+# z.jobのディレクトリパスを取得する
 #
-# $id: job id
-# REPLY: job directory path
+# $id: ジョブID
+# REPLY: ジョブディレクトリのパス
 # return: 0|1
 #
 # example:
@@ -37,11 +37,11 @@ z.job.file._dir() {
   REPLY="$REPLY/$id"
 }
 
-# get a z.job file path
+# z.jobのファイルパスを取得する
 #
-# $id: job id
-# $name: file name
-# REPLY: job file path
+# $id: ジョブID
+# $name: ファイル名
+# REPLY: ジョブファイルのパス
 # return: 0|1
 #
 # example:

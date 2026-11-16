@@ -1,7 +1,7 @@
-# stop proxy daemon for z.wtproxy.stop
+# z.wtproxy.stop用のプロキシデーモンを停止する
 #
 # REPLY: null
-# return: 0 if daemon is stopped, otherwise 1
+# return: デーモンを停止できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy.stop._daemon

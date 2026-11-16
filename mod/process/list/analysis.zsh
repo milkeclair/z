@@ -1,7 +1,7 @@
-# collect visible TCP listening ports, grouped by PID
+# 取得可能なTCP待受ポートをPIDごとにまとめる
 #
-# REPLY: PID/port-list key-value pairs; empty when no listeners are reported
-# return: 0 on success, otherwise 1
+# REPLY: PIDとポート一覧のキー・値の組。待受が報告されなければ空
+# return: 成功時は0、それ以外は1
 #
 # example:
 #  z.process.list._ports

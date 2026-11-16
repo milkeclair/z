@@ -1,7 +1,7 @@
-# pull latest changes for current branch
-# if current branch is pr/123, pull latest changes for that PR
-# if current branch is develop, pull latest changes for develop branch
-# if arguments contain "origin", pull with those arguments
+# 現在のブランチの最新の変更を取得する
+# 現在のブランチがpr/123なら、そのPRの最新の変更を取得する
+# 現在のブランチがdevelopなら、developブランチの最新の変更を取得する
+# 引数に"origin"があれば、その引数でpullする
 #
 # REPLY: null
 # return: null
@@ -22,7 +22,7 @@ z.git.pull() {
   z.git.pull._pr || z.git.pull._current
 }
 
-# pull latest changes for develop branch
+# developブランチの最新の変更を取得する
 #
 # REPLY: null
 # return: null
@@ -35,7 +35,7 @@ z.git.pull._develop() {
   git pull origin develop
 }
 
-# pull latest changes for PR branch
+# PRブランチの最新の変更を取得する
 #
 # REPLY: null
 # return: null
@@ -67,7 +67,7 @@ z.git.pull._pr() {
   fi
 }
 
-# pull latest changes for current branch
+# 現在のブランチの最新の変更を取得する
 #
 # REPLY: null
 # return: null

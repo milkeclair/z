@@ -1,6 +1,6 @@
-# get all author names from git log
+# Gitのログから作成者名をすべて取得する
 #
-# REPLY: array of author names
+# REPLY: 作成者名の配列
 # return: null
 #
 # example:

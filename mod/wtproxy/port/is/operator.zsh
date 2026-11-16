@@ -1,8 +1,8 @@
-# check if a TCP port is free
+# TCPポートが空いているか確認する
 #
-# $1: port number
+# $1: ポート番号
 # REPLY: null
-# return: 0 if port is free, otherwise 1
+# return: ポートが空いている場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy._port.is.free 41080
@@ -22,12 +22,12 @@ z.wtproxy._port.is.free() {
   return $exit_status
 }
 
-# check if a port is included in used ports
+# ポートが使用済みポートに含まれるか確認する
 #
-# $1: port number
-# $@?: used ports
+# $1: ポート番号
+# $@?: 使用済みポート
 # REPLY: null
-# return: 0 if port is used, otherwise 1
+# return: ポートが使用中の場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy._port.is.used 41080 41080 41081

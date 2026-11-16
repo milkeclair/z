@@ -1,8 +1,8 @@
-# format exclude patterns
+# 除外パターンを整形する
 #
-# $exclude_exts?: array of file extensions to exclude (e.g. "md" "txt")
-# $exclude_dirs?: array of directories to exclude (e.g. "docs" "tests")
-# REPLY: a string containing the exclude patterns for file extensions and directories
+# $exclude_exts?: 除外する拡張子の配列（例: "md" "txt"）
+# $exclude_dirs?: 除外するディレクトリの配列（例: "docs" "tests"）
+# REPLY: ファイル拡張子とディレクトリの除外パターンを含む文字列
 # return: null
 #
 # example:

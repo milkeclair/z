@@ -1,6 +1,6 @@
-# check if branch exists
+# ブランチが存在するか確認する
 #
-# $1: branch name
+# $1: ブランチ名
 # REPLY: null
 # return: 0|1
 #

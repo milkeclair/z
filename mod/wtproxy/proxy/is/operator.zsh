@@ -1,7 +1,7 @@
-# check if proxy daemon is running
+# プロキシデーモンが動作中か確認する
 #
 # REPLY: null
-# return: 0 if daemon is running, otherwise 1
+# return: デーモンが動作中の場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy._proxy.is.running
@@ -17,11 +17,11 @@ z.wtproxy._proxy.is.running() {
   z.wtproxy._proxy.is.pid "$pid"
 }
 
-# check if a pid belongs to wtproxy daemon
+# PIDがwtproxyデーモンのものか確認する
 #
-# $1: process id
+# $1: プロセスID
 # REPLY: null
-# return: 0 if the process is wtproxy daemon, otherwise 1
+# return: wtproxyデーモンのプロセスの場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy._proxy.is.pid 12345

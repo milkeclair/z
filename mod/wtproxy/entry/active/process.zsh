@@ -1,7 +1,7 @@
-# read active entry while state lock is held
+# 状態のロックを保持しながら有効なエントリを読む
 #
-# REPLY: entry hash as key-value pairs
-# return: 0 if active entry is available, otherwise 1
+# REPLY: エントリのキーと値の組
+# return: 有効なエントリを取得できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy._entry.active.locked

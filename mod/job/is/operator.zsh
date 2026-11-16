@@ -1,6 +1,6 @@
-# check whether a job is running
+# ジョブが動作中か確認する
 #
-# $id: job id
+# $id: ジョブID
 # REPLY: null
 # return: 0|1
 #

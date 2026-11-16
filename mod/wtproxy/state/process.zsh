@@ -1,4 +1,4 @@
-# initialize in-memory wtproxy state
+# メモリ内のwtproxyの状態を初期化する
 #
 # REPLY: null
 # return: null
@@ -13,10 +13,10 @@ z.wtproxy._state.init() {
   typeset -gA z_wtproxy_state_port=()
 }
 
-# load wtproxy state from the state file
+# 状態ファイルからwtproxyの状態を読み込む
 #
 # REPLY: null
-# return: 0 if state is loaded, otherwise 1
+# return: 状態を読み込めた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy._state.load
@@ -55,10 +55,10 @@ z.wtproxy._state.load() {
   done < $state_file
 }
 
-# save wtproxy state to the state file
+# wtproxyの状態を状態ファイルへ保存する
 #
 # REPLY: null
-# return: 0 if state is saved, otherwise 1
+# return: 状態を保存できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy._state.save
@@ -95,12 +95,12 @@ z.wtproxy._state.save() {
   z.perm path=$config[state_file] mode=600
 }
 
-# run a function while holding the state lock
+# 状態のロックを保持しながら関数を実行する
 #
-# $1: function name
-# $@?: function arguments
-# REPLY: function return value
-# return: function return status
+# $1: 関数名
+# $@?: 関数の引数
+# REPLY: 関数の返す値
+# return: 関数の終了コード
 #
 # example:
 #  z.wtproxy._state.with_lock z.wtproxy._entry.current.locked "$path" "$branch" true

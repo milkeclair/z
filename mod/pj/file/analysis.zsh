@@ -1,6 +1,6 @@
-# get the project registry directory
+# プロジェクトの登録ディレクトリを取得する
 #
-# REPLY: registry directory path
+# REPLY: 登録先ディレクトリのパス
 # return: null
 #
 # example:
@@ -10,10 +10,10 @@ z.pj.file._root() {
   REPLY="$config_home/z/pj"
 }
 
-# get a validated project registration file path
+# 検証済みのプロジェクト登録ファイルのパスを取得する
 #
-# $1: project name
-# REPLY: registration file path, or empty on failure
+# $1: プロジェクト名
+# REPLY: 登録ファイルのパス。失敗時は空
 # return: 0|1
 #
 # example:
@@ -30,9 +30,9 @@ z.pj.file._path() {
   REPLY="$REPLY/$name"
 }
 
-# get registered project names in filename order
+# ファイル名順に登録済みのプロジェクト名を取得する
 #
-# REPLY: array of project names
+# REPLY: プロジェクト名の配列
 # return: null
 #
 # example:
@@ -50,10 +50,10 @@ z.pj.file._names() {
   REPLY=("${names[@]}")
 }
 
-# read the directory stored in a project registration
+# プロジェクト登録に保存されたディレクトリを読む
 #
-# $1: project name
-# REPLY: registered directory, or empty on failure
+# $1: プロジェクト名
+# REPLY: 登録されたディレクトリ。失敗時は空
 # return: 0|1
 #
 # example:

@@ -1,7 +1,7 @@
-# start proxy daemon for z.wtproxy.start
+# z.wtproxy.start用のプロキシデーモンを起動する
 #
 # REPLY: null
-# return: 0 if daemon is running, otherwise 1
+# return: デーモンが動作中の場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy.start._daemon
@@ -27,10 +27,10 @@ z.wtproxy.start._daemon() {
   return 1
 }
 
-# serve proxy listeners in the current process
+# 現在のプロセスでプロキシの待受を処理する
 #
 # REPLY: null
-# return: 0 if proxy exits normally, otherwise 1
+# return: プロキシが正常終了した場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy.start._serve

@@ -1,6 +1,6 @@
-# build function docs cache from a file
+# ファイルから関数ドキュメントのキャッシュを作成する
 #
-# $1: source file path
+# $1: ソースファイルのパス
 # REPLY: null
 # return: null
 #

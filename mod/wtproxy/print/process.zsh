@@ -1,8 +1,8 @@
-# print a proxy entry
+# プロキシエントリを表示する
 #
-# $@: entry hash as key-value pairs
+# $@: エントリのキーと値の組
 # REPLY: null
-# return: 0 if configuration is available, otherwise 1
+# return: 設定を取得できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy._print.entry "${(@kv)entry}"

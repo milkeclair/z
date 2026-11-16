@@ -1,7 +1,7 @@
-# get current branch label
+# 現在のブランチのラベルを取得する
 #
-# REPLY: branch name or detached-<short HEAD>
-# return: 0 if label is found, otherwise 1
+# REPLY: ブランチ名、またはdetached-<短いHEAD>
+# return: ラベルが見つかった場合は0、それ以外は1
 #
 # example:
 #  z.git.branch.label.current #=> "main"
@@ -24,11 +24,11 @@ z.git.branch.label.current() {
   REPLY="detached-$head"
 }
 
-# get branch label for a path
+# パスに対応するブランチのラベルを取得する
 #
-# $1: git worktree path
-# REPLY: branch name or detached-<short HEAD>
-# return: 0 if label is found, otherwise 1
+# $1: Git worktreeのパス
+# REPLY: ブランチ名、またはdetached-<短いHEAD>
+# return: ラベルが見つかった場合は0、それ以外は1
 #
 # example:
 #  z.git.branch.label.for /path/to/worktree #=> "main"

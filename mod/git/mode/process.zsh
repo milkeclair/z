@@ -1,4 +1,4 @@
-# interactive mode for git
+# Gitの対話モード
 #
 # REPLY: null
 # return: null

@@ -1,6 +1,6 @@
-# show current branch
+# 現在のブランチを表示する
 #
-# REPLY: current branch name
+# REPLY: 現在のブランチ名
 # return: null
 #
 # example:

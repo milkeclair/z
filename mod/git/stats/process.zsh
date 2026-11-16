@@ -1,6 +1,6 @@
-# display commit stats for each author
+# 作成者ごとのコミット統計を表示する
 #
-# $@: optional arguments for excluding certain file extensions or directories from the analysis
+# $@: 統計から特定の拡張子やディレクトリを除くための任意の引数
 # REPLY: null
 # return: null
 #
@@ -12,11 +12,11 @@ z.git.stats() {
   z.git.stats._show "$@"
 }
 
-# show commit stats for each author
-# excluding specified file extensions and directories
+# 作成者ごとのコミット統計を表示する
+# 指定した拡張子とディレクトリを除く
 #
-# $exclude_exts?: array of file extensions to exclude (e.g. "md" "txt")
-# $exclude_dirs?: array of directories to exclude (e.g. "docs" "tests")
+# $exclude_exts?: 除外する拡張子の配列（例: "md" "txt"）
+# $exclude_dirs?: 除外するディレクトリの配列（例: "docs" "tests"）
 # REPLY: null
 # return: null
 #
@@ -30,10 +30,10 @@ z.git.stats._show() {
   z.git.stats._author exclude_exts="${exclude_exts[*]}" exclude_dirs="${exclude_dirs[*]}"
 }
 
-# display which file extensions and directories are excluded from commit stats analysis
+# コミット統計で除外する拡張子とディレクトリを表示する
 #
-# $exclude_exts?: array of file extensions to exclude (e.g. "md" "txt")
-# $exclude_dirs?: array of directories to exclude (e.g. "docs" "tests")
+# $exclude_exts?: 除外する拡張子の配列（例: "md" "txt"）
+# $exclude_dirs?: 除外するディレクトリの配列（例: "docs" "tests"）
 # REPLY: null
 # return: null
 #
@@ -47,10 +47,10 @@ z.git.stats._exclude() {
   z.io.line
 }
 
-# display commit stats for each author in a table format
+# 作成者ごとのコミット統計を表形式で表示する
 #
-# $exclude_exts?: array of file extensions to exclude (e.g. "md" "txt")
-# $exclude_dirs?: array of directories to exclude (e.g. "docs" "tests")
+# $exclude_exts?: 除外する拡張子の配列（例: "md" "txt"）
+# $exclude_dirs?: 除外するディレクトリの配列（例: "docs" "tests"）
 # REPLY: null
 # return: null
 #

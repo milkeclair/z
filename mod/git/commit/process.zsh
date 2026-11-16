@@ -1,9 +1,9 @@
-# git commit alias
+# git commitの別名
 #
-# $1: commit tag
-# $2: commit message
-# $3?: ticket number
-# $@: commit options (e.g. -nt, -ca, -ae)
+# $1: コミットタグ
+# $2: コミットメッセージ
+# $3?: チケット番号
+# $@: コミットオプション（例: -nt、-ca、-ae）
 # REPLY: null
 # return: null
 #
@@ -13,12 +13,12 @@ z.git.c() {
   z.git.commit "$@" # zls: ignore
 }
 
-# tdd commit alias for red cycle
+# TDDのredサイクル用コミットの別名
 #
-# $1: commit tag
-# $2: commit message
-# $3?: ticket number
-# $@: commit options (e.g. -nt, -ca, -ae)
+# $1: コミットタグ
+# $2: コミットメッセージ
+# $3?: チケット番号
+# $@: コミットオプション（例: -nt、-ca、-ae）
 # REPLY: null
 # return: null
 #
@@ -28,12 +28,12 @@ z.git.c.r() {
   z.git.commit.tdd red "$@" # zls: ignore
 }
 
-# tdd commit alias for green cycle
+# TDDのgreenサイクル用コミットの別名
 #
-# $1: commit tag
-# $2: commit message
-# $3?: ticket number
-# $@: commit options (e.g. -nt, -ca, -ae)
+# $1: コミットタグ
+# $2: コミットメッセージ
+# $3?: チケット番号
+# $@: コミットオプション（例: -nt、-ca、-ae）
 # REPLY: null
 # return: null
 #
@@ -43,12 +43,12 @@ z.git.c.g() {
   z.git.commit.tdd green "$@" # zls: ignore
 }
 
-# git commit
+# git commitを実行する
 #
-# $1: commit tag
-# $2: commit message
-# $3?: ticket number
-# $@: commit options (e.g. -nt, -ca, -ae)
+# $1: コミットタグ
+# $2: コミットメッセージ
+# $3?: チケット番号
+# $@: コミットオプション（例: -nt、-ca、-ae）
 #
 # REPLY: null
 # return: null
@@ -77,13 +77,13 @@ z.git.commit() {
   z.git.commit._with_committer "$REPLY" ${opts[@]}
 }
 
-# tdd commit
+# TDDのコミット
 #
-# $1: commit cycle (red, green)
-# $2: commit tag
-# $3: commit message
-# $4?: ticket number (optional)
-# $@: commit options (e.g. -nt, -ca, -ae)
+# $1: コミットサイクル（red、green）
+# $2: コミットタグ
+# $3: コミットメッセージ
+# $4?: チケット番号（任意）
+# $@: コミットオプション（例: -nt、-ca、-ae）
 #
 # REPLY: null
 # return: null
@@ -115,10 +115,10 @@ z.git.commit.tdd() {
   z.git.commit._with_committer "$REPLY" ${opts[@]}
 }
 
-# commit with committer info
+# コミッター情報を指定してコミットする
 #
-# $1: commit message
-# $@: commit options (e.g. -nt, -ca, -ae)
+# $1: コミットメッセージ
+# $@: コミットオプション（例: -nt、-ca、-ae）
 #
 # REPLY: null
 # return: null
@@ -135,7 +135,7 @@ z.git.commit._with_committer() {
   z.git.commit.help._committer
 }
 
-# show help for git commit
+# git commitのヘルプを表示する
 #
 # REPLY: null
 # return: null

@@ -1,8 +1,8 @@
-# extract commit args
-# results has hash keys, receiver can build an hash from it
+# コミット引数を取り出す
+# 結果は連想配列のキーと値の組なので、呼び出し元で連想配列に組み立てられる
 #
-# $@: commit args
-# REPLY: array of commit options
+# $@: コミット引数
+# REPLY: コミットオプションの配列
 # return: null
 #
 # example:

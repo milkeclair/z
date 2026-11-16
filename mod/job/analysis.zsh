@@ -1,8 +1,8 @@
-# print and return a job status
+# ジョブの状態を表示して返す
 #
-# $id: job id
-# stdout: job status
-# REPLY: job status|null
+# $id: ジョブID
+# stdout: ジョブの状態
+# REPLY: ジョブの状態|null
 # return: 0|1
 #
 # example:
@@ -21,10 +21,10 @@ z.job.status() {
   REPLY="$result"
 }
 
-# print and return queued jobs
+# 待機中のジョブを表示して返す
 #
-# stdout: tab-separated job lines (empty when no jobs exist)
-# REPLY: tab-separated job lines
+# stdout: タブ区切りのジョブの行（ジョブがなければ空）
+# REPLY: タブ区切りのジョブの行
 # return: null
 #
 # example:

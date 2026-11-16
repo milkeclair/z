@@ -4,7 +4,7 @@ typeset -g z_completion_cache_ready=false
 typeset -g z_completion_cache_job_id=""
 typeset -g z_completion_command_function
 
-# enable z function completion in interactive shells without -c
+# -cを指定しない対話シェルでzの関数補完を有効にする
 #
 # REPLY: null
 # return: 0|1

@@ -1,7 +1,7 @@
-# set git user info (name and email) for local
+# Gitのローカルなユーザー名とメールアドレスを設定する
 #
-# $1: user.name value
-# $2: user.email value
+# $1: user.nameの値
+# $2: user.emailの値
 # REPLY: null
 # return: null
 #
@@ -11,10 +11,10 @@ z.git.user.set() {
   z.git.user.set.local "$1" "$2"
 }
 
-# set git user info (name and email) for local
+# Gitのローカルなユーザー名とメールアドレスを設定する
 #
-# $1: user.name value
-# $2: user.email value
+# $1: user.nameの値
+# $2: user.emailの値
 # REPLY: null
 # return: 0|1
 #
@@ -30,10 +30,10 @@ z.git.user.set.local() {
   z.io "set user.email: $2"
 }
 
-# set git user info (name and email) for global
+# Gitのグローバルなユーザー名とメールアドレスを設定する
 #
-# $1: user.name value
-# $2: user.email value
+# $1: user.nameの値
+# $2: user.emailの値
 # REPLY: null
 # return: null
 #

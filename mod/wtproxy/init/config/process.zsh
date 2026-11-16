@@ -1,7 +1,7 @@
-# build the wtproxy initial configuration file content
+# wtproxyの初期設定ファイルの内容を組み立てる
 #
-# $@: named configuration values
-# REPLY: configuration file content
+# $@: 名前付きの設定値
+# REPLY: 設定ファイルの内容
 # return: null
 #
 # example:
@@ -25,12 +25,12 @@ z.wtproxy.init._config.content() {
   REPLY="${(F)lines}"$'\n'
 }
 
-# create the initial wtproxy configuration file
+# wtproxyの初期設定ファイルを作成する
 #
-# $force?: overwrite existing file when true
-# $@: named configuration values
+# $force?: trueなら既存ファイルを上書きする
+# $@: 名前付きの設定値
 # REPLY: null
-# return: 0 if the file is created, otherwise 1
+# return: ファイルを作成できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy.init._config.file proxy_port_1=3000

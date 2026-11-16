@@ -1,10 +1,10 @@
-# run a background job
+# バックグラウンドでジョブを実行する
 #
-# $name: job name
-# $command: child function name
-# $on_success?: parent success callback function name
-# $on_failure?: parent failure callback function name
-# REPLY: job id
+# $name: ジョブ名
+# $command: 子で実行する関数名
+# $on_success?: 親プロセスの成功時コールバック関数名
+# $on_failure?: 親プロセスの失敗時コールバック関数名
+# REPLY: ジョブID
 # return: 0|1
 #
 # example:
@@ -46,9 +46,9 @@ z.job.run() {
   return 0
 }
 
-# collect finished jobs
+# 終了済みのジョブを回収する
 #
-# REPLY: collected job ids
+# REPLY: 回収したジョブID
 # return: 0|1
 #
 # example:
@@ -72,9 +72,9 @@ z.job.collect() {
   return 0
 }
 
-# cancel a job
+# ジョブをキャンセルする
 #
-# $id: job id
+# $id: ジョブID
 # REPLY: null
 # return: 0|1
 #

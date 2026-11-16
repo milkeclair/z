@@ -1,4 +1,4 @@
-# show wtproxy status
+# wtproxyの状態を表示する
 #
 # REPLY: null
 # return: null
@@ -9,7 +9,7 @@ z.wtproxy() {
   z.wtproxy.status
 }
 
-# show wtproxy help
+# wtproxyのヘルプを表示する
 #
 # REPLY: null
 # return: null
@@ -54,11 +54,11 @@ z.wtproxy.help() {
   z.io indent=2 "state:   \${XDG_STATE_HOME:-\$HOME/.local/state}/wtproxy/<project>.state"
 }
 
-# create the initial wtproxy configuration file
+# wtproxyの初期設定ファイルを作成する
 #
-# $@: named configuration values
+# $@: 名前付きの設定値
 # REPLY: null
-# return: 0 if the file is created, otherwise 1
+# return: ファイルを作成できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy.init
@@ -66,11 +66,11 @@ z.wtproxy.init() {
   z.wtproxy.init._config.file "$@"
 }
 
-# print Docker Compose environment values or run a command with them
+# Docker Composeの環境変数を表示するか、その環境でコマンドを実行する
 #
-# $@?: command to run with environment values
+# $@?: 環境変数を渡して実行するコマンド
 # REPLY: null
-# return: command status if a command is given, 0 if printed, otherwise 1
+# return: コマンド指定時はその終了コード、表示した場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy.env
@@ -101,10 +101,10 @@ z.wtproxy.env() {
   z.io.line ${env_values[@]}
 }
 
-# activate current worktree and print its proxy entry
+# 現在のworktreeを有効にし、そのプロキシエントリを表示する
 #
 # REPLY: null
-# return: 0 if current entry is available, otherwise 1
+# return: 現在のエントリを取得できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy.use
@@ -113,10 +113,10 @@ z.wtproxy.use() {
   z.wtproxy._print.entry "${(@)REPLY}"
 }
 
-# activate current worktree and start proxy daemon
+# 現在のworktreeを有効にし、プロキシデーモンを起動する
 #
 # REPLY: null
-# return: 0 if proxy is started, otherwise 1
+# return: プロキシを起動できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy.start
@@ -127,7 +127,7 @@ z.wtproxy.start() {
   z.wtproxy._print.entry "${(@kv)entry}"
 }
 
-# stop proxy daemon
+# プロキシデーモンを停止する
 #
 # REPLY: null
 # return: null
@@ -142,7 +142,7 @@ z.wtproxy.stop() {
   fi
 }
 
-# print active entry and proxy daemon status
+# 有効なエントリとプロキシデーモンの状態を表示する
 #
 # REPLY: null
 # return: null
@@ -163,10 +163,10 @@ z.wtproxy.status() {
   fi
 }
 
-# remove current worktree entry and its Docker resources
+# 現在のworktreeエントリとそのDockerリソースを削除する
 #
 # REPLY: null
-# return: 0 if current entry is removed, otherwise 1
+# return: 現在のエントリを削除できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy.rm
@@ -189,10 +189,10 @@ z.wtproxy.rm() {
   fi
 }
 
-# remove stale worktree entries from state
+# 状態から古いworktreeエントリを取り除く
 #
 # REPLY: null
-# return: 0 if state is updated, otherwise 1
+# return: 状態を更新できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy.prune

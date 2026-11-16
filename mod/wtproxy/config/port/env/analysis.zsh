@@ -1,6 +1,6 @@
-# get wtproxy configuration values from environment variables
+# 環境変数からwtproxyの設定値を取得する
 #
-# REPLY: configuration hash as key-value pairs
+# REPLY: 設定のキーと値の組
 # return: null
 #
 # example:

@@ -1,6 +1,6 @@
-# remove docker resources for a compose project
+# ComposeプロジェクトのDockerリソースを削除する
 #
-# $1: compose project name
+# $1: Composeのプロジェクト名
 # REPLY: null
 # return: null
 #

@@ -1,6 +1,6 @@
-# check whether a registry entry is a plain file rather than a symbolic link
+# 登録エントリがシンボリックリンクではなく通常ファイルか確認する
 #
-# $1: registration file path
+# $1: 登録ファイルのパス
 # REPLY: null
 # return: 0|1
 #

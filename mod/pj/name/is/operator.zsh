@@ -1,6 +1,6 @@
-# check whether a project name can be used as a registry file name
+# プロジェクト名を登録ファイル名に使用できるか確認する
 #
-# $1: project name
+# $1: プロジェクト名
 # REPLY: null
 # return: 0|1
 #

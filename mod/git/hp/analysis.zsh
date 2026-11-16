@@ -1,6 +1,6 @@
-# extract ticket number from current branch name
+# 現在のブランチ名からチケット番号を取り出す
 #
-# REPLY: ticket number or empty string if not found
+# REPLY: チケット番号。見つからなければ空文字列
 # return: null
 #
 # example:
@@ -9,12 +9,12 @@
 z.git._hp.ticket() {
   z.git.branch.current._get && local branch=$REPLY
 
-  # e.g. feature/some-description-123 => some-description-123
+  # 例: feature/some-description-123 => some-description-123
   z.str.split str=$branch delimiter="/"
   local branch_parts=(${(@)REPLY})
   local after_last_slash=$branch_parts[-1]
 
-  # e.g. some-description-123 => some description 123
+  # 例: some-description-123 => some description 123
   z.str.split str=$after_last_slash delimiter="-"
   local parts=(${(@)REPLY})
   local first_part=$parts[1]

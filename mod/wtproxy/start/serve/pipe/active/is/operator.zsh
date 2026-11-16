@@ -1,8 +1,8 @@
-# check if the current active path matches a pipe active path
+# 現在の有効なパスが中継先の有効なパスと一致するか確認する
 #
-# $1: pipe active worktree path
+# $1: 中継で有効なworktreeのパス
 # REPLY: null
-# return: 0 if active path matches, otherwise 1
+# return: 有効なパスが一致する場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy.start._serve.pipe.active.is.current /tmp/worktree

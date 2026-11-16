@@ -1,6 +1,6 @@
-# get the default wtproxy configuration file path
+# wtproxyの既定の設定ファイルパスを取得する
 #
-# REPLY: configuration file path|null
+# REPLY: 設定ファイルのパス|null
 # return: null
 #
 # example:
@@ -13,10 +13,10 @@ z.wtproxy._config.file.path() {
   REPLY="$config_home/$z_wtproxy_config_dir_name/$project.$z_wtproxy_config_file_extension"
 }
 
-# get the configuration key for an environment variable name
+# 環境変数名に対応する設定キーを取得する
 #
-# $1: environment variable name
-# REPLY: configuration key|null
+# $1: 環境変数名
+# REPLY: 設定キー|null
 # return: null
 #
 # example:
@@ -30,11 +30,11 @@ z.wtproxy._config.file.key() {
   z.wtproxy._port.proxy.key $port_index
 }
 
-# parse a wtproxy configuration file line
+# wtproxy設定ファイルの1行を解析する
 #
-# $1: configuration file line
-# REPLY: configuration key and value|null
-# return: 0 if the line contains a known setting, otherwise 1
+# $1: 設定ファイルの行
+# REPLY: 設定のキーと値|null
+# return: 行に既知の設定が含まれる場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy._config.file.line "Z_WTPROXY_PROXY_PORT_1=3000"
@@ -74,9 +74,9 @@ z.wtproxy._config.file.line() {
   REPLY=("$key" "$value")
 }
 
-# get wtproxy configuration values from the configuration file
+# 設定ファイルからwtproxyの設定値を取得する
 #
-# REPLY: configuration hash as key-value pairs
+# REPLY: 設定のキーと値の組
 # return: null
 #
 # example:
@@ -100,9 +100,9 @@ z.wtproxy._config.file.values() {
   z.hash.entries config
 }
 
-# infer the default wtproxy project name
+# wtproxyの既定のプロジェクト名を推定する
 #
-# REPLY: project name
+# REPLY: プロジェクト名
 # return: null
 #
 # example:

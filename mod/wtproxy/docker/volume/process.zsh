@@ -1,8 +1,8 @@
-# remove docker volumes by actual volume names
+# 実際のボリューム名を指定してDockerボリュームを削除する
 #
-# $@: docker volume names
+# $@: Dockerボリューム名
 # REPLY: null
-# return: 0 if all removals succeed, otherwise 1
+# return: すべて削除できた場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy._docker.volume.remove volume_name

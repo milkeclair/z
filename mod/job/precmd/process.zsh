@@ -1,4 +1,4 @@
-# register z.job collection in precmd
+# precmdにz.jobの回収処理を登録する
 #
 # REPLY: null
 # return: 0|1

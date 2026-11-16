@@ -1,11 +1,11 @@
-# write job metadata
+# ジョブのメタデータを書き込む
 #
-# $id: job id
-# $name: job name
-# $command: command function name
-# $dir: job directory
-# $on_success?: success callback function name
-# $on_failure?: failure callback function name
+# $id: ジョブID
+# $name: ジョブ名
+# $command: コマンド関数名
+# $dir: ジョブのディレクトリ
+# $on_success?: 成功時のコールバック関数名
+# $on_failure?: 失敗時のコールバック関数名
 # REPLY: null
 # return: null
 #
@@ -33,9 +33,9 @@ z.job.meta._write() {
   done
 }
 
-# read job metadata
+# ジョブのメタデータを読む
 #
-# $dir: job directory
+# $dir: ジョブのディレクトリ
 # REPLY: null
 # return: 0|1
 #
