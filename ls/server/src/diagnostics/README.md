@@ -1,132 +1,49 @@
-# AST-based diagnostics
+# ASTを使う診断
 
-## Inputs and state
+## 入力と状態
 
-A server connection owns a `FunctionSnapshot`, a `ShellEnvironment` and a
-`DiagnosticSnapshot`. Initialization reads the shell environment once. Document,
-watcher and configuration notifications refresh the function and diagnostic
-snapshots together. Document and workspace requests read the resulting reports.
+各サーバー接続が`FunctionSnapshot`、`ShellEnvironment`、`DiagnosticSnapshot`を所有します。初期化時にシェル環境を1回読みます。文書・監視・設定変更の通知では関数と診断のsnapshotを一緒に更新し、文書やworkspaceの要求は作成済みの報告を参照します。
 
-`collectFileFacts` uses the iterative syntax walker once for each changed
-hydration. It records command nodes, static alias/autoload/module builtin declarations,
-documentation usage and lexer/parser/documentation diagnostics. Function usage
-has its own traversal frame, so nested function parameters belong to that
-function. The existing semantic references share syntax nodes and are not
-visited twice.
+`collectFileFacts`は、変更された解析結果ごとに反復型の構文探索を1回行います。コマンドノード、静的なalias・autoload・モジュール組み込みコマンドの宣言、引数ドキュメントの使用状況、Lexer・Parser・ドキュメントの診断を記録します。関数の使用状況は独立した探索フレームを持ち、入れ子の関数の引数はその関数に属します。既存のsemantic参照は構文ノードを共有するため、重複して探索しません。
 
-`refreshDiagnosticSnapshot` reuses unchanged facts and reports. Changes to
-function definitions or alias/autoload/module builtin declarations rebind calls in other files.
-Reports retain AST references rather than copying syntax trees. An external open
-document has local declarations and diagnostics; its declarations and report
-stay outside project-wide enumeration.
+`refreshDiagnosticSnapshot`は変更のない情報と報告を再利用します。関数定義、alias・autoload・モジュール組み込みコマンドの宣言が変わると、他のファイルの呼び出しも対応付け直します。報告は構文木をコピーせずASTへの参照を保持します。プロジェクト外で開いた文書の宣言と診断はローカルに保ち、プロジェクト全体の列挙には含めません。
 
-## Shell name resolution
+## シェルの名前解決
 
-`readShellEnvironment` starts one interactive Zsh child with a fixed query.
-It loads the user's normal shell startup environment and reads names from the
-command, builtin, alias and function tables. Registered autoload functions appear
-in the function table without executing their bodies. Global and suffix aliases
-and `POSIX_BUILTINS` are recorded too.
+`readShellEnvironment`は固定の問い合わせで対話Zshの子プロセスを1つ起動します。通常のシェル起動環境を読み、コマンド・組み込みコマンド・別名・関数の表から名前を取得します。登録済みautoload関数は本体を実行せず関数表に現れます。グローバル別名、接尾辞別名、`POSIX_BUILTINS`も記録します。
 
-The query has a three-second timeout and a two-MiB combined output limit. On
-Unix the child owns a process group, which is terminated on completion or
-failure, including normal exit of the calling Node process. A failed query leaves environment-dependent names unresolved; known
-project-function argument checks still work. A server restart refreshes changes
-to the runtime environment.
+問い合わせの制限は3秒と合計出力2 MiBです。Unixでは子が専用のプロセスグループを持ち、完了・失敗・呼び出し元Nodeプロセスの正常終了時に停止します。取得に失敗すると環境依存の名前解決を保留しますが、既知のプロジェクト関数の引数検証は継続します。実行環境の変更はサーバーの再起動で取り込みます。
 
-Normal calls resolve aliases, project functions, shell functions, autoloads,
-builtins and external commands. `builtin` selects builtins. `command` selects
-external commands, with builtin fallback when `POSIX_BUILTINS` is enabled.
-`exec` can invoke functions and builtins. `command -v/-V` queries names, so it
-does not produce execution diagnostics.
+通常の呼び出しでは別名、プロジェクト関数、シェル関数、autoload、組み込みコマンド、外部コマンドを解決します。`builtin`は組み込みコマンドを選び、`command`は外部コマンドを選びます。`POSIX_BUILTINS`が有効なら組み込みコマンドへもフォールバックします。`exec`は関数と組み込みコマンドを呼べます。`command -v/-V`は名前の問い合わせなので、実行に関する診断を出しません。
 
-Static project `alias` and `autoload` declarations supplement the captured
-environment. Alias calls are recognized as macros and their expanded argument
-lists are left unresolved. The analyzer does not execute project files or
-autoload bodies. Runtime changes to PATH, shell options and declarations can
-differ from these static inputs.
+プロジェクト内の静的な`alias`と`autoload`の宣言で、取得済みの環境を補います。別名の呼び出しはマクロとして認識し、展開後の引数一覧の解決は保留します。解析器はプロジェクトファイルやautoloadの本体を実行しません。実行時のPATH・シェルオプション・宣言は、この静的な入力と異なる場合があります。
 
-Static `zmodload` declarations also supplement the builtin table. Plain loads
-(with optional `-i`/`-s`) recognize the standard module builtins used by this
-repository: `zsh/datetime`, `zsh/net/tcp`, `zsh/system`, `zsh/zpty` and
-`zsh/zselect`. Explicit `-a`/`-ab` builtin autoloads and `-F`/`-Fa` builtin
-feature names are collected directly; disabled features, queries and unload-only
-commands do not introduce declarations. Dynamic module/feature names remain
-unresolved. This uses the same project-wide declaration model as aliases and
-autoloads, including cross-file invalidation and local declarations for external
-open documents. It does not model runtime execution order or conditional loads.
-The standard module names and features are documented in the
-[Zsh module manual](https://zsh.sourceforge.io/Doc/Release/Zsh-Modules.html).
+静的な`zmodload`の宣言も組み込みコマンド表に追加します。通常の読み込み（任意の`-i`・`-s`を含む）では、このリポジトリで使う標準モジュール`zsh/datetime`、`zsh/net/tcp`、`zsh/system`、`zsh/zpty`、`zsh/zselect`を認識します。明示的な`-a`・`-ab`の組み込みコマンドautoloadと、`-F`・`-Fa`の組み込み機能名は直接収集します。無効化する機能、問い合わせ、解除だけのコマンドは宣言を追加しません。動的なモジュール名や機能名は解決を保留します。別名とautoloadと同じプロジェクト全体の宣言モデルを使い、ファイルをまたぐ再診断と外部の開いた文書のローカル宣言にも対応します。実行順や条件付きの読み込みは評価しません。標準モジュール名と機能は[Zshのモジュールマニュアル](https://zsh.sourceforge.io/Doc/Release/Zsh-Modules.html)に記載されています。
 
-Absolute executable paths are checked for file type and execution permission.
-Existing executable paths relative to the project root are recognized. A missing
-relative path remains unresolved because the script's working directory may
-change. Glob, tilde, equals and dynamic command-name expansions also remain
-unresolved. An unknown static name produces `undefined-command` only when the
-shell environment was obtained successfully.
+絶対パスの実行ファイルは、ファイル種別と実行権限を検証します。プロジェクトルートからの既存の相対実行パスも認識します。存在しない相対パスは、スクリプトの作業ディレクトリが変わる場合があるため保留します。glob・チルダ・等号・動的なコマンド名の展開も保留します。未知の静的な名前は、シェル環境の取得に成功した場合だけ`undefined-command`を出します。
 
-## Parameter contracts
+## 引数の契約
 
-Required arguments come from `documentationOf(definition).parameters`. Each
-syntax word supplies one positional argument unless its static prefix has a
-documented `name=value` key after shell quote removal. This includes
-`name="value"`, `"name=value"` and `"name=$value"`. A key that depends on an
-expansion is not treated as a statically known name. Position numbers, optional
-parameters and rest parameters are read directly from documentation nodes. A required `$3` needs three positional
-words even if `$1` and `$2` are absent from the documentation.
+必須引数は`documentationOf(definition).parameters`から取得します。構文上の各単語を1つの位置引数として扱いますが、引用を除いた静的な接頭辞に文書の`name=value`キーがあれば名前付き引数として扱います。`name="value"`、`"name=value"`、`"name=$value"`も含みます。展開に依存するキーは静的な名前として扱いません。位置番号・省略可否・残りの引数はドキュメントノードから直接読みます。文書に`$1`と`$2`がなくても、必須の`$3`には3つの位置引数が必要です。
 
-Quoted scalar values count as one word. Words whose expansions or global aliases
-may supply an unknown number of arguments defer the missing-argument checks.
-Files with incomplete syntax also defer these checks while retaining syntax diagnostics.
-This is a syntax-based contract check, rather than runtime shell evaluation.
+引用されたスカラー値は1つの単語として数えます。展開やグローバル別名によって引数の個数が不明になる単語があれば、引数不足の検証を保留します。構文が未完成のファイルも、構文診断を保持したままこの検証を保留します。実行時のシェル評価ではなく、構文に基づく契約の検証です。
 
-Unused-argument warnings point to the documentation marker range. Actual
-parameter/variable references, static named hash access and `z.arg.named` retrieval
-count as uses. `$@` and `$*` forwarding conservatively consume all parameters.
-Literal text, comments and nested function bodies do not count as outer uses.
-Opaque expressions, complex parameter expansions, expanding here-documents and
-incomplete syntax defer unused-argument warnings because usage cannot be
-established from the current AST representation.
+未使用引数の警告は、ドキュメントの引数マーカーの範囲へ返します。実際のパラメータ・変数参照、静的な名前付き連想配列アクセス、`z.arg.named`による取得を使用と数えます。`$@`と`$*`の転送は、安全側に全引数を使用したとみなします。文字列そのもの、コメント、入れ子の関数本体は外側の引数の使用に含めません。詳細を保持しない式、複雑なパラメータ展開、展開するヒアドキュメント、未完成の構文では、現在のAST表現から使用を確定できないため警告を保留します。
 
-## Controls and reports
+## 制御コメントと報告
 
-`zls: ignore` is read from hydrated comment directives. It suppresses diagnostics
-starting on that physical line. Optional arguments select diagnostic codes, for
-example `# zls: ignore missing-positional-argument`. Text inside strings and
-documentation examples has no suppression effect.
+`zls: ignore`は、情報を付加したコメントのdirectiveから読みます。同じ物理行で始まる診断を抑制し、任意の引数で診断コードを選べます。例は`# zls: ignore missing-positional-argument`です。文字列やドキュメントの例示内に書いても抑制しません。
 
-Lexer, parser and documentation diagnostics retain separate sources. Formatting
-checks use syntax whitespace and exact source positions. Workspace reports
-include unsaved project files and their open versions; closed files use a null
-version. Reports include a result ID so clients can return their previous URI/ID
-pairs. Previous workspace result URIs that disappeared receive empty reports.
+Lexer・Parser・ドキュメントの診断は発生元を分けて保持します。書式の検証は構文の空白と正確なソース位置を使います。workspaceの報告には未保存のプロジェクトファイルと開いているバージョンを含み、閉じたファイルのバージョンはnullです。報告には結果IDがあり、クライアントは前回のURIとIDの組を返せます。前回のworkspace結果から消えたURIには空の報告を返します。
 
-Tests exercise a real Zsh environment and a compiled Node server over stdio,
-alongside AST ownership, argument contracts, controls and snapshot reuse.
+ASTの所有関係、引数の契約、制御コメント、snapshotの再利用に加え、実際のZsh環境とコンパイル済みNodeサーバーのstdio通信をテストします。
 
-## Commands passed as strings
+## 文字列で渡すコマンド
 
-Parameters annotated `[code]` in hydrated function documentation opt into
-embedded-code analysis. The analyzer resolves the receiver normally, removes
-static shell quoting, and uses the existing Lexer/Parser on the argument value.
-It checks syntax, command resolution and required arguments, including nested
-annotated calls. `[code | 'call_original']` exempts that exact decoded value.
+関数ドキュメントで`[code]`を指定した引数を、埋め込みコードとして解析します。通常の方法で呼び出し先を解決して静的な引用を取り除き、既存のLexer/Parserで引数の値を解析します。入れ子のコード指定も含め、構文・コマンド解決・必須引数を検証します。`[code | 'call_original']`の指定は、復号後の値が完全一致した場合に解析対象から除きます。
 
-The string remains a word in the outer syntax AST. Parsed code uses its own
-decoded source; a flattened source map translates diagnostics back to the
-original physical file, including escapes, concatenated quotes, Unicode and
-multiple lines. Local functions, aliases, autoloads and module builtins in the
-code belong to that code and its nested code calls, rather than the project.
-Embedded `zls: ignore` comments apply to embedded logical lines; outer controls
-continue to apply to physical source lines.
+外側の構文ASTでは文字列を単語のまま保持します。解析したコードは復号後の独立したソースを使い、平坦化した位置対応表で、エスケープ・連結した引用・Unicode・複数行を元の物理ファイルの位置へ戻します。コード内の関数・別名・autoload・モジュール組み込みコマンドの宣言は、そのコードと入れ子のコード呼び出しに属し、プロジェクト全体へ追加しません。内側の`zls: ignore`は内側の論理行に、外側の制御は物理的なソース行に適用します。
 
-Outer expansions make the resulting program unknown, so their code diagnostics
-are deferred. Command substitutions already represented by the outer AST keep
-their normal diagnostics. The analyzer never evaluates the code. Formatting
-rules for whole files are not applied to string payloads.
+外側の展開で生成後のコードが不明になる場合は、そのコードの診断を保留します。外側のASTにあるコマンド置換は通常の診断を保ち、コードを実行して評価することはありません。ファイル全体の書式規則は文字列の内容には適用しません。
 
-Processing uses an explicit program stack, at most 32 embedded levels and a
-1,048,576 UTF-16-unit budget for literal spellings per file. Exceeding a limit
-produces `embedded-analysis-limit` rather than continuing to allocate decoded
-source maps. Unchanged reports reuse the existing diagnostic snapshot; code-type
-or allowed-literal changes invalidate dependent call contracts.
+明示的な処理スタックを使い、入れ子は最大32段、ファイルごとの文字列表記は合計1,048,576 UTF-16単位までとします。上限を超えると、復号後のソースや位置対応表の確保を続けず`embedded-analysis-limit`を返します。変更のない報告は既存の診断snapshotを再利用し、コード型や許可値が変わると依存する呼び出しの契約を更新します。
