@@ -62,3 +62,112 @@ z.arg.named() {
 
   z.return ${value:-$default}
 }
+
+# parse an input array into named values and remaining literal arguments
+#
+# $input: name of a declared ordinary indexed array (read only)
+# $named: name of a plain writable associative array declaring accepted names and defaults
+# $rest: name of a plain writable indexed array for remaining arguments
+# REPLY: unchanged
+# return: 0 on success, 1 for invalid API arguments or variable declarations
+#
+# The three variable names must differ. Output names cannot be REPLY.
+# Variable names starting with z_arg_parse_ are reserved.
+# The first occurrence of each declared name wins; all its occurrences are removed.
+# Named values use z.return conversion; an empty converted value uses its default.
+# Unknown arguments and empty elements are preserved literally in rest.
+# Outputs are unchanged on validation failure. Successful calls print nothing.
+#
+# example:
+#  local -a input_args=("a" "delimiter=," "b")
+#  local -A parsed_named=([delimiter]=" ")
+#  local -a parsed_args=()
+#  z.arg.parse input=input_args named=parsed_named rest=parsed_args
+#  # parsed_named[delimiter]=","; parsed_args=("a" "b")
+z.arg.parse() {
+  emulate -L zsh
+  local z_arg_parse_option z_arg_parse_key z_arg_parse_name
+  local -A z_arg_parse_targets=()
+
+  for z_arg_parse_option in "$@"; do
+    case $z_arg_parse_option in
+    input=*|named=*|rest=*)
+      z_arg_parse_key=${z_arg_parse_option%%=*}
+      if (( ${+z_arg_parse_targets[$z_arg_parse_key]} )); then
+        print -u2 -- "z.arg.parse: duplicate API argument: $z_arg_parse_key"
+        return 1
+      fi
+      z_arg_parse_targets[$z_arg_parse_key]=${z_arg_parse_option#*=}
+      ;;
+    *)
+      print -u2 -- "z.arg.parse: expected input=, named= and rest= variable names"
+      return 1
+      ;;
+    esac
+  done
+
+  local z_arg_parse_input=${z_arg_parse_targets[input]}
+  local z_arg_parse_named=${z_arg_parse_targets[named]}
+  local z_arg_parse_rest=${z_arg_parse_targets[rest]}
+
+  for z_arg_parse_name in "$z_arg_parse_input" "$z_arg_parse_named" "$z_arg_parse_rest"; do
+    if [[ -z $z_arg_parse_name || $z_arg_parse_name == [0-9]* ||
+      $z_arg_parse_name == *[^a-zA-Z0-9_]* || $z_arg_parse_name == z_arg_parse_* ]]; then
+      print -u2 -- "z.arg.parse: invalid or reserved variable name: $z_arg_parse_name"
+      return 1
+    fi
+  done
+
+  if [[ $z_arg_parse_input == $z_arg_parse_named ||
+    $z_arg_parse_input == $z_arg_parse_rest || $z_arg_parse_named == $z_arg_parse_rest ||
+    $z_arg_parse_named == REPLY || $z_arg_parse_rest == REPLY ]]; then
+    print -u2 -- "z.arg.parse: use distinct variables and output names other than REPLY"
+    return 1
+  fi
+
+  if [[ ${(Pt)z_arg_parse_input} != array* ||
+    ${(Pt)z_arg_parse_input} == *special* ||
+    ( ${(Pt)z_arg_parse_named} != association && ${(Pt)z_arg_parse_named} != association-local ) ||
+    ( ${(Pt)z_arg_parse_rest} != array && ${(Pt)z_arg_parse_rest} != array-local ) ]]; then
+    print -u2 -- "z.arg.parse: input/rest must be indexed arrays and named a writable associative array"
+    return 1
+  fi
+
+  local -a z_arg_parse_values=("${(@P)z_arg_parse_input}")
+  local -A z_arg_parse_result=("${(@Pkv)z_arg_parse_named}")
+  local -A z_arg_parse_found=()
+  local -a z_arg_parse_remaining=()
+  local z_arg_parse_value
+
+  for z_arg_parse_value in "${z_arg_parse_values[@]}"; do
+    z_arg_parse_key=${z_arg_parse_value%%=*}
+    if [[ $z_arg_parse_value == *=* && -n $z_arg_parse_key ]] &&
+      (( ${+z_arg_parse_result[$z_arg_parse_key]} )); then
+      if (( ! ${+z_arg_parse_found[$z_arg_parse_key]} )); then
+        z_arg_parse_found[$z_arg_parse_key]=${z_arg_parse_value#*=}
+      fi
+    else
+      z_arg_parse_remaining+=("$z_arg_parse_value")
+    fi
+  done
+
+  local REPLY
+  # z.returnが使うargは、変換中だけローカルに隔離する。
+  () {
+    local arg
+    for z_arg_parse_key in "${(@k)z_arg_parse_result}"; do
+      if (( ${+z_arg_parse_found[$z_arg_parse_key]} )); then
+        z.return "${z_arg_parse_found[$z_arg_parse_key]}"
+        if [[ -z $REPLY ]]; then
+          z.return ${z_arg_parse_result[$z_arg_parse_key]}
+        fi
+      else
+        z.return ${z_arg_parse_result[$z_arg_parse_key]}
+      fi
+      z_arg_parse_result[$z_arg_parse_key]=$REPLY
+    done
+  }
+
+  set -A "$z_arg_parse_named" "${(@kv)z_arg_parse_result}"
+  set -A "$z_arg_parse_rest" "${z_arg_parse_remaining[@]}"
+}
