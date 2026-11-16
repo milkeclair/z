@@ -1,4 +1,5 @@
 # パスの権限と所有者を変更する
+# 権限名はread・write・execute・noneをカンマで区切り、mode指定時はmodeを優先する
 #
 # $path: 対象のパス
 # $owner?: 所有者名またはID
@@ -15,11 +16,26 @@
 #  z.perm path=/tmp/z-example.txt mode=600
 #  # return: 0
 #  # 変更後のモード: 600
+#
+#  # 所有者へ読み書き、グループへ読み取りを許可する場合
+#  z.perm \
+#    path=/tmp/z-example.txt \
+#    mode_owner=read,write,none \
+#    mode_group=read,none,none \
+#    mode_other=none,none,none
+#  # return: 0
+#  # 変更後のモード: 640
+#
+#  # exampleユーザーとstaffグループが存在し、所有者を変更できる場合
+#  z.perm path=/tmp/z-example.txt owner=example group=staff
+#  # return: 0
+#  # 変更後: 所有者はexample、グループはstaff
 z.perm() {
   z.perm._apply recursive=false "$@" # zls: ignore
 }
 
 # ディレクトリの権限と所有者を再帰的に変更する
+# 権限名はread・write・execute・noneをカンマで区切り、mode指定時はmodeを優先する
 #
 # $path: 対象ディレクトリのパス
 # $owner?: 所有者名またはID
@@ -35,12 +51,27 @@ z.perm() {
 #  # 対象ディレクトリと配下の権限を変更できる場合
 #  z.perm.dir path=/tmp/z-example mode=755
 #  # return: 0
-#  # 変更後のモード: 755
+#  # 変更後のモード: 対象ディレクトリと配下すべてが755
+#
+#  # 所有者へ読み書き実行、グループへ読み取り実行を再帰的に許可する場合
+#  z.perm.dir \
+#    path=/tmp/z-example \
+#    mode_owner=read,write,execute \
+#    mode_group=read,none,execute \
+#    mode_other=none,none,none
+#  # return: 0
+#  # 変更後のモード: 対象ディレクトリと配下すべてが750
+#
+#  # exampleユーザーとstaffグループが存在し、配下の所有者も変更できる場合
+#  z.perm.dir path=/tmp/z-example owner=example group=staff
+#  # return: 0
+#  # 変更後: 対象ディレクトリと配下の所有者はexample、グループはstaff
 z.perm.dir() {
   z.perm._apply recursive=true "$@" # zls: ignore
 }
 
 # 再帰指定に応じて権限と所有者を変更する
+# 権限名はread・write・execute・noneをカンマで区切り、mode指定時はmodeを優先する
 #
 # $recursive?: 再帰的に変更を適用するか（既定: false）
 # $path: 対象のパス
@@ -58,6 +89,15 @@ z.perm.dir() {
 #  z.perm._apply recursive=false path=/tmp/z-example.txt mode=600
 #  # return: 0
 #  # 変更後のモード: 600
+#
+#  # exampleユーザーとstaffグループが存在し、配下の権限と所有者を変更できる場合
+#  z.perm._apply \
+#    recursive=true path=/tmp/z-example owner=example group=staff \
+#    mode_owner=read,write,execute \
+#    mode_group=read,none,execute \
+#    mode_other=none,none,none
+#  # return: 0
+#  # 変更後: 対象ディレクトリと配下はモード750、所有者example、グループstaff
 z.perm._apply() {
   z.arg.named recursive $@ default=false && local recursive=$REPLY
   z.arg.named path $@ && local target_path=$REPLY
@@ -95,6 +135,10 @@ z.perm._apply() {
 # example:
 #  z.perm._owner_spec owner=user group=group
 #  # REPLY: "user:group"
+#  z.perm._owner_spec owner=user
+#  # REPLY: "user"
+#  z.perm._owner_spec group=group
+#  # REPLY: ":group"
 z.perm._owner_spec() {
   z.arg.named owner $@ default="" && local owner=$REPLY
   z.arg.named group $@ default="" && local group=$REPLY
@@ -123,8 +167,15 @@ z.perm._owner_spec() {
 # return: 権限モードを組み立てられた場合は0、それ以外は1
 #
 # example:
+#  z.perm._mode mode=600
+#  # REPLY: "600"
+#
 #  z.perm._mode mode_owner=read,write,none mode_group=read,none,none mode_other=none,none,none
 #  # REPLY: "640"
+#
+#  # modeを指定した場合は、mode_owner等より優先する
+#  z.perm._mode mode=600 mode_owner=read,write,execute
+#  # REPLY: "600"
 z.perm._mode() {
   z.arg.named mode $@ default="" && local mode=$REPLY
   if z.is.not.null "$mode"; then
@@ -167,6 +218,8 @@ z.perm._mode() {
 # example:
 #  z.perm._mode_digit read,write,none
 #  # REPLY: 6
+#  z.perm._mode_digit read,write,execute
+#  # REPLY: 7
 z.perm._mode_digit() {
   local mode_values=$1
   local digit=0
