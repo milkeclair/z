@@ -4,7 +4,9 @@
 # return: null
 #
 # example:
-#   z.git.branch.current._get #=> "main"
+#  # カレントブランチがmainの場合
+#  z.git.branch.current._get
+#  # REPLY: "main"
 z.git.branch.current._get() {
   if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     REPLY=$(git branch --show-current)

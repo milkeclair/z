@@ -4,7 +4,11 @@
 # return: 現在のエントリが存在する場合は0、それ以外は1
 #
 # example:
+#  # 現在のworktreeが/tmp/worktreeで、状態ファイルにエントリがある場合
 #  z.wtproxy.rm._current.entry
+#  local -A entry=($REPLY)
+#  # entry[path]: "/tmp/worktree"
+#  # return: 0
 z.wtproxy.rm._current.entry() {
   z.git.wt.current.root || return 1
   local worktree_path=$REPLY
@@ -20,7 +24,13 @@ z.wtproxy.rm._current.entry() {
 # return: 現在のエントリを削除できた場合は0、それ以外は1
 #
 # example:
-#  z.wtproxy.rm._current.locked /path/to/worktree project_branch_hash
+#  # /tmp/worktreeが唯一のエントリで、Compose名が一致する場合
+#  z.wtproxy.rm._current.locked /tmp/worktree sample_feat_example_b671591e
+#  local -A result=($REPLY)
+#  # result[removed_path]: "/tmp/worktree"
+#  # result[removed_project]: "sample_feat_example_b671591e"
+#  # result[entries_count]: 0
+#  # return: 0
 z.wtproxy.rm._current.locked() {
   local worktree_path=$1
   local expected_project=$2

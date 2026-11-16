@@ -6,8 +6,8 @@
 # return: 0|1
 #
 # example:
-#   z.git.commit._arg.is.enough -m "commit message" #=> true
-#   z.git.commit._arg.is.enough #=> false
+#  z.git.commit._arg.is.enough feat "add new feature"
+#  # return: 0
 z.git.commit._arg.is.enough() {
   local tag_and_message=2
 

@@ -5,7 +5,9 @@
 # return: null
 #
 # example:
-#   z.git.stats._commit.map.split entry="milkeclair:1000 500:50"
+#  z.git.stats._commit.map.split entry="milkeclair:1000 500:50"
+#  local -A stats=($REPLY)
+#  # stats: author=milkeclair、commit_count=50、inserted=1000、deleted=500、total=1500
 z.git.stats._commit.map.split() {
   z.arg.named entry "$@" && local entry=$REPLY
   z.str.split str="$entry" delimiter=:
@@ -39,8 +41,8 @@ z.git.stats._commit.map.split() {
 # return: null
 #
 # example:
-#   z.git.stats._commit.map.distinct commit_map=("Alice:1000 500:50" "Bob:800 300:40" "Alice:1000 500:50")
-#   #=> REPLY=("Alice:1000 500:50" "Bob:800 300:40")
+#  z.git.stats._commit.map.distinct "Alice:1000 500:50" "Bob:800 300:40" "Alice:1000 500:50"
+#  # REPLY: ("Alice:1000 500:50" "Bob:800 300:40")
 z.git.stats._commit.map.distinct() {
   local commit_map=("$@")
   local filtered_entries=()

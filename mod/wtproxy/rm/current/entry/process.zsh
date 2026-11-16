@@ -5,7 +5,11 @@
 # return: 現在のエントリが存在する場合は0、それ以外は1
 #
 # example:
-#  z.wtproxy.rm._current.entry.locked /path/to/worktree
+#  # 状態ファイルに/tmp/worktreeのエントリがある場合
+#  z.wtproxy.rm._current.entry.locked /tmp/worktree
+#  local -A entry=($REPLY)
+#  # entry[path]: "/tmp/worktree"
+#  # return: 0
 z.wtproxy.rm._current.entry.locked() {
   local worktree_path=$1
 

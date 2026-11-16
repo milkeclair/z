@@ -5,7 +5,9 @@
 # return: 状態にパスが存在する場合は0、それ以外は1
 #
 # example:
-#  z.wtproxy._state.path.has /path/to/worktree
+#  z_wtproxy_state_paths=(/tmp/worktree)
+#  z.wtproxy._state.path.has /tmp/worktree
+#  # return: 0
 z.wtproxy._state.path.has() {
   local target_path=$1
   local worktree_path

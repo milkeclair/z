@@ -7,6 +7,8 @@
 #
 # example:
 #  z.completion.cache.build.line._function_name "z.example() {"
+#  # REPLY: "z.example"
+#  # return: 0
 z.completion.cache.build.line._function_name() {
   local line=$1
   local trimmed_line=${2-$line}

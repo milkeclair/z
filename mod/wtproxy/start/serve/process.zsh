@@ -7,7 +7,9 @@
 # return: null
 #
 # example:
+#  # FD10が待受中で、activeのworktree_port_1が3001の場合
 #  z.wtproxy.start._serve.accept 10 worktree_port_1
+#  # 結果: localhostからの接続が127.0.0.1:3001へ中継される
 z.wtproxy.start._serve.accept() {
   local listener_fd=$1
   local target_key=$2
@@ -68,7 +70,9 @@ z.wtproxy.start._serve.accept() {
 # return: null
 #
 # example:
+#  # このデーモンがFD11、12、13を待受用に開いている場合
 #  z.wtproxy.start._serve.cleanup 11 12 13
+#  # 結果: 待受FD11、12、13が閉じられる
 z.wtproxy.start._serve.cleanup() {
   for pid in $z_wtproxy_serve_pipe_pids; do
     z.io.null kill -TERM "$pid"

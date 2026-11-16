@@ -6,6 +6,9 @@
 #
 # example:
 #  z.pj.remove._menu first second
+#  # 標準エラー:
+#  # 1) first
+#  # 2) second
 z.pj.remove._menu() {
   local index=1
   local name
@@ -21,7 +24,10 @@ z.pj.remove._menu() {
 # return: 0|1
 #
 # example:
+#  # 登録名がfirst、secondで、1を入力した場合
 #  z.pj.remove._select
+#  # REPLY: "first"
+#  # return: 0
 z.pj.remove._select() {
   z.pj.file._names
   local names=("${(@)REPLY}")
@@ -61,7 +67,10 @@ z.pj.remove._select() {
 # return: 0|1
 #
 # example:
+#  # exampleの登録ファイルが存在する場合
 #  z.pj.remove._entry example
+#  # return: 0
+#  # 結果: exampleの登録ファイルが削除される
 z.pj.remove._entry() {
   z.pj.file._path "$1" || return 1
   local file=$REPLY

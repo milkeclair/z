@@ -5,7 +5,9 @@
 # return: null
 #
 # example:
+#  # ztcp -LでFD12の接続先が127.0.0.1と報告される場合
 #  z.wtproxy.start._serve.remote.host 12
+#  # REPLY: "127.0.0.1"
 z.wtproxy.start._serve.remote.host() {
   local target_fd=$1
 

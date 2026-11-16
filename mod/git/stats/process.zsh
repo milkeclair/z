@@ -5,7 +5,9 @@
 # return: null
 #
 # example:
-#   z.git.stats._author exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
+#  # milkeclairのコミット2件、追加3行、削除1行が対象の場合
+#  z.git.stats exclude_exts=md exclude_dirs=docs
+#  # 表示例（一部、色と余白を省略）: │ milkeclair │ 2 │ 3 │ 1 │ 4 │
 z.git.stats() {
   z.io.line
   z.io "--- author stats ---"
@@ -21,7 +23,9 @@ z.git.stats() {
 # return: null
 #
 # example:
-#   z.git.stats._show exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
+#  # milkeclairのコミット2件、追加3行、削除1行が対象の場合
+#  z.git.stats._show exclude_exts=md exclude_dirs=docs
+#  # 表示例（一部、色と余白を省略）: │ milkeclair │ 2 │ 3 │ 1 │ 4 │
 z.git.stats._show() {
   z.git.stats._exclude.exts $@ && local exclude_exts=($REPLY)
   z.git.stats._exclude.dirs $@ && local exclude_dirs=($REPLY)
@@ -38,7 +42,11 @@ z.git.stats._show() {
 # return: null
 #
 # example:
-#   z.git.stats._exclude exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
+#  z.git.stats._exclude exclude_exts=md exclude_dirs=docs
+#  # 出力:
+#  # exclude_exts: md
+#  # exclude_dirs: docs
+#  # （この後に空行）
 z.git.stats._exclude() {
   z.arg.named exclude_exts $@ && local exclude_exts=($REPLY)
   z.arg.named exclude_dirs $@ && local exclude_dirs=($REPLY)
@@ -55,7 +63,9 @@ z.git.stats._exclude() {
 # return: null
 #
 # example:
-#   z.git.stats._author exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
+#  # milkeclairのコミット2件、追加3行、削除1行が対象の場合
+#  z.git.stats._author exclude_exts=md exclude_dirs=docs
+#  # 表示例（一部、色と余白を省略）: │ milkeclair │ 2 │ 3 │ 1 │ 4 │
 z.git.stats._author() {
   z.arg.named exclude_exts $@ && local exclude_exts=$REPLY
   z.arg.named exclude_dirs $@ && local exclude_dirs=$REPLY

@@ -7,7 +7,13 @@
 # return: エントリを取得できた場合は0、それ以外は1
 #
 # example:
-#  z.wtproxy._entry.current.locked "$path" "$branch" true
+#  # /tmp/worktreeの有効なエントリが保存済みで、更新を保存できる場合
+#  z.wtproxy._entry.current.locked /tmp/worktree feat/example true
+#  local -A entry=($REPLY)
+#  # entry[path]: "/tmp/worktree"
+#  # entry[branch]: "feat/example"
+#  # 変更後のactive: "/tmp/worktree"
+#  # return: 0
 z.wtproxy._entry.current.locked() {
   local worktree_path=$1
   local branch=$2

@@ -4,7 +4,10 @@
 # return: 設定を取得できた場合は0、それ以外は1
 #
 # example:
+#  # 既定の3ポートが有効な場合
 #  z.wtproxy._port.keys
+#  # REPLY: ("worktree_port_1" "worktree_port_2" "worktree_port_3")
+#  # return: 0
 z.wtproxy._port.keys() {
   z.wtproxy._config || return 1
   local -A config=("${(@)REPLY}")
@@ -18,7 +21,10 @@ z.wtproxy._port.keys() {
 # return: 設定を取得できた場合は0、それ以外は1
 #
 # example:
+#  # 既定の3ポートを使う場合
 #  z.wtproxy._port.proxies
+#  # REPLY: ("3000" "5432" "5173")
+#  # return: 0
 z.wtproxy._port.proxies() {
   z.wtproxy._config || return 1
   local -A config=("${(@)REPLY}")
@@ -42,7 +48,9 @@ z.wtproxy._port.proxies() {
 # return: null
 #
 # example:
+#  z_wtproxy_state_port=("/tmp/worktree|worktree_port_1" 3001)
 #  z.wtproxy._port.used
+#  # REPLY: ("3001")
 z.wtproxy._port.used() {
   local ports=()
 
@@ -61,7 +69,10 @@ z.wtproxy._port.used() {
 # return: キーが存在する場合は0、それ以外は1
 #
 # example:
+#  # proxy_port_1=3000の設定の場合
 #  z.wtproxy._port.proxy worktree_port_1
+#  # REPLY: "3000"
+#  # return: 0
 z.wtproxy._port.proxy() {
   local port_key=$1
 

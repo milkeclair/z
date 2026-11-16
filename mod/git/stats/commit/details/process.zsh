@@ -6,8 +6,8 @@
 # return: null
 #
 # example:
-#   z.git.stats._commit.details.excludes exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
-#   #=> REPLY="\.(md|txt)$ (docs|tests)/"
+#  z.git.stats._commit.details.excludes exclude_exts="md txt" exclude_dirs="docs tests"
+#  # REPLY: "\.(md|txt)$ (docs|tests)/"
 z.git.stats._commit.details.excludes() {
   z.arg.named exclude_exts $@ && local exclude_exts_raw=$REPLY
   z.arg.named exclude_dirs $@ && local exclude_dirs_raw=$REPLY

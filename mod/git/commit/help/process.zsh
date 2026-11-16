@@ -4,9 +4,9 @@
 # return: null
 #
 # example:
-#   z.git.commit.help
-#   #=> name: milkeclair
-#   #   email: milkeclair@example.com
+#  # ローカル設定のuser.nameがmilkeclair、user.emailがmilkeclair@example.comの場合
+#  z.git.commit.help._committer
+#  # 出力: $'\n--- committer ---\nname: milkeclair\nemail: milkeclair@example.com\n'
 z.git.commit.help._committer() {
   z.io.line
   z.io "--- committer ---"

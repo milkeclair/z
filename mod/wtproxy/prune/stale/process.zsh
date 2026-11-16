@@ -4,7 +4,12 @@
 # return: 状態を更新できた場合は0、それ以外は1
 #
 # example:
+#  # 状態ロック中で、不存在のworktreeが1件だけある場合
 #  z.wtproxy.prune._stale.locked
+#  local -A result=($REPLY)
+#  # result[entries_count]: 0
+#  # result[pruned_projects]: "sample_feat_example_b671591e"
+#  # return: 0
 z.wtproxy.prune._stale.locked() {
   z.wtproxy._state.load || return 1
 

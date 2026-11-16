@@ -6,6 +6,7 @@
 #
 # example:
 #  z.wtproxy._port.worktree.key 1
+#  # REPLY: "worktree_port_1"
 z.wtproxy._port.worktree.key() {
   local port_index=$1
 
@@ -20,6 +21,8 @@ z.wtproxy._port.worktree.key() {
 #
 # example:
 #  z.wtproxy._port.worktree.index worktree_port_1
+#  # REPLY: "1"
+#  # return: 0
 z.wtproxy._port.worktree.index() {
   local key=$1
 

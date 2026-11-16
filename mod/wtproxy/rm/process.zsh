@@ -5,7 +5,12 @@
 # return: 現在のエントリを削除できた場合は0、それ以外は1
 #
 # example:
-#  z.wtproxy.rm._current expected_project=project_branch_hash
+#  # 現在のworktreeが/tmp/worktreeで、Compose名が一致する場合
+#  z.wtproxy.rm._current expected_project=sample_feat_example_b671591e
+#  local -A result=($REPLY)
+#  # result[removed_path]: "/tmp/worktree"
+#  # result[removed_project]: "sample_feat_example_b671591e"
+#  # return: 0
 z.wtproxy.rm._current() {
   z.arg.named expected_project $@ default="" && local expected_project=$REPLY
 

@@ -4,7 +4,14 @@
 # return: null
 #
 # example:
+#  local -A z_completion_docs=()
+#  local -a z_completion_function_names=()
 #  z.completion.cache._dump
+#  # REPLY:
+#  # typeset -gA z_completion_docs=()
+#  # typeset -ga z_completion_function_names=()
+#  # typeset -g z_completion_cache_ready=false
+#  # z_completion_cache_ready=true
 z.completion.cache._dump() {
   local lines=(
     "typeset -gA z_completion_docs=()"

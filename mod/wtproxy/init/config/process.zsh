@@ -5,7 +5,9 @@
 # return: null
 #
 # example:
+#  # 環境変数による上書きがない場合
 #  z.wtproxy.init._config.content proxy_port_1=3000
+#  # REPLY: $'Z_WTPROXY_PROXY_PORT_1=3000\nZ_WTPROXY_PROXY_PORT_2=5432\nZ_WTPROXY_PROXY_PORT_3=5173\n'
 z.wtproxy.init._config.content() {
   local -a lines=()
   z.wtproxy.init._config.port.keys "$@"
@@ -33,7 +35,10 @@ z.wtproxy.init._config.content() {
 # return: ファイルを作成できた場合は0、それ以外は1
 #
 # example:
+#  # 有効なGitプロジェクトで、設定ファイルが未作成の場合
 #  z.wtproxy.init._config.file proxy_port_1=3000
+#  # return: 0
+#  # 保存される行の例: Z_WTPROXY_PROXY_PORT_1=3000
 z.wtproxy.init._config.file() {
   z.arg.named force $@ default=false
   local force=$REPLY

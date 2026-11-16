@@ -4,7 +4,9 @@
 # return: デーモンが動作中の場合は0、それ以外は1
 #
 # example:
+#  # 正しいプロキシデーモンが既に起動済みの場合
 #  z.wtproxy.start._daemon
+#  # return: 0
 z.wtproxy.start._daemon() {
   z.wtproxy._proxy.is.running && return 0
 
@@ -33,7 +35,9 @@ z.wtproxy.start._daemon() {
 # return: プロキシが正常終了した場合は0、それ以外は1
 #
 # example:
+#  # 内部デーモンとして実行し、INT/TERMで正常終了した場合
 #  z.wtproxy.start._serve
+#  # return: 0
 z.wtproxy.start._serve() {
   zmodload zsh/net/tcp
   zmodload zsh/zselect

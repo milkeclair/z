@@ -5,7 +5,8 @@
 # return: null
 #
 # example:
-#  z.wtproxy._slug "feat/WT Proxy!" #=> "feat_wtproxy"
+#  z.wtproxy._slug "feat/WT Proxy!"
+#  # REPLY: "feat_wt_proxy"
 z.wtproxy._slug() {
   local value=${1:-}
 

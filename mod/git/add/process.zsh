@@ -6,7 +6,9 @@
 # return: null
 #
 # example:
-#   z.git.add file1.txt file2.txt
+#  # 2つのファイルが作業ツリーに存在する場合
+#  z.git.add file1.txt file2.txt
+#  # 結果: file1.txtとfile2.txtがステージされる
 z.git.add() {
   if z.is.eq $1 "."; then
     z.io 'Rejecting "git add ." command. Please specify the files to add explicitly.'

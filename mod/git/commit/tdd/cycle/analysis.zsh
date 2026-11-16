@@ -4,7 +4,8 @@
 # return: null
 #
 # example:
-#   z.git.commit.tdd._cycle.list #=> ("red" "green")
+#  z.git.commit.tdd._cycle.list
+#  # REPLY: ("red" "green")
 z.git.commit.tdd._cycle.list() {
   local tdd_cycles=(
     red

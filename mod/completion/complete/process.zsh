@@ -5,7 +5,9 @@
 # return: 0|1
 #
 # example:
+#  # コマンド位置のz.arg.gを補完するコンテキスト内の場合
 #  z.completion.complete._command
+#  # 関数候補の例: z.arg.get
 z.completion.complete._command() {
   local current_word=${words[$CURRENT]:-}
   if z.str.start_with "$current_word" z. &&
@@ -26,7 +28,10 @@ z.completion.complete._command() {
 # return: 0|1
 #
 # example:
+#  # 現在の単語がz.arg.gで、候補がある補完コンテキスト内の場合
 #  z.completion.complete._run
+#  # 補完候補: z.arg.get
+#  # return: 0
 z.completion.complete._run() {
   if z.completion.complete._functions; then
     return
@@ -41,7 +46,10 @@ z.completion.complete._run() {
 # return: 0|1
 #
 # example:
+#  # 現在の単語がz.arg.gで、候補がある補完コンテキスト内の場合
 #  z.completion.complete._functions
+#  # 補完候補: z.arg.get
+#  # return: 0
 z.completion.complete._functions() {
   local current_word=${words[$CURRENT]:-}
   if ! z.str.start_with "$current_word" "z."; then
@@ -61,7 +69,9 @@ z.completion.complete._functions() {
 # return: 0|1
 #
 # example:
+#  # z.arg.getの引数位置で、その説明がキャッシュ済みの場合
 #  z.completion.complete._docs
+#  # 表示例（一部）: 指定インデックスの引数を取得する（1始まり）
 z.completion.complete._docs() {
   z.completion.function.name._words || return 1
   local function_name=$REPLY

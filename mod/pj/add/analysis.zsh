@@ -5,7 +5,10 @@
 # return: 0|1
 #
 # example:
-#  z.pj.add._directory ~/repo/example
+#  # /tmp/exampleが実在し、シンボリックリンクでない場合
+#  z.pj.add._directory /tmp/example
+#  # REPLY: "/tmp/example"
+#  # return: 0
 z.pj.add._directory() {
   local dir=$1
   if z.is.eq "$dir" '~'; then

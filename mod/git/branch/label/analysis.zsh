@@ -4,7 +4,9 @@
 # return: ラベルが見つかった場合は0、それ以外は1
 #
 # example:
-#  z.git.branch.label.current #=> "main"
+#  # カレントブランチがmainの場合
+#  z.git.branch.label.current
+#  # REPLY: "main"
 z.git.branch.label.current() {
   local branch
   branch=$(git branch --show-current)
@@ -31,7 +33,9 @@ z.git.branch.label.current() {
 # return: ラベルが見つかった場合は0、それ以外は1
 #
 # example:
-#  z.git.branch.label.for /path/to/worktree #=> "main"
+#  # /tmp/worktreeのブランチがmainの場合
+#  z.git.branch.label.for /tmp/worktree
+#  # REPLY: "main"
 z.git.branch.label.for() {
   local worktree_path=$1
   local branch

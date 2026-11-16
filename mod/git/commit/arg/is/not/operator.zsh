@@ -5,8 +5,10 @@
 # return: 0|1
 #
 # example:
-#   z.git.commit._arg.is.not.no_ticket -m "commit message" #=> true
-#   z.git.commit._arg.is.not.no_ticket -m "commit message" -nt #=> false
+#  z.git.commit._arg.is.not.no_ticket opts="-ca -ae"
+#  # return: 0
+#  z.git.commit._arg.is.not.no_ticket opts="-nt -ae"
+#  # return: 1
 z.git.commit._arg.is.not.no_ticket() {
   z.arg.named opts $@ && local opts=$REPLY
 

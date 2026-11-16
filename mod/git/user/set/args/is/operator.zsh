@@ -6,9 +6,12 @@
 # return: 0|1
 #
 # example:
-#   z.git.user.set._arg.is.enough "milkeclair" "milkeclair@example.com" #=> 0 (valid)
-#   z.git.user.set._arg.is.enough "" "milkeclair@example.com" #=> 1 (invalid)
-#   z.git.user.set._arg.is.enough "milkeclair" "" #=> 1 (invalid)
+#  z.git.user.set._arg.is.enough "milkeclair" "milkeclair@example.com"
+#  # return: 0
+#  z.git.user.set._arg.is.enough "" "milkeclair@example.com"
+#  # return: 1
+#  z.git.user.set._arg.is.enough "milkeclair" ""
+#  # return: 1
 z.git.user.set._arg.is.enough() {
   if z.is.null $1 && z.is.null $2; then
     z.io "require user.name"

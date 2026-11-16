@@ -6,6 +6,9 @@
 #
 # example:
 #  z.pj.name.is.valid some_project
+#  # return: 0
+#  z.pj.name.is.valid ../invalid
+#  # return: 1
 z.pj.name.is.valid() {
   local pattern='^[A-Za-z0-9_][A-Za-z0-9_.-]*$'
   z.str.is.match "$1" "$pattern"

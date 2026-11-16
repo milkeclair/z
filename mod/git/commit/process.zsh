@@ -8,7 +8,9 @@
 # return: null
 #
 # example:
-#   z.git.c feat "add new feature" TICKET-123 -ca
+#  # コミット可能な変更がある場合
+#  z.git.c feat "add new feature" TICKET-123
+#  # 新しいコミットのメッセージ: "feat: #TICKET-123 add new feature"
 z.git.c() {
   z.git.commit "$@" # zls: ignore
 }
@@ -23,7 +25,9 @@ z.git.c() {
 # return: null
 #
 # example:
-#   z.git.c.r feat "add new feature" TICKET-123 -ca -ae
+#  # 空コミットを許可する場合
+#  z.git.c.r test "add failing test" TICKET-123 -ae
+#  # 新しいコミットのメッセージ: "test: #TICKET-123 [red] add failing test"
 z.git.c.r() {
   z.git.commit.tdd red "$@" # zls: ignore
 }
@@ -38,7 +42,9 @@ z.git.c.r() {
 # return: null
 #
 # example:
-#   z.git.c.g feat "add new feature" TICKET-123 -ca -ae
+#  # 空コミットを許可する場合
+#  z.git.c.g test "make test pass" TICKET-123 -ae
+#  # 新しいコミットのメッセージ: "test: #TICKET-123 [green] make test pass"
 z.git.c.g() {
   z.git.commit.tdd green "$@" # zls: ignore
 }
@@ -54,7 +60,9 @@ z.git.c.g() {
 # return: null
 #
 # example:
-#   z.git.commit feat "add new feature" TICKET-123 -ca
+#  # コミット可能な変更がある場合
+#  z.git.commit feat "add new feature" TICKET-123
+#  # 新しいコミットのメッセージ: "feat: #TICKET-123 add new feature"
 z.git.commit() {
   z.git.commit._arg.is.enough $@ || return 1
 
@@ -89,7 +97,9 @@ z.git.commit() {
 # return: null
 #
 # example:
-#   z.git.commit.tdd red feat "add new feature" TICKET-123 -ca -ae
+#  # 空コミットを許可する場合
+#  z.git.commit.tdd red test "add failing test" TICKET-123 -ae
+#  # 新しいコミットのメッセージ: "test: #TICKET-123 [red] add failing test"
 z.git.commit.tdd() {
   local cycle=$1 && shift
 
@@ -124,7 +134,9 @@ z.git.commit.tdd() {
 # return: null
 #
 # example:
-#   z.git.commit._with_committer "feat: add new feature" -ca
+#  # コミット可能な変更がある場合
+#  z.git.commit._with_committer "feat: add new feature"
+#  # 新しいコミットのメッセージ: "feat: add new feature"
 z.git.commit._with_committer() {
   local message=$1 && shift
 
@@ -141,7 +153,8 @@ z.git.commit._with_committer() {
 # return: null
 #
 # example:
-#   z.git.commit.help
+#  z.git.commit.help
+#  # 表示例（一部）: commit:   z.git.c [tag] message ?[ticket] ?[-nt|-ca|-ae]
 z.git.commit.help() {
   z.git.commit._tag.list && local tags=$REPLY
 

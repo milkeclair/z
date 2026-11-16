@@ -4,7 +4,10 @@
 # return: 0|1
 #
 # example:
+#  # compinit済みで、z.arg.getが候補に含まれる場合
 #  z.completion.compdef._register
+#  # return: 0
+#  # 変更後: _comps[z.arg.get]="_z_completion"
 z.completion.compdef._register() {
   if z.int.is.zero ${+functions[compdef]}; then
     return 1
@@ -31,6 +34,8 @@ z.completion.compdef._register() {
 #
 # example:
 #  z.completion.compdef._ignore_private
+#  # return: 0
+#  # 結果: コマンド補完のignored-patternsに"z.*._*"が含まれる
 z.completion.compdef._ignore_private() {
   local context=':completion:*:*:-command-:*:functions'
   local private_pattern='z.*._*'

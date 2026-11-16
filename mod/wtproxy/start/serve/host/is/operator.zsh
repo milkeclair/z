@@ -6,6 +6,9 @@
 #
 # example:
 #  z.wtproxy.start._serve.host.is.localhost 127.0.0.1
+#  # return: 0
+#  z.wtproxy.start._serve.host.is.localhost 192.0.2.1
+#  # return: 1
 z.wtproxy.start._serve.host.is.localhost() {
   local host=$1
 

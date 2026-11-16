@@ -5,6 +5,8 @@
 #
 # example:
 #  z.wtproxy._state.init
+#  # 変更後: z_wtproxy_state_active_path=""、z_wtproxy_state_paths=()
+#  # 状態の連想配列も空になる
 z.wtproxy._state.init() {
   typeset -g z_wtproxy_state_active_path=""
   typeset -ga z_wtproxy_state_paths=()
@@ -19,7 +21,10 @@ z.wtproxy._state.init() {
 # return: 状態を読み込めた場合は0、それ以外は1
 #
 # example:
+#  # 状態ファイルのactive行がactive "/tmp/worktree"の場合
 #  z.wtproxy._state.load
+#  # return: 0
+#  # 読み込み後: z_wtproxy_state_active_path="/tmp/worktree"
 z.wtproxy._state.load() {
   z.wtproxy._state.init
   z.wtproxy._config.value state_file || return 1
@@ -61,7 +66,10 @@ z.wtproxy._state.load() {
 # return: 状態を保存できた場合は0、それ以外は1
 #
 # example:
+#  # activeが/tmp/worktreeで、設定の保存先へ書き込める場合
 #  z.wtproxy._state.save
+#  # return: 0
+#  # 状態ファイルの先頭行: active "/tmp/worktree"
 z.wtproxy._state.save() {
   z.wtproxy._config || return 1
   local -A config=("${(@)REPLY}")
@@ -103,7 +111,11 @@ z.wtproxy._state.save() {
 # return: 関数の終了コード
 #
 # example:
-#  z.wtproxy._state.with_lock z.wtproxy._entry.current.locked "$path" "$branch" true
+#  # 有効なロック用設定が取得できる場合
+#  z.example.value() { REPLY="ready"; return 0; }
+#  z.wtproxy._state.with_lock z.example.value
+#  # REPLY: "ready"
+#  # return: 0
 z.wtproxy._state.with_lock() {
   local fn=$1
   shift

@@ -8,7 +8,8 @@
 # return: 0|1
 #
 # example:
-#  z.job.run._validate name=example command=z.example.build
+#  z.job.run._validate name=version command=z.version
+#  # return: 0
 z.job.run._validate() {
   z.arg.named name "$@" && local name=$REPLY
   z.arg.named command "$@" && local command=$REPLY

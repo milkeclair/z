@@ -6,7 +6,8 @@
 # return: null
 #
 # example:
-#  z.wtproxy._state.port.state_key /path/to/worktree worktree_port_1
+#  z.wtproxy._state.port.state_key /tmp/worktree worktree_port_1
+#  # REPLY: "/tmp/worktree|worktree_port_1"
 z.wtproxy._state.port.state_key() {
   local worktree_path=$1
   local port_key=$2
@@ -22,7 +23,10 @@ z.wtproxy._state.port.state_key() {
 # return: null
 #
 # example:
-#  z.wtproxy._state.port.get /path/to/worktree worktree_port_1
+#  z.wtproxy._state.init
+#  z.wtproxy._state.port.set /tmp/worktree worktree_port_1 3001
+#  z.wtproxy._state.port.get /tmp/worktree worktree_port_1
+#  # REPLY: "3001"
 z.wtproxy._state.port.get() {
   local worktree_path=$1
   local port_key=$2

@@ -4,7 +4,11 @@
 # return: 成功時は0、それ以外は1
 #
 # example:
+#  # PID12345がTCP80と3000を待ち受けている場合
 #  z.process.list._ports
+#  local -A ports=($REPLY)
+#  # ports[12345]: "80,3000"
+#  # return: 0
 z.process.list._ports() {
   local listing="$(lsof -nP -w -iTCP -sTCP:LISTEN -Fpn 2>&1)" lookup_status=$?
   REPLY=()

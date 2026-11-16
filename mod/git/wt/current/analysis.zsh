@@ -4,7 +4,9 @@
 # return: ルートが見つかった場合は0、それ以外は1
 #
 # example:
-#  z.git.wt.current.root #=> "/path/to/worktree"
+#  # カレントディレクトリが/tmp/worktree内の場合
+#  z.git.wt.current.root
+#  # REPLY: "/tmp/worktree"
 z.git.wt.current.root() {
   local worktree_path
   worktree_path=$(git rev-parse --show-toplevel)
@@ -20,7 +22,9 @@ z.git.wt.current.root() {
 # return: Gitの共通ディレクトリが見つかった場合は0、それ以外は1
 #
 # example:
-#  z.git.wt.current.common_dir #=> "/path/to/repo/.git"
+#  # メインリポジトリのGitディレクトリが/tmp/repo/.gitの場合
+#  z.git.wt.current.common_dir
+#  # REPLY: "/tmp/repo/.git"
 z.git.wt.current.common_dir() {
   local common_dir
   common_dir=$(git rev-parse --git-common-dir)

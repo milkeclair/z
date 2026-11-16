@@ -6,7 +6,10 @@
 # return: null
 #
 # example:
-#   z.git.push #=> push latest changes for current branch
+#  # mainブランチからorigin/mainへのpushに成功した場合
+#  z.git.push
+#  # 出力の先頭: Pushing latest changes for current branch main
+#  # return: 0
 z.git.push() {
   if z.git._hp.arg.has.origin "$@"; then
     git push "$@"
@@ -22,8 +25,11 @@ z.git.push() {
 # return: null
 #
 # example:
-#   # if current branch is pr/123
-#   z.git.push._pr #=> push latest changes for PR #123
+#  # ブランチがpr/123で、PR #123のheadがfeature/exampleの場合
+#  # originへのpushに成功することが前提
+#  z.git.push._pr
+#  # 出力の先頭: Pushing latest changes for PR #123
+#  # return: 0
 z.git.push._pr() {
   z.git.branch.current._get
   local current_branch=$REPLY
@@ -54,7 +60,10 @@ z.git.push._pr() {
 # return: null
 #
 # example:
-#   z.git.push._current #=> push latest changes for current branch
+#  # mainブランチからorigin/mainへのpushに成功した場合
+#  z.git.push._current
+#  # 出力の先頭: Pushing latest changes for current branch main
+#  # return: 0
 z.git.push._current() {
   z.git.branch.current._get
   local current_branch=$REPLY

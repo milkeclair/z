@@ -6,9 +6,8 @@
 # return: null
 #
 # example:
-#   z.git.commit._arg.extract.opts -m "commit message" --amend
-#   #=> (tag "feat" message "commit message" ticket "TICKET-123" opts_count 2 opts_1 "-m" opts_2 "--amend")
-#   local -A results=(${(@)REPLY})
+#  z.git.commit._arg.extract feat "add new feature" TICKET-123 -ca -ae
+#  # REPLY: ("tag" "feat" "message" "add new feature" "ticket" "TICKET-123" "opts_count" "2" "opts_1" "-ca" "opts_2" "-ae")
 z.git.commit._arg.extract() {
   local tag=$1
   local message=$2

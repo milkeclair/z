@@ -5,7 +5,10 @@
 # return: 0|1
 #
 # example:
-#  z.job.collect._one dir=/tmp/z/job/123/jobs/job
+#  # ジョブが完了し、コールバックも成功する場合
+#  z.job.collect._one dir=/tmp/z/job/100/jobs/20260623T121530000000000.100.1
+#  # REPLY: "20260623T121530000000000.100.1"
+#  # return: 0
 z.job.collect._one() {
   z.arg.named dir "$@" && local dir=$REPLY
   z.is.null "$dir" && return 1
@@ -60,7 +63,9 @@ z.job.collect._one() {
 # return: 0|1
 #
 # example:
-#  z.job.collect._callback dir=/tmp/z/job/123/jobs/job status=success
+#  # メタデータで成功時コールバックが未設定の場合
+#  z.job.collect._callback dir=/tmp/z/job/100/jobs/20260623T121530000000000.100.1 status=success
+#  # return: 0
 z.job.collect._callback() {
   z.arg.named dir "$@" && local dir=$REPLY
   z.arg.named status "$@" && local job_status=$REPLY

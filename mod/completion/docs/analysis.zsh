@@ -5,7 +5,10 @@
 # return: 0|1
 #
 # example:
+#  z_completion_docs[z.arg.get]="引数を取得する"
 #  z.completion.docs._get z.arg.get
+#  # REPLY: "引数を取得する"
+#  # return: 0
 z.completion.docs._get() {
   local function_name=$1
 
@@ -25,7 +28,8 @@ z.completion.docs._get() {
 # return: null
 #
 # example:
-#  z.completion.docs._format "$docs"
+#  z.completion.docs._format "100% complete"
+#  # REPLY: "100%% complete"
 z.completion.docs._format() {
   z.str.gsub str="$1" search="%" replace="%%" literal=true
   local docs=$REPLY

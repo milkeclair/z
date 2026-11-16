@@ -8,9 +8,14 @@
 # return: 対象の全PIDへシグナルを送信できた場合は0、それ以外は1
 #
 # example:
-#  z.process.kill pid=12345
-#  z.process.kill port=3000
-#  z.process.kill name=node
+#  # この例で起動した子プロセスだけを終了する
+#  sleep 30 &
+#  local target_pid=$!
+#  z.process.kill pid=$target_pid
+#  # target_pidが12345だった場合のREPLY: ("12345")
+#  # return: 0
+#  # 自然終了を待たずTERMで停止する
+#  wait "$target_pid" 2>/dev/null
 z.process.kill() {
   if ! z.process._pids "$@"; then
     REPLY=""

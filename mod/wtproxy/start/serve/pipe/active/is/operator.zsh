@@ -5,7 +5,11 @@
 # return: 有効なパスが一致する場合は0、それ以外は1
 #
 # example:
+#  # 状態ファイルのactiveが/tmp/worktreeの場合
 #  z.wtproxy.start._serve.pipe.active.is.current /tmp/worktree
+#  # return: 0
+#  z.wtproxy.start._serve.pipe.active.is.current /tmp/other-worktree
+#  # return: 1
 z.wtproxy.start._serve.pipe.active.is.current() {
   local active_path=$1
 

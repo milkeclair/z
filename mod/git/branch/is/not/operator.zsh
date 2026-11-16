@@ -5,7 +5,9 @@
 # return: 0|1
 #
 # example:
-#   z.git.branch.is.not.exists "feature-branch"
+#  # feature-branchが存在しないリポジトリの場合
+#  z.git.branch.is.not.exists feature-branch
+#  # return: 0
 z.git.branch.is.not.exists() {
   ! z.git.branch.is.exists $1
 }

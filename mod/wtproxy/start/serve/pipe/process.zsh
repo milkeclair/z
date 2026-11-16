@@ -7,7 +7,9 @@
 # return: null
 #
 # example:
+#  # FD11と12が接続済みで、/tmp/worktreeが有効な中継先の場合
 #  z.wtproxy.start._serve.pipe.pair 11 12 /tmp/worktree
+#  # 結果: FD11で受信した"hello"がFD12へ渡される
 z.wtproxy.start._serve.pipe.pair() {
   local left_fd=$1
   local right_fd=$2

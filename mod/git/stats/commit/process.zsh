@@ -7,8 +7,9 @@
 # return: null
 #
 # example:
-#   z.git.stats._commit.map authors=("Alice" "Bob") exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
-#   #=> REPLY=("Alice:1000 500:50" "Bob:800 300:40")
+#  # Aliceのコミットが50件、追加1000行、削除500行の場合
+#  z.git.stats._commit.map authors="Alice" exclude_exts=md exclude_dirs=docs
+#  # REPLY: ("Alice:1000 500:50")
 z.git.stats._commit.map() {
   z.arg.named authors $@ && local authors_raw=$REPLY
   z.arg.named exclude_exts $@ && local exclude_exts=($REPLY)
@@ -42,11 +43,13 @@ z.git.stats._commit.map() {
 # $author: 作成者名
 # $exclude_exts?: 除外する拡張子の配列（例: "md" "txt"）
 # $exclude_dirs?: 除外するディレクトリの配列（例: "docs" "tests"）
-# REPLY: 作成者の変更行数の合計
+# REPLY: 追加行数と削除行数を空白で区切った文字列
 # return: null
 #
 # example:
-#   z.git.stats._commit.details author="milkeclair" exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
+#  # 対象の履歴が追加3行、削除1行の場合
+#  z.git.stats._commit.details author=milkeclair exclude_exts=md exclude_dirs=docs
+#  # REPLY: "3 1"
 z.git.stats._commit.details() {
   z.arg.named author $@ && local author=$REPLY
   z.arg.named exclude_exts $@ && local exclude_exts_raw=$REPLY
@@ -83,8 +86,8 @@ z.git.stats._commit.details() {
 # return: null
 #
 # example:
-#   z.git.stats._commit.sum_lines inserted=1000 deleted=500
-#   #=> 1500
+#  z.git.stats._commit.sum_lines inserted=1000 deleted=500
+#  # REPLY: 1500
 z.git.stats._commit.sum_lines() {
   z.arg.named inserted $@ && local inserted=$REPLY
   z.arg.named deleted $@ && local deleted=$REPLY

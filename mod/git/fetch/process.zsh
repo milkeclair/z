@@ -4,7 +4,10 @@
 # return: null
 #
 # example:
-#   z.git.fetch
+#  # originにfeature-branchがあり、取得に成功する場合
+#  z.git.fetch
+#  # return: 0
+#  # 結果: origin/feature-branchがリモート追跡ブランチとして取得される
 z.git.fetch() {
   git fetch --prune
 }

@@ -6,7 +6,11 @@
 # return: 0|1
 #
 # example:
+#  # 指定したジョブがsuccess状態で残っている場合
 #  z.job.status id=20260623T121530000000000.100.1
+#  # 出力: success
+#  # REPLY: "success"
+#  # return: 0
 z.job.status() {
   z.arg.named id "$@" && local id=$REPLY
   z.is.null "$id" && return 1
@@ -28,7 +32,10 @@ z.job.status() {
 # return: null
 #
 # example:
+#  # 指定のID・名前example・状態queuedのジョブが1件ある場合
 #  z.job.list
+#  # 表示例: 20260623T121530000000000.100.1<TAB>example<TAB>queued
+#  # REPLY: $'20260623T121530000000000.100.1\texample\tqueued'
 z.job.list() {
   z.job.file._jobs
   local jobs_dir=$REPLY

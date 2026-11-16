@@ -5,7 +5,8 @@
 # return: null
 #
 # example:
-#   z.git.branch._merged.get.excludes exclude_branches="main master feature/a"
+#  z.git.branch._merged.get.excludes exclude_branches="main master feature/a"
+#  # REPLY: ("main" "master" "feature/a")
 z.git.branch._merged.get.excludes() {
   local exclude_branches=(main master develop release)
 
@@ -25,7 +26,8 @@ z.git.branch._merged.get.excludes() {
 # return: null
 #
 # example:
-#   z.git.branch._merged.get.remove_symbols "* feature/branch" #=> "feature/branch"
+#  z.git.branch._merged.get.remove_symbols "* feature/branch"
+#  # REPLY: "feature/branch"
 z.git.branch._merged.get.remove_symbols() {
   z.str.trim "$1" && local trimmed=$REPLY
   if z.str.start_with "$trimmed" "*" || z.str.start_with "$trimmed" "+"; then

@@ -4,10 +4,16 @@
 # return: null
 #
 # example:
-#   z.git.user
-#   #=> --- local user info ---
-#   #   user.name: milkeclair
-#   #   user.email: milkeclair@example.com...
+#  # local/globalの名前がmilkeclair、メールがmilkeclair@example.comの場合
+#  z.git.user
+#  # 出力:
+#  # --- local user info ---
+#  # user.name: milkeclair
+#  # user.email: milkeclair@example.com
+#  #
+#  # --- global user info ---
+#  # user.name: milkeclair
+#  # user.email: milkeclair@example.com
 z.git.user() {
   z.git.user.local
   z.io.line
@@ -20,9 +26,12 @@ z.git.user() {
 # return: null
 #
 # example:
-#   z.git.user.local
-#   #=> user.name: milkeclair
-#   #   user.email: milkeclair@example.com
+#  # ローカル設定の名前がmilkeclair、メールがmilkeclair@example.comの場合
+#  z.git.user.local
+#  # 出力:
+#  # --- local user info ---
+#  # user.name: milkeclair
+#  # user.email: milkeclair@example.com
 z.git.user.local() {
   z.io "--- local user info ---"
   local user_name=$(git config --local user.name)
@@ -37,9 +46,12 @@ z.git.user.local() {
 # return: null
 #
 # example:
-#   z.git.user.global
-#   #=> user.name: milkeclair
-#   #   user.email: milkeclair@example.com
+#  # グローバル設定の名前がmilkeclair、メールがmilkeclair@example.comの場合
+#  z.git.user.global
+#  # 出力:
+#  # --- global user info ---
+#  # user.name: milkeclair
+#  # user.email: milkeclair@example.com
 z.git.user.global() {
   z.io "--- global user info ---"
   local user_name=$(git config --global user.name)

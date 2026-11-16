@@ -4,7 +4,11 @@
 # return: 有効なエントリを取得できた場合は0、それ以外は1
 #
 # example:
+#  # 状態ファイルのactiveが実在する/tmp/worktreeを指し、エントリが登録済みの場合
 #  z.wtproxy._entry.active.locked
+#  local -A entry=($REPLY)
+#  # entry[path]: "/tmp/worktree"
+#  # return: 0
 z.wtproxy._entry.active.locked() {
   z.wtproxy._state.load || return 1
 

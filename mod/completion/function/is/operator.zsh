@@ -6,6 +6,9 @@
 #
 # example:
 #  z.completion.function.is._private z.completion.cache._build
+#  # return: 0
+#  z.completion.function.is._private z.arg.get
+#  # return: 1
 z.completion.function.is._private() {
   local function_name=$1
 

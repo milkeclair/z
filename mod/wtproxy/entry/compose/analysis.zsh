@@ -5,7 +5,10 @@
 # return: 設定を取得できた場合は0、それ以外は1
 #
 # example:
+#  # 設定のprojectがsampleの場合
 #  z.wtproxy._entry.compose.name feat/example
+#  # REPLY: "sample_feat_example_b671591e"
+#  # return: 0
 z.wtproxy._entry.compose.name() {
   local branch=$1
 

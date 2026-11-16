@@ -5,8 +5,11 @@
 # return: 0|1
 #
 # example:
-#   z.git.commit._tag.is.valid "feat" #=> true
-#   z.git.commit._tag.is.valid "invalid_tag" #=> false
+#  z.git.commit._tag.is.valid "feat"
+#  # return: 0
+#  z.git.commit._tag.is.valid "invalid_tag"
+#  # 出力: コミットコマンドのヘルプ
+#  # return: 1
 z.git.commit._tag.is.valid() {
   z.git.commit._tag.list && local tag_list="${REPLY[*]}"
   local tag=$1

@@ -4,7 +4,11 @@
 # return: null
 #
 # example:
-#   z.git.stats._author.header #=> display header for commit stats table
+#  z.git.stats._author.header
+#  # 出力:
+#  # ┌──────────────────────┬────────────┬────────────┬────────────┬────────────┐
+#  # │ author               │ commit     │ add        │ delete     │ total      │
+#  # ├──────────────────────┼────────────┼────────────┼────────────┼────────────┤
 z.git.stats._author.header() {
   # 22, 12, 12, 12, 12
   z.io "┌──────────────────────┬────────────┬────────────┬────────────┬────────────┐"
@@ -20,7 +24,9 @@ z.git.stats._author.header() {
 # return: null
 #
 # example:
-#   z.git.stats._author.body exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
+#  # milkeclairのコミット2件、追加3行、削除1行が対象の場合
+#  z.git.stats._author.body exclude_exts=md exclude_dirs=docs
+#  # 表示例（色と余白を省略）: │ milkeclair │ 2 │ 3 │ 1 │ 4 │
 z.git.stats._author.body() {
   z.arg.named exclude_exts $@ && local exclude_exts=($REPLY)
   z.arg.named exclude_dirs $@ && local exclude_dirs=($REPLY)
@@ -65,8 +71,9 @@ z.git.stats._author.body() {
 # return: null
 #
 # example:
-#   z.git.stats._author.show author="milkeclair" commit_count=100 inserted=1000 deleted=1000 total=2000
-#   #=> display a table row for milkeclair with her commit stats
+#  z.git.stats._author.show author="milkeclair" commit_count=100 inserted=1000 deleted=1000 total=2000
+#  # 出力（色指定と列幅の空白を省略）:
+#  # │ milkeclair │ 100 │ 1000 │ 1000 │ 2000 │
 z.git.stats._author.show() {
   z.arg.named author $@ && local author=$REPLY
   z.arg.named commit_count $@ && local commit_count=$REPLY
@@ -94,7 +101,9 @@ z.git.stats._author.show() {
 # return: null
 #
 # example:
-#   z.git.stats._author.border #=> display border for commit stats table
+#  z.git.stats._author.border
+#  # 出力:
+#  # ├──────────────────────┼────────────┼────────────┼────────────┼────────────┤
 z.git.stats._author.border() {
   # 22, 12, 12, 12, 12
   z.io "├──────────────────────┼────────────┼────────────┼────────────┼────────────┤"
@@ -106,7 +115,9 @@ z.git.stats._author.border() {
 # return: null
 #
 # example:
-#   z.git.stats._author.footer #=> display footer for commit stats table
+#  z.git.stats._author.footer
+#  # 出力:
+#  # └──────────────────────┴────────────┴────────────┴────────────┴────────────┘
 z.git.stats._author.footer() {
   # 22, 12, 12, 12, 12
   z.io "└──────────────────────┴────────────┴────────────┴────────────┴────────────┘"

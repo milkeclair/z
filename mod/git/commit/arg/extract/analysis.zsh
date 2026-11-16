@@ -5,8 +5,8 @@
 # return: null
 #
 # example:
-#   z.git.commit._arg.extract.opts (opts_count=3 opts_1="-m" opts_2="commit message" opts_3="--amend")
-#   #=> ("-m" "commit message" "--amend")
+#  z.git.commit._arg.extract.opts opts_count 2 opts_1 "-ca" opts_2 "-ae"
+#  # REPLY: ("-ca" "-ae")
 z.git.commit._arg.extract.opts() {
   local -A args=("${(@)@}")
   local opts=()

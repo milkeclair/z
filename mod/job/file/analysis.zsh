@@ -4,7 +4,9 @@
 # return: null
 #
 # example:
+#  # シェルPIDが100の場合
 #  z.job.file._root
+#  # REPLY: "/tmp/z/job/100"
 z.job.file._root() {
   REPLY="/tmp/z/job/$$"
 }
@@ -15,7 +17,9 @@ z.job.file._root() {
 # return: null
 #
 # example:
+#  # シェルPIDが100の場合
 #  z.job.file._jobs
+#  # REPLY: "/tmp/z/job/100/jobs"
 z.job.file._jobs() {
   z.job.file._root
   REPLY="$REPLY/jobs"
@@ -28,7 +32,9 @@ z.job.file._jobs() {
 # return: 0|1
 #
 # example:
+#  # シェルPIDが100の場合
 #  z.job.file._dir id=20260623T121530000000000.100.1
+#  # REPLY: "/tmp/z/job/100/jobs/20260623T121530000000000.100.1"
 z.job.file._dir() {
   z.arg.named id "$@" && local id=$REPLY
   z.is.null "$id" && return 1
@@ -45,7 +51,9 @@ z.job.file._dir() {
 # return: 0|1
 #
 # example:
+#  # シェルPIDが100の場合
 #  z.job.file._path id=20260623T121530000000000.100.1 name=status
+#  # REPLY: "/tmp/z/job/100/jobs/20260623T121530000000000.100.1/status"
 z.job.file._path() {
   z.arg.named id "$@" && local id=$REPLY
   z.arg.named name "$@" && local name=$REPLY

@@ -6,6 +6,7 @@
 #
 # example:
 #  z.wtproxy._port.proxy.env.key proxy_port_1
+#  # REPLY: "Z_WTPROXY_PROXY_PORT_1"
 z.wtproxy._port.proxy.env.key() {
   local key=$1
 
@@ -23,6 +24,8 @@ z.wtproxy._port.proxy.env.key() {
 #
 # example:
 #  z.wtproxy._port.proxy.env.index Z_WTPROXY_PROXY_PORT_1
+#  # REPLY: "1"
+#  # return: 0
 z.wtproxy._port.proxy.env.index() {
   local env_name=$1
 

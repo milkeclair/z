@@ -5,7 +5,12 @@
 # return: エントリを取得できた場合は0、それ以外は1
 #
 # example:
+#  # 現在のworktreeが/tmp/worktree、ブランチがfeat/exampleの場合
 #  z.wtproxy._entry.current activate=true
+#  local -A entry=($REPLY)
+#  # entry[path]: "/tmp/worktree"
+#  # entry[branch]: "feat/example"
+#  # return: 0
 z.wtproxy._entry.current() {
   z.arg.named activate $@ default=false && local activate=$REPLY
 
@@ -23,7 +28,11 @@ z.wtproxy._entry.current() {
 # return: 有効なエントリを取得できた場合は0、それ以外は1
 #
 # example:
+#  # 状態ファイルのactiveが実在する/tmp/worktreeを指し、エントリが登録済みの場合
 #  z.wtproxy._entry.active
+#  local -A entry=($REPLY)
+#  # entry[path]: "/tmp/worktree"
+#  # return: 0
 z.wtproxy._entry.active() {
   z.wtproxy._state.with_lock z.wtproxy._entry.active.locked
 }
@@ -36,7 +45,13 @@ z.wtproxy._entry.active() {
 # return: エントリを取得できた場合は0、それ以外は1
 #
 # example:
-#  z.wtproxy._entry.ensure /path/to/worktree feat/example
+#  # 対象のポート3001とCompose名を読み込み済みの場合
+#  z.wtproxy._entry.ensure /tmp/worktree feat/example
+#  local -A entry=($REPLY)
+#  # entry[path]: "/tmp/worktree"
+#  # entry[branch]: "feat/example"
+#  # entry[worktree_port_1]: "3001"
+#  # return: 0
 z.wtproxy._entry.ensure() {
   local worktree_path=$1
   local branch=$2

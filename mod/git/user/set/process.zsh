@@ -6,7 +6,9 @@
 # return: null
 #
 # example:
-#   z.git.user.set "milkeclair" "milkeclair@example.com"
+#  # 書き込み可能なGitリポジトリ内の場合
+#  z.git.user.set "milkeclair" "milkeclair@example.com"
+#  # 変更後のローカル設定: user.name=milkeclair、user.email=milkeclair@example.com
 z.git.user.set() {
   z.git.user.set.local "$1" "$2"
 }
@@ -19,7 +21,10 @@ z.git.user.set() {
 # return: 0|1
 #
 # example:
-#   z.git.user.set.local "milkeclair" "milkeclair@example.com"
+#  # 書き込み可能なGitリポジトリ内の場合
+#  z.git.user.set.local "milkeclair" "milkeclair@example.com"
+#  # return: 0
+#  # 変更後のローカル設定: user.name=milkeclair、user.email=milkeclair@example.com
 z.git.user.set.local() {
   z.io "--- set local user info ---"
   z.git.user.set._arg.is.enough "$1" "$2" || return 1
@@ -38,7 +43,9 @@ z.git.user.set.local() {
 # return: null
 #
 # example:
-#   z.git.user.set.global "milkeclair" "milkeclair@example.com"
+#  # グローバル設定へ書き込める場合
+#  z.git.user.set.global "milkeclair" "milkeclair@example.com"
+#  # 変更後のグローバル設定: user.name=milkeclair、user.email=milkeclair@example.com
 z.git.user.set.global() {
   z.io "--- set global user info ---"
   z.git.user.set._arg.is.enough "$1" "$2" || return 1

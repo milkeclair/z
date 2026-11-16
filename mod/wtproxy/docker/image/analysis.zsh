@@ -5,7 +5,9 @@
 # return: null
 #
 # example:
+#  # Dockerへ接続でき、対象のイメージがこの1件だけの場合
 #  z.wtproxy._docker.image.ids sample_project
+#  # REPLY: ("0123456789ab")
 z.wtproxy._docker.image.ids() {
   local project_name=$1
   local label_filter="label=$z_wtproxy_docker_compose_project_label=$project_name"

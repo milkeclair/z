@@ -5,8 +5,9 @@
 #
 # example:
 #  z.git
-#  $z.git> add file.txt
-#  $z.git> c.g feat "add new feature"
+#  # 入力例: add file.txt
+#  # 実行される操作: z.git.add file.txt
+#  # 結果: file.txtがステージされる
 z.git() {
   z.git.mode
 }

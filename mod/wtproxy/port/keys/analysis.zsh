@@ -5,7 +5,9 @@
 # return: null
 #
 # example:
+#  local -A config=(proxy_port_1 3000 proxy_port_3 5173)
 #  z.wtproxy._port.keys.from_config config
+#  # REPLY: ("worktree_port_1" "worktree_port_3")
 z.wtproxy._port.keys.from_config() {
   local config_name=$1
   local -A seen=()

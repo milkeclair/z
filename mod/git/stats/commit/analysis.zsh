@@ -5,7 +5,9 @@
 # return: null
 #
 # example:
-#   z.git.stats._commit.count "milkeclair"
+#  # milkeclairのマージ以外のコミットが2件ある場合
+#  z.git.stats._commit.count milkeclair
+#  # REPLY: 2
 z.git.stats._commit.count() {
   local author=$1
 

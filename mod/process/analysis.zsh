@@ -7,7 +7,9 @@
 # return: 解決できた場合は0、それ以外は1
 #
 # example:
-#  z.process._pids port=3000
+#  z.process._pids pid=12345
+#  # REPLY: ("12345")
+#  # return: 0
 z.process._pids() {
   if ! z.int.is.eq $# 1; then
     z.io.error "Specify exactly one of pid=, port=, or name="
@@ -84,8 +86,13 @@ z.process._pids() {
 # return: 成功時は0、それ以外は1
 #
 # example:
-#  z.process.list
-#  z.process.list port=3000
+#  # PID12345のnodeがTCP3000を待ち受けている場合
+#  z.process.list pid=12345
+#  # 出力:
+#  # PID<TAB>NAME<TAB>PORTS
+#  # 12345<TAB>node<TAB>3000
+#  # REPLY: $'12345\tnode\t3000'
+#  # return: 0
 z.process.list() {
   local -A selected=()
   local pid name

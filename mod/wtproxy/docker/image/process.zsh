@@ -5,7 +5,10 @@
 # return: すべて削除できた場合は0、それ以外は1
 #
 # example:
-#  z.wtproxy._docker.image.remove image_id
+#  # 指定したイメージが存在し、削除できる場合
+#  z.wtproxy._docker.image.remove 0123456789ab
+#  # return: 0
+#  # 結果: イメージ0123456789abが削除される
 z.wtproxy._docker.image.remove() {
   local exit_status=0
 

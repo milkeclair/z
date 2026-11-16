@@ -4,7 +4,10 @@
 # return: null
 #
 # example:
+#  # Gitプロジェクト名がsampleの場合
+#  local XDG_CONFIG_HOME=/tmp/config
 #  z.wtproxy._config.file.path
+#  # REPLY: "/tmp/config/wtproxy/sample.env"
 z.wtproxy._config.file.path() {
   z.wtproxy._config.file.default_project || { REPLY=""; return; }
   local project=$REPLY
@@ -21,6 +24,7 @@ z.wtproxy._config.file.path() {
 #
 # example:
 #  z.wtproxy._config.file.key Z_WTPROXY_PROXY_PORT_1
+#  # REPLY: "proxy_port_1"
 z.wtproxy._config.file.key() {
   local env_name=$1
 
@@ -38,6 +42,8 @@ z.wtproxy._config.file.key() {
 #
 # example:
 #  z.wtproxy._config.file.line "Z_WTPROXY_PROXY_PORT_1=3000"
+#  # REPLY: ("proxy_port_1" "3000")
+#  # return: 0
 z.wtproxy._config.file.line() {
   local line=$1
   z.str.trim "$line"
@@ -80,7 +86,9 @@ z.wtproxy._config.file.line() {
 # return: null
 #
 # example:
+#  # 設定ファイルの内容がZ_WTPROXY_PROXY_PORT_1=3000の1行だけの場合
 #  z.wtproxy._config.file.values
+#  # REPLY: ("proxy_port_1" "3000")
 z.wtproxy._config.file.values() {
   local -A config=()
 
@@ -106,7 +114,9 @@ z.wtproxy._config.file.values() {
 # return: null
 #
 # example:
+#  # Gitの共通ディレクトリが/tmp/sample/.gitの場合
 #  z.wtproxy._config.file.default_project
+#  # REPLY: "sample"
 z.wtproxy._config.file.default_project() {
   z.git.wt.current.common_dir || {
     REPLY=""

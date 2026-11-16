@@ -4,7 +4,9 @@
 # return: null
 #
 # example:
+#  local XDG_CONFIG_HOME=/tmp/config
 #  z.pj.file._root
+#  # REPLY: "/tmp/config/z/pj"
 z.pj.file._root() {
   local config_home=${XDG_CONFIG_HOME:-$HOME/.config}
   REPLY="$config_home/z/pj"
@@ -17,7 +19,10 @@ z.pj.file._root() {
 # return: 0|1
 #
 # example:
+#  local XDG_CONFIG_HOME=/tmp/config
 #  z.pj.file._path some_project
+#  # REPLY: "/tmp/config/z/pj/some_project"
+#  # return: 0
 z.pj.file._path() {
   local name=$1
   if ! z.pj.name.is.valid "$name"; then
@@ -36,7 +41,9 @@ z.pj.file._path() {
 # return: null
 #
 # example:
+#  # firstとsecondの有効な登録ファイルがある場合
 #  z.pj.file._names
+#  # REPLY: ("first" "second")
 z.pj.file._names() {
   z.pj.file._root
   local registry=$REPLY
@@ -57,7 +64,10 @@ z.pj.file._names() {
 # return: 0|1
 #
 # example:
+#  # some_projectの登録先が/tmp/exampleの場合
 #  z.pj.file._directory some_project
+#  # REPLY: "/tmp/example"
+#  # return: 0
 z.pj.file._directory() {
   z.pj.file._path "$1" || return 1
   local file=$REPLY

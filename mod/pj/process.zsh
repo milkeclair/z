@@ -5,7 +5,10 @@
 # return: codeの終了コード。入力不正または未登録のプロジェクトなら1
 #
 # example:
+#  # some_project=/tmp/exampleを登録済みで、codeが0で終了する場合
 #  z.pj some_project
+#  # 実行されるコマンド: code /tmp/example
+#  # return: 0
 z.pj() {
   z.arr.count "$@"
   if z.int.is.not.eq $REPLY 1; then
@@ -36,7 +39,10 @@ z.pj() {
 # return: 0|1
 #
 # example:
-#  z.pj.add name=some_project dir=~/repo/p/some
+#  # /tmp/exampleが実在し、同名の登録がない場合
+#  z.pj.add name=some_project dir=/tmp/example
+#  # return: 0
+#  # 結果: some_projectの登録先が/tmp/exampleになる
 z.pj.add() {
   z.arg.named name "$@" && local name=$REPLY
   z.arg.named dir "$@" && local dir=$REPLY
@@ -55,7 +61,10 @@ z.pj.add() {
 # return: 0|1
 #
 # example:
+#  # some_project=/tmp/exampleだけを登録済みの場合
 #  z.pj.list
+#  # 出力: some_project<TAB>/tmp/example
+#  # return: 0
 z.pj.list() {
   z.pj.file._names
   local names=("${(@)REPLY}")
@@ -81,8 +90,10 @@ z.pj.list() {
 # return: 削除またはキャンセルした場合は0、それ以外は1
 #
 # example:
+#  # some_projectを登録済みの場合
 #  z.pj.remove some_project
-#  z.pj.remove
+#  # return: 0
+#  # 結果: some_projectの登録ファイルが削除され、プロジェクト本体は残る
 z.pj.remove() {
   z.arr.count "$@" && local arg_count=$REPLY
   if z.int.is.gt $arg_count 1; then

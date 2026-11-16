@@ -5,7 +5,9 @@
 # return: ポートが空いている場合は0、それ以外は1
 #
 # example:
+#  # TCP41080が空いており、待受可能な場合
 #  z.wtproxy._port.is.free 41080
+#  # return: 0
 z.wtproxy._port.is.free() {
   local port=$1
 
@@ -31,6 +33,9 @@ z.wtproxy._port.is.free() {
 #
 # example:
 #  z.wtproxy._port.is.used 41080 41080 41081
+#  # return: 0
+#  z.wtproxy._port.is.used 41082 41080 41081
+#  # return: 1
 z.wtproxy._port.is.used() {
   local port=$1
   shift

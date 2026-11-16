@@ -4,8 +4,9 @@
 # return: null
 #
 # example:
-#   # if current branch is feature/some-description-123
-#   z.git._hp.ticket #=> "123"
+#  # カレントブランチがfeature/some-description-123の場合
+#  z.git._hp.ticket
+#  # REPLY: "123"
 z.git._hp.ticket() {
   z.git.branch.current._get && local branch=$REPLY
 

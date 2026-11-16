@@ -5,7 +5,9 @@
 # return: 0|1
 #
 # example:
+#  # 指定したジョブがrunning状態で、その子プロセスが生存している場合
 #  z.job.is.running id=20260623T121530000000000.100.1
+#  # return: 0
 z.job.is.running() {
   z.arg.named id "$@" && local id=$REPLY
   z.is.null "$id" && return 1

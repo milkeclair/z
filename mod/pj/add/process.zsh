@@ -6,7 +6,10 @@
 # return: 0|1
 #
 # example:
-#  z.pj.add._write name=example dir=/repo/example
+#  # /tmp/exampleが存在し、同名の登録がない場合
+#  z.pj.add._write name=example dir=/tmp/example
+#  # return: 0
+#  # 結果: exampleの登録ファイルへ/tmp/exampleが保存される
 z.pj.add._write() {
   z.arg.named name "$@" && local name=$REPLY
   z.arg.named dir "$@" && local dir=$REPLY

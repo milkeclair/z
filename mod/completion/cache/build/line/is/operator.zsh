@@ -5,7 +5,9 @@
 # return: 0|1
 #
 # example:
-#  z.completion.cache.build.line.is._comment "# docs"
+#  z.completion.cache.build.line.is._comment "  # docs"
+#  # REPLY: "# docs"
+#  # return: 0
 z.completion.cache.build.line.is._comment() {
   local line=$1
   z.str.gsub str="$line" search="^[[:space:]]+" replace=""

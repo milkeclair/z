@@ -7,6 +7,7 @@
 #
 # example:
 #  z.wtproxy.init._config.port.value proxy_port_1 proxy_port_1=3000
+#  # REPLY: "3000"
 z.wtproxy.init._config.port.value() {
   local key=$1 && shift
   z.arg.named $key $@
@@ -31,7 +32,9 @@ z.wtproxy.init._config.port.value() {
 # return: null
 #
 # example:
+#  # 既定の3ポート以外に環境変数の追加指定がない場合
 #  z.wtproxy.init._config.port.keys proxy_port_4=8080
+#  # REPLY: ("proxy_port_1" "proxy_port_2" "proxy_port_3" "proxy_port_4")
 z.wtproxy.init._config.port.keys() {
   z.group "default values"; {
     z.hash.keys z_wtproxy_default_config_values

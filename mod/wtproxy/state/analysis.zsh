@@ -5,7 +5,12 @@
 # return: null
 #
 # example:
-#  z.wtproxy._state.entry /path/to/worktree
+#  # /tmp/worktreeにfeat/exampleとworktree_port_1=3001を記録済みの場合
+#  z.wtproxy._state.entry /tmp/worktree
+#  local -A entry=($REPLY)
+#  # entry[path]: "/tmp/worktree"
+#  # entry[branch]: "feat/example"
+#  # entry[worktree_port_1]: "3001"
 z.wtproxy._state.entry() {
   local worktree_path=$1
 

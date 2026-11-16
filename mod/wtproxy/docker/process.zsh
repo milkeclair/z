@@ -5,7 +5,9 @@
 # return: null
 #
 # example:
+#  # sample_projectの未使用イメージ・ボリュームを削除できる場合
 #  z.wtproxy._docker.prune sample_project
+#  # 結果: そのComposeプロジェクトのイメージとボリュームが削除される
 z.wtproxy._docker.prune() {
   local project_name=$1
 

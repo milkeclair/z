@@ -4,7 +4,10 @@
 # return: sourceの終了コード
 #
 # example:
+#  # ~/.zshrcでREPLY="ready"を設定し、最後にreturn 0する場合
 #  z.reload
+#  # REPLY: "ready"
+#  # return: 0
 z.reload() {
   source "$HOME/.zshrc"
 }

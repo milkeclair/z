@@ -10,7 +10,10 @@ typeset -g z_completion_command_function
 # return: 0|1
 #
 # example:
+#  # -cなしの対話シェルで、compinit済みの場合
 #  z.completion.enable
+#  # return: 0
+#  # z_completion_cache_job_idの例: "20260623T121530000000000.100.1"
 z.completion.enable() {
   z.completion.is._interactive || return 0
 

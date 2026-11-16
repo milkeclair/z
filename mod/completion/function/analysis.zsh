@@ -5,7 +5,9 @@
 # return: 0|1
 #
 # example:
+#  z_completion_function_names=(z.arg.get z.arg.named)
 #  z.completion.function._candidates z.arg.
+#  # REPLY: $'z.arg.get\nz.arg.named'
 z.completion.function._candidates() {
   local prefix=$1
   local function_names=("${z_completion_function_names[@]}")

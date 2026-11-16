@@ -6,6 +6,8 @@
 #
 # example:
 #  z.completion.function.name._declaration "z.example() {"
+#  # REPLY: "z.example"
+#  # return: 0
 z.completion.function.name._declaration() {
   local line=$1
 
@@ -35,7 +37,12 @@ z.completion.function.name._declaration() {
 # return: 0|1
 #
 # example:
+#  # z.arg.getが読み込み済みの場合
+#  local words=(z.arg.get value)
+#  local CURRENT=2
 #  z.completion.function.name._words
+#  # REPLY: "z.arg.get"
+#  # return: 0
 z.completion.function.name._words() {
   local current=$CURRENT # 現在のカーソル位置
   if z.int.is.gt $current ${#words[@]}; then

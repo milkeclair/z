@@ -6,7 +6,9 @@
 # return: null
 #
 # example:
-#   z.git.branch._merged.get
+#  # 現在のmainへfeature/aだけがマージ済みの場合
+#  z.git.branch._merged.get
+#  # REPLY: "feature/a"
 z.git.branch._merged.get() {
   z.git.branch._merged.get.excludes "$@"
   local exclude_branches=($REPLY)
