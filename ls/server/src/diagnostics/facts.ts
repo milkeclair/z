@@ -1,15 +1,13 @@
 import type { FunctionDefinitionNode, SimpleCommandNode, WordNode } from '../zshParser/ast';
 import { walk } from '../zshParser/ast';
-import type { ZshFileHydration } from '../zshHydrator';
-import { documentationOf } from '../zshHydrator';
+import type { ClassFileHydration, ZshFileHydration } from '../zshHydrator';
+import { classMethodAt, documentationOf } from '../zshHydrator';
 import { DiagnosticSeverity } from '../vscode_type';
 import type { Diagnostics } from './type';
 import { protocolRange } from '../connection/ast/cursor';
 import { literalWord } from '../refreshFunctions/word';
 import { formatDiagnostics } from './format';
 import { moduleBuiltins } from './modules';
-import { classMethodAt } from '../zshHydrator';
-import type { ClassFileHydration } from '../zshHydrator';
 
 export type Declarations = {
   readonly aliases: ReadonlySet<string>; readonly globalAliases: ReadonlySet<string>;
@@ -17,8 +15,10 @@ export type Declarations = {
   readonly builtins: ReadonlySet<string>;
 };
 export type FileFacts = {
-  readonly calls: readonly SimpleCommandNode[]; readonly base: readonly Diagnostics[];
-  readonly declarations: Declarations; readonly classes: ClassFileHydration;
+  readonly calls: readonly SimpleCommandNode[];
+  readonly base: readonly Diagnostics[];
+  readonly declarations: Declarations;
+  readonly classes: ClassFileHydration;
 };
 type Usage = {
   readonly definition: FunctionDefinitionNode; readonly depth: number;

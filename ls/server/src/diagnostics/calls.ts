@@ -17,10 +17,11 @@ import type { ShellEnvironment } from './environment';
 import type { Declarations } from './facts';
 import { simpleParameter } from './facts';
 import type { ClassFileHydration } from '../zshHydrator';
-import type { ClassCommandTargets, ClassCommandTarget } from './classes';
+import type { ClassCommandTarget, ClassCommandTargets } from './classes';
 
 export type ResolutionContext = Declarations & {
-  readonly environment: ShellEnvironment; readonly projectRoot: string;
+  readonly environment: ShellEnvironment;
+  readonly projectRoot: string;
   readonly classCommands: ClassCommandTargets;
   readonly classFiles: readonly ClassFileHydration[];
 };

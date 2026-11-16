@@ -71,12 +71,16 @@ export function embeddedCallDiagnostics(snapshot: FunctionSnapshot, file: ZshFil
         const declarations = facts.declarations;
         const inherited = program.context;
         const classFiles = [...inherited.classFiles, child.classes];
-        const childContext: ResolutionContext = { ...inherited, classFiles, classCommands: classCommands(classFiles),
+        const childContext: ResolutionContext = {
+          ...inherited,
+          classFiles,
+          classCommands: classCommands(classFiles),
           aliases: new Set([...inherited.aliases, ...declarations.aliases]),
           globalAliases: new Set([...inherited.globalAliases, ...declarations.globalAliases]),
           suffixAliases: new Set([...inherited.suffixAliases, ...declarations.suffixAliases]),
           autoloads: new Set([...inherited.autoloads, ...declarations.autoloads]),
-          builtins: new Set([...inherited.builtins, ...declarations.builtins]) };
+          builtins: new Set([...inherited.builtins, ...declarations.builtins]),
+        };
         pending.push({ file: child, calls: facts.calls, context: childContext, source,
           scopes: [{ file: program.file, offset: argument.word.range.start.offset }, ...program.scopes], depth: program.depth + 1 });
       }

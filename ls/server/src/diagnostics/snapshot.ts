@@ -23,9 +23,22 @@ export type DiagnosticSnapshot = {
 };
 
 export function createDiagnosticSnapshot(): DiagnosticSnapshot {
-  return { revision: 0, targets: new Map(), context: { environment: emptyShellEnvironment(), projectRoot: '',
-    classCommands: new Map(), classFiles: [], aliases: new Set(), globalAliases: new Set(), suffixAliases: new Set(),
-    autoloads: new Set(), builtins: new Set() }, files: new Map() };
+  return {
+    revision: 0,
+    targets: new Map(),
+    context: {
+      environment: emptyShellEnvironment(),
+      projectRoot: '',
+      classCommands: new Map(),
+      classFiles: [],
+      aliases: new Set(),
+      globalAliases: new Set(),
+      suffixAliases: new Set(),
+      autoloads: new Set(),
+      builtins: new Set(),
+    },
+    files: new Map(),
+  };
 }
 
 function sameSet(left: ReadonlySet<string>, right: ReadonlySet<string>): boolean {
@@ -47,7 +60,13 @@ function resolutionContext(facts: readonly FileFacts[], environment: ShellEnviro
     sameSet(declarations.aliases, previous.aliases) && sameSet(declarations.globalAliases, previous.globalAliases) &&
     sameSet(declarations.suffixAliases, previous.suffixAliases) && sameSet(declarations.autoloads, previous.autoloads) &&
     sameSet(declarations.builtins, previous.builtins) && sameClassFiles(classFiles, previous.classFiles)) return previous;
-  return { ...declarations, environment, projectRoot, classCommands: generated, classFiles };
+  return {
+    ...declarations,
+    environment,
+    projectRoot,
+    classCommands: generated,
+    classFiles,
+  };
 }
 
 function suppressed(file: ZshFileHydration, diagnostics: readonly Diagnostics[]): readonly Diagnostics[] {
@@ -85,7 +104,10 @@ export function refreshDiagnosticSnapshot({ snapshot, environment, previous = cr
       const local = input.project ? context : resolutionContext([...projectFacts, current], environment,
         context.projectRoot, context);
       const effective = input.project ? context : {
-        ...context, classCommands: local.classCommands, classFiles: local.classFiles, aliases: new Set([...context.aliases, ...local.aliases]),
+        ...context,
+        classCommands: local.classCommands,
+        classFiles: local.classFiles,
+        aliases: new Set([...context.aliases, ...local.aliases]),
         globalAliases: new Set([...context.globalAliases, ...local.globalAliases]),
         suffixAliases: new Set([...context.suffixAliases, ...local.suffixAliases]),
         autoloads: new Set([...context.autoloads, ...local.autoloads]),
