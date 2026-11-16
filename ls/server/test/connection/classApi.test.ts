@@ -22,7 +22,7 @@ afterEach(() => {
   for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
 });
 
-/** Index the actual class declarations through the ordinary provider snapshot path. */
+/** 実際のクラス宣言を通常のprovider snapshot経由で索引化する。 */
 function fixture(content = 'z.cls.¦\n') {
   const repoRoot = path.resolve(__dirname, '../../../..');
   const source = globSync('lib/cls/**/*.zsh', { cwd: repoRoot, nodir: true }).sort()

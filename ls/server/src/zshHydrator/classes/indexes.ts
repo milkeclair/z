@@ -13,7 +13,7 @@ type LocatedMember = {
   readonly member: ClassAttribute | ClassMethod;
 };
 
-/** Retain a member's final syntax nodes without copying its body or value. */
+/** 本体や値をコピーせず、最終AST内のメンバーの構文ノードを保持する。 */
 function memberFromCommand(command: HydratedClassCommand): LocatedMember | null {
   const information = command.hydration;
   const [nameNode, value] = command.arguments;
@@ -36,7 +36,7 @@ function memberFromCommand(command: HydratedClassCommand): LocatedMember | null 
   return { classOffset: information.classOffset, member: { ...base, kind: 'classMethod', body } };
 }
 
-/** Build fresh member groups; input commands and their existing indexes stay unchanged. */
+/** 入力コマンドと既存の索引を変えず、新しいメンバーの組を構築する。 */
 export function membersFromCommands(commands: readonly HydratedClassCommand[]): ReadonlyMap<number, MemberGroup> {
   const groups = new Map<number, { attributes: ClassAttribute[]; methods: ClassMethod[] }>();
 
@@ -56,7 +56,7 @@ export function membersFromCommands(commands: readonly HydratedClassCommand[]): 
   return groups;
 }
 
-/** Join a definition to its final native function owner and freshly built member group. */
+/** 定義を、最終ASTの所有関数と新しく構築したメンバーの組へ対応付ける。 */
 function definitionFromCommand(ast: FileNode, command: HydratedClassCommand,
   functions: ReadonlyMap<number, FunctionDefinitionNode>,
   members: ReadonlyMap<number, MemberGroup>): ClassDefinition | null {
@@ -81,7 +81,7 @@ function definitionFromCommand(ast: FileNode, command: HydratedClassCommand,
   };
 }
 
-/** Collect definitions in native syntax order, retaining incomplete and aborted entries. */
+/** 未完了と破棄済みの状態も含め、構文の順序で定義を集める。 */
 export function definitionsFromCommands(ast: FileNode, commands: readonly HydratedClassCommand[],
   functions: ReadonlyMap<number, FunctionDefinitionNode>,
   members: ReadonlyMap<number, MemberGroup>): readonly ClassDefinition[] {
@@ -89,7 +89,7 @@ export function definitionsFromCommands(ast: FileNode, commands: readonly Hydrat
     .filter((definition): definition is ClassDefinition => definition !== null);
 }
 
-/** Resolve lexical ownership only against the final enriched syntax nodes. */
+/** 情報を付加した最終構文ノードだけを使い、構文スコープの所有関係を解決する。 */
 function instanceScope(location: ClassScopeLocation,
   functions: ReadonlyMap<number, FunctionDefinitionNode>,
   commands: ReadonlyMap<number, SimpleCommandNode>): ClassInstance['scope'] | null {
@@ -104,7 +104,7 @@ function instanceScope(location: ClassScopeLocation,
   return declaration ? { kind: 'classMethod', declaration } : null;
 }
 
-/** Bind an instance's class/name words to its final lexical owner. */
+/** 実体のクラス名・変数名の単語を、最終ASTの所有スコープに対応付ける。 */
 function instanceFromCommand(ast: FileNode, command: HydratedClassCommand,
   functions: ReadonlyMap<number, FunctionDefinitionNode>,
   commands: ReadonlyMap<number, SimpleCommandNode>): ClassInstance | null {
@@ -127,7 +127,7 @@ function instanceFromCommand(ast: FileNode, command: HydratedClassCommand,
   };
 }
 
-/** Collect independent bindings without changing commands or other file indexes. */
+/** コマンドや他のファイルの索引を変えず、実体の束縛を集める。 */
 export function instancesFromCommands(ast: FileNode, commands: readonly HydratedClassCommand[],
   functions: ReadonlyMap<number, FunctionDefinitionNode>): readonly ClassInstance[] {
   const commandByOffset = new Map(commands.map(node => [node.range.start.offset, node]));
@@ -136,7 +136,7 @@ export function instancesFromCommands(ast: FileNode, commands: readonly Hydrated
     .filter((instance): instance is ClassInstance => instance !== null);
 }
 
-/** Index block ranges for argument ownership without interpreting directives again. */
+/** 宣言を再解釈せずに引数の所有関係を判定できるよう、本体の範囲を索引化する。 */
 export function methodScopesFromDefinitions(definitions: readonly ClassDefinition[]): ClassFileHydration['methodScopes'] {
   const methodScopes = new Map<FunctionDefinitionNode | null, ClassMethodScope[]>();
 

@@ -8,7 +8,7 @@ import {
 
 export type * from './types';
 
-/** Narrow the attachment through its class role discriminator. */
+/** クラスでの役割を示す種別から、付加情報の型を絞り込む。 */
 export function isHydratedClassCommand(node: SimpleCommandNode): node is HydratedClassCommand {
   if (!('hydration' in node) || typeof node.hydration !== 'object' || node.hydration === null) {
     return false;
@@ -21,12 +21,12 @@ export function isHydratedClassCommand(node: SimpleCommandNode): node is Hydrate
       information.kind === 'classMethod' || information.kind === 'classInstance');
 }
 
-/** Expose class meaning without changing the generic syntax node types. */
+/** 汎用の構文ノード型を変えず、クラスの意味情報を取得する。 */
 export function classInformationOf(node: SimpleCommandNode): ClassInformation | null {
   return isHydratedClassCommand(node) ? node.hydration : null;
 }
 
-/** Attach class meaning while retaining every native syntax kind, token and range. */
+/** 通常の構文種別・トークン・範囲を保ったまま、クラスの意味情報を付加する。 */
 export function hydrateClasses(ast: FileNode): FileNode {
   const information = collectClassInformation(ast);
   if (information.size === 0) return ast;
@@ -49,7 +49,7 @@ export function hydrateClasses(ast: FileNode): FileNode {
   });
 }
 
-/** Compose role-specific indexes after enrichment, retaining only final AST references. */
+/** 情報の付加後に役割別の索引を組み合わせ、最終ASTの参照だけを保持する。 */
 export function classesFromAst(ast: FileNode): ClassFileHydration {
   const commands = findAll(ast, 'simpleCommand').filter(isHydratedClassCommand);
   if (commands.length === 0) return { definitions: [], instances: [], methodScopes: new Map() };
@@ -65,7 +65,7 @@ export function classesFromAst(ast: FileNode): ClassFileHydration {
   };
 }
 
-/** Find method parameter ownership without interpreting class commands again during diagnostics. */
+/** 診断時にクラスのコマンドを再解釈せず、メソッドの引数の所有関係を調べる。 */
 export function classMethodAt(classes: ClassFileHydration,
   scope: FunctionDefinitionNode | null, offset: number): ClassMethod | null {
   const methods = classes.methodScopes.get(scope) ?? [];

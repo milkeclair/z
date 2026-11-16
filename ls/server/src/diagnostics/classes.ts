@@ -14,7 +14,7 @@ export type ClassCommandTarget = {
 };
 export type ClassCommandTargets = ReadonlyMap<string, readonly ClassCommandTarget[]>;
 
-/** Resolve only published class symbols; targets retain declaration nodes and member provenance. */
+/** 公開済みクラスだけを解決し、宣言ノードとメンバーの定義元を参照先に保持する。 */
 export function classCommands(files: readonly ClassFileHydration[]): ClassCommandTargets {
   const definitions = new Map(files.flatMap(file => file.definitions
     .filter(definition => definition.state === 'published')
@@ -45,7 +45,7 @@ export function classCommands(files: readonly ClassFileHydration[]): ClassComman
   return commands;
 }
 
-/** Preserve cached contexts only while all class declaration and binding references are current. */
+/** クラス宣言と実体の束縛が同じノードを参照する間だけ、解決コンテキストを再利用する。 */
 export function sameClassFiles(left: readonly ClassFileHydration[], right: readonly ClassFileHydration[]): boolean {
   const declarations = (files: readonly ClassFileHydration[]) => files.flatMap(file => [
     ...file.definitions.map(definition => definition.declaration),

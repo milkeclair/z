@@ -38,7 +38,7 @@ type ClassDirective = {
   readonly scope: FunctionDefinitionNode | undefined;
 };
 
-/** Keep runtime-reserved names outside statically declared class symbols. */
+/** 実行時に予約した名前を、静的なクラスの識別子から除外する。 */
 function identifier(value: string | null | undefined): value is string {
   if (!value || value.startsWith('z_cls_')) return false;
 
@@ -50,12 +50,12 @@ function identifier(value: string | null | undefined): value is string {
   });
 }
 
-/** Store ownership by position so syntax attachments never retain an earlier AST. */
+/** 以前のASTを付加情報に保持しないよう、所有関係を位置で記録する。 */
 function scopeLocation(scope: FunctionDefinitionNode | undefined): ClassScopeLocation {
   return scope ? { kind: 'function', offset: scope.range.start.offset } : { kind: 'file' };
 }
 
-/** Replace one lexical capture without changing previous states. */
+/** 以前の状態を変更せず、1つの構文スコープの収集状態を置き換える。 */
 function withCapture(state: State, scope: FunctionDefinitionNode | undefined, capture: Capture | null): State {
   const scopes = new Map(state.scopes);
 
@@ -68,7 +68,7 @@ function withCapture(state: State, scope: FunctionDefinitionNode | undefined, ca
   return { ...state, scopes };
 }
 
-/** Add a member through the same immutable transition for every declaration form. */
+/** 宣言形式にかかわらず、元の状態を変えない共通の遷移でメンバーを追加する。 */
 function withMember(state: State, scope: FunctionDefinitionNode | undefined,
   definition: Definition, member: Member): State {
   return withCapture(state, scope, {
@@ -80,7 +80,7 @@ function withMember(state: State, scope: FunctionDefinitionNode | undefined,
   });
 }
 
-/** Keep block source positions even when editing leaves its end marker absent. */
+/** 編集中に終了マーカーが欠けた場合も、本体のソース位置を保持する。 */
 function blockMethod(capture: Extract<Capture, { kind: 'method' }>, end: SourceRange, closed: boolean): Member {
   return {
     node: capture.node,
@@ -97,7 +97,7 @@ function blockMethod(capture: Extract<Capture, { kind: 'method' }>, end: SourceR
   };
 }
 
-/** Publish the complete definition and member meaning together. */
+/** クラス定義とメンバーの意味情報をまとめて確定する。 */
 function finish(state: State, scope: FunctionDefinitionNode | undefined, capture: Capture,
   end: SourceRange, status: ClassDefinition['state']): State {
   const definition = capture.definition;
@@ -121,7 +121,7 @@ function finish(state: State, scope: FunctionDefinitionNode | undefined, capture
   return { ...withCapture(state, scope, null), information };
 }
 
-/** Read one literal directive from native syntax without executing its arguments. */
+/** 引数を実行せず、通常の構文から静的な宣言を1つ読む。 */
 function classDirective(command: SimpleCommandNode, depth: number,
   scope: FunctionDefinitionNode | undefined): ClassDirective | null {
   const external = command.precommandModifiers.some(
@@ -139,7 +139,7 @@ function classDirective(command: SimpleCommandNode, depth: number,
   return { command, name, args: command.arguments.map(word => literalWord(word)), depth, scope };
 }
 
-/** Record a binding in its native function or captured method scope. */
+/** 通常の関数または収集中のメソッドのスコープに、実体の束縛を記録する。 */
 function instanceDeclaration(directive: ClassDirective, capture: Capture | undefined, state: State): State {
   const [className, name] = directive.args;
   if (directive.args.length !== 2 || !identifier(className) || !identifier(name)) return state;
@@ -159,7 +159,7 @@ function instanceDeclaration(directive: ClassDirective, capture: Capture | undef
   return { ...state, information };
 }
 
-/** Close only markers at the method's original syntax depth. */
+/** メソッド開始時と同じ構文の深さにある終了マーカーだけを処理する。 */
 function methodEnd(directive: ClassDirective, capture: Extract<Capture, { kind: 'method' }>, state: State): State {
   if (directive.depth !== capture.depth) return state;
 
@@ -174,7 +174,7 @@ function methodEnd(directive: ClassDirective, capture: Extract<Capture, { kind: 
   return state;
 }
 
-/** Retain the first valid attribute declaration in a definition. */
+/** クラス内で最初に現れた有効な属性宣言を保持する。 */
 function attributeDeclaration(directive: ClassDirective, definition: Definition, state: State): State {
   const name = directive.args[0];
   if (directive.args.length !== 2 || !identifier(name)) return state;
@@ -194,7 +194,7 @@ function attributeDeclaration(directive: ClassDirective, definition: Definition,
   });
 }
 
-/** Start a block capture or retain an inline body's original word range. */
+/** 本体の収集を開始するか、引数で指定した本体の元の単語範囲を保持する。 */
 function methodDeclaration(directive: ClassDirective, capture: Capture, state: State): State {
   const [name] = directive.args;
   if (directive.args.length < 1 || directive.args.length > 2 || !identifier(name)) return state;
@@ -228,7 +228,7 @@ function methodDeclaration(directive: ClassDirective, capture: Capture, state: S
   });
 }
 
-/** Apply the member or publication transition for an open definition. */
+/** 定義中のクラスに、メンバー登録または公開の状態遷移を適用する。 */
 function definitionDeclaration(directive: ClassDirective, capture: Capture, state: State): State {
   switch (directive.name) {
     case 'z.cls.attr':
@@ -246,7 +246,7 @@ function definitionDeclaration(directive: ClassDirective, capture: Capture, stat
   }
 }
 
-/** Route a directive through its current lexical capture state. */
+/** 現在の構文スコープの収集状態に応じて宣言を処理する。 */
 function declaration(command: SimpleCommandNode, depth: number,
   scope: FunctionDefinitionNode | undefined, state: State): State {
   const directive = classDirective(command, depth, scope);
@@ -266,7 +266,7 @@ function declaration(command: SimpleCommandNode, depth: number,
   return capture ? definitionDeclaration(directive, capture, state) : state;
 }
 
-/** Interpret class directives from syntax commands, independently in each native function scope. */
+/** 通常の関数スコープごとに独立して、構文上のコマンドからクラス宣言を解釈する。 */
 export function collectClassInformation(ast: FileNode): ReadonlyMap<number, ClassInformation | null> {
   let state: State = { scopes: new Map(), information: new Map() };
   const scopes: { readonly node: FunctionDefinitionNode; readonly depth: number }[] = [];
