@@ -8,6 +8,7 @@ import { literalWord as compatibilityLiteralWord } from '../../../../src/refresh
 function word(source: string) {
   const lexed = Lexer.tokenize(source, { sourceFile: 'literal.zsh' });
   const parsed = Parser.parse(lexed.tokens, { sourceFile: 'literal.zsh', path: 'literal.zsh' });
+
   expect(lexed.diagnostics).toEqual([]);
   expect(parsed.diagnostics).toEqual([]);
   const argument = findAll(parsed.ast, 'simpleCommand')[0]?.arguments[0];
@@ -35,6 +36,7 @@ describe('literalWord', () => {
 
   test('指定された終端まで復元し、既存importの互換性を保持する', () => {
     const argument = word("print 'option'=value");
+
     expect(literalWord(argument, argument.raw.indexOf('='))).toBe('option');
     expect(compatibilityLiteralWord).toBe(literalWord);
   });

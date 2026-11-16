@@ -35,7 +35,12 @@ export function createZshFileHydration({
   const ast = hydrateAst(parsed.ast, content, options);
   const definitions = findAll(ast, 'functionDefinition');
   return {
-    sourceFile, file, ast, classes: classesFromAst(ast), tokens: parsed.tokens, query: createQueryContext(ast),
+    sourceFile,
+    file,
+    ast,
+    classes: classesFromAst(ast),
+    tokens: parsed.tokens,
+    query: createQueryContext(ast),
     functions: definitions.flatMap((definition) => definition.names.map((word) => ({ name: word.raw, definition }))),
     lexerDiagnostics: lexed.diagnostics,
     parserDiagnostics: parsed.diagnostics,

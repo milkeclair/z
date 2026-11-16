@@ -6,5 +6,19 @@ export { hydrateAst, documentationOf, directivesOf, isHydratedDocBlock, isHydrat
 export type { HydratedDocBlock, HydratedComment } from './hydrate';
 export type * from './documentation';
 export type { Directive, DirectiveArgument, ControlComment, HydrationOptions } from './directive';
-export { hydrateClasses, classesFromAst, classInformationOf, isHydratedClassCommand, classMethodAt } from './classes';
-export type { ClassInformation, HydratedClassCommand, ClassFileHydration, ClassDefinition, ClassMethod, ClassAttribute, ClassInstance } from './classes';
+export {
+  hydrateClasses,
+  classesFromAst,
+  classInformationOf,
+  isHydratedClassCommand,
+  classMethodAt,
+} from './classes';
+export type {
+  ClassInformation,
+  HydratedClassCommand,
+  ClassFileHydration,
+  ClassDefinition,
+  ClassMethod,
+  ClassAttribute,
+  ClassInstance,
+} from './classes';
