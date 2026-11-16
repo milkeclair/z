@@ -312,10 +312,10 @@ z.t.describe "z.arg.parse"; {
       local -A parsed_named=([key]="default")
       local -a parsed_args=("old")
 
-      z.arg.parse input=input_args named=parsed_named 2>/dev/null
+      z.arg.parse input=input_args named=parsed_named 2>/dev/null # zls: ignore missing-named-argument
 
       z.t.expect.status.is.false
-      z.arg.parse input=input_args named=parsed_named unknown=parsed_args 2>/dev/null
+      z.arg.parse input=input_args named=parsed_named unknown=parsed_args 2>/dev/null # zls: ignore missing-named-argument
 
       z.t.expect.status.is.false
       z.arg.parse input=missing_array named=parsed_named rest=parsed_args 2>/dev/null
