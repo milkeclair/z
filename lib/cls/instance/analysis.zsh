@@ -5,7 +5,7 @@
 # $3: opaque instance reference
 # REPLY: array of command names, including an empty array for an empty class
 # return: 0
-z.cls.instance.commands() {
+z.cls.instance._commands() {
   local z_cls_class=$1
   local z_cls_binding=$2
   local z_cls_id=$3

@@ -4,7 +4,7 @@
 # $1: generated command name
 # REPLY: unchanged
 # return: 0|1
-z.cls.instance.owns() {
+z.cls.instance._owns() {
   local z_cls_program=${functions[$1]-}
   local z_cls_suffix=${1#*.}
   local z_cls_expected=${z_cls_dispatch_programs[$z_cls_suffix]-}

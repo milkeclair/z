@@ -1,12 +1,12 @@
 source ${z_main}
 
-z.t.describe "z.cls.instance.execute.set"; {
+z.t.describe "z.cls.instance.execute._set"; {
   z.t.context "呼出元のスカラーの場合"; {
     z.t.it "型を保って値を更新する"; {
       () {
         local -i number=1
 
-        z.cls.instance.execute.set number 4
+        z.cls.instance.execute._set number 4
 
         z.t.expect "$number" 4
         z.t.expect.includes "${(t)number}" integer
@@ -19,7 +19,7 @@ z.t.describe "z.cls.instance.execute.set"; {
       () {
         local -a items=(old)
 
-        z.cls.instance.execute.set items "" "two words"
+        z.cls.instance.execute._set items "" "two words"
 
         z.t.expect "${#items}" 2
         z.t.expect "$items[1]" ""
@@ -33,7 +33,7 @@ z.t.describe "z.cls.instance.execute.set"; {
       () {
         local literal=original
 
-        z.cls.instance.execute.set literal one two
+        z.cls.instance.execute._set literal one two
 
         z.t.expect.status.is.false
         z.t.expect "$literal" original

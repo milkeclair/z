@@ -3,13 +3,15 @@
 # $1: attribute name
 # REPLY: exact scalar or array value
 # return: 0|1
-z.cls.instance.execute.get() {
+z.cls.instance.execute._get() {
   local z_cls_name=$1
 
   shift
   z.int.is.zero $# || return 1
 
-  if [[ ${(tP)z_cls_name} == *array* || ${(tP)z_cls_name} == *association* ]]; then
+  local z_cls_type=${(tP)z_cls_name}
+
+  if z.str.includes "$z_cls_type" array || z.str.includes "$z_cls_type" association; then
     REPLY=("${(@P)z_cls_name}")
   else
     REPLY=${(P)z_cls_name}

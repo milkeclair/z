@@ -115,6 +115,18 @@ finished; leaving a variable scope alone does not free their state.
 - Ordinary shell process isolation applies to subshells and command
   substitutions. Use `REPLY` for results when mutations must persist.
 
+## Public API and internal helpers
+
+The public class API is draw, attr, fn, fn.done, drew, abort, new and delete.
+Internal helper names have a final segment beginning with an underscore, following
+z's completion convention. Shell completion and z-ls hide those helpers by default;
+z-ls can include them with its showPrivateFunctions setting. This naming convention
+does not restrict Zsh from calling the functions directly.
+
+Shared z predicates validate integers, type flags, names and registry entries.
+Attribute access retains exact values and native parameter types; the normalizing
+z.return and z.var.get APIs would change literal false/null values and array shape.
+
 ## Runtime and editing
 
 Method collection temporarily uses Zsh's DEBUG trap to record commands while

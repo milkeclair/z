@@ -2,7 +2,7 @@
 #
 # REPLY: unchanged
 # return: 0
-z.cls.store.ensure() {
+z.cls.store._ensure() {
   z.is.eq "${z_cls_store_ready:-0}" 1 && z.var.exists z_cls_dispatch_programs && return 0
 
   zmodload zsh/parameter

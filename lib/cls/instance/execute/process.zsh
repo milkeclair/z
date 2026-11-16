@@ -4,12 +4,14 @@
 # $@?: new value or array elements
 # REPLY: unchanged
 # return: 0|1
-z.cls.instance.execute.set() {
+z.cls.instance.execute._set() {
   local z_cls_name=$1
 
   shift
 
-  if [[ ${(tP)z_cls_name} == *array* || ${(tP)z_cls_name} == *association* ]]; then
+  local z_cls_type=${(tP)z_cls_name}
+
+  if z.str.includes "$z_cls_type" array || z.str.includes "$z_cls_type" association; then
     set -A "$z_cls_name" "$@"
   else
     z.int.is.eq $# 1 || return 1

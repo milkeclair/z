@@ -1,6 +1,6 @@
 source ${z_main}
 
-z.t.describe "z.cls.new.validate"; {
+z.t.describe "z.cls.new._validate"; {
   z.t.context "書き込み可能な呼出元の変数の場合"; {
     z.t.it "検証だけでは参照を代入しない"; {
       () {
@@ -8,7 +8,7 @@ z.t.describe "z.cls.new.validate"; {
         z.cls.drew
         local object=""
 
-        z.cls.new.validate NewValidate object
+        z.cls.new._validate NewValidate object
 
         z.t.expect.status.is.true
         z.t.expect "$object" ""
@@ -18,10 +18,10 @@ z.t.describe "z.cls.new.validate"; {
 
   z.t.context "引数が不足する場合"; {
     z.t.it "作成を拒否する"; {
-      z.cls.store.ensure
+      z.cls.store._ensure
       z.t.mock name=z.io.error
 
-      z.cls.new.validate # zls: ignore
+      z.cls.new._validate # zls: ignore
 
       z.t.expect.status.is.false
     }
@@ -37,7 +37,7 @@ z.t.describe "z.cls.new.validate"; {
         local original=$object
         z.t.mock name=z.io.error
 
-        z.cls.new.validate NewValidateReadonly object
+        z.cls.new._validate NewValidateReadonly object
 
         z.t.expect.status.is.false
         z.t.expect "$object" "$original"

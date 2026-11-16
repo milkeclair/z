@@ -6,7 +6,7 @@
 # $4: discard the invalid definition when 1
 # REPLY: unchanged
 # return: 0
-z.cls.capture.start() {
+z.cls.capture._start() {
   typeset -g z_cls_capture_discard=${4:-0}
   typeset -g z_cls_capture_done_result=0
   typeset -g z_cls_capture_stack=$2
@@ -30,7 +30,7 @@ z.cls.capture.start() {
 
   unsetopt localtraps
   setopt debugbeforecmd
-  functions[TRAPDEBUG]='unsetopt localoptions; z.cls.capture.debug "$ZSH_DEBUG_CMD"'
+  functions[TRAPDEBUG]='unsetopt localoptions; z.cls.capture._debug "$ZSH_DEBUG_CMD"'
   z_cls_capture_method=$1
 }
 
@@ -38,7 +38,7 @@ z.cls.capture.start() {
 #
 # REPLY: unchanged
 # return: 0
-z.cls.capture.stop() {
+z.cls.capture._stop() {
   z.is.not.null "${z_cls_capture_method:-}" || return 0
 
   z_cls_capture_method=''
@@ -62,7 +62,7 @@ z.cls.capture.stop() {
 # $1: Zsh's reconstructed command text
 # REPLY: unchanged
 # return: 0
-z.cls.capture.debug() {
+z.cls.capture._debug() {
   z.is.not.null "${z_cls_capture_method:-}" || return 0
 
   if z.is.not.eq "${(j:|:)funcstack[3,-1]}" "$z_cls_capture_stack" ||
@@ -80,7 +80,7 @@ z.cls.capture.debug() {
     else
       z_cls_bodies[$z_cls_drawing:$z_cls_capture_method]=$z_cls_capture_body
       z_cls_class_methods[$z_cls_drawing]+="$z_cls_capture_method "
-      z.cls.capture.stop
+      z.cls.capture._stop
     fi
   else
     z_cls_capture_body+="$1"$'\n'

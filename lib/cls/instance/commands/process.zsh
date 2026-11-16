@@ -3,7 +3,7 @@
 # $@: proposed command names
 # REPLY: unchanged
 # return: 0 if every name is available or owned, otherwise 1 with an error
-z.cls.instance.commands.validate() {
+z.cls.instance.commands._validate() {
   local REPLY=""
   local z_cls_member
 
@@ -14,7 +14,7 @@ z.cls.instance.commands.validate() {
     fi
 
     if z.is.not.null "${z_cls_wrapper_refs[$z_cls_member]:-}" &&
-        z.cls.instance.owns "$z_cls_member"; then
+        z.cls.instance._owns "$z_cls_member"; then
       continue
     fi
 
@@ -32,7 +32,7 @@ z.cls.instance.commands.validate() {
 # $@: validated command names
 # REPLY: unchanged
 # return: 0
-z.cls.instance.commands.install() {
+z.cls.instance.commands._install() {
   local z_cls_member
 
   for z_cls_member in "$@"; do
@@ -47,7 +47,7 @@ z.cls.instance.commands.install() {
     local z_cls_template="z_cls_dispatch_${z_cls_operation}_$z_cls_name"
 
     if ! z.var.exists "functions[$z_cls_template]"; then
-      functions[$z_cls_template]='z.cls.instance.call "${funcstack[1]%%.*}" '"$z_cls_operation ${(q)z_cls_name}"' "$@"'
+      functions[$z_cls_template]='z.cls.instance._call "${funcstack[1]%%.*}" '"$z_cls_operation ${(q)z_cls_name}"' "$@"'
       z_cls_dispatch_programs[${z_cls_member#*.}]=$functions[$z_cls_template]
     fi
 

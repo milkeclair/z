@@ -1,13 +1,13 @@
 source ${z_main}
 
-z.t.describe "z.cls.instance.call.validate"; {
+z.t.describe "z.cls.instance.call._validate"; {
   z.t.context "公開済みのメソッドの場合"; {
     z.t.it "実行を許可する"; {
-      z.cls.store.ensure
+      z.cls.store._ensure
       z_cls_instances[validate_ref]=ValidateCall
       z_cls_bodies[ValidateCall:run]=':'
 
-      z.cls.instance.call.validate validate_ref method run object
+      z.cls.instance.call._validate validate_ref method run object
 
       z.t.expect.status.is.true
 
@@ -17,10 +17,10 @@ z.t.describe "z.cls.instance.call.validate"; {
 
   z.t.context "参照がない場合"; {
     z.t.it "存在しない実体の操作を拒否する"; {
-      z.cls.store.ensure
+      z.cls.store._ensure
       z.t.mock name=z.io.error
 
-      z.cls.instance.call.validate "" method run missing
+      z.cls.instance.call._validate "" method run missing
 
       z.t.expect.status.is.false
     }
@@ -28,7 +28,7 @@ z.t.describe "z.cls.instance.call.validate"; {
 
   z.t.context "別の実体の呼出しから再入する場合"; {
     z.t.it "実行中の実体を保護する"; {
-      z.cls.store.ensure
+      z.cls.store._ensure
       z_cls_instances[reentry_ref]=ValidateReentry
       z_cls_bodies[ValidateReentry:run]=':'
       z_cls_active[reentry_ref]=1
@@ -37,7 +37,7 @@ z.t.describe "z.cls.instance.call.validate"; {
       () {
         local z_cls_current_instance=another_ref
 
-        z.cls.instance.call.validate reentry_ref method run object
+        z.cls.instance.call._validate reentry_ref method run object
 
         z.t.expect.status.is.false
       }
@@ -47,13 +47,38 @@ z.t.describe "z.cls.instance.call.validate"; {
   }
 }
 
-z.t.describe "z.cls.instance.call.access"; {
+z.t.describe "z.cls.instance.call._access"; {
+  z.t.context "符号付きの整数を更新する場合"; {
+    z.t.it "正負の符号を共通の整数判定で扱う"; {
+      () {
+        z.cls.draw SignedAccess
+        z.cls.attr count 0
+        z.cls.drew
+        local object=""
+        z.cls.new SignedAccess object
+        z_cls_values[${object}:count]='typeset -i count=0'
+
+        z.cls.instance.call._access "$object" set count +7
+        object.count.get
+
+        z.t.expect.reply 7
+
+        z.cls.instance.call._access "$object" set count -3
+        object.count.get
+
+        z.t.expect.reply -3
+
+        z.cls.delete object
+      }
+    }
+  }
+
   z.t.context "保存済みのスカラーの場合"; {
     z.t.it "リテラルを変換せず取得する"; {
-      z.cls.store.ensure
+      z.cls.store._ensure
       z_cls_values[access_ref:literal]="typeset -- literal='false'"
 
-      z.cls.instance.call.access access_ref get literal
+      z.cls.instance.call._access access_ref get literal
 
       z.t.expect.reply false
 
@@ -61,10 +86,10 @@ z.t.describe "z.cls.instance.call.access"; {
     }
 
     z.t.it "引数のあるgetterを拒否して保存値を保つ"; {
-      z.cls.store.ensure
+      z.cls.store._ensure
       z_cls_values[access_ref:literal]="typeset -- literal='false'"
 
-      z.cls.instance.call.access access_ref get literal extra
+      z.cls.instance.call._access access_ref get literal extra
 
       z.t.expect.status.is.false
       z.t.expect "$z_cls_values[access_ref:literal]" "typeset -- literal='false'"
@@ -84,7 +109,7 @@ z.t.describe "z.cls.instance.call.access"; {
         z.cls.new DirectAccessScope object
         z_cls_values[${object}:count]='typeset -i count=1'
 
-        z.cls.instance.call.access "$object" set count 'other+1'
+        z.cls.instance.call._access "$object" set count 'other+1'
         object.count.get
 
         z.t.expect.reply 14
@@ -95,7 +120,7 @@ z.t.describe "z.cls.instance.call.access"; {
   }
 }
 
-z.t.describe "z.cls.instance.call.run"; {
+z.t.describe "z.cls.instance.call._run"; {
   z.t.context "メソッドが非zeroで戻る場合"; {
     z.t.it "更新とREPLYを保ちactive状態を解放する"; {
       () {
@@ -106,7 +131,7 @@ z.t.describe "z.cls.instance.call.run"; {
         local object=""
         z.cls.new DirectRunScope object
 
-        z.cls.instance.call.run "$object" method fail
+        z.cls.instance.call._run "$object" method fail
         local -A observed=(result $? reply "$REPLY")
 
         z.t.expect "$observed[result]" 7

@@ -3,7 +3,7 @@
 # $1: identifier
 # REPLY: unchanged
 # return: 0|1
-z.cls.is.name() {
+z.cls.is._name() {
   local name=${1:-}
   local pattern='^[A-Za-z_][A-Za-z0-9_]*$'
 
@@ -16,8 +16,8 @@ z.cls.is.name() {
 # $1: attribute name
 # REPLY: unchanged
 # return: 0|1
-z.cls.is.attribute() {
-  z.cls.is.name "${1:-}" &&
+z.cls.is._attribute() {
+  z.cls.is._name "${1:-}" &&
     z.is.not.eq "$1" REPLY &&
     z.is.not.eq "$1" reply &&
     z.str.excludes "${parameters[$1]:-}" special

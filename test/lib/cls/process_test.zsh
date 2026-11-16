@@ -131,6 +131,24 @@ z.t.describe "z.cls.abort"; {
 }
 
 z.t.describe "z.cls.new"; {
+  z.t.context "変換すると意味が変わる名前と属性値の場合"; {
+    z.t.it "falseというクラス名とnullという文字列を保つ"; {
+      () {
+        z.cls.draw false
+        z.cls.attr literal null
+        z.cls.drew
+        local object=""
+
+        z.cls.new false object
+        object.literal.get
+
+        z.t.expect.reply null
+
+        z.cls.delete object
+      }
+    }
+  }
+
   z.t.context "呼出元に内部変数と同名のlocalがある場合"; {
     z.t.it "生成・メソッド・削除が呼出元の変数を変更しない"; {
       () {
@@ -492,6 +510,29 @@ z.t.describe "z.cls source integration"; {
       zsh -f "$z_root/test/lib/cls/reference-scenarios.zsh" exported-environment
 
       z.t.expect.status.is.true
+    }
+  }
+}
+
+z.t.describe "z.cls public API"; {
+  z.t.context "補完の関数名cacheを構築する場合"; {
+    z.t.it "公開DSLの8関数だけを候補にする"; {
+      source "$z_root/mod/completion/function/is/operator.zsh"
+      source "$z_root/mod/completion/cache/build/process.zsh"
+      local -a z_completion_function_names=()
+
+      z.completion.cache.build._names
+
+      local -a class_names=()
+      local function_name
+
+      for function_name in "${z_completion_function_names[@]}"; do
+        z.str.start_with "$function_name" z.cls. && class_names+=("$function_name")
+      done
+
+      REPLY=("${class_names[@]}")
+
+      z.t.expect.reply.is.arr z.cls.abort z.cls.attr z.cls.delete z.cls.draw z.cls.drew z.cls.fn z.cls.fn.done z.cls.new
     }
   }
 }

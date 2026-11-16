@@ -6,7 +6,7 @@
 # $4: original binding or reference for error reporting
 # REPLY: unchanged
 # return: 0|1
-z.cls.instance.call.validate() {
+z.cls.instance.call._validate() {
   local z_cls_instance=$1
 
   if z.is.null "${z_cls_instances[$z_cls_instance]:-}"; then
@@ -39,7 +39,7 @@ z.cls.instance.call.validate() {
 # $@?: accessor arguments
 # REPLY: accessor result
 # return: accessor exit status
-z.cls.instance.call.access() {
+z.cls.instance.call._access() {
   local z_cls_instance=$1
   local z_cls_operation=$2
   local z_cls_member=$3
@@ -67,7 +67,7 @@ z.cls.instance.call.access() {
       return 0
     fi
 
-    if [[ $1 == <-> || $1 == -<-> ]]; then
+    if z.int.is.match "$1"; then
       local -i z_cls_numeric=$1
 
       z_cls_values[$z_cls_instance:$z_cls_member]="$z_cls_integer_prefix${(qq)z_cls_numeric}"
@@ -75,7 +75,7 @@ z.cls.instance.call.access() {
     fi
   fi
 
-  z.cls.instance.call.run "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
+  z.cls.instance.call._run "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
 }
 
 # Own restored attributes through execution, persistence, and active-state cleanup.
@@ -86,7 +86,7 @@ z.cls.instance.call.access() {
 # $@?: operation arguments
 # REPLY: operation result
 # return: operation exit status
-z.cls.instance.call.run() {
+z.cls.instance.call._run() {
   local z_cls_instance=$1
   local z_cls_operation=$2
   local -a z_cls_attributes=("$3")
@@ -106,7 +106,7 @@ z.cls.instance.call.run() {
 
   z_cls_active[$z_cls_instance]=1
   {
-    if z.cls.instance.execute "$@"; then
+    if z.cls.instance._execute "$@"; then
       z_cls_result=0
     else
       z_cls_result=$?
@@ -114,7 +114,7 @@ z.cls.instance.call.run() {
   } always {
     if z.is.not.eq "$z_cls_operation" get; then
       for z_cls_attribute in "${z_cls_attributes[@]}"; do
-        if ! z.cls.instance.snapshot "$z_cls_instance" "$z_cls_attribute"; then
+        if ! z.cls.instance._snapshot "$z_cls_instance" "$z_cls_attribute"; then
           z_cls_values[$z_cls_instance:$z_cls_attribute]="$(typeset -p "$z_cls_attribute")"
         fi
       done

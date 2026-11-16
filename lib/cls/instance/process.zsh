@@ -7,21 +7,21 @@
 # $@?: operation arguments
 # REPLY: operation result
 # return: operation exit status
-z.cls.instance.call() {
+z.cls.instance._call() {
   local z_cls_instance=${(P)1:-}
   local z_cls_operation=$2
   local z_cls_member=$3
 
   z.is.not.null "${z_cls_instances[$1]:-}" && z_cls_instance=$1
-  z.cls.instance.call.validate "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$1" || return 1
+  z.cls.instance.call._validate "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$1" || return 1
   shift 3
 
   if z.is.not.null "${z_cls_active[$z_cls_instance]:-}"; then
-    z.cls.instance.execute "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
+    z.cls.instance._execute "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
   elif z.is.eq "$z_cls_operation" method; then
-    z.cls.instance.call.run "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
+    z.cls.instance.call._run "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
   else
-    z.cls.instance.call.access "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
+    z.cls.instance.call._access "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
   fi
 }
 
@@ -33,7 +33,7 @@ z.cls.instance.call() {
 # $@?: operation arguments
 # REPLY: operation result
 # return: operation exit status
-z.cls.instance.execute() {
+z.cls.instance._execute() {
   local z_cls_target=$1
   local z_cls_kind=$2
   local z_cls_name=$3
@@ -49,10 +49,10 @@ z.cls.instance.execute() {
       } "$@"
       ;;
     get)
-      z.cls.instance.execute.get "$z_cls_name" "$@"
+      z.cls.instance.execute._get "$z_cls_name" "$@"
       ;;
     set)
-      z.cls.instance.execute.set "$z_cls_name" "$@"
+      z.cls.instance.execute._set "$z_cls_name" "$@"
       ;;
   esac
 }
@@ -64,7 +64,7 @@ z.cls.instance.execute() {
 # $2: attribute name
 # REPLY: unchanged
 # return: 0 when saved, 1 when canonical typeset output is needed
-z.cls.instance.snapshot() {
+z.cls.instance._snapshot() {
   local z_cls_snapshot_key="$1:$2"
   local z_cls_snapshot_name=$2
 
@@ -84,7 +84,7 @@ z.cls.instance.snapshot() {
     integer|integer-local)
       local z_cls_snapshot_value=${(P)z_cls_snapshot_name}
 
-      if [[ $z_cls_snapshot_value == <-> || $z_cls_snapshot_value == -<-> ]]; then
+      if z.int.is.match "$z_cls_snapshot_value"; then
         z_cls_values[$z_cls_snapshot_key]="typeset -i $z_cls_snapshot_name=${(qq)z_cls_snapshot_value}"
       else
         return 1
@@ -111,7 +111,7 @@ z.cls.instance.snapshot() {
 # $1: existing inactive instance reference
 # REPLY: unchanged
 # return: 0
-z.cls.instance.release() {
+z.cls.instance._release() {
   local z_cls_id=$1
   local z_cls_member
 
@@ -119,7 +119,7 @@ z.cls.instance.release() {
     z_cls_wrapper_refs[$z_cls_member]=$(( z_cls_wrapper_refs[$z_cls_member] - 1 ))
 
     if z.int.is.zero $z_cls_wrapper_refs[$z_cls_member]; then
-      if z.cls.instance.owns "$z_cls_member"; then
+      if z.cls.instance._owns "$z_cls_member"; then
         unfunction "$z_cls_member"
       fi
 

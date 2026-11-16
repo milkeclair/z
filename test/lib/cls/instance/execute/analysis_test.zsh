@@ -1,12 +1,12 @@
 source ${z_main}
 
-z.t.describe "z.cls.instance.execute.get"; {
+z.t.describe "z.cls.instance.execute._get"; {
   z.t.context "動的スコープにあるスカラーの場合"; {
     z.t.it "falseを文字列として返す"; {
       () {
         local literal=false
 
-        z.cls.instance.execute.get literal
+        z.cls.instance.execute._get literal
 
         z.t.expect.reply false
       }
@@ -18,7 +18,7 @@ z.t.describe "z.cls.instance.execute.get"; {
       () {
         local -a items=()
 
-        z.cls.instance.execute.get items
+        z.cls.instance.execute._get items
 
         z.t.expect.includes "${(t)REPLY}" array
         z.t.expect "${#REPLY}" 0
@@ -31,7 +31,7 @@ z.t.describe "z.cls.instance.execute.get"; {
       () {
         local literal=value
 
-        z.cls.instance.execute.get literal extra
+        z.cls.instance.execute._get literal extra
 
         z.t.expect.status.is.false
       }

@@ -7,9 +7,9 @@
 # example:
 #  z.cls.draw Counter; { z.cls.attr count 0; z.cls.drew; }
 z.cls.draw() {
-  z.cls.store.ensure
+  z.cls.store._ensure
 
-  if ! z.int.is.eq $# 1 || ! z.cls.is.name "$1"; then
+  if ! z.int.is.eq $# 1 || ! z.cls.is._name "$1"; then
     z.io.error "Expected a valid class name."
     return 1
   fi
@@ -34,9 +34,9 @@ z.cls.draw() {
 # example:
 #  z.cls.attr count 0
 z.cls.attr() {
-  z.cls.store.ensure
+  z.cls.store._ensure
 
-  if ! z.int.is.eq $# 2 || z.is.null "$z_cls_drawing" || ! z.cls.is.attribute "$1"; then
+  if ! z.int.is.eq $# 2 || z.is.null "$z_cls_drawing" || ! z.cls.is._attribute "$1"; then
     z.io.error "Expected an active class, an ordinary attribute name, and a default."
     return 1
   fi
@@ -65,12 +65,12 @@ z.cls.attr() {
 #    (( ++count ))
 #  z.cls.fn.done
 z.cls.fn() {
-  z.cls.store.ensure
+  z.cls.store._ensure
 
   local invalid=0
   local key="$z_cls_drawing:${1:-}"
 
-  if z.int.is.lt $# 1 || z.int.is.gt $# 2 || z.is.null "$z_cls_drawing" || ! z.cls.is.name "${1:-}"; then
+  if z.int.is.lt $# 1 || z.int.is.gt $# 2 || z.is.null "$z_cls_drawing" || ! z.cls.is._name "${1:-}"; then
     z.io.error "Expected an active class and a valid method name."
     invalid=1
   elif z.var.exists "z_cls_bodies[$key]"; then
@@ -86,7 +86,7 @@ z.cls.fn() {
   fi
 
   unsetopt localoptions
-  z.cls.capture.start "${1:-invalid}" "${(j:|:)funcstack[2,-1]}" "${funcfiletrace[1]%:*}" "$invalid"
+  z.cls.capture._start "${1:-invalid}" "${(j:|:)funcstack[2,-1]}" "${funcfiletrace[1]%:*}" "$invalid"
 }
 
 # Publish the active class after all methods have been collected.
@@ -97,7 +97,7 @@ z.cls.fn() {
 # example:
 #  z.cls.drew
 z.cls.drew() {
-  z.cls.store.ensure
+  z.cls.store._ensure
 
   if z.is.null "$z_cls_drawing"; then
     z.io.error "No class definition is active."
@@ -116,8 +116,8 @@ z.cls.drew() {
 # example:
 #  z.cls.abort
 z.cls.abort() {
-  z.cls.store.ensure
-  z.cls.capture.stop
+  z.cls.store._ensure
+  z.cls.capture._stop
 
   # 共通getterのループ変数を呼出元のreadonly参照から隔離する。
   local arg=""
@@ -153,9 +153,9 @@ z.cls.abort() {
 # example:
 #  z.cls.new Counter counter
 z.cls.new() {
-  z.cls.store.ensure
+  z.cls.store._ensure
 
-  z.cls.new.validate "$@" || return 1
+  z.cls.new._validate "$@" || return 1
 
   local z_cls_class=$1
   local z_cls_binding=$2
@@ -164,11 +164,11 @@ z.cls.new() {
 
   local z_cls_id="z_cls_${$}_$z_cls_next_id"
 
-  z.cls.instance.commands "$z_cls_class" "$z_cls_binding" "$z_cls_id"
+  z.cls.instance._commands "$z_cls_class" "$z_cls_binding" "$z_cls_id"
 
   local -a z_cls_wrappers=("${(@)REPLY}")
 
-  z.cls.instance.commands.validate "${z_cls_wrappers[@]}" || return 1
+  z.cls.instance.commands._validate "${z_cls_wrappers[@]}" || return 1
 
   local z_cls_member
 
@@ -176,7 +176,7 @@ z.cls.new() {
     z_cls_values[$z_cls_id:$z_cls_member]="typeset -- $z_cls_member=${(qq)z_cls_defaults[$z_cls_class:$z_cls_member]}"
   done
 
-  z.cls.instance.commands.install "${z_cls_wrappers[@]}"
+  z.cls.instance.commands._install "${z_cls_wrappers[@]}"
 
   z_cls_members[$z_cls_id]="${(j: :)z_cls_wrappers}"
   z_cls_instances[$z_cls_id]=$z_cls_class
@@ -195,7 +195,7 @@ z.cls.new() {
 # example:
 #  z.cls.delete counter
 z.cls.delete() {
-  z.cls.store.ensure
+  z.cls.store._ensure
 
   local REPLY=""
 
@@ -210,7 +210,7 @@ z.cls.delete() {
     return 1
   fi
 
-  z.cls.instance.release "$z_cls_id"
+  z.cls.instance._release "$z_cls_id"
 
   # IDの解決後に隔離し、argという参照名の動的な参照先を保つ。
   local arg=""
