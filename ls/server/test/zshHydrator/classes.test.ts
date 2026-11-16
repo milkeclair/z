@@ -29,6 +29,47 @@ function fixture(content = source) {
 }
 
 describe('class hydration', () => {
+  test('重複したblockメソッドはclassを破棄する', () => {
+    const file = fixture("z.cls.draw Duplicate\nz.cls.fn run ':'\nz.cls.fn run\nz.cls.fn.done\nz.cls.drew\n");
+
+    expect(file.classes.definitions[0].state).toBe('aborted');
+    expect(file.classes.definitions[0].methods).toHaveLength(1);
+  });
+
+  test('重複したinlineメソッドは元の本体を保持する', () => {
+    const file = fixture("z.cls.draw Duplicate\nz.cls.fn run 'print first'\nz.cls.fn run 'print second'\nz.cls.drew\n");
+    const definition = file.classes.definitions[0];
+    const method = definition.methods[0];
+
+    expect(definition.state).toBe('published');
+    expect(definition.methods).toHaveLength(1);
+    expect(method.body.kind).toBe('inline');
+    if (method.body.kind !== 'inline') throw new Error('Expected an inline method');
+
+    expect(method.body.value.raw).toBe("'print first'");
+  });
+
+  test('重複した属性は元のdefaultを保持する', () => {
+    const file = fixture('z.cls.draw Duplicate\nz.cls.attr value first\nz.cls.attr value second\nz.cls.drew\n');
+    const definition = file.classes.definitions[0];
+
+    expect(definition.state).toBe('published');
+    expect(definition.attributes).toHaveLength(1);
+    expect(definition.attributes[0].defaultValue.raw).toBe('first');
+  });
+
+  test('索引の再構築が既存索引を変更せず返却ASTの参照を保持する', () => {
+    const file = fixture();
+    const original = file.classes;
+    const rebuilt = classesFromAst(file.ast);
+
+    expect(rebuilt).toEqual(original);
+    expect(rebuilt.definitions).not.toBe(original.definitions);
+    expect(rebuilt.definitions[0].attributes).not.toBe(original.definitions[0].attributes);
+    expect(rebuilt.definitions[0].attributes[0].defaultValue).toBe(original.definitions[0].attributes[0].defaultValue);
+    expect(rebuilt.instances[0].declaration).toBe(original.instances[0].declaration);
+  });
+
   test('runtimeと同じ予約prefixだけを除外する', () => {
     const file = fixture('z.cls.draw __z_cls_Box\nz.cls.attr __z_cls_value 0\nz.cls.drew\n');
 

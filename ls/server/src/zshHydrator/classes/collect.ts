@@ -30,6 +30,14 @@ type State = {
   readonly information: ReadonlyMap<number, ClassInformation | null>;
 };
 
+type ClassDirective = {
+  readonly command: SimpleCommandNode;
+  readonly name: string;
+  readonly args: readonly (string | null)[];
+  readonly depth: number;
+  readonly scope: FunctionDefinitionNode | undefined;
+};
+
 /** Keep runtime-reserved names outside statically declared class symbols. */
 function identifier(value: string | null | undefined): value is string {
   if (!value || value.startsWith('z_cls_')) return false;
@@ -113,113 +121,149 @@ function finish(state: State, scope: FunctionDefinitionNode | undefined, capture
   return { ...withCapture(state, scope, null), information };
 }
 
-/** Interpret only literal directive commands in the current native function scope. */
-function declaration(command: SimpleCommandNode, depth: number,
-  scope: FunctionDefinitionNode | undefined, state: State): State {
+/** Read one literal directive from native syntax without executing its arguments. */
+function classDirective(command: SimpleCommandNode, depth: number,
+  scope: FunctionDefinitionNode | undefined): ClassDirective | null {
   const external = command.precommandModifiers.some(
     modifier => modifier.type === 'builtin' || modifier.type === 'command',
   );
-  if (external) return state;
+  if (external) return null;
 
   const name = command.commandName && literalWord(command.commandName.word);
-  if (!name || !name.startsWith('z.cls.')) return state;
+  if (!name || !name.startsWith('z.cls.')) return null;
 
-  const directives = ['z.cls.draw', 'z.cls.attr', 'z.cls.fn', 'z.cls.fn.done',
+  const names = ['z.cls.draw', 'z.cls.attr', 'z.cls.fn', 'z.cls.fn.done',
     'z.cls.drew', 'z.cls.abort', 'z.cls.new'];
-  if (!directives.includes(name)) return state;
+  if (!names.includes(name)) return null;
 
-  const args = command.arguments.map(word => literalWord(word));
-  const capture = state.scopes.get(scope);
+  return { command, name, args: command.arguments.map(word => literalWord(word)), depth, scope };
+}
 
-  if (name === 'z.cls.new' && args.length === 2 && identifier(args[0]) && identifier(args[1])) {
-    const information = new Map(state.information);
-    const location: ClassScopeLocation = capture?.kind === 'method'
-      ? { kind: 'classMethod', offset: capture.node.range.start.offset }
-      : scopeLocation(scope);
+/** Record a binding in its native function or captured method scope. */
+function instanceDeclaration(directive: ClassDirective, capture: Capture | undefined, state: State): State {
+  const [className, name] = directive.args;
+  if (directive.args.length !== 2 || !identifier(className) || !identifier(name)) return state;
 
-    information.set(command.range.start.offset, {
-      kind: 'classInstance',
-      name: args[1],
-      className: args[0],
-      scope: location,
-    });
+  const information = new Map(state.information);
+  const scope: ClassScopeLocation = capture?.kind === 'method'
+    ? { kind: 'classMethod', offset: capture.node.range.start.offset }
+    : scopeLocation(directive.scope);
 
-    return { ...state, information };
+  information.set(directive.command.range.start.offset, {
+    kind: 'classInstance',
+    name,
+    className,
+    scope,
+  });
+
+  return { ...state, information };
+}
+
+/** Close only markers at the method's original syntax depth. */
+function methodEnd(directive: ClassDirective, capture: Extract<Capture, { kind: 'method' }>, state: State): State {
+  if (directive.depth !== capture.depth) return state;
+
+  if (directive.name === 'z.cls.fn.done' && directive.args.length === 0) {
+    return withMember(state, directive.scope, capture.definition, blockMethod(capture, directive.command.range, true));
   }
 
-  if (capture?.kind === 'method') {
-    if (depth !== capture.depth) return state;
-
-    if (name === 'z.cls.fn.done' && args.length === 0) {
-      return withMember(state, scope, capture.definition, blockMethod(capture, command.range, true));
-    }
-
-    if (name === 'z.cls.abort' || name === 'z.cls.drew') {
-      return finish(state, scope, capture, command.range, 'aborted');
-    }
-
-    return state;
-  }
-
-  if (name === 'z.cls.draw' && args.length === 1 && identifier(args[0]) && !capture) {
-    return withCapture(state, scope, {
-      kind: 'definition',
-      definition: { node: command, name: args[0], members: [] },
-    });
-  }
-
-  if (!capture) return state;
-
-  const definition = capture.definition;
-
-  if (name === 'z.cls.attr' && args.length === 2 && identifier(args[0])) {
-    const duplicate = definition.members.some(
-      member => member.information.kind === 'classAttribute' && member.information.name === args[0],
-    );
-    if (duplicate) return state;
-
-    return withMember(state, scope, definition, {
-      node: command,
-      information: {
-        kind: 'classAttribute',
-        name: args[0],
-        classOffset: definition.node.range.start.offset,
-      },
-    });
-  }
-
-  if (name === 'z.cls.fn' && args.length >= 1 && args.length <= 2 && identifier(args[0])) {
-    const duplicate = definition.members.some(
-      member => member.information.kind === 'classMethod' && member.information.name === args[0],
-    );
-    if (duplicate) {
-      return args.length === 1 ? finish(state, scope, capture, command.range, 'aborted') : state;
-    }
-
-    if (args.length === 1) {
-      return withCapture(state, scope, { kind: 'method', definition, node: command, name: args[0], depth });
-    }
-
-    return withMember(state, scope, definition, {
-      node: command,
-      information: {
-        kind: 'classMethod',
-        name: args[0],
-        classOffset: definition.node.range.start.offset,
-        body: { kind: 'inline', range: command.arguments[1].range },
-      },
-    });
-  }
-
-  if (name === 'z.cls.drew' && args.length === 0) {
-    return finish(state, scope, capture, command.range, 'published');
-  }
-
-  if (name === 'z.cls.abort') {
-    return finish(state, scope, capture, command.range, 'aborted');
+  if (directive.name === 'z.cls.abort' || directive.name === 'z.cls.drew') {
+    return finish(state, directive.scope, capture, directive.command.range, 'aborted');
   }
 
   return state;
+}
+
+/** Retain the first valid attribute declaration in a definition. */
+function attributeDeclaration(directive: ClassDirective, definition: Definition, state: State): State {
+  const name = directive.args[0];
+  if (directive.args.length !== 2 || !identifier(name)) return state;
+
+  const duplicate = definition.members.some(
+    member => member.information.kind === 'classAttribute' && member.information.name === name,
+  );
+  if (duplicate) return state;
+
+  return withMember(state, directive.scope, definition, {
+    node: directive.command,
+    information: {
+      kind: 'classAttribute',
+      name,
+      classOffset: definition.node.range.start.offset,
+    },
+  });
+}
+
+/** Start a block capture or retain an inline body's original word range. */
+function methodDeclaration(directive: ClassDirective, capture: Capture, state: State): State {
+  const [name] = directive.args;
+  if (directive.args.length < 1 || directive.args.length > 2 || !identifier(name)) return state;
+
+  const definition = capture.definition;
+  const duplicate = definition.members.some(
+    member => member.information.kind === 'classMethod' && member.information.name === name,
+  );
+  if (duplicate) {
+    return directive.args.length === 1 ? finish(state, directive.scope, capture, directive.command.range, 'aborted') : state;
+  }
+
+  if (directive.args.length === 1) {
+    return withCapture(state, directive.scope, {
+      kind: 'method',
+      definition,
+      node: directive.command,
+      name,
+      depth: directive.depth,
+    });
+  }
+
+  return withMember(state, directive.scope, definition, {
+    node: directive.command,
+    information: {
+      kind: 'classMethod',
+      name,
+      classOffset: definition.node.range.start.offset,
+      body: { kind: 'inline', range: directive.command.arguments[1].range },
+    },
+  });
+}
+
+/** Apply the member or publication transition for an open definition. */
+function definitionDeclaration(directive: ClassDirective, capture: Capture, state: State): State {
+  switch (directive.name) {
+    case 'z.cls.attr':
+      return attributeDeclaration(directive, capture.definition, state);
+    case 'z.cls.fn':
+      return methodDeclaration(directive, capture, state);
+    case 'z.cls.drew':
+      return directive.args.length === 0
+        ? finish(state, directive.scope, capture, directive.command.range, 'published')
+        : state;
+    case 'z.cls.abort':
+      return finish(state, directive.scope, capture, directive.command.range, 'aborted');
+    default:
+      return state;
+  }
+}
+
+/** Route a directive through its current lexical capture state. */
+function declaration(command: SimpleCommandNode, depth: number,
+  scope: FunctionDefinitionNode | undefined, state: State): State {
+  const directive = classDirective(command, depth, scope);
+  if (!directive) return state;
+
+  const capture = state.scopes.get(scope);
+  if (directive.name === 'z.cls.new') return instanceDeclaration(directive, capture, state);
+  if (capture?.kind === 'method') return methodEnd(directive, capture, state);
+
+  if (directive.name === 'z.cls.draw' && directive.args.length === 1 && identifier(directive.args[0]) && !capture) {
+    return withCapture(state, scope, {
+      kind: 'definition',
+      definition: { node: command, name: directive.args[0], members: [] },
+    });
+  }
+
+  return capture ? definitionDeclaration(directive, capture, state) : state;
 }
 
 /** Interpret class directives from syntax commands, independently in each native function scope. */
