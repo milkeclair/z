@@ -46,6 +46,7 @@ z.t.describe "z.var.get"; {
       z.t.expect "${result[5]}" "keep_empty=true"
     }
   }
+
   z.t.context "入力がREPLYの場合"; {
     z.t.it "現在のREPLYの値を返す"; {
       local REPLY
@@ -69,5 +70,4 @@ z.t.describe "z.var.get"; {
       z.t.expect "${result[3]}" "two words"
     }
   }
-
 }

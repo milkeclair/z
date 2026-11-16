@@ -38,12 +38,15 @@ z.t.describe "z.install.mod.list"; {
       z.t.expect "$output" $'\033[38;5;208malpha [update-available]\033[0m\n\033[32mbeta [installed]\033[0m\n\033[31mgamma [not-installed]\033[0m\n\033[32mlocal-only [installed]\033[0m'
 
       z.dir.not.exists "$work_dir"
+
       z.t.expect.status.is.true
 
       z.file.not.exists "$fixture/executed"
+
       z.t.expect.status.is.true
 
       z.file.read path="$z_root/mod/alpha/value"
+
       z.t.expect.reply old
 
       z.dir.remove path="$fixture"
@@ -80,6 +83,7 @@ z.t.describe "z.install.mod.list"; {
 
       z.t.expect "$result_code" 0
       [[ ! -s "$fixture/output" ]]
+
       z.t.expect.status.is.true
 
       z.dir.remove path="$fixture"
@@ -99,9 +103,11 @@ z.t.describe "z.install.mod.list"; {
 
       z.t.expect "$result_code" 1
       [[ ! -s "$fixture/output" ]]
+
       z.t.expect.status.is.true
 
       z.dir.not.exists "$work_dir"
+
       z.t.expect.status.is.true
 
       z.dir.remove path="$fixture"
@@ -124,9 +130,11 @@ z.t.describe "z.install.mod.list"; {
 
       z.t.expect "$result_code" 1
       [[ ! -s "$fixture/output" ]]
+
       z.t.expect.status.is.true
 
       z.dir.not.exists "$work_dir"
+
       z.t.expect.status.is.true
 
       z.dir.remove path="$fixture"
@@ -174,6 +182,7 @@ z.t.describe "z.install.mod._fetch"; {
       z.t.expect "$call" "-fLsS https://github.com/milkeclair/z/archive/refs/heads/topic/change.tar.gz -o $fixture/work/source.tar.gz"
 
       z.file.read path="$source_dir/example/value"
+
       z.t.expect.reply remote
 
       z.dir.remove path="$fixture"
@@ -278,14 +287,19 @@ z.t.describe "z.install.mod.all"; {
       z.t.expect "$fetch_count" 1
       z.t.expect "$confirm_count" 1
       z.file.read path="$z_root/mod/app/value"
+
       z.t.expect.reply updated
       z.file.read path="$z_root/mod/new/value"
+
       z.t.expect.reply added
       z.file.read path="$z_root/mod/custom/value"
+
       z.t.expect.reply custom
       z.file.exists "$fixture/reloaded"
+
       z.t.expect.status.is.true
       local leftovers=("$z_root"/.z-mod-all.*(N/))
+
       z.t.expect "${#leftovers}" 0
 
       z.dir.remove path="$fixture"
@@ -307,8 +321,10 @@ z.t.describe "z.install.mod.all"; {
 
       z.t.expect.status.is.false
       z.file.read path="$z_root/mod/app/value"
+
       z.t.expect.reply old
       local leftovers=("$z_root"/.z-mod-all.*(N/))
+
       z.t.expect "${#leftovers}" 0
 
       z.dir.remove path="$fixture"
@@ -331,8 +347,10 @@ z.t.describe "z.install.mod.all"; {
 
       z.t.expect.status.is.false
       z.file.read path="$z_root/mod/app/value"
+
       z.t.expect.reply old
       local leftovers=("$z_root"/.z-mod-all.*(N/))
+
       z.t.expect "${#leftovers}" 0
 
       z.dir.remove path="$fixture"
@@ -362,8 +380,10 @@ z.t.describe "z.install.mod.all"; {
       z.t.expect "$result_code" 1
       z.t.expect "${#leftovers}" 1
       z.file.read path="$leftovers[1]/previous/app/value"
+
       z.t.expect.reply old
       z.file.read path="$z_root/mod/app/value"
+
       z.t.expect.reply updated
 
       z.dir.remove path="$fixture"
@@ -391,11 +411,13 @@ z.t.describe "z.install.mod.all"; {
       z.t.expect "$result_reply" ""
       z.t.expect "$calls" 0
       z.file.read path="$z_root/mod/custom/value"
+
       z.t.expect.reply custom
 
       z.dir.remove path="$fixture"
     }
   }
+
   z.t.context "作業領域の作成に失敗した場合"; {
     z.t.it "取得前に中断して現行modを維持する"; {
       local fixture=$(mktemp -d /tmp/z_all_command.XXXXXX)
@@ -414,6 +436,7 @@ z.t.describe "z.install.mod.all"; {
       z.t.expect "$result_code" 1
       z.t.expect "$attempts" ""
       z.file.read path="$z_root/mod/app/value"
+
       z.t.expect.reply old
 
       z.dir.remove path="$fixture"
@@ -429,6 +452,7 @@ z.t.describe "z.install.mod.all"; {
       z.t.expect.status.is.false
     }
   }
+
   z.t.context "補完の有効化だけが失敗した場合"; {
     z.t.it "導入成功として更新しbackupを片付ける"; {
       local fixture=$(mktemp -d /tmp/z_all_command.XXXXXX)
@@ -454,6 +478,7 @@ z.t.describe "z.install.mod.all"; {
       z.t.expect "$result_code" 0
       z.t.expect "${#leftovers}" 0
       z.file.read path="$z_root/mod/app/value"
+
       z.t.expect.reply new
 
       z.dir.remove path="$fixture"

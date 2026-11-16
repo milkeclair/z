@@ -57,6 +57,7 @@ z.t.describe "z.hash.values"; {
       local -A empty_hash
 
       z.hash.values empty_hash
+
       z.t.expect.reply.is.null
     }
   }
@@ -89,6 +90,7 @@ z.t.describe "z.hash.entries"; {
 
       z.t.expect "${#result[@]}" 6
       z.hash.has.key entries key=empty
+
       z.t.expect.status.is.true
       z.t.expect.is.null "${entries[empty]}"
       z.t.expect "${entries[word]}" "keep_empty=true"
@@ -115,6 +117,7 @@ z.t.describe "z.hash.count"; {
       hash[city]="Tokyo"
 
       z.hash.count hash
+
       z.t.expect.reply "3"
     }
   }
@@ -124,6 +127,7 @@ z.t.describe "z.hash.count"; {
       local -A empty_hash
 
       z.hash.count empty_hash
+
       z.t.expect.reply "0"
     }
   }
@@ -134,6 +138,7 @@ z.t.describe "z.hash.count"; {
       single_hash[key]="value"
 
       z.hash.count single_hash
+
       z.t.expect.reply "1"
     }
   }

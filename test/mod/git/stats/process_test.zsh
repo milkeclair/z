@@ -22,6 +22,7 @@ z.t.describe "z.git.stats"; {
       z.git.stats exclude_exts="md log" exclude_dirs="docs tests"
 
       z.t.mock.result
+
       z.t.expect.reply.is.arr "exclude_exts=md log" "exclude_dirs=docs tests"
     }
   }
@@ -51,6 +52,7 @@ z.t.describe "z.git.stats._show"; {
       z.git.stats._show exclude_exts="md log" exclude_dirs="docs tests"
 
       z.t.mock.result name="z.git.stats._exclude"
+
       z.t.expect.reply.is.arr "exclude_exts=md log" "exclude_dirs=docs tests"
     }
 
@@ -63,6 +65,7 @@ z.t.describe "z.git.stats._show"; {
       z.git.stats._show exclude_exts="md log" exclude_dirs="docs tests"
 
       z.t.mock.result name="z.git.stats._author"
+
       z.t.expect.reply.is.arr "exclude_exts=md log" "exclude_dirs=docs tests"
     }
   }
@@ -76,6 +79,7 @@ z.t.describe "z.git.stats._exclude"; {
       z.git.stats._exclude exclude_exts="md log" exclude_dirs="docs tests"
 
       z.t.mock.result name="z.io.line"
+
       z.t.expect.reply.is.arr "exclude_exts: md log" "exclude_dirs: docs tests" ""
     }
   }

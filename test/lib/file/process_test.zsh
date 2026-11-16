@@ -91,6 +91,7 @@ z.t.describe "z.file.write"; {
 
       z.t.expect.status.is.true
       z.file.read path=/tmp/z_t/literal/value
+
       z.t.expect.reply $'line\\n\ntrue'
     }
 
@@ -100,12 +101,14 @@ z.t.describe "z.file.write"; {
       z.file.write path=/tmp/z_t/literal_empty/value content=null
 
       z.file.read path=/tmp/z_t/literal_empty/value
+
       z.t.expect.reply null
 
       z.file.write path=/tmp/z_t/literal_empty/value content=
 
       z.t.expect.status.is.true
       z.file.read path=/tmp/z_t/literal_empty/value
+
       z.t.expect.reply.is.null
     }
   }
@@ -119,6 +122,7 @@ z.t.describe "z.file.write"; {
 
       z.t.expect.status.is.false
       z.file.read path=/tmp/z_t/literal_existing/value
+
       z.t.expect.reply before
     }
   }

@@ -105,16 +105,19 @@ z.t.describe "z.arg.named"; {
   z.t.context "重複した名前と後続のdefault指定がある場合"; {
     z.t.it "最初に指定されたnull文字列を返す"; {
       z.arg.named name name=null name=second default=first default=last
+
       z.t.expect.reply "null"
     }
 
     z.t.it "最初の名前付き値がfalseなら文字列のまま返す"; {
       z.arg.named name name=false name=second default=last
+
       z.t.expect.reply "false"
     }
 
     z.t.it "default自体を取得する場合も既存の既定値規約に従う"; {
       z.arg.named default default=first default=last
+
       z.t.expect.reply last
     }
   }
@@ -122,9 +125,11 @@ z.t.describe "z.arg.named"; {
   z.t.context "名前に等号や括弧を含む場合"; {
     z.t.it "名前全体の接頭辞を除き、値の等号を保持する"; {
       z.arg.named "a=b" "a=b=value=tail" default=fallback
+
       z.t.expect.reply "value=tail"
 
       z.arg.named "key[0]" "key[0]=value" default=fallback
+
       z.t.expect.reply "value"
     }
   }
@@ -169,6 +174,7 @@ z.t.describe "z.arg.parse"; {
       REPLY="unchanged"
 
       z.arg.parse input=input_args named=parsed_named rest=parsed_args && local result_reply=$REPLY
+
       z.t.expect.status.is.true
       z.t.expect.is.null "$result_reply"
       z.t.expect "${parsed_named[delimiter]}" ","
@@ -285,6 +291,7 @@ z.t.describe "z.arg.parse"; {
         local -A outer_named=([key]="")
         local -a outer_rest=()
         z.arg.parse input=outer_input named=outer_named rest=outer_rest
+
         z.t.expect "${outer_named[key]}" "inner"
         z.t.expect "${outer_rest[1]}" "inner-item"
       }
@@ -303,10 +310,13 @@ z.t.describe "z.arg.parse"; {
       REPLY="unchanged"
 
       z.arg.parse input=input_args named=parsed_named 2>/dev/null
+
       z.t.expect.status.is.false
       z.arg.parse input=input_args named=parsed_named unknown=parsed_args 2>/dev/null
+
       z.t.expect.status.is.false
       z.arg.parse input=missing_array named=parsed_named rest=parsed_args 2>/dev/null
+
       z.t.expect.status.is.false
 
       z.t.expect "${parsed_named[key]}" "default"

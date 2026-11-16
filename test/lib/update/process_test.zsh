@@ -37,12 +37,14 @@ z.t.describe "z.update"; {
 
       z.t.expect "$update_status" 0
       REPLY=$result
+
       z.t.expect.reply.is.null
       z.t.expect "$events" $'download\nextract\nresolve\ncore\nmods\nreplace\nreload'
       z.t.expect "$mod_call" "source=$dir/source current=$dir/installed dir=$dir/.z-update.fixture/next job completion"
       z.t.expect "$download_call" "dir=$dir/.z-update.fixture branch=main"
 
       z.dir.not.exists "$dir/.z-update.fixture"
+
       z.t.expect.status.is.true
 
       z.dir.remove path=/tmp/z_t/update_flow
@@ -80,6 +82,7 @@ z.t.describe "z.update"; {
 
       z.t.expect "$update_status" 1
       REPLY=$call
+
       z.t.expect.reply.is.null
     }
   }
@@ -104,9 +107,11 @@ z.t.describe "z.update"; {
 
       z.t.expect "$update_status" 1
       REPLY=$call
+
       z.t.expect.reply.is.null
 
       local work_dirs=("$dir"/.z-update.*(N/))
+
       z.t.expect "${#work_dirs}" 0
 
       z.dir.remove path=/tmp/z_t/update_flow
@@ -134,9 +139,11 @@ z.t.describe "z.update"; {
 
       z.t.expect "$update_status" 1
       REPLY=$call
+
       z.t.expect.reply.is.null
 
       z.file.read path="$dir/installed/main.zsh"
+
       z.t.expect.reply old
 
       z.dir.remove path=/tmp/z_t/update_flow
@@ -165,12 +172,15 @@ z.t.describe "z.update"; {
 
       z.t.expect "$update_status" 1
       REPLY=$call
+
       z.t.expect.reply.is.null
 
       z.dir.not.exists "$dir/.z-update.fixture"
+
       z.t.expect.status.is.true
 
       z.file.read path="$dir/installed/main.zsh"
+
       z.t.expect.reply old
 
       z.dir.remove path=/tmp/z_t/update_flow
@@ -202,15 +212,16 @@ z.t.describe "z.update"; {
       z.t.expect "$update_status" 1
 
       z.file.read path="$dir/.z-update.fixture/previous/main.zsh"
+
       z.t.expect.reply old
 
       z.file.read path="$dir/error"
+
       z.t.expect.includes "$REPLY" "$dir/.z-update.fixture/previous"
 
       z.dir.remove path=/tmp/z_t/update_flow
     }
   }
-
 }
 
 z.t.describe "z.update._confirm"; {
@@ -225,9 +236,11 @@ z.t.describe "z.update._confirm"; {
 
       z.t.expect "$confirm_status" 0
       REPLY=$result
+
       z.t.expect.reply.is.null
 
       z.file.read path="$dir/prompt"
+
       z.t.expect.includes "$REPLY" "Update /tmp/installed z and its installed mods? (y/n):"
 
       z.dir.remove path="$dir"
@@ -254,6 +267,7 @@ z.t.describe "z.update._confirm"; {
 
       z.t.expect "$confirm_status" 1
       REPLY=$result
+
       z.t.expect.reply.is.null
     }
   }
@@ -278,9 +292,8 @@ z.t.describe "z.update._confirm"; {
 
       z.t.expect "$confirm_status" 1
       REPLY=$call
+
       z.t.expect.reply.is.null
     }
   }
-
 }
-

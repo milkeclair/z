@@ -52,6 +52,7 @@ z.t.describe "z.mod.dependencies._resolve"; {
 
       z.t.expect.status.is.true skip_unmock=true
       REPLY=("${resolved_mod_names[@]}")
+
       z.t.expect.reply.is.arr git wtproxy skip_unmock=true
       z.t.expect "$resolved_mod_name_map[git]" true skip_unmock=true
       z.t.expect "$resolved_mod_name_map[wtproxy]" true
@@ -72,6 +73,7 @@ z.t.describe "z.mod.dependencies._resolve"; {
 
       z.t.expect.status.is.true skip_unmock=true
       REPLY=("${resolved_mod_names[@]}")
+
       z.t.expect.reply.is.arr git
       z.mod.reset
       unset resolved_mod_names resolving_mod_name_map resolved_mod_name_map
@@ -96,6 +98,7 @@ z.t.describe "z.mod.dependencies._resolve"; {
 
       z.t.expect.status.is.false skip_unmock=true
       z.t.mock.result name="z.io.error"
+
       z.t.expect.reply "cyclic mod dependency: wtproxy"
     }
   }
@@ -112,6 +115,7 @@ z.t.describe "z.mod.dependencies._resolve"; {
 
       z.t.expect.status.is.false skip_unmock=true
       z.t.mock.result name="z.io.error"
+
       z.t.expect.reply "mod is not registered: unknown"
     }
   }

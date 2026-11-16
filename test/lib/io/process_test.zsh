@@ -64,6 +64,7 @@ z.t.describe "z.io"; {
       z.t.expect "$output" $'\nend'
     }
   }
+
   z.t.context "明示したmessageと書式指定がある場合"; {
     z.t.it "message内の名前付き引数風文字列を保持して装飾する"; {
       local output=$(z.io message="color=red" color=green indent=1)
@@ -71,7 +72,6 @@ z.t.describe "z.io"; {
       z.t.expect "$output" $'\033[32m  color=red\033[0m'
     }
   }
-
 }
 
 z.t.describe "z.io.empty"; {
