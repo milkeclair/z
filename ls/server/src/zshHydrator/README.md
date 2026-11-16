@@ -40,6 +40,27 @@ The documentation reader consumes associated comment nodes once. It reads dollar
 A positional parameter stores its numeric position and prose description; named and rest parameters have their own variants.
 Examples keep their content and indentation. Parameter-looking text and directives inside examples belong to the example.
 
+## Code parameter annotations
+
+A parameter can declare that each supplied value contains Zsh source:
+
+```zsh
+# $behavior? [code]: commands to execute
+mock() { : }
+```
+
+Named, positional and rest parameter documentation accept `[code]` before the
+colon. Rest parameters apply the annotation to each remaining argument.
+Literal alternatives can exempt sentinel values:
+
+```zsh
+# $behavior? [code | 'call_original']: commands to execute
+```
+
+The parameter node stores `valueType: 'code'` and optional `literalValues`.
+Quoted alternatives use single or double quotes; quotes and backslashes can be
+escaped. Ordinary descriptions and example sections retain their existing meaning.
+
 ## Attached directives
 
 ```ts

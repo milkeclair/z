@@ -10,6 +10,9 @@ import { protocolRange, functionCommand } from '../connection/ast/cursor';
 import { resolveFunction } from '../connection/ast/context';
 import { DiagnosticSeverity } from '../vscode_type';
 import type { Diagnostics } from './type';
+import type { SourceRange } from '../zshParser/lexer';
+import type { IgnoreControls } from './controls';
+import { ignored } from './controls';
 import type { ShellEnvironment } from './environment';
 import type { Declarations } from './facts';
 import { simpleParameter } from './facts';
@@ -54,13 +57,13 @@ function shellKnown(name: string, command: SimpleCommandNode, context: Resolutio
     !commandOnly && (environment.functions.has(name) || context.autoloads.has(name));
 }
 
-function uncertainWord(word: WordNode, context: ResolutionContext): boolean {
+export function uncertainWord(word: WordNode, context: ResolutionContext): boolean {
   const environment = context.environment;
   const literal = literalWord(word);
   if (literal !== null) {
     if (!word.quoted && (context.globalAliases.has(literal) ||
       environment.kind === 'available' && environment.globalAliases.has(literal))) return true;
-    return !word.quoted && [...word.raw].some(char => '*?[{~'.includes(char));
+    return !word.quoted && [...word.raw].some(char => '*?[{~('.includes(char));
   }
   if (word.quoteKind !== 'double') return true;
   return word.parts.some(part => part.kind === 'parameterExpansion' &&
@@ -68,7 +71,7 @@ function uncertainWord(word: WordNode, context: ResolutionContext): boolean {
 }
 
 function argumentDiagnostics(command: SimpleCommandNode, definition: FunctionDefinitionNode,
-  context: ResolutionContext): readonly Diagnostics[] {
+  context: ResolutionContext, mapRange: (range: SourceRange) => SourceRange): readonly Diagnostics[] {
   const parameters = documentationOf(definition)?.parameters ?? [];
   if (!parameters.length || command.arguments.some(word => uncertainWord(word, context))) return [];
   const named = new Set(parameters.filter(parameter => parameter.kind === 'namedParameterDoc').map(parameter => parameter.name));
@@ -80,7 +83,7 @@ function argumentDiagnostics(command: SimpleCommandNode, definition: FunctionDef
     else positional += 1;
   }
   const diagnostics: Diagnostics[] = [];
-  const range = protocolRange(command.commandName?.range ?? command.range);
+  const range = protocolRange(mapRange(command.commandName?.range ?? command.range));
   const missing = parameters.filter(parameter =>
     parameter.kind === 'positionalParameterDoc' && !parameter.optional && parameter.position > positional);
   if (missing.length) diagnostics.push({ severity: DiagnosticSeverity.Error, code: 'missing-positional-argument',
@@ -95,22 +98,48 @@ function argumentDiagnostics(command: SimpleCommandNode, definition: FunctionDef
   return diagnostics;
 }
 
-export function callDiagnostics(snapshot: FunctionSnapshot, file: ZshFileHydration,
-  commands: readonly SimpleCommandNode[], context: ResolutionContext): readonly Diagnostics[] {
-  const diagnostics: Diagnostics[] = [];
+export type CallScope = { readonly file: ZshFileHydration; readonly offset: number };
+export type CallAnalysisOptions = {
+  readonly scopes?: readonly CallScope[];
+  readonly mapRange?: (range: SourceRange) => SourceRange;
+  readonly ignores?: IgnoreControls;
+};
+export type CallAnalysis = {
+  readonly diagnostics: readonly Diagnostics[];
+  readonly targets: ReadonlyMap<SimpleCommandNode, FunctionDefinitionNode>;
+};
+
+/** Embedded and outside-workspace definitions stay local rather than joining workspace targets. */
+function localDefinitions(snapshot: FunctionSnapshot, file: ZshFileHydration): ReadonlyMap<string, readonly FunctionDefinitionNode[]> {
   const local = new Map<string, FunctionDefinitionNode[]>();
-  if (snapshot.hydrator.files.get(file.file) !== file) {
-    for (const definition of new Set(file.functions.map(entry => entry.definition))) {
-      for (const word of definition.names) {
-        const name = literalWord(word);
-        if (name) {
-          const group = local.get(name) ?? [];
-          group.push(definition);
-          local.set(name, group);
-        }
-      }
+  if (snapshot.hydrator.files.get(file.file) === file) return local;
+  for (const definition of new Set(file.functions.map(entry => entry.definition))) {
+    for (const word of definition.names) {
+      const name = literalWord(word);
+      if (!name) continue;
+      const group = local.get(name) ?? [];
+      group.push(definition);
+      local.set(name, group);
     }
   }
+  return local;
+}
+
+/** Prefer the closest preceding definition while retaining existing forward-reference behavior. */
+function localDefinition(definitions: ReadonlyMap<string, readonly FunctionDefinitionNode[]>, name: string, offset: number) {
+  const candidates = definitions.get(name) ?? [];
+  return candidates.findLast(definition => definition.range.start.offset <= offset) ?? candidates[0];
+}
+
+/** Reuse resolved function bindings for code-argument analysis and map only reported locations. */
+export function analyzeCalls(snapshot: FunctionSnapshot, file: ZshFileHydration,
+  commands: readonly SimpleCommandNode[], context: ResolutionContext, options: CallAnalysisOptions = {}): CallAnalysis {
+  const diagnostics: Diagnostics[] = [];
+  const targets = new Map<SimpleCommandNode, FunctionDefinitionNode>();
+  const local = localDefinitions(snapshot, file);
+  const scopes = (options.scopes ?? []).map(scope => ({ ...scope, definitions: localDefinitions(snapshot, scope.file) }));
+  const origin = scopes.at(-1);
+  const mapRange = options.mapRange ?? (range => range);
   const incomplete = file.lexerDiagnostics.length > 0 || file.parserDiagnostics.length > 0;
   for (const command of commands) {
     const word = command.commandName?.word;
@@ -120,21 +149,30 @@ export function callDiagnostics(snapshot: FunctionSnapshot, file: ZshFileHydrati
     const inspect = command.precommandModifiers.some(modifier => modifier.type === 'command' &&
       modifier.options.some(option => option.name.includes('v') || option.name.includes('V')));
     if (inspect || alias(name, word, context)) continue;
-    const definitions = local.get(name) ?? [];
-    const preceding = definitions.findLast(definition => definition.range.start.offset <= word.range.start.offset);
-    const target = functionCommand(command) ? preceding ?? definitions[0] ?? resolveFunction(snapshot, name,
-      { file, offset: word.range.start.offset })?.definition : null;
+    const inherited = scopes.map(scope => localDefinition(scope.definitions, name, scope.offset)).find(target => target !== undefined);
+    const target = functionCommand(command) ? localDefinition(local, name, word.range.start.offset) ?? inherited ??
+      resolveFunction(snapshot, name, { file: origin?.file ?? file, offset: origin?.offset ?? word.range.start.offset })?.definition : null;
     if (target) {
+      targets.set(command, target);
       if (!incomplete) {
-        for (const diagnostic of argumentDiagnostics(command, target, context)) diagnostics.push(diagnostic);
+        for (const diagnostic of argumentDiagnostics(command, target, context, mapRange)) {
+          if (!options.ignores || !ignored(options.ignores, word.range.start.line, diagnostic.code)) diagnostics.push(diagnostic);
+        }
       }
     } else if (context.autoloads.has(name) && functionCommand(command)) {
       continue;
-    } else if (shellKnown(name, command, context) === false) {
+    } else if (shellKnown(name, command, context) === false &&
+      (!options.ignores || !ignored(options.ignores, word.range.start.line, 'undefined-command'))) {
       diagnostics.push({ severity: DiagnosticSeverity.Error, code: 'undefined-command',
-        range: protocolRange(word.range), source: 'z-ls',
+        range: protocolRange(mapRange(word.range)), source: 'z-ls',
         message: name + ' is not defined in the project or shell environment.' });
     }
   }
-  return diagnostics;
+  return { diagnostics, targets };
+}
+
+/** Preserve the existing diagnostics-only API for callers that do not need function bindings. */
+export function callDiagnostics(snapshot: FunctionSnapshot, file: ZshFileHydration,
+  commands: readonly SimpleCommandNode[], context: ResolutionContext): readonly Diagnostics[] {
+  return analyzeCalls(snapshot, file, commands, context).diagnostics;
 }

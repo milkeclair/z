@@ -1,7 +1,7 @@
 # mock a function or external command
 #
 # $name: function or command name
-# $behavior?: behavior (call_original|custom code)
+# $behavior? [code | 'call_original']: commands to execute
 # REPLY: null
 # return: null
 #

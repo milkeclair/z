@@ -103,3 +103,30 @@ pairs. Previous workspace result URIs that disappeared receive empty reports.
 
 Tests exercise a real Zsh environment and a compiled Node server over stdio,
 alongside AST ownership, argument contracts, controls and snapshot reuse.
+
+## Commands passed as strings
+
+Parameters annotated `[code]` in hydrated function documentation opt into
+embedded-code analysis. The analyzer resolves the receiver normally, removes
+static shell quoting, and uses the existing Lexer/Parser on the argument value.
+It checks syntax, command resolution and required arguments, including nested
+annotated calls. `[code | 'call_original']` exempts that exact decoded value.
+
+The string remains a word in the outer syntax AST. Parsed code uses its own
+decoded source; a flattened source map translates diagnostics back to the
+original physical file, including escapes, concatenated quotes, Unicode and
+multiple lines. Local functions, aliases, autoloads and module builtins in the
+code belong to that code and its nested code calls, rather than the project.
+Embedded `zls: ignore` comments apply to embedded logical lines; outer controls
+continue to apply to physical source lines.
+
+Outer expansions make the resulting program unknown, so their code diagnostics
+are deferred. Command substitutions already represented by the outer AST keep
+their normal diagnostics. The analyzer never evaluates the code. Formatting
+rules for whole files are not applied to string payloads.
+
+Processing uses an explicit program stack, at most 32 embedded levels and a
+1,048,576 UTF-16-unit budget for literal spellings per file. Exceeding a limit
+produces `embedded-analysis-limit` rather than continuing to allocate decoded
+source maps. Unchanged reports reuse the existing diagnostic snapshot; code-type
+or allowed-literal changes invalidate dependent call contracts.

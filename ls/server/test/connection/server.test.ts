@@ -685,4 +685,31 @@ describe('server@hydration stdio', () => {
     } finally { await client.close(); }
   }, 15000);
 
+  test('code引数の診断を元の文字列へ返し、許可値と注釈編集を反映する', async () => {
+    const root = fixture();
+    fs.writeFileSync(path.join(root, '.zshrc'), '');
+    const definition = path.join(root, 'code.zsh');
+    const definitionUri = pathToFileURL(definition).href;
+    const caller = pathToFileURL(path.join(root, 'caller.zsh')).href;
+    fs.writeFileSync(definition, "# $code? [code | 'call_original']: commands\nrun_code() { print \"$code\" }\n");
+    const client = startServer({ ...process.env, ZDOTDIR: root });
+    const request = () => bounded(client.connection.sendRequest(DocumentDiagnosticRequest.type, {
+      textDocument: { uri: caller },
+    }));
+    try {
+      await client.initialize(root, false);
+      const source = "run_code code='fixture_embedded_missing'\n";
+      await client.open(caller, source);
+      expect(await request()).toMatchObject({ items: [{
+        code: 'undefined-command',
+        range: { start: { line: 0, character: source.indexOf('fixture_embedded_missing') } },
+      }] });
+      await client.edit(caller, 'run_code code=call_original\n', 2);
+      expect(await request()).toMatchObject({ items: [] });
+      await client.edit(caller, source, 3);
+      await client.open(definitionUri, '# $code?: ordinary text\nrun_code() { print "$code" }\n');
+      expect(await request()).toMatchObject({ items: [] });
+    } finally { await client.close(); }
+  }, 15000);
+
 });

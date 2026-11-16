@@ -57,7 +57,7 @@ export function parseFunctionDocumentation(block: DocBlockNode, source: string, 
       finish();
       const parameter = parseParameter(comment);
       if (parameter) parameters.push(parameter);
-      else diagnostics.push({ kind: 'invalidParameterDoc', range: comment.range, message: 'Expected $parameter[?]: description' });
+      else diagnostics.push({ kind: 'invalidParameterDoc', range: comment.range, message: 'Expected $parameter[?]: description, optionally with [code] before the colon' });
     } else if (section) {
       section.comments.push(comment); section.text.push(payload);
     } else description.push({ kind: 'docDescription', range: comment.range, raw: comment.text, text: payload });

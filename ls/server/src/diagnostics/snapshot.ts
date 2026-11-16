@@ -2,12 +2,12 @@ import { pathToFileURL } from 'node:url';
 import type { FunctionSnapshot } from '../refreshFunctions/main';
 import type { FunctionTargets } from '../refreshFunctions/target';
 import type { ZshFileHydration } from '../zshHydrator';
-import { directivesOf } from '../zshHydrator';
+import { collectIgnoreControls, ignored } from './controls';
 import type { ShellEnvironment } from './environment';
 import { emptyShellEnvironment } from './environment';
 import { collectFileFacts } from './facts';
 import type { FileFacts, Declarations } from './facts';
-import { callDiagnostics } from './calls';
+import { embeddedCallDiagnostics } from './embedded';
 import { sameCallContracts } from './contracts';
 import type { ResolutionContext } from './calls';
 import type { Diagnostics } from './type';
@@ -47,18 +47,8 @@ function resolutionContext(facts: readonly FileFacts[], environment: ShellEnviro
 }
 
 function suppressed(file: ZshFileHydration, diagnostics: readonly Diagnostics[]): readonly Diagnostics[] {
-  const ignores = new Map<number, ReadonlySet<string>>();
-  for (const comment of file.ast.comments) {
-    for (const directive of directivesOf(comment)) {
-      if (directive.namespace === 'zls' && directive.command === 'ignore') {
-        ignores.set(comment.range.start.line, new Set(directive.arguments.map(argument => argument.value)));
-      }
-    }
-  }
-  return diagnostics.filter(diagnostic => {
-    const codes = ignores.get(diagnostic.range.start.line);
-    return !codes || codes.size > 0 && (!diagnostic.code || !codes.has(diagnostic.code));
-  });
+  const controls = collectIgnoreControls(file);
+  return diagnostics.filter(diagnostic => !ignored(controls, diagnostic.range.start.line, diagnostic.code));
 }
 
 export function refreshDiagnosticSnapshot({ snapshot, environment, previous = createDiagnosticSnapshot() }: {
@@ -98,7 +88,7 @@ export function refreshDiagnosticSnapshot({ snapshot, environment, previous = cr
         builtins: new Set([...context.builtins, ...local.builtins]),
       };
       files.set(uri, { ...input, facts: current, resultId: String(revision),
-        items: suppressed(input.file, [...current.base, ...callDiagnostics(snapshot, input.file, current.calls, effective)])
+        items: suppressed(input.file, [...current.base, ...embeddedCallDiagnostics(snapshot, input.file, current.calls, effective)])
           .toSorted((left, right) => left.range.start.line - right.range.start.line ||
             left.range.start.character - right.range.start.character) });
     }
