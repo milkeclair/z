@@ -78,7 +78,6 @@ z.arg.named() {
 #  local -a parsed_args=()
 #  z.arg.parse input=input_args named=parsed_named rest=parsed_args
 z.arg.parse() {
-  local arg
   z.arg.named input "$@" && local input_name=$REPLY
   z.arg.named named "$@" && local named_name=$REPLY
   z.arg.named rest "$@" && local rest_name=$REPLY
@@ -93,48 +92,11 @@ z.arg.parse() {
 
   z.var.get $input_name && local args=("${REPLY[@]}")
   z.hash.entries $named_name && local -A values=("${REPLY[@]}")
-  z.hash.keys values && local names=("${REPLY[@]}")
-  local accepted_names=()
-  local remaining=()
-  local -A found
-  local name
+  z.arg.parse._names values && local accepted_names=("${REPLY[@]}")
+  z.arg.parse._collect "${args[@]}" && local remaining=("${REPLY[@]}")
 
-  z.group "collecting argument names"; {
-    for name in "${names[@]}"; do
-      z.is.null "$name" && continue
-      z.str.includes "$name" "=" && continue
-      accepted_names+=("$name")
-    done
-  }
-
-  z.group "parsing arguments"; {
-    for arg in "${args[@]}"; do
-      local matched=false
-
-      for name in "${accepted_names[@]}"; do
-        z.str.start_with "$arg" "${name}=" || continue
-
-        if ! z.is.true ${found[$name]}; then
-          z.str.remove.prefix "$arg" "${name}="
-          local value=$REPLY
-          z.is.null "$value" && value=${values[$name]}
-          values[$name]=$value
-          found[$name]=true
-        fi
-
-        matched=true
-        break
-      done
-
-      z.is.false $matched && remaining+=("$arg")
-    done
-  }
-
-  z.group "writing results"; {
-    z.hash.entries values
-    set -A "$named_name" "${REPLY[@]}"
-    set -A "$rest_name" "${remaining[@]}"
-  }
-
+  z.hash.entries values
+  set -A "$named_name" "${REPLY[@]}"
+  set -A "$rest_name" "${remaining[@]}"
   REPLY=""
 }
