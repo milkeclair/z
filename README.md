@@ -122,35 +122,6 @@ The following rules apply under lib.
   - Modify the data.
   - If the function has a return value, it is placed in `REPLY` (not `return`).
 
-### Parse arguments once
-
-Declare accepted named arguments and their defaults in an associative array.
-Pass variable names using named API arguments. The parser reads the input array
-once and writes the named values and remaining arguments into caller-owned arrays.
-
-```zsh
-local -a input_args=("$@")
-local -A parsed_named=([delimiter]=" ")
-local -a parsed_args=()
-
-z.arg.parse input=input_args named=parsed_named rest=parsed_args
-```
-
-The first occurrence of each declared name wins, and every occurrence of that
-name is removed from the remaining arguments. Named values follow `z.return`
-conversion; an empty converted value uses its declared default. Remaining
-arguments retain their literal values, including empty strings and unknown
-`name=value` arguments. The input array remains unchanged. As with other z
-APIs, `REPLY` is used as a working return value and is empty after success.
-
-Use distinct, declared arrays with names separate from `REPLY` and the parser's
-local variables, such as the names in the example. The output arrays must be plain
-writable arrays of the shown types; declare them as shown before calling the
-parser. Missing arrays return status 1 before either output is changed.
-
-`z.arr.join` uses this parser while retaining its existing argument and return
-conversion behavior.
-
 ### Modules
 
 - arg

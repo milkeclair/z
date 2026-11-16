@@ -63,25 +63,19 @@ z.arg.named() {
   z.return ${value:-$default}
 }
 
-# parse an input array into named values and remaining literal arguments
+# parse named arguments and collect the remaining arguments
 #
-# $input: name of an indexed input array
-# $named: name of a writable associative array with accepted names and defaults
-# $rest: name of a writable indexed array for remaining arguments
+# $input: name of the input array (read only)
+# $named: name of the hash of defaults, updated with first matching values
+# $rest: name of the output array for remaining literal arguments
 # REPLY: null
-# return: 0 on success, 1 for missing arrays
-#
-# Use distinct array names, separate from REPLY and this function's locals.
-# The first occurrence wins; all occurrences of accepted names are removed.
-# Named values use z.return conversion; an empty value uses its default.
-# Remaining arguments and the input array retain their literal values.
+# return: 0 if parsed, otherwise 1
 #
 # example:
 #  local -a input_args=("a" "delimiter=," "b")
 #  local -A parsed_named=([delimiter]=" ")
 #  local -a parsed_args=()
 #  z.arg.parse input=input_args named=parsed_named rest=parsed_args
-#  # parsed_named[delimiter]=","; parsed_args=("a" "b")
 z.arg.parse() {
   local arg
   z.arg.named input $@ && local input_name=$REPLY
