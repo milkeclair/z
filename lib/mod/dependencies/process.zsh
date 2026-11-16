@@ -15,7 +15,7 @@ z.mod.dependencies.resolve() {
   local -A resolved_mod_name_map=()
 
   z.mod.dependencies._resolve $mod_name || return 1
-  z.return ${resolved_mod_names[@]}
+  REPLY=("${resolved_mod_names[@]}")
 }
 
 # resolve dependencies recursively

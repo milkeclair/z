@@ -31,11 +31,11 @@ z.t.describe "z.var.get"; {
     }
   }
 
-  z.t.context "literalがtrueの場合"; {
+  z.t.context "値をそのまま取得する場合"; {
     z.t.it "空要素と真偽値風の値を配列のまま返す"; {
       local input_args=("" "true" "null" "two words" "keep_empty=true")
 
-      z.var.get input_args literal=true
+      z.var.get input_args
       local result=("${REPLY[@]}")
 
       z.t.expect "${#result[@]}" 5
@@ -47,18 +47,20 @@ z.t.describe "z.var.get"; {
     }
   }
   z.t.context "入力がREPLYの場合"; {
-    z.t.it "名前付き引数を取得する前の値を返す"; {
-      local REPLY="sentinel"
+    z.t.it "現在のREPLYの値を返す"; {
+      local REPLY
+      REPLY="sentinel"
 
       z.var.get REPLY
 
       z.t.expect.reply "sentinel"
     }
 
-    z.t.it "literal指定時も元の配列要素を保持する"; {
-      local REPLY=("true" "" "two words")
+    z.t.it "元の配列要素を保持する"; {
+      local REPLY
+      REPLY=("true" "" "two words")
 
-      z.var.get REPLY literal=true
+      z.var.get REPLY
       local result=("${REPLY[@]}")
 
       z.t.expect "${#result[@]}" 3

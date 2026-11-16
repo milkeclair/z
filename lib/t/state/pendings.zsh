@@ -8,7 +8,7 @@ z_t_states[pendings]=0
 # example:
 #  z.t._state.pendings  #=> 3
 z.t._state.pendings() {
-  z.return ${z_t_states[pendings]}
+  REPLY=${z_t_states[pendings]}
 }
 
 # increment the number of pending tests by 1

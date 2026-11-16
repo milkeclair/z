@@ -12,7 +12,7 @@ z.file.read.lines() {
   if z.file.exists $file; then
     REPLY=(${(f)$(cat $file)})
   else
-    z.return
+    REPLY=()
   fi
 }
 
@@ -32,6 +32,6 @@ z.file.read.pick() {
   if z.file.exists $file; then
     REPLY=$(grep $word $file | head -n 1)
   else
-    z.return
+    REPLY=""
   fi
 }

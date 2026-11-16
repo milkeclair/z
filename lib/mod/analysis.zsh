@@ -11,5 +11,5 @@ z.mod.dependencies() {
   z.arg.first "$@"
   local mod_name=$REPLY
 
-  z.return ${=z_mod_depends[$mod_name]}
+  REPLY=("${=z_mod_depends[$mod_name]}")
 }

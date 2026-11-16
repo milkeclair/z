@@ -21,7 +21,7 @@ z.t.describe "z.install.mod.list"; {
       z.file.write path="$fixture/source/gamma/mod.zsh" content="touch \"$fixture/executed\""
 
       z.t.mock name=mktemp behavior="z.dir.make path=\"$work_dir\"; z.io \"$work_dir\""
-      z.t.mock name="z.install.mod._fetch" behavior="((fetch_calls++)); z.return \"$fixture/source\""
+      z.t.mock name="z.install.mod._fetch" behavior="((fetch_calls++)); REPLY=\"$fixture/source\""
 
       z.install.mod.list > "$fixture/output"
       local result_code=$?
@@ -55,7 +55,7 @@ z.t.describe "z.install.mod.list"; {
       local fixture=$(mktemp -d /tmp/z_mod_list.XXXXXX)
       local z_root="$fixture/installed"
       z.dir.make path="$fixture/source/example"
-      z.t.mock name="z.install.mod._fetch" behavior="z.return \"$fixture/source\""
+      z.t.mock name="z.install.mod._fetch" behavior="REPLY=\"$fixture/source\""
 
       z.install.mod.list > "$fixture/output"
       local result_code=$?
@@ -73,7 +73,7 @@ z.t.describe "z.install.mod.list"; {
       local fixture=$(mktemp -d /tmp/z_mod_list.XXXXXX)
       local z_root="$fixture/installed"
       z.dir.make path="$fixture/source"
-      z.t.mock name="z.install.mod._fetch" behavior="z.return \"$fixture/source\""
+      z.t.mock name="z.install.mod._fetch" behavior="REPLY=\"$fixture/source\""
 
       z.install.mod.list > "$fixture/output"
       local result_code=$?
@@ -116,7 +116,7 @@ z.t.describe "z.install.mod.list"; {
       z.dir.make path="$fixture/source/example"
       z.dir.make path="$z_root/mod/example"
       z.t.mock name=mktemp behavior="z.dir.make path=\"$work_dir\"; z.io \"$work_dir\""
-      z.t.mock name="z.install.mod._fetch" behavior="z.return \"$fixture/source\""
+      z.t.mock name="z.install.mod._fetch" behavior="REPLY=\"$fixture/source\""
       z.t.mock name=diff behavior="return 2"
 
       z.install.mod.list > "$fixture/output" 2>/dev/null
@@ -261,7 +261,7 @@ z.t.describe "z.install.mod.all"; {
       z.file.write path="$z_root/mod/custom/value" content=custom
       z.file.write path="$fixture/source/app/value" content=updated
       z.file.write path="$fixture/source/new/value" content=added
-      z.t.mock name="z.install.mod._fetch" behavior="((all_fetch_count++)); z.return \"$fixture/source\""
+      z.t.mock name="z.install.mod._fetch" behavior="((all_fetch_count++)); REPLY=\"$fixture/source\""
       z.t.mock name="z.install.mod.all._confirm" behavior="((all_confirm_count++)); return 0"
       z.t.mock name="z.completion.cache._cancel" behavior="return 0"
       z.t.mock name="z.completion.enable" behavior="return 0"
@@ -300,7 +300,7 @@ z.t.describe "z.install.mod.all"; {
       z.dir.make path="$fixture/source/app"
       z.file.write path="$z_root/main.zsh" content=":"
       z.file.write path="$z_root/mod/app/value" content=old
-      z.t.mock name="z.install.mod._fetch" behavior="z.return \"$fixture/source\""
+      z.t.mock name="z.install.mod._fetch" behavior="REPLY=\"$fixture/source\""
       z.t.mock name="z.install.mod.all._confirm" behavior="return 1"
 
       z.install.mod.all > "$fixture/output"
@@ -323,7 +323,7 @@ z.t.describe "z.install.mod.all"; {
       z.dir.make path="$fixture/source/app"
       z.file.write path="$z_root/main.zsh" content=":"
       z.file.write path="$z_root/mod/app/value" content=old
-      z.t.mock name="z.install.mod._fetch" behavior="z.return \"$fixture/source\""
+      z.t.mock name="z.install.mod._fetch" behavior="REPLY=\"$fixture/source\""
       z.t.mock name="z.install.mod.all._confirm" behavior="return 0"
       z.t.mock name=cp behavior="return 1"
 
@@ -348,7 +348,7 @@ z.t.describe "z.install.mod.all"; {
       z.file.write path="$z_root/main.zsh" content="return 7"
       z.file.write path="$z_root/mod/app/value" content=old
       z.file.write path="$fixture/source/app/value" content=updated
-      z.t.mock name="z.install.mod._fetch" behavior="z.return \"$fixture/source\""
+      z.t.mock name="z.install.mod._fetch" behavior="REPLY=\"$fixture/source\""
       z.t.mock name="z.install.mod.all._confirm" behavior="return 0"
       z.t.mock name="z.completion.cache._cancel" behavior="return 0"
 
@@ -379,7 +379,7 @@ z.t.describe "z.install.mod.all"; {
       z.dir.make path="$fixture/source"
       z.file.write path="$z_root/main.zsh" content=":"
       z.file.write path="$z_root/mod/custom/value" content=custom
-      z.t.mock name="z.install.mod._fetch" behavior="z.return \"$fixture/source\""
+      z.t.mock name="z.install.mod._fetch" behavior="REPLY=\"$fixture/source\""
       z.t.mock name="z.install.mod.all._confirm" behavior="((all_confirm_count++)); return 1"
 
       z.install.mod.all > "$fixture/output"
@@ -438,7 +438,7 @@ z.t.describe "z.install.mod.all"; {
       z.file.write path="$z_root/main.zsh" content=":"
       z.file.write path="$z_root/mod/app/value" content=old
       z.file.write path="$fixture/source/app/value" content=new
-      z.t.mock name="z.install.mod._fetch" behavior="z.return \"$fixture/source\""
+      z.t.mock name="z.install.mod._fetch" behavior="REPLY=\"$fixture/source\""
       z.t.mock name="z.install.mod.all._confirm" behavior="return 0"
       z.t.mock name="z.completion.cache._cancel" behavior="return 0"
       z.t.mock name="z.completion.enable" behavior="return 1"

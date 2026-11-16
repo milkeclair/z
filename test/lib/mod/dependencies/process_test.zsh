@@ -51,7 +51,7 @@ z.t.describe "z.mod.dependencies._resolve"; {
       z.mod.dependencies._resolve wtproxy
 
       z.t.expect.status.is.true skip_unmock=true
-      z.return ${resolved_mod_names[@]}
+      REPLY=("${resolved_mod_names[@]}")
       z.t.expect.reply.is.arr git wtproxy skip_unmock=true
       z.t.expect "$resolved_mod_name_map[git]" true skip_unmock=true
       z.t.expect "$resolved_mod_name_map[wtproxy]" true
@@ -71,7 +71,7 @@ z.t.describe "z.mod.dependencies._resolve"; {
       z.mod.dependencies._resolve git
 
       z.t.expect.status.is.true skip_unmock=true
-      z.return ${resolved_mod_names[@]}
+      REPLY=("${resolved_mod_names[@]}")
       z.t.expect.reply.is.arr git
       z.mod.reset
       unset resolved_mod_names resolving_mod_name_map resolved_mod_name_map

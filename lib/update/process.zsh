@@ -57,7 +57,7 @@ z.update() {
     fi
   }
 
-  z.return
+  REPLY=""
 }
 
 # confirm an update of an installation
@@ -78,10 +78,10 @@ z.update._confirm() {
   local response=$REPLY
 
   if z.is.eq "$response" y || z.is.eq "$response" Y; then
-    z.return
+    REPLY=""
     return 0
   fi
 
-  z.return
+  REPLY=""
   return 1
 }

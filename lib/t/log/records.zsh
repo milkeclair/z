@@ -43,10 +43,10 @@ z.t._log.records.collect() {
   fi
 
   z.arr.count $all_records
-  z.int.is.zero $REPLY && { z.return ""; return 0; }
+  z.int.is.zero $REPLY && { REPLY=(""); return 0; }
 
   local sorted_records=(${(o)all_records})
-  z.return ${sorted_records[@]}
+  REPLY=("${sorted_records[@]}")
 }
 
 # display sorted records

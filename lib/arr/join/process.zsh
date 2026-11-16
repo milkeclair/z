@@ -7,7 +7,7 @@
 # example:
 #  z.arr.join.line "a" "b" "c" #=> REPLY=$'a\nb\nc'
 z.arr.join.line() {
-  local arr=($@)
+  local arr=("$@")
 
-  z.return ${(pj:\n:)arr}
+  REPLY=${(pj:\n:)arr}
 }

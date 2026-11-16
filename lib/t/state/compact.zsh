@@ -8,7 +8,7 @@ z_t_states[compact]="${Z_TEST_COMPACT:-false}"
 # example:
 #  z.t._state.compact  #=> "false"
 z.t._state.compact() {
-  z.return ${z_t_states[compact]}
+  REPLY=${z_t_states[compact]}
 }
 
 # set the compact state

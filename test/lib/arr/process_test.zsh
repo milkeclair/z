@@ -30,9 +30,9 @@ z.t.describe "z.arr.join"; {
   }
 
   z.t.context "空要素や名前付き引数に見えるデータが渡された場合"; {
-    z.t.it "従来どおり空要素を除き、未知の名前をデータとして結合する"; {
+    z.t.it "空要素と未知の名前をデータとして結合する"; {
       z.arr.join "" "a b" "" "input=value" "named=value" "rest=value" "default=x" ""
-      z.t.expect.reply "a b input=value named=value rest=value default=x"
+      z.t.expect.reply " a b  input=value named=value rest=value default=x "
     }
   }
 
@@ -43,23 +43,23 @@ z.t.describe "z.arr.join"; {
     }
   }
 
-  z.t.context "区切り文字が空値またはnullの場合"; {
-    z.t.it "既定のスペースを使う"; {
+  z.t.context "区切り文字が空値またはnullという文字列の場合"; {
+    z.t.it "空値は既定値を使い、nullは区切り文字として扱う"; {
       z.arr.join delimiter= "a" "b"
       z.t.expect.reply "a b"
 
       z.arr.join delimiter=null "a" "b"
-      z.t.expect.reply "a b"
+      z.t.expect.reply "anb"
     }
   }
 
   z.t.context "区切り文字が真偽値の場合"; {
-    z.t.it "従来の数値変換を維持する"; {
+    z.t.it "trueとfalseを区切り文字として扱う"; {
       z.arr.join delimiter=true "a" "b"
-      z.t.expect.reply "a0b"
+      z.t.expect.reply "atb"
 
       z.arr.join delimiter=false "a" "b"
-      z.t.expect.reply "a1b"
+      z.t.expect.reply "afb"
     }
   }
 
@@ -71,22 +71,22 @@ z.t.describe "z.arr.join"; {
   }
 
   z.t.context "残りの引数が単独の真偽値またはnullの場合"; {
-    z.t.it "従来の戻り値変換を維持する"; {
+    z.t.it "文字列を変換せずに返す"; {
       z.arr.join true
-      z.t.expect.reply 0
+      z.t.expect.reply "true"
 
       z.arr.join false
-      z.t.expect.reply 1
+      z.t.expect.reply "false"
 
       z.arr.join null
-      z.t.expect.reply.is.null
+      z.t.expect.reply "null"
     }
   }
 
   z.t.context "keep_empty指定を含む場合"; {
-    z.t.it "従来どおり戻り値オプションとして扱う"; {
+    z.t.it "名前付き引数風の値もそのまま結合する"; {
       z.arr.join keep_empty=true "a" "" "b"
-      z.t.expect.reply "a b"
+      z.t.expect.reply "keep_empty=true a  b"
     }
   }
 
@@ -234,6 +234,16 @@ z.t.describe "z.arr.unique"; {
       z.t.expect "${#result[@]}" 3
     }
   }
+  z.t.context "空要素を含む場合"; {
+    z.t.it "空要素を一つ残して重複を除く"; {
+      z.arr.unique "" false "" null false
+      local result=("${REPLY[@]}")
+
+      z.t.expect.reply.is.arr "" false null
+      z.t.expect "${#result[@]}" 3
+    }
+  }
+
 }
 
 z.t.describe "z.arr.diff"; {

@@ -89,6 +89,19 @@ z.t.describe "z.arg.first"; {
       z.t.expect.reply "b"
     }
   }
+  z.t.context "空要素と真偽値風の文字列を含む場合"; {
+    z.t.it "空要素を数に含め、値を変換せずに取得する"; {
+      z.arg.first "" true null void
+      z.t.expect.reply.is.null
+
+      z.arg.second "" true null void
+      z.t.expect.reply "true"
+
+      z.arg.last "" true null void
+      z.t.expect.reply "void"
+    }
+  }
+
 }
 
 z.t.describe "z.arg.second"; {

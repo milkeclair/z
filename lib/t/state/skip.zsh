@@ -10,7 +10,7 @@ z_t_states[skip_it]="false"
 # example:
 #  z.t._state.skip.describe  #=> "false"
 z.t._state.skip.describe() {
-  z.return ${z_t_states[skip_describe]}
+  REPLY=${z_t_states[skip_describe]}
 }
 
 # set the skip state for describe level
@@ -33,7 +33,7 @@ z.t._state.skip.describe.set() {
 # example:
 #  z.t._state.skip.context  #=> "false"
 z.t._state.skip.context() {
-  z.return ${z_t_states[skip_context]}
+  REPLY=${z_t_states[skip_context]}
 }
 
 # set the skip state for context level
@@ -56,7 +56,7 @@ z.t._state.skip.context.set() {
 # example:
 #  z.t._state.skip.it  #=> "false"
 z.t._state.skip.it() {
-  z.return ${z_t_states[skip_it]}
+  REPLY=${z_t_states[skip_it]}
 }
 
 # set the skip state for it level

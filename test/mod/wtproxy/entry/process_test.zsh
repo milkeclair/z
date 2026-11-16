@@ -10,7 +10,7 @@ z.t.describe "z.wtproxy._entry.current"; {
       z.wtproxy._entry.current activate=true
 
       z.t.mock.result name="z.wtproxy._state.with_lock"
-      z.t.expect.reply.is.arr z.wtproxy._entry.current.locked /tmp/worktree feat/example 0
+      z.t.expect.reply.is.arr z.wtproxy._entry.current.locked /tmp/worktree feat/example true
     }
   }
 }

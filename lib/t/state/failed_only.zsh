@@ -8,7 +8,7 @@ z_t_states[failed_only]="${Z_TEST_FAILED_ONLY:-false}"
 # example:
 #  z.t._state.failed_only  #=> "false"
 z.t._state.failed_only() {
-  z.return ${z_t_states[failed_only]}
+  REPLY=${z_t_states[failed_only]}
 }
 
 # set the failed_only state

@@ -8,7 +8,7 @@ typeset z_t_pending_records=()
 # example:
 #  z.t._state.pending_records  #=> ("record1" "record2" ...)
 z.t._state.pending_records() {
-  z.return ${z_t_pending_records[@]}
+  REPLY=("${z_t_pending_records[@]}")
 }
 
 # add a pending record
