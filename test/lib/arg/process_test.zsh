@@ -267,6 +267,8 @@ z.t.describe "z.arg.parse"; {
       local -A named=([name]="default")
       local -a rest=()
       local arg="arg" key="key" value="value" args="args"
+      local -A values=([caller]="unchanged")
+      local -a accepted_names=("caller")
 
       z.arg.parse input=input named=named rest=rest
       local result_arg=$arg result_key=$key result_value=$value result_args=$args
@@ -277,6 +279,10 @@ z.t.describe "z.arg.parse"; {
       z.t.expect "$result_key" "key"
       z.t.expect "$result_value" "value"
       z.t.expect "$result_args" "args"
+      z.t.expect "${values[caller]}" "unchanged"
+      z.t.expect "${#values[@]}" 1
+      z.t.expect "${accepted_names[1]}" "caller"
+      z.t.expect "${#accepted_names[@]}" 1
     }
 
     z.t.it "内側の解析結果と外側の解析結果を分離する"; {
