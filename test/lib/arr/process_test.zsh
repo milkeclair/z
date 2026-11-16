@@ -226,6 +226,18 @@ z.t.describe "z.arr.unique"; {
       z.t.expect.reply.is.arr "1" "2" "3" "4"
     }
   }
+
+  z.t.context "値がfalse、null、パス風文字列の場合"; {
+    z.t.it "要素名を真偽判定せず、内部集合の所属で処理する"; {
+      z.arr.unique false null ./missing false null ./missing
+      local -a result=("${REPLY[@]}")
+
+      z.t.expect "${#result[@]}" 3
+      z.t.expect "${result[1]}" "false"
+      z.t.expect "${result[2]}" "null"
+      z.t.expect "${result[3]}" "./missing"
+    }
+  }
 }
 
 z.t.describe "z.arr.diff"; {
