@@ -49,7 +49,6 @@ z.t.describe "z.var.get"; {
 
   z.t.context "入力がREPLYの場合"; {
     z.t.it "現在のREPLYの値を返す"; {
-      local REPLY
       REPLY="sentinel"
 
       z.var.get REPLY
@@ -58,7 +57,6 @@ z.t.describe "z.var.get"; {
     }
 
     z.t.it "元の配列要素を保持する"; {
-      local REPLY
       REPLY=("true" "" "two words")
 
       z.var.get REPLY

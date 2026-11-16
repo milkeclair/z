@@ -170,7 +170,6 @@ z.t.describe "z.arg.parse"; {
       local -a input_args=("first" "delimiter=," "other=two words" "" "--" "named=payload")
       local -A parsed_named=([delimiter]=" ")
       local -a parsed_args=("old")
-      local REPLY
       REPLY="unchanged"
 
       z.arg.parse input=input_args named=parsed_named rest=parsed_args && local result_reply=$REPLY
@@ -306,8 +305,6 @@ z.t.describe "z.arg.parse"; {
       local -a input_args=("key=value")
       local -A parsed_named=([key]="default")
       local -a parsed_args=("old")
-      local REPLY
-      REPLY="unchanged"
 
       z.arg.parse input=input_args named=parsed_named 2>/dev/null
 
