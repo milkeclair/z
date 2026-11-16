@@ -93,13 +93,11 @@ z.t.describe "z.arr.join"; {
   z.t.context "空白、改行、日本語を含む要素が渡された場合"; {
     z.t.it "要素の内容と呼び出し元のIFSを保持する"; {
       local IFS=":"
-      z.arr.join "a b" $'c\nd' 日本語 delimiter=,
-      local result_code=$?
-      local result_reply=$REPLY
-      local result_ifs=$IFS
+      z.arr.join "a b" $'c\nd' 日本語 delimiter=, &&
+        local result_reply=$REPLY result_ifs=$IFS
+      z.t.expect.status.is.true
 
       z.t.expect "$result_reply" $'a b,c\nd,日本語'
-      z.t.expect "$result_code" 0
       z.t.expect "$result_ifs" ":"
     }
   }
@@ -232,10 +230,8 @@ z.t.describe "z.arr.unique"; {
       z.arr.unique false null ./missing false null ./missing
       local -a result=("${REPLY[@]}")
 
+      z.t.expect.reply.is.arr false null ./missing
       z.t.expect "${#result[@]}" 3
-      z.t.expect "${result[1]}" "false"
-      z.t.expect "${result[2]}" "null"
-      z.t.expect "${result[3]}" "./missing"
     }
   }
 }
