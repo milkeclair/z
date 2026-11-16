@@ -284,6 +284,8 @@ Mod dependencies are resolved and installed first.
 
 ### List of Mods
 
+- `z.reload`
+  - Reload the home Zsh configuration. [README](mod/reload/README.md)
 - `z.pj`
   - Named project directories and VS Code launcher. [README](mod/pj/README.md)
 - `z.git`
