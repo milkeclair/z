@@ -1,60 +1,51 @@
 # z
 
-A zsh utility library for me who can't memorize shell script syntax.
-Provide functions with readable names for syntax that is not intuitive for me.
+シェルスクリプトの構文を覚えられない自分のためのZshユーティリティライブラリです。直感的に書きにくい構文を、読みやすい名前の関数で扱えるようにします。
 
-## Installation
+## インストール
 
-### First time
+### 初回導入
 
 `curl -sL https://raw.githubusercontent.com/milkeclair/z/main/install.zsh | zsh`
 
-### Update
+### 更新
 
-`z.update` updates the loaded installation and its installed mods from one
-branch archive. Required mod dependencies are included. The command asks once,
-prepares the new files before replacement, and reloads the current shell.
-Git checkouts are updated with Git.
+`z.update`は、読み込み済みのインストール先と導入済みmodを、1つのブランチアーカイブから更新します。必要な依存modも含めます。確認は1回だけ行い、新しいファイルを準備してから置換し、現在のシェルで読み込み直します。Gitの作業ツリーはGitで更新します。
 
-### Reinstall core
+### coreの再インストール
 
-`z.install` replaces the core while preserving installed mods.
-Use `z.install.mod <mod_name>` to update a single mod.
+`z.install`は導入済みmodを保持してcoreを置換します。単一のmodを更新するには`z.install.mod <mod_name>`を使います。
 
-`z.install.mod.list` lists available and installed mods: green for installed,
-orange for different contents, and red for not installed. It compares against
-`Z_INSTALL_BRANCH` (default: `main`); local edits also appear orange.
+`z.install.mod.list`は、配布されているmodと導入済みmodを一覧します。緑は導入済み、オレンジは内容が異なるもの、赤は未導入です。`Z_INSTALL_BRANCH`（既定: `main`）と比較し、ローカルの編集もオレンジで表示します。
 
-`z.install.mod.all` installs or updates every available mod after one confirmation.
-Local-only mods and files directly under `mod` are preserved. Distribution mods
-are replaced with the selected branch's contents and reloaded.
+`z.install.mod.all`は、1回の確認後に配布対象の全modを導入または更新します。ローカルだけのmodと`mod`直下のファイルは保持し、配布対象のmodを選択したブランチの内容で置換して読み込み直します。
 
-### Uninstall
+### アンインストール
 
 `z.uninstall`
 
-### Version
+### バージョン
 
 - `z.version`
-  - echo the current version
+  - 現在のバージョンを表示します。
 - `z.version.latest`
-  - echo the latest version from GitHub
+  - GitHubから最新バージョンを取得して表示します。
 - `z.version.note`
-  - echo the release note of the current version
+  - 現在のバージョンのリリースノートを表示します。
 - `z.version.latest.note`
-  - echo the release note of the latest version from GitHub
+  - GitHubから最新バージョンのリリースノートを取得して表示します。
 
-## Usage
+## 使い方
 
-### Help
+### ヘルプ
 
-`z.help` displays this README.
+`z.help`でこのREADMEを表示します。
 
-`z.help <function_name>` displays the function docs. If no doc block is found, it displays `Document not found`.
+`z.help <function_name>`で関数のドキュメントを表示します。ドキュメントのコメントが見つからない場合は`Document not found`と表示します。
 
-### Examples
+### 使用例
 
-Script to check if the number of arguments is more than 2.
+引数の数が2を超えているか確認するスクリプトです。
 
 ```zsh
 my.argument_check() {
@@ -70,7 +61,7 @@ my.argument_check() {
 }
 ```
 
-Test
+テスト
 ```zsh
 z.t.describe "my.argument_check"; {
   z.t.context "when more than max args"; {
@@ -102,141 +93,131 @@ z.t.describe "my.argument_check"; {
 }
 ```
 
-### Library
+### ライブラリ
 
-This library provides a set of utility functions for common tasks.
+よく使う処理を行うユーティリティ関数を提供します。
 
-Functions are namespaced with `z.` prefix.
-And modules are namespaced with `z.<module>.` prefix.
+関数は`z.`、モジュールは`z.<module>.`の接頭辞で名前空間を分けます。
 
-The following rules apply under lib.
+lib配下では次の規則を使います。
 
 - analysis
-  - Analyze without modifying the data.
-  - If the function has a return value, it is placed in `REPLY` (not `return`).
+  - データを変更せずに解析します。
+  - 値を返す場合は`return`ではなく`REPLY`へ格納します。
 - operator
-  - Check arguments and `return` true or false.
-  - If the function has a return value, it is returned (i.e. placed in the function's return value, not in `REPLY`).
-  - It can be used in if statements.
+  - 引数を判定し、trueまたはfalseを`return`します。
+  - 判定結果は`REPLY`ではなく、関数の終了コードで返します。
+  - if文の条件として使用できます。
 - process
-  - Modify the data.
-  - If the function has a return value, it is placed in `REPLY` (not `return`).
+  - データを変更します。
+  - 値を返す場合は`return`ではなく`REPLY`へ格納します。
 
-Return values are assigned directly to `REPLY`. Strings stay unchanged, and array
-results retain their elements, including empty strings.
+返す値は`REPLY`へ直接代入します。文字列を変換せず、配列の要素と空文字列もそのまま保持します。
 
-### Modules
+### モジュール
 
 - arg
-  - named and positional argument parsing
+  - 名前付き引数と位置引数の解析
 - arr
-  - join, split, unique...
+  - join、split、uniqueなど
 - common
-  - eq, is.null, guard...
+  - eq、is.null、guardなど
 - debug
-  - interactive debugging
+  - 対話形式のデバッグ
 - dir
-  - make, remove, exists...
+  - make、remove、existsなど
 - file
-  - read, write, make.with_dir...
+  - read、write、make.with_dirなど
 - fn
-  - list, show, edit...
+  - list、show、editなど
 - hash
-  - keys, values, merge...
+  - keys、values、mergeなど
 - int
-  - is.gteq, is.lteq, is.eq...
+  - is.gteq、is.lteq、is.eqなど
 - io
-  - is.empty, oneline, indent...
+  - is.empty、oneline、indentなど
 - mode
-  - interactive mode
+  - 対話モード
 - path
-  - dir, base, stem...
+  - dir、base、stemなど
 - perm
-  - chmod, chown, chgrp wrapper
+  - chmod、chown、chgrpのラッパー
 - status
-  - abstract exit status handling
+  - 終了コードの扱いをまとめた関数
 - str
-  - color, is.path_like, gsub...
+  - color、is.path_like、gsubなど
 - t
-  - testing framework
+  - テストフレームワーク
 - var
-  - exists, sets, get...
+  - exists、sets、getなど
 
-### Testing
+### テスト
 
-This library provides a testing framework for writing and running tests.
-Tests are written in zsh and use a RSpec-like syntax.
+テストを記述・実行するフレームワークを提供します。テストはZshで書き、RSpecに似た構文を使います。
 
-Run `z.t` to run all tests.
-z.t accepts the following options.
+全テストを実行するには`z.t`を使います。次のオプションを指定できます。
 
-`z.t` searches tests from the current directory.
-Run it from a directory whose path ends with `/test`.
-If the current directory is not `/test`, `z.t` returns an error.
+`z.t`は現在のディレクトリからテストを探します。パスが`/test`で終わるディレクトリで実行してください。それ以外のディレクトリではエラーを返します。
 
-`z_main` is the main test file that sets up the test environment and runs the tests.
-`z.t` looks for `main.zsh` in the test directory and sources it before running the tests.
+`z_main`には、テスト対象の`main.zsh`のパスが入ります。各テストはこのファイルをsourceして、テスト環境を読み込みます。
 
 - `-l, --log`
-  - Display test details.
+  - テストの詳細を表示します。
 - `-f, --failed`
-  - Display only failed tests.
+  - 失敗したテストだけを表示します。
 - `-c, --compact`
-  - Display compact dot output (`.` for success, `F` for failure, `*` for pending).
+  - 結果をドットで簡潔に表示します（`.`: 成功、`F`: 失敗、`*`: 保留）。
 - `<name|path>`
-  - Run matched tests only.
-  - If a directory path is provided (e.g. `z.t mod`), tests under the directory are collected recursively.
-  - If a test file path is provided (e.g. `z.t arg/process`), only that file is run.
+  - 一致するテストだけを実行します。
+  - ディレクトリ（例: `z.t mod`）なら配下のテストを再帰的に集めます。
+  - テストファイルのパス（例: `z.t arg/process`）ならそのファイルだけを実行します。
 
-Tests are placed in the `test` directory.
-Tests are namespaced with `z.t.` prefix.
-And modules are namespaced with `z.t.<module>.` prefix.
+テストは`test`ディレクトリに置きます。関数は`z.t.`、モジュールは`z.t.<module>.`の接頭辞で名前空間を分けます。
 
-The following rules apply under test.
+test配下では次の規則を使います。
 
 - describe
-  - Describe the function or feature being tested.
+  - テストする関数や機能を記述します。
 - xdescribe
-  - Skip the describe block.
+  - describeブロックをスキップします。
 - context
-  - Describe the context in which the tests are run.
+  - テストを実行する条件を記述します。
 - xcontext
-  - Skip the context block.
+  - contextブロックをスキップします。
 - it
-  - Describe the expected behavior of the function or feature.
+  - 関数や機能に期待する動作を記述します。
 - xit
-  - Skip the it block.
+  - itブロックをスキップします。
 - expect
-  - Assert the expected behavior of the function or feature.
-  - The expectation functions are namespaced with `z.t.expect.` prefix.
+  - 関数や機能の期待する動作を検証します。
+  - 検証関数は`z.t.expect.`の接頭辞で名前空間を分けます。
 - mock
-  - Mock a function or command.
-  - The mock is automatically restored after the test and assertion.
-  - If you want to skip restoring in assertion, use `skip_unmock` option.
-  - The mock result is placed in `REPLY`, not `return`.
-  - Modes:
-    - Default mode: Records function calls without executing original behavior.
-    - `call_original` mode: Executes original function after recording the call.
-      - `z.t.mock.call_original` function: Same as `call_original` mode.
-    - Provide custom behavior: You can provide custom behavior by passing a command as the second argument.
+  - 関数やコマンドをモックします。
+  - テストや検証の後にモックを自動で解除します。
+  - 検証時の解除を省略するには`skip_unmock`を指定します。
+  - モックの結果は`return`ではなく`REPLY`へ格納します。
+  - モード:
+    - 既定: 元の処理を実行せずに呼び出しを記録します。
+    - `call_original`: 呼び出しを記録して元の関数を実行します。
+      - `z.t.mock.call_original`も同じ動作です。
+    - 任意の処理: `behavior`引数にコマンドを渡して処理を指定できます。
 
-## Debug
+## デバッグ
 
-This library provides a debug function for interactive debugging.
+対話形式でデバッグする関数を提供します。
 
-### Using the Debug Function
+### デバッグ関数の使い方
 
-Call `z.debug` in your script to enter debug mode. When debug mode is enabled, the function will pause execution and provide an interactive prompt.
+スクリプト内で`z.debug`を呼ぶとデバッグモードに入ります。実行を一時停止し、対話プロンプトを表示します。
 
-To enable debug mode, use the `z.debug.enable` function.
-To disable debug mode, use the `z.debug.disable` function.
+デバッグモードを有効にするには`z.debug.enable`、無効にするには`z.debug.disable`を使います。
 
-Available commands in debug mode:
+デバッグモードで使えるコマンド:
 
-- `c` or `continue`: Continue execution.
-- `p <var>` or `print <var>`: Print the value of a variable.
-- `h` or `help`: Show help.
-- `q` or `quit` or `exit`: Exit the script.
+- `c`または`continue`: 実行を続けます。
+- `p <var>`または`print <var>`: 変数の値を表示します。
+- `h`または`help`: ヘルプを表示します。
+- `q`、`quit`、`exit`: スクリプトを終了します。
 
 ```zsh
 my.function() {
@@ -246,11 +227,9 @@ my.function() {
 }
 ```
 
-## Mode
+## 対話モード
 
-This library provides an interactive mode.
-It is similar to debug, but with a prefix applied to the functions being executed.
-For example, it is used in operations such as git, where the motivation is to avoid repeatedly typing 'git' as a prefix.
+関数の実行に接頭辞を付ける対話モードを提供します。デバッグに似ていますが、Git操作のように毎回gitと入力する手間を省くために使います。
 
 ```zsh
 $ z.mode git
@@ -270,62 +249,61 @@ z.io> q
 $
 ```
 
-## Modifier
+## mod
 
-This library provides modifiers that enhance the execution of your specific tasks.
-You will individually install the ones you wish to use.
+特定の作業を行うためのmodを提供します。使いたいものを個別に導入します。
 
-### Install or Update
+### 導入・更新
 
 `z.install.mod <mod_name>`
 
-Mod dependencies are resolved and installed first.
+依存するmodを解決し、先に導入します。
 
-### Uninstall
+### アンインストール
 
 `z.uninstall.mod <mod_name>`
 
-### List of Mods
+### mod一覧
 
 - `z.reload`
-  - Reload the home Zsh configuration. [README](mod/reload/README.md)
+  - ホームのZsh設定を読み直します。[README](mod/reload/README.md)
 - `z.pj`
-  - Named project directories and VS Code launcher. [README](mod/pj/README.md)
+  - 名前付きのプロジェクトディレクトリとVS Codeの起動。[README](mod/pj/README.md)
 - `z.git`
-  - Git command modifier. [README](mod/git/README.md)
+  - Git操作用のmod。[README](mod/git/README.md)
 - `z.wtproxy`
-  - Docker Compose worktree proxy modifier. [README](mod/wtproxy/README.md)
+  - Docker Composeとworktree用のプロキシmod。[README](mod/wtproxy/README.md)
 - `z.job`
-  - A very simple background job. [README](mod/job/README.md)
+  - 簡単なバックグラウンドジョブ。[README](mod/job/README.md)
 - `z.completion`
-  - Completing document or function names in the shell. [README](mod/completion/README.md)
+  - シェルでの関数名やドキュメントの補完。[README](mod/completion/README.md)
 
 ## Language Server
 
-This library provides a language server.
+Language Serverを提供します。
 
-Download: https://marketplace.visualstudio.com/items?itemName=milkeclair.z-ls
+ダウンロード: https://marketplace.visualstudio.com/items?itemName=milkeclair.z-ls
 
-### Features
+### 機能
 
-- Autocompletion
-  - Function names
-- Hover information
-  - name
-  - description
-  - parameters
-  - returns
-  - example
+- 補完
+  - 関数名
+- Hover表示
+  - 名前
+  - 説明
+  - 引数
+  - 返り値
+  - 使用例
 - Signature Help
-  - argument documentation
-- Go to definition
-- Diagnostics
-  - Function not found with suggestion
-  - Empty line
-    - Start of file
-    - Whitespace only line
-    - Final newline
-  - Unused function arguments
-  - Missing required positional arguments
-  - Missing required named arguments
-  - Suppression comment (`# zls: ignore`)
+  - 引数の説明
+- 定義への移動
+- 診断
+  - 関数が見つからない場合の候補提示
+  - 空行
+    - ファイル先頭
+    - 空白だけの行
+    - 末尾の改行
+  - 未使用の関数引数
+  - 必須の位置引数の不足
+  - 必須の名前付き引数の不足
+  - 抑制コメント（`# zls: ignore`）
