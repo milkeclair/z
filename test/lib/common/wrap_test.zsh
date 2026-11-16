@@ -80,6 +80,74 @@ z.t.describe "z.return"; {
       z.t.expect.reply.is.arr "value1" "value3"
     }
   }
+
+  z.t.context "keep_emptyが複数回指定される場合"; {
+    z.t.it "falseの間だけ指定を読み取り、true以降はデータとして残す"; {
+      () {
+        local REPLY
+        z.return keep_empty=false keep_empty=true keep_empty=false "a" "" "b"
+        local result_code=$?
+        local -a result=("${REPLY[@]}")
+
+        z.t.expect "$result_code" 0
+        z.t.expect "${#result[@]}" 4
+        z.t.expect "${result[1]}" "keep_empty=false"
+        z.t.expect "${result[2]}" "a"
+        z.t.expect "${result[3]}" ""
+        z.t.expect "${result[4]}" "b"
+      }
+    }
+  }
+
+  z.t.context "空文字と真偽値が複数要素として渡される場合"; {
+    z.t.it "要素数を判定してから空要素を除き、配列内の真偽値は変換しない"; {
+      () {
+        local REPLY
+        z.return "" true
+        local -a result=("${REPLY[@]}")
+
+        z.t.expect "${#result[@]}" 1
+        z.t.expect "${result[1]}" "true"
+      }
+    }
+  }
+
+  z.t.context "keep_emptyに数値または未知の値を渡す場合"; {
+    z.t.it "0をtrueとして扱い、未知の値では空要素を除く"; {
+      () {
+        local REPLY
+        z.return keep_empty=0 "a" "" "b"
+        local -a kept=("${REPLY[@]}")
+        z.return keep_empty=other "a" "" "b"
+        local -a dropped=("${REPLY[@]}")
+
+        z.t.expect "${#kept[@]}" 3
+        z.t.expect "${kept[2]}" ""
+        z.t.expect "${#dropped[@]}" 2
+        z.t.expect "${dropped[1]}" "a"
+        z.t.expect "${dropped[2]}" "b"
+      }
+    }
+  }
+
+  z.t.context "単一値を返す場合"; {
+    z.t.it "空白を含む値と終了ステータスを保持する"; {
+      () {
+        local REPLY=sentinel
+        z.return "two words"
+        local result_code=$?
+        local result_reply=$REPLY
+
+        z.t.expect "$result_code" 0
+        z.t.expect "$result_reply" "two words"
+      }
+    }
+
+    z.t.it "単独のkeep_empty指定は制御引数として消費する"; {
+      z.return keep_empty=other
+      z.t.expect.reply.is.null
+    }
+  }
 }
 
 z.t.describe "z.return.hash"; {

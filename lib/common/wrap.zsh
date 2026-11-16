@@ -19,27 +19,35 @@
 #  z.return "some string" #=> REPLY="some string"
 #  z.return "a" "b" "c"   #=> REPLY=("a" "b" "c")
 z.return() {
-  local keep_empty=false
-  local filtered_args=()
-
-  for arg in "$@"; do
-    if z.is.false $keep_empty && z.str.start_with "$arg" "keep_empty="; then
-      keep_empty=${arg#keep_empty=}
-    else
-      filtered_args+=("$arg")
+  if (( $# <= 1 )); then
+    local value=""
+    if (( $# == 1 )); then
+      arg=$1
+      [[ $arg == keep_empty=* ]] || value=$arg
     fi
-  done
+  else
+    local keep_empty=false
+    local filtered_args=()
 
-  if z.int.is.gt ${#filtered_args[@]} 1; then
-    if z.is.true $keep_empty; then
-      REPLY=("${filtered_args[@]}")
-    else
-      REPLY=(${filtered_args[@]})
+    for arg in "$@"; do
+      if [[ ( $keep_empty == false || $keep_empty == 1 ) && $arg == keep_empty=* ]]; then
+        keep_empty=${arg#keep_empty=}
+      else
+        filtered_args+=("$arg")
+      fi
+    done
+
+    if (( ${#filtered_args[@]} > 1 )); then
+      if [[ $keep_empty == true || $keep_empty == 0 ]]; then
+        REPLY=("${filtered_args[@]}")
+      else
+        REPLY=(${filtered_args[@]})
+      fi
+      return
     fi
-    return
+
+    local value=$filtered_args[1]
   fi
-
-  local value=$filtered_args[1]
 
   case $value in
   0|"true")
