@@ -155,27 +155,10 @@ z.cls.abort() {
 z.cls.new() {
   z.cls.store.ensure
 
-  if ! z.int.is.eq $# 2 || z.is.null "${z_cls_classes[$1]:-}" || ! z.cls.is.attribute "$2"; then
-    z.io.error "Expected an existing class and an ordinary instance variable name."
-    return 1
-  fi
+  z.cls.new.validate "$@" || return 1
 
   local z_cls_class=$1
   local z_cls_binding=$2
-
-  if [[ ${parameters[$z_cls_binding]:-} == *readonly* ||
-        ${parameters[$z_cls_binding]:-} == *array* ||
-        ${parameters[$z_cls_binding]:-} == *association* ||
-        ${parameters[$z_cls_binding]:-} == *integer* ||
-        ${parameters[$z_cls_binding]:-} == *float* ]]; then
-    z.io.error "Instance variable $z_cls_binding must be a writable scalar."
-    return 1
-  fi
-
-  if z.is.not.null "${z_cls_instances[${(P)z_cls_binding:-}]:-}"; then
-    z.io.error "Instance variable $z_cls_binding already holds a reference."
-    return 1
-  fi
 
   (( ++z_cls_next_id ))
 
@@ -227,26 +210,7 @@ z.cls.delete() {
     return 1
   fi
 
-  local z_cls_member
-
-  for z_cls_member in ${=z_cls_members[$z_cls_id]}; do
-    z_cls_wrapper_refs[$z_cls_member]=$(( z_cls_wrapper_refs[$z_cls_member] - 1 ))
-
-    if z.int.is.zero $z_cls_wrapper_refs[$z_cls_member]; then
-      if z.cls.instance.owns "$z_cls_member"; then
-        unfunction "$z_cls_member"
-      fi
-
-      unset "z_cls_wrapper_refs[$z_cls_member]" "z_cls_wrapper_bodies[$z_cls_member]"
-    fi
-  done
-
-  for z_cls_member in ${=z_cls_class_attrs[${z_cls_instances[$z_cls_id]}]}; do
-    unset "z_cls_values[$z_cls_id:$z_cls_member]"
-  done
-
-  # 未設定の要素参照でも管理ノードが残るため、activeも明示的に削除する。
-  unset "z_cls_instances[$z_cls_id]" "z_cls_members[$z_cls_id]" "z_cls_active[$z_cls_id]"
+  z.cls.instance.release "$z_cls_id"
 
   # IDの解決後に隔離し、argという参照名の動的な参照先を保つ。
   local arg=""

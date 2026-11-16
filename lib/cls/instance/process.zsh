@@ -13,100 +13,16 @@ z.cls.instance.call() {
   local z_cls_member=$3
 
   z.is.not.null "${z_cls_instances[$1]:-}" && z_cls_instance=$1
-
-  if z.is.null "${z_cls_instances[$z_cls_instance]:-}"; then
-    z.io.error "Instance reference $1 is not available in this scope."
-    return 1
-  fi
-
-  local z_cls_key="${z_cls_instances[$z_cls_instance]}:$z_cls_member"
-
-  if z.is.eq "$z_cls_operation" method; then
-    z.var.exists "z_cls_bodies[$z_cls_key]" || return 1
-  else
-    z.var.exists "z_cls_defaults[$z_cls_key]" || return 1
-  fi
-
+  z.cls.instance.call.validate "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$1" || return 1
   shift 3
 
   if z.is.not.null "${z_cls_active[$z_cls_instance]:-}"; then
-    if z.is.not.eq "${z_cls_current_instance:-}" "$z_cls_instance"; then
-      z.io.error "Instance $z_cls_instance is active in another instance call."
-      return 1
-    fi
-
     z.cls.instance.execute "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
-    return $?
+  elif z.is.eq "$z_cls_operation" method; then
+    z.cls.instance.call.run "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
+  else
+    z.cls.instance.call.access "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
   fi
-
-  if z.is.not.eq "$z_cls_operation" method; then
-    local z_cls_declaration=$z_cls_values[$z_cls_instance:$z_cls_member]
-    local z_cls_scalar_prefix="typeset -- $z_cls_member="
-    local z_cls_integer_prefix="typeset -i $z_cls_member="
-
-    if z.str.start_with "$z_cls_declaration" "$z_cls_scalar_prefix" ||
-        z.str.start_with "$z_cls_declaration" "$z_cls_integer_prefix"; then
-      if z.is.eq "$z_cls_operation" get; then
-        z.int.is.zero $# || return 1
-
-        local z_cls_literal=${z_cls_declaration#*=}
-
-        REPLY=${(Q)z_cls_literal}
-        return 0
-      fi
-
-      z.int.is.eq $# 1 || return 1
-
-      if z.str.start_with "$z_cls_declaration" "$z_cls_scalar_prefix"; then
-        z_cls_values[$z_cls_instance:$z_cls_member]="$z_cls_scalar_prefix${(qq)1}"
-        return 0
-      fi
-
-      if [[ $1 == <-> || $1 == -<-> ]]; then
-        local -i z_cls_numeric=$1
-
-        z_cls_values[$z_cls_instance:$z_cls_member]="$z_cls_integer_prefix${(qq)z_cls_numeric}"
-        return 0
-      fi
-    fi
-  fi
-
-  local z_cls_class=${z_cls_instances[$z_cls_instance]}
-  local -a z_cls_attributes=("$z_cls_member")
-
-  if z.is.not.eq "$z_cls_operation" get; then
-    z_cls_attributes=(${=z_cls_class_attrs[$z_cls_class]})
-  fi
-
-  local z_cls_attribute
-
-  for z_cls_attribute in "${z_cls_attributes[@]}"; do
-    eval "$z_cls_values[$z_cls_instance:$z_cls_attribute]"
-  done
-
-  local z_cls_current_instance=$z_cls_instance
-  local z_cls_result=0
-
-  z_cls_active[$z_cls_instance]=1
-  {
-    if z.cls.instance.execute "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"; then
-      z_cls_result=0
-    else
-      z_cls_result=$?
-    fi
-  } always {
-    if z.is.not.eq "$z_cls_operation" get; then
-      for z_cls_attribute in "${z_cls_attributes[@]}"; do
-        if ! z.cls.instance.snapshot "$z_cls_instance" "$z_cls_attribute"; then
-          z_cls_values[$z_cls_instance:$z_cls_attribute]="$(typeset -p "$z_cls_attribute")"
-        fi
-      done
-    fi
-
-    unset "z_cls_active[$z_cls_instance]"
-  }
-
-  return $z_cls_result
 }
 
 # Run a method in a child function scope, or access a restored attribute.
@@ -133,22 +49,10 @@ z.cls.instance.execute() {
       } "$@"
       ;;
     get)
-      z.int.is.zero $# || return 1
-
-      if [[ ${(tP)z_cls_name} == *array* || ${(tP)z_cls_name} == *association* ]]; then
-        REPLY=("${(@P)z_cls_name}")
-      else
-        REPLY=${(P)z_cls_name}
-      fi
+      z.cls.instance.execute.get "$z_cls_name" "$@"
       ;;
     set)
-      if [[ ${(tP)z_cls_name} == *array* || ${(tP)z_cls_name} == *association* ]]; then
-        set -A "$z_cls_name" "$@"
-      else
-        z.int.is.eq $# 1 || return 1
-
-        : ${(P)z_cls_name::=$1}
-      fi
+      z.cls.instance.execute.set "$z_cls_name" "$@"
       ;;
   esac
 }
@@ -200,4 +104,33 @@ z.cls.instance.snapshot() {
       return 1
       ;;
   esac
+}
+
+# Release a validated instance's commands and stored attributes.
+#
+# $1: existing inactive instance reference
+# REPLY: unchanged
+# return: 0
+z.cls.instance.release() {
+  local z_cls_id=$1
+  local z_cls_member
+
+  for z_cls_member in ${=z_cls_members[$z_cls_id]}; do
+    z_cls_wrapper_refs[$z_cls_member]=$(( z_cls_wrapper_refs[$z_cls_member] - 1 ))
+
+    if z.int.is.zero $z_cls_wrapper_refs[$z_cls_member]; then
+      if z.cls.instance.owns "$z_cls_member"; then
+        unfunction "$z_cls_member"
+      fi
+
+      unset "z_cls_wrapper_refs[$z_cls_member]" "z_cls_wrapper_bodies[$z_cls_member]"
+    fi
+  done
+
+  for z_cls_member in ${=z_cls_class_attrs[${z_cls_instances[$z_cls_id]}]}; do
+    unset "z_cls_values[$z_cls_id:$z_cls_member]"
+  done
+
+  # 未設定のactive要素も管理ノードを残すため、一緒に削除する。
+  unset "z_cls_instances[$z_cls_id]" "z_cls_members[$z_cls_id]" "z_cls_active[$z_cls_id]"
 }
