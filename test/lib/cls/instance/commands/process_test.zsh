@@ -15,7 +15,7 @@ z.t.describe "z.cls.instance.commands._validate"; {
     z.t.it "拒否する"; {
       z.cls.store._ensure
       existing_cls_command.run() {
-        z.return original
+        REPLY=original
       }
       z.t.mock name=z.io.error
 

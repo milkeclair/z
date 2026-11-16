@@ -119,8 +119,6 @@ z.cls.abort() {
   z.cls.store._ensure
   z.cls.capture._stop
 
-  # 共通getterのループ変数を呼出元のreadonly参照から隔離する。
-  local arg=""
   local REPLY=""
   local key
 
@@ -212,8 +210,6 @@ z.cls.delete() {
 
   z.cls.instance._release "$z_cls_id"
 
-  # IDの解決後に隔離し、argという参照名の動的な参照先を保つ。
-  local arg=""
   z.hash.count z_cls_instances
   if z.int.is.zero $REPLY; then
     # 全実体の削除後に空テーブルを作り直し、バケットと未設定ノードを解放する。

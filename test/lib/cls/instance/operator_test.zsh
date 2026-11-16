@@ -20,7 +20,7 @@ z.t.describe "z.cls.instance._owns"; {
       z.cls.store._ensure
       z.cls.instance.commands._install replaced_cls.run
       replaced_cls.run() {
-        z.return user
+        REPLY=user
       }
 
       z.cls.instance._owns replaced_cls.run

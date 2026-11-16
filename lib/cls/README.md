@@ -124,8 +124,9 @@ z-ls can include them with its showPrivateFunctions setting. This naming convent
 does not restrict Zsh from calling the functions directly.
 
 Shared z predicates validate integers, type flags, names and registry entries.
-Attribute access retains exact values and native parameter types; the normalizing
-z.return and z.var.get APIs would change literal false/null values and array shape.
+Shared collection getters preserve literal elements. Class accessors additionally
+retain scalar-versus-array result shape and resolve attributes in their owning
+scope through reserved internal parameter names.
 
 ## Runtime and editing
 
