@@ -73,3 +73,62 @@ z.process._pids() {
 
   z.return "${(@u)pids}"
 }
+
+# print process IDs, names and visible TCP listening ports
+# accepts at most one selector; with none, lists all processes
+#
+# $pid?: positive process ID
+# $port?: TCP listening port used to select processes
+# $name?: exact process name from ps comm
+# stdout: tab-separated PID, NAME and PORTS header and rows
+# REPLY: tab-separated rows without the header
+# return: 0 on success, otherwise 1
+#
+# example:
+#  z.process.list
+#  z.process.list port=3000
+z.process.list() {
+  local -A selected=()
+  local pid name
+  if z.arg.is.present "$@"; then
+    if ! z.process._pids "$@"; then
+      z.return
+      return 1
+    fi
+    for pid in "${REPLY[@]}"; do
+      selected[$pid]=true
+    done
+  fi
+
+  local listing="$(ps -A -o pid= -o comm=)" lookup_status=$?
+  if z.int.is.not.zero "$lookup_status"; then
+    z.io.error "Unable to list processes"
+    z.return
+    return 1
+  fi
+  if ! z.process.list._ports; then
+    return 1
+  fi
+  local -A ports=($REPLY)
+
+  local rows=()
+  while IFS=$' \t' read -r pid name; do
+    z.is.null "$pid" && continue
+    if z.arg.is.present "$@" && z.is.not.eq "${selected[$pid]:-}" true; then
+      continue
+    fi
+    rows+=("$pid"$'\t'"$name"$'\t'"${ports[$pid]:--}")
+  done <<< "$listing"
+
+  if z.arg.is.present "$@" && z.int.is.zero ${#rows}; then
+    z.io.error "No matching process: $1"
+    z.return
+    return 1
+  fi
+
+  z.arr.join.line "${rows[@]}"
+  local result=$REPLY
+  z.io.literal $'PID\tNAME\tPORTS'
+  z.is.not.null "$result" && z.io.literal "$result"
+  z.return "$result"
+}
