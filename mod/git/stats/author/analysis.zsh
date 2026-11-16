@@ -1,10 +1,12 @@
-# get all author names from git log
+# Gitのログから作成者名をすべて取得する
 #
-# REPLY: array of author names
+# REPLY: 作成者名の配列
 # return: null
 #
 # example:
-#   z.git.stats._author.names #=> ("Alice" "Bob" "Charlie")
+#  # コミットの作成者がAlice、Bob、Charlieだけの場合
+#  z.git.stats._author.names
+#  # REPLY: ("Alice" "Bob" "Charlie")
 z.git.stats._author.names() {
   local author_name="%an"
   local strip_regex="^[[:space:]]*//;s/[[:space:]]*$"

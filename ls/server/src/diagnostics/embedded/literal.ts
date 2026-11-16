@@ -4,7 +4,7 @@ import { ansiEscape, doubleEscape } from '../../zshParser/lexer/delimiter/heredo
 export type SourceSpan = { readonly start: number; readonly end: number };
 export type DecodedLiteral = { readonly text: string; readonly spans: readonly SourceSpan[] };
 
-/** Remove static shell quoting while retaining the physical span of each UTF-16 unit. */
+/** UTF-16の各単位に対応する物理的な範囲を保ち、静的なシェルの引用を取り除く。 */
 export function decodeLiteral(word: WordNode): DecodedLiteral | null {
   if (word.parts.some(part => part.kind !== 'stringLiteral')) return null;
   const raw = word.raw;
@@ -69,7 +69,7 @@ export function decodeLiteral(word: WordNode): DecodedLiteral | null {
   return text.includes('\0') || !text.isWellFormed() ? null : { text, spans };
 }
 
-/** Drop a decoded named-argument prefix without discarding its source-coordinate mapping. */
+/** 元ソースとの位置対応を保ちながら、復号済みの名前付き引数から接頭辞を取り除く。 */
 export function literalValue(source: DecodedLiteral, prefix: number): DecodedLiteral {
   return { text: source.text.slice(prefix), spans: source.spans.slice(prefix) };
 }

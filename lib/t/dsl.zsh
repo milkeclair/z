@@ -10,14 +10,17 @@ z.is.eq $z_mode "test" && {
   }
 }
 
-# mark the test suite as having command not found error
+# テストスイートでcommand not foundエラーが発生したことを記録する
 #
-# $message: error message
+# $message: エラーメッセージ
 # REPLY: null
-# return: 127(command not found)
+# return: 127（コマンドが見つからない）
 #
 # example:
-#  z.t.mark_not_found_error message="command not found: ls"
+#  # シェルPIDが100の場合
+#  z.t._mark_not_found_error message="command not found: ls"
+#  # return: 127
+#  # 結果: /tmp/z_t_error_100へメッセージが記録される
 z.t._mark_not_found_error() {
   z.arg.named message $@ && local message=$REPLY
 

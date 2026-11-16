@@ -1,13 +1,14 @@
-# expect that last command's exit status equals expect
+# 直前のコマンドの終了コードが期待値と等しいことを検証する
 #
-# $1: expected status (0 for true, 1 for false, "true" for 0, "false" for 1)
-# $skip_unmock?: skip_unmock
+# $1: 期待する終了コード（0は成功、非0は失敗。文字列"true"は0、"false"は1に変換する）
+# $skip_unmock?: モック解除を省略するか
 # REPLY: null
 # return: null
 #
 # example:
-#  some_command
+#  true
 #  z.t.expect.status 0
+#  # 結果: 検証成功（失敗件数は増えない）
 z.t.expect.status() {
   z.status
   local actual=$REPLY

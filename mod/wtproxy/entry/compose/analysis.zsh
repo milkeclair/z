@@ -1,11 +1,14 @@
-# build Docker Compose project name for a worktree
+# worktree用のDocker Composeプロジェクト名を組み立てる
 #
-# $1: branch label
-# REPLY: compose project name
-# return: 0 if configuration is available, otherwise 1
+# $1: ブランチのラベル
+# REPLY: Composeのプロジェクト名
+# return: 設定を取得できた場合は0、それ以外は1
 #
 # example:
+#  # 設定のprojectがsampleの場合
 #  z.wtproxy._entry.compose.name feat/example
+#  # REPLY: "sample_feat_example_b671591e"
+#  # return: 0
 z.wtproxy._entry.compose.name() {
   local branch=$1
 

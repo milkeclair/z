@@ -1,10 +1,14 @@
-# collect visible TCP listening ports, grouped by PID
+# 取得可能なTCP待受ポートをPIDごとにまとめる
 #
-# REPLY: PID/port-list key-value pairs; empty when no listeners are reported
-# return: 0 on success, otherwise 1
+# REPLY: PIDとポート一覧のキー・値の組。待受が報告されなければ空
+# return: 成功時は0、それ以外は1
 #
 # example:
+#  # PID12345がTCP80と3000を待ち受けている場合
 #  z.process.list._ports
+#  local -A ports=($REPLY)
+#  # ports[12345]: "80,3000"
+#  # return: 0
 z.process.list._ports() {
   local listing="$(lsof -nP -w -iTCP -sTCP:LISTEN -Fpn 2>&1)" lookup_status=$?
   REPLY=()

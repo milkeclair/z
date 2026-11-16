@@ -1,10 +1,15 @@
-# get wtproxy configuration
+# wtproxyの設定を取得する
 #
-# REPLY: configuration hash as key-value pairs
+# REPLY: 設定のキーと値の組
 # return: null
 #
 # example:
+#  # Gitプロジェクト名がsample、XDG_STATE_HOME=/tmp/stateの場合
 #  z.wtproxy._config
+#  local -A config=($REPLY)
+#  # config[project]: "sample"
+#  # config[state_file]: "/tmp/state/wtproxy/sample.state"
+#  # config[host]: "127.0.0.1"
 z.wtproxy._config() {
   z.wtproxy._config.values
   local -A config=("${(@)REPLY}")
@@ -27,14 +32,17 @@ z.wtproxy._config() {
   z.hash.entries config
 }
 
-# get a single wtproxy configuration value
+# wtproxyの設定値を1つ取得する
 #
-# $1: configuration key
-# REPLY: configuration value
-# return: 0 if configuration is available, otherwise 1
+# $1: 設定キー
+# REPLY: 設定値
+# return: 設定を取得できた場合は0、それ以外は1
 #
 # example:
+#  # Gitプロジェクト名がsample、XDG_STATE_HOME=/tmp/stateの場合
 #  z.wtproxy._config.value state_file
+#  # REPLY: "/tmp/state/wtproxy/sample.state"
+#  # return: 0
 z.wtproxy._config.value() {
   local config_key=$1
 
@@ -43,13 +51,16 @@ z.wtproxy._config.value() {
   REPLY="${config[$config_key]}"
 }
 
-# get wtproxy configuration values from defaults, file settings, and environment
+# 既定値・ファイル設定・環境変数からwtproxyの設定値を取得する
 #
-# REPLY: configuration hash as key-value pairs
+# REPLY: 設定のキーと値の組
 # return: null
 #
 # example:
+#  # ファイル・環境変数による上書きがない場合
 #  z.wtproxy._config.values
+#  local -A config=($REPLY)
+#  # config: proxy_port_1=3000、proxy_port_2=5432、proxy_port_3=5173
 z.wtproxy._config.values() {
   local -A config=("${(@kv)z_wtproxy_default_config_values}")
 

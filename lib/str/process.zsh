@@ -10,29 +10,31 @@ typeset -gA z_color_palette=(
   [reset]=$'\033[0m'
 )
 
-# get color code by name
+# 名前からカラーコードを取得する
 #
-# $1: color name
-# REPLY: color code
+# $1: 色
+# REPLY: カラーコード
 # return: null
 #
 # example:
-#  z.str.color red #=> "\033[31m"
+#  z.str.color red
+#  # REPLY: $'\033[31m'
 z.str.color() {
   local selected=$1
 
   REPLY=${z_color_palette[$selected]}
 }
 
-# indent a string with specified level
+# 指定した段階で文字列をインデントする
 #
-# $level: indent level (number of 2-space indents)
-# $message: string to indent
-# REPLY: indented string
+# $level: インデント（空白2個を1段階とする）
+# $message: インデントする文字列
+# REPLY: インデントした文字列
 # return: null
 #
 # example:
-#  z.str.indent level=2 message="Hello" #=> "    Hello"
+#  z.str.indent level=2 message="Hello"
+#  # REPLY: "    Hello"
 z.str.indent() {
   z.arg.named level $@ && local level=$REPLY
   z.arg.named message $@ && local message=$REPLY
@@ -49,15 +51,16 @@ z.str.indent() {
   REPLY="${indent}${message}"
 }
 
-# split a string by a delimiter
+# 文字列を区切りで分割する
 #
-# $str: string to split
-# $delimiter?: delimiter (default: "|")
-# REPLY: array of split strings
+# $str: 分割する文字列
+# $delimiter?: 区切り文字（既定: "|"）
+# REPLY: 分割した文字列の配列
 # return: null
 #
 # example:
-#  z.str.split str="apple|banana|cherry" delimiter=| #=> ("apple" "banana" "cherry")
+#  z.str.split str="apple|banana|cherry" delimiter="|"
+#  # REPLY: ("apple" "banana" "cherry")
 z.str.split() {
   z.arg.named str $@ && local str=$REPLY
   z.arg.named delimiter $@ default="|" && local delimiter=$REPLY
@@ -66,17 +69,19 @@ z.str.split() {
   REPLY=(${=str})
 }
 
-# split a string into two parts at the first delimiter match
+# 区切りに最初に一致する位置で文字列を2つに分割する
 #
-# $1: original string
-# $2: delimiter regex or literal string
-# $literal?: if true, treat delimiter as a literal string (default: false)
-# REPLY: array of left and right strings
+# $1: 元の文字列
+# $2: 区切り文字の正規表現または文字列
+# $literal?: trueなら区切りを通常の文字列として扱う（既定: false）
+# REPLY: 左側と右側の文字列の配列
 # return: null
 #
 # example:
-#  z.str.partition "p foo bar" "[[:space:]]+" #=> ("p" "foo bar")
-#  z.str.partition "a[0-9]b" "[0-9]" literal=true #=> ("a" "b")
+#  z.str.partition "p foo bar" "[[:space:]]+"
+#  # REPLY: ("p" "foo bar")
+#  z.str.partition "a[0-9]b" "[0-9]" literal=true
+#  # REPLY: ("a" "b")
 z.str.partition() {
   z.arg.named literal $@ default=false && local literal=$REPLY
   z.arg.named.shift literal $@
@@ -124,15 +129,16 @@ z.str.partition() {
   fi
 }
 
-# match a string against a regex
+# 文字列を正規表現と照合する
 #
-# $1: string
-# $2: regex
-# REPLY: matched string
+# $1: 文字列
+# $2: 正規表現
+# REPLY: 一致した文字列
 # return: null
 #
 # example:
-#  z.str.match "helloWorld" "[a-z]+" #=> "hello"
+#  z.str.match "helloWorld" "[a-z]+"
+#  # REPLY: "hello"
 z.str.match() {
   local str=$1
   local regex=$2
@@ -140,19 +146,22 @@ z.str.match() {
   [[ $str =~ $regex ]] && REPLY="$MATCH" || REPLY=""
 }
 
-# global substitute in a string
+# 文字列全体を置換する
 #
-# $str: original string
-# $search: search regex or literal string
-# $replace: replace string
-# $literal?: if true, treat search as a literal string (default: false)
-# REPLY: modified string
+# $str: 元の文字列
+# $search: 検索する正規表現または文字列
+# $replace: 置換後の文字列
+# $literal?: trueなら検索対象を通常の文字列として扱う（既定: false）
+# REPLY: 変更後の文字列
 # return: null
 #
 # example:
-#  z.str.gsub str="Hello World" search="World" replace="Zsh" #=> "Hello Zsh"
-#  z.str.gsub str="Hello123World" search="[0-9]" replace="-" #=> "Hello---World"
-#  z.str.gsub str="a[0-9]b" search="[0-9]" replace="X" literal=true #=> "aXb"
+#  z.str.gsub str="Hello World" search="World" replace="Zsh"
+#  # REPLY: "Hello Zsh"
+#  z.str.gsub str="Hello123World" search="[0-9]" replace="-"
+#  # REPLY: "Hello---World"
+#  z.str.gsub str="a[0-9]b" search="[0-9]" replace="X" literal=true
+#  # REPLY: "aXb"
 z.str.gsub() {
   z.arg.named str $@ && local str=$REPLY
   z.arg.named search $@ && local search=$REPLY
@@ -191,42 +200,45 @@ z.str.gsub() {
   fi
 }
 
-# convert string to uppercase
+# 文字列を大文字に変換する
 #
-# $1: original string
-# REPLY: uppercase string
+# $1: 元の文字列
+# REPLY: 大文字の文字列
 # return: null
 #
 # example:
-#  z.str.upcase "hello" #=> "HELLO"
+#  z.str.upcase "hello"
+#  # REPLY: "HELLO"
 z.str.upcase() {
   local str=$1
 
   REPLY=${(U)str}
 }
 
-# convert string to lowercase
+# 文字列を小文字に変換する
 #
-# $1: original string
-# REPLY: lowercase string
+# $1: 元の文字列
+# REPLY: 小文字の文字列
 # return: null
 #
 # example:
-#  z.str.downcase "HELLO" #=> "hello"
+#  z.str.downcase "HELLO"
+#  # REPLY: "hello"
 z.str.downcase() {
   local str=$1
 
   REPLY=${(L)str}
 }
 
-# convert string to camelCase
+# 文字列をcamelCaseに変換する
 #
-# $1: original string
-# REPLY: camelCase string
+# $1: 元の文字列
+# REPLY: camelCase形式の文字列
 # return: null
 #
 # example:
-#  z.str.camelize "hello_world" #=> "helloWorld"
+#  z.str.camelize "hello_world"
+#  # REPLY: "helloWorld"
 z.str.camelize() {
   local str=$1
   local result=""
@@ -255,14 +267,15 @@ z.str.camelize() {
   REPLY=${(L)result[1]}${result[2,-1]}
 }
 
-# convert string to PascalCase
+# 文字列をPascalCaseに変換する
 #
-# $1: original string
-# REPLY: PascalCase string
+# $1: 元の文字列
+# REPLY: PascalCase形式の文字列
 # return: null
 #
 # example:
-#  z.str.pascalize "hello_world" #=> "HelloWorld"
+#  z.str.pascalize "hello_world"
+#  # REPLY: "HelloWorld"
 z.str.pascalize() {
   local str=$1
   local result=""
@@ -291,14 +304,15 @@ z.str.pascalize() {
   REPLY=$result
 }
 
-# convert string to CONSTANTIZE format
+# 文字列をCONSTANTIZE形式に変換する
 #
-# $1: original string
-# REPLY: CONSTANTIZE string
+# $1: 元の文字列
+# REPLY: CONSTANTIZE形式の文字列
 # return: null
 #
 # example:
-#  z.str.constantize "helloWorld" #=> "HELLO_WORLD"
+#  z.str.constantize "helloWorld"
+#  # REPLY: "HELLOWORLD"
 z.str.constantize() {
   local str=$1
   local result=""
@@ -324,45 +338,49 @@ z.str.constantize() {
   REPLY=$result
 }
 
-# convert string to underscore_case
+# 文字列をunderscore_caseに変換する
 #
-# $1: original string
-# REPLY: underscore_case string
+# $1: 元の文字列
+# REPLY: underscore_case形式の文字列
 # return: null
 #
 # example:
-#  z.str.underscore "helloWorld" #=> "hello_world"
+#  z.str.underscore "helloWorld"
+#  # REPLY: "hello_world"
 z.str.underscore() {
   local str=$1
 
   z.str.delimitize $str delimiter="_" replace_chars="[ -]"
 }
 
-# convert string to kebab-case
+# 文字列をkebab-caseに変換する
 #
-# $1: original string
-# REPLY: kebab-case string
+# $1: 元の文字列
+# REPLY: kebab-case形式の文字列
 # return: null
 #
 # example:
-#  z.str.kebabize "helloWorld" #=> "hello-world"
+#  z.str.kebabize "helloWorld"
+#  # REPLY: "hello-world"
 z.str.kebabize() {
   local str=$1
 
   z.str.delimitize $str delimiter="-" replace_chars="[ _]"
 }
 
-# convert string by inserting delimiters
+# 区切り文字を挿入して文字列を変換する
 #
-# $delimiter: delimiter to insert
-# $replace_chars: characters to replace with delimiter (default: "[ _-]")
-# $1: original string
-# REPLY: converted string
+# $delimiter: 挿入する区切り文字
+# $replace_chars: 区切り文字へ置換する文字（既定: "[ _-]"）
+# $1: 元の文字列
+# REPLY: 変換した文字列
 # return: null
 #
 # example:
-#  z.str.delimitize delimiter="_" "helloWorld" #=> "hello_world"
-#  z.str.delimitize delimiter="-" replace_chars="[ _]" "hello world_test" #=> "hello-world-test"
+#  z.str.delimitize delimiter="_" "helloWorld"
+#  # REPLY: "hello_world"
+#  z.str.delimitize delimiter="-" replace_chars="[ _]" "hello world_test"
+#  # REPLY: "hello-world-test"
 z.str.delimitize() {
   z.arg.named delimiter $@ && local delimiter=$REPLY
   z.arg.named replace_chars $@ default="[ _-]" && local replace_chars=$REPLY
@@ -379,55 +397,57 @@ z.str.delimitize() {
     fi
   }
 
-  # insert delimiter before uppercase letters
-  # e.g., "helloWorld" -> "hello_World" (if delimiter is "_")
+  # 大文字の前へ区切り文字を挿入する
+  # 例: "helloWorld" -> "hello_World"（区切りが"_"の場合）
   z.str.gsub str="$str" search="[A-Z]" replace='${delimiter}${MATCH}'
   result=${(L)REPLY}
 
-  # replace specified characters with delimiter
-  # e.g., "hello world-test" -> "hello_world_test" (if delimiter is "_", replace_chars is "[ -]")
+  # 指定した文字を区切り文字へ置換する
+  # 例: "hello world-test" -> "hello_world_test"（区切りが"_"、replace_charsが"[ -]"の場合）
   z.str.gsub str="$result" search="$replace_chars" replace="${delimiter}"
   result=$REPLY
 
-  # remove consecutive delimiters
-  # e.g., "hello__world" -> "hello_world" (if delimiter is "_")
+  # 連続する区切り文字をまとめる
+  # 例: "hello__world" -> "hello_world"（区切りが"_"の場合）
   while z.str.includes "$result" "${delimiter}${delimiter}"; do
     z.str.gsub str="$result" search="${delimiter}${delimiter}" replace="${delimiter}" literal=true
     result=$REPLY
   done
 
-  # remove leading delimiter
-  # e.g., "_hello_world" -> "hello_world" (if delimiter is "_")
+  # 先頭の区切り文字を取り除く
+  # 例: "_hello_world" -> "hello_world"（区切りが"_"の場合）
   z.str.remove.prefix "$result" "$delimiter"
   result=$REPLY
 
   REPLY=${(L)result}
 }
 
-# make string visible (escape non-printable characters)
+# 文字列を可視化する（表示できない文字をエスケープする）
 #
-# $1: original string
-# REPLY: visible string
+# $1: 元の文字列
+# REPLY: 可視化した文字列
 # return: null
 #
 # example:
-#  z.str.visible $'\nHello\tWorld' #=> '\nHello\tWorld'
+#  z.str.visible $'\nHello\tWorld'
+#  # REPLY: '\nHello\tWorld'
 z.str.visible() {
   local str=$1
 
   REPLY=${(V)str}
 }
 
-# left-justify a string with specified width and fill character
+# 指定した幅と埋める文字で文字列を左寄せする
 #
-# $width: total width of the resulting string
-# $fill?: fill character (default: space)
-# $1: original string
-# REPLY: left-justified string
+# $width: 結果の文字列の幅
+# $fill?: 埋める文字（既定: 空白）
+# $1: 元の文字列
+# REPLY: 左寄せした文字列
 # return: null
 #
 # example:
-#  z.str.ljust width=10 fill="." "Hi" #=> "Hi........"
+#  z.str.ljust width=10 fill="." "Hi"
+#  # REPLY: "Hi........"
 z.str.ljust() {
   z.arg.named width $@ && local width=$REPLY
   z.arg.named fill $@ default=" " && local fill=$REPLY
@@ -450,16 +470,17 @@ z.str.ljust() {
   REPLY="${str}${padding}"
 }
 
-# right-justify a string with specified width and fill character
+# 指定した幅と埋める文字で文字列を右寄せする
 #
-# $width: total width of the resulting string
-# $fill?: fill character (default: space)
-# $1: original string
-# REPLY: right-justified string
+# $width: 結果の文字列の幅
+# $fill?: 埋める文字（既定: 空白）
+# $1: 元の文字列
+# REPLY: 右寄せした文字列
 # return: null
 #
 # example:
-#  z.str.rjust width=10 fill="." "Hi" #=> "........Hi"
+#  z.str.rjust width=10 fill="." "Hi"
+#  # REPLY: "........Hi"
 z.str.rjust() {
   z.arg.named width $@ && local width=$REPLY
   z.arg.named fill $@ default=" " && local fill=$REPLY
@@ -482,14 +503,15 @@ z.str.rjust() {
   REPLY="${padding}${str}"
 }
 
-# trim leading and trailing whitespace from a string
+# 文字列の前後の空白を取り除く
 #
-# $1: original string
-# REPLY: trimmed string
+# $1: 元の文字列
+# REPLY: 前後の空白を除いた文字列
 # return: null
 #
 # example:
-#  z.str.trim "  Hello World  " #=> "Hello World"
+#  z.str.trim "  Hello World  "
+#  # REPLY: "Hello World"
 z.str.trim() {
   local str=$1
 

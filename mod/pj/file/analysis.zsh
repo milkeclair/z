@@ -1,23 +1,28 @@
-# get the project registry directory
+# プロジェクトの登録ディレクトリを取得する
 #
-# REPLY: registry directory path
+# REPLY: 登録先ディレクトリのパス
 # return: null
 #
 # example:
+#  local XDG_CONFIG_HOME=/tmp/config
 #  z.pj.file._root
+#  # REPLY: "/tmp/config/z/pj"
 z.pj.file._root() {
   local config_home=${XDG_CONFIG_HOME:-$HOME/.config}
   REPLY="$config_home/z/pj"
 }
 
-# get a validated project registration file path
+# 検証済みのプロジェクト登録ファイルのパスを取得する
 #
-# $1: project name
-# REPLY: registration file path, or empty on failure
+# $1: プロジェクト名
+# REPLY: 登録ファイルのパス。失敗時は空
 # return: 0|1
 #
 # example:
+#  local XDG_CONFIG_HOME=/tmp/config
 #  z.pj.file._path some_project
+#  # REPLY: "/tmp/config/z/pj/some_project"
+#  # return: 0
 z.pj.file._path() {
   local name=$1
   if ! z.pj.name.is.valid "$name"; then
@@ -30,13 +35,15 @@ z.pj.file._path() {
   REPLY="$REPLY/$name"
 }
 
-# get registered project names in filename order
+# ファイル名順に登録済みのプロジェクト名を取得する
 #
-# REPLY: array of project names
+# REPLY: プロジェクト名の配列
 # return: null
 #
 # example:
+#  # firstとsecondの有効な登録ファイルがある場合
 #  z.pj.file._names
+#  # REPLY: ("first" "second")
 z.pj.file._names() {
   z.pj.file._root
   local registry=$REPLY
@@ -50,14 +57,17 @@ z.pj.file._names() {
   REPLY=("${names[@]}")
 }
 
-# read the directory stored in a project registration
+# プロジェクト登録に保存されたディレクトリを読む
 #
-# $1: project name
-# REPLY: registered directory, or empty on failure
+# $1: プロジェクト名
+# REPLY: 登録されたディレクトリ。失敗時は空
 # return: 0|1
 #
 # example:
+#  # some_projectの登録先が/tmp/exampleの場合
 #  z.pj.file._directory some_project
+#  # REPLY: "/tmp/example"
+#  # return: 0
 z.pj.file._directory() {
   z.pj.file._path "$1" || return 1
   local file=$REPLY

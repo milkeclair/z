@@ -465,7 +465,7 @@ describe('server@hydration stdio', () => {
       await client.initialize(root, true);
       await client.open(caller, 'z.');
       await client.items(caller);
-      // Observe a refresh after registration to establish the incremental path.
+      // 登録後の更新を確認し、差分更新の経路に入ったことを確かめる。
       await expect.poll(() => client.refreshRequests.length).toBeGreaterThan(0);
       fs.writeFileSync(definition, 'z.disk() { : }\n');
       await client.edit(caller, 'z.d', 2);

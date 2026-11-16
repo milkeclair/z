@@ -13,7 +13,7 @@ type FunctionProjection = {
 };
 export type FileFunctionProjections = ReadonlyMap<ZshFileHydration, FunctionProjection>;
 
-/** Reuse current file projections and merge candidates in hydrator order. */
+/** 現在のファイル単位の変換結果を再利用し、hydratorの順序で候補を統合する。 */
 export function projectFunctions(
   hydrator: ZshHydrator, previous: FileFunctionProjections = new Map(),
 ): FunctionProjection & { readonly fileProjections: FileFunctionProjections } {
@@ -34,7 +34,7 @@ export function projectFunctions(
   return { functions, targets, fileProjections };
 }
 
-/** Derive the compatibility view and definition targets for one hydrated file. */
+/** 情報を付加した1ファイルから、互換用の情報と定義の参照先を取り出す。 */
 function projectFileFunctions(entry: ZshFileHydration): FunctionProjection {
   const functions: Func[] = [];
   const targets = new Map<string, FunctionTarget[]>();

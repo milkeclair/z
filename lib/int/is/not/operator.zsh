@@ -1,26 +1,32 @@
-# check if the value is not an integer
+# 値が整数でないか確認する
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #
 # example:
-#  z.int.is.not.match "123" && z.io "is not integer" || z.io "is integer"
+#  z.int.is.not.match "123"
+#  # return: 1
+#  z.int.is.not.match "abc"
+#  # return: 0
 z.int.is.not.match() {
   local value=$1
 
   [[ $value != <-> && $value != -<-> && $value != +<-> ]]
 }
 
-# compare two integers (not equal)
+# 2つの整数を比較する（等しくない）
 #
-# $1: base
-# $2: other
+# $1: 基準値
+# $2: 比較する値
 # REPLY: null
 # return: 0|1
 #
 # example:
-#  z.int.is.not.eq 123 456 && z.io "not equal" || z.io "equal"
+#  z.int.is.not.eq 123 456
+#  # return: 0
+#  z.int.is.not.eq 123 123
+#  # return: 1
 z.int.is.not.eq() {
   local a=$1
   local b=$2
@@ -31,14 +37,17 @@ z.int.is.not.eq() {
   (( a != b ))
 }
 
-# check if the value is not zero
+# 値が0でないか確認する
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #
 # example:
-#  z.int.is.not.zero 123 && z.io "is not zero" || z.io "is zero"
+#  z.int.is.not.zero 123
+#  # return: 0
+#  z.int.is.not.zero 0
+#  # return: 1
 z.int.is.not.zero() {
   local value=$1
 

@@ -1,12 +1,12 @@
-# get the directory part of a file path
+# ファイルパスのディレクトリ部分を取得する
 #
-# $1: file path
-# REPLY: directory path
+# $1: ファイルのパス
+# REPLY: ディレクトリのパス
 # return: null
 #
 # example:
-#   z.path.dir "/usr/local/bin/script.sh"
-#   echo $REPLY  # outputs "/usr/local/bin"
+#  z.path.dir "/usr/local/bin/script.sh"
+#  # REPLY: "/usr/local/bin"
 z.path.dir() {
   local filepath=$1
 
@@ -15,15 +15,15 @@ z.path.dir() {
   REPLY=${filepath:h}
 }
 
-# get the base name of a file path
+# ファイルパスのベース名を取得する
 #
-# $1: file path
-# REPLY: base name
+# $1: ファイルのパス
+# REPLY: ベース名
 # return: null
 #
 # example:
-#   z.path.base "/usr/local/bin/script.sh"
-#   echo $REPLY  # outputs "script.sh"
+#  z.path.base "/usr/local/bin/script.sh"
+#  # REPLY: "script.sh"
 z.path.base() {
   local filepath=$1
 
@@ -32,15 +32,15 @@ z.path.base() {
   REPLY=${filepath:t}
 }
 
-# get the stem (base name without extension) of a file path
+# ファイルパスから拡張子を除いたベース名を取得する
 #
-# $1: file path
-# REPLY: stem
+# $1: ファイルのパス
+# REPLY: 拡張子を除いたベース名
 # return: null
 #
 # example:
-#   z.path.stem "/usr/local/bin/script.sh"
-#   echo $REPLY  # outputs "script"
+#  z.path.stem "/usr/local/bin/script.sh"
+#  # REPLY: "script"
 z.path.stem() {
   local filepath=$1
 
@@ -50,15 +50,15 @@ z.path.stem() {
   REPLY=${base:r}
 }
 
-# get the extension of a file path
+# ファイルパスの拡張子を取得する
 #
-# $1: file path
-# REPLY: extension
+# $1: ファイルのパス
+# REPLY: 拡張子
 # return: null
 #
 # example:
-#   z.path.ext "/usr/local/bin/script.sh"
-#   echo $REPLY  # outputs "sh"
+#  z.path.ext "/usr/local/bin/script.sh"
+#  # REPLY: "sh"
 z.path.ext() {
   local filepath=$1
 
@@ -68,15 +68,17 @@ z.path.ext() {
   REPLY=${base:e}
 }
 
-# get the real (absolute and symlink-resolved) path
+# 実パスを取得する（絶対パスにし、シンボリックリンクを解決する）
 #
-# $1: file path
-# REPLY: real path
+# $1: ファイルのパス
+# REPLY: 実パス
 # return: null
 #
 # example:
-#   z.path.real "./script.sh"
-#   echo $REPLY  # outputs "/home/user/current/script.sh"
+#  # /tmp/z-exampleにscript.shがあり、シンボリックリンクを含まない場合
+#  # カレントディレクトリは/tmp/z-example
+#  z.path.real "./script.sh"
+#  # REPLY: "/tmp/z-example/script.sh"
 z.path.real() {
   local filepath=$1
 
@@ -85,15 +87,16 @@ z.path.real() {
   REPLY=${filepath:A}
 }
 
-# get the absolute path
+# 絶対パスを取得する
 #
-# $1: file path
-# REPLY: absolute path
+# $1: ファイルのパス
+# REPLY: 絶対パス
 # return: null
 #
 # example:
-#   z.path.abs "./script.sh"
-#   echo $REPLY  # outputs "/home/user/current/script.sh"
+#  # カレントディレクトリが/tmp/z-exampleの場合
+#  z.path.abs "./script.sh"
+#  # REPLY: "/tmp/z-example/script.sh"
 z.path.abs() {
   local filepath=$1
 
@@ -102,15 +105,15 @@ z.path.abs() {
   REPLY=${filepath:a}
 }
 
-# convert path to lowercase
+# パスを小文字に変換する
 #
-# $1: file path
-# REPLY: lowercase path
+# $1: ファイルのパス
+# REPLY: 小文字のパス
 # return: null
 #
 # example:
-#   z.path.downcase "/UsR/LoCaL/Bin/ScRiPt.Sh"
-#   echo $REPLY  # outputs "/usr/local/bin/script.sh"
+#  z.path.downcase "/UsR/LoCaL/Bin/ScRiPt.Sh"
+#  # REPLY: "/usr/local/bin/script.sh"
 z.path.downcase() {
   local filepath=$1
 
@@ -119,15 +122,15 @@ z.path.downcase() {
   REPLY=${filepath:l}
 }
 
-# convert path to uppercase
+# パスを大文字に変換する
 #
-# $1: file path
-# REPLY: uppercase path
+# $1: ファイルのパス
+# REPLY: 大文字のパス
 # return: null
 #
 # example:
-#   z.path.upcase "/UsR/LoCaL/Bin/ScRiPt.Sh"
-#   echo $REPLY  # outputs "/USR/LOCAL/BIN/SCRIPT.SH"
+#  z.path.upcase "/UsR/LoCaL/Bin/ScRiPt.Sh"
+#  # REPLY: "/USR/LOCAL/BIN/SCRIPT.SH"
 z.path.upcase() {
   local filepath=$1
 

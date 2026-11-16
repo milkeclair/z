@@ -1,11 +1,13 @@
-# build function docs cache from a file
+# ファイルから関数ドキュメントのキャッシュを作成する
 #
-# $1: source file path
+# $1: ソースファイルのパス
 # REPLY: null
 # return: null
 #
 # example:
-#  z.completion.cache.build.docs._from_file /path/to/source.zsh
+#  # /tmp/example.zshにz.exampleの定義と「使用例」という説明があり、関数も読み込み済みの場合
+#  z.completion.cache.build.docs._from_file /tmp/example.zsh
+#  # 変更後: z_completion_docs[z.example]="使用例"
 z.completion.cache.build.docs._from_file() {
   setopt local_options EXTENDED_GLOB
 

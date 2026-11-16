@@ -1,12 +1,13 @@
-# expect that REPLY is not null (not empty string)
+# REPLYがnullでないことを検証する（空文字列でない）
 #
-# $skip_unmock?: skip_unmock
+# $skip_unmock?: モック解除を省略するか
 # REPLY: null
 # return: null
 #
 # example:
 #  REPLY="some value"
 #  z.t.expect.reply.is.not.null
+#  # 結果: 検証成功（失敗件数は増えない）
 z.t.expect.reply.is.not.null() {
   local expect=""
   local reply=$REPLY

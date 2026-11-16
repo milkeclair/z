@@ -1,12 +1,12 @@
-# show git status with upstream info
+# upstream情報とともにGitの状態を表示する
 #
 # REPLY: null
 # return: null
 #
 # example:
-#   z.git.status
-#   #=> 'origin/main' by 2 commits.
-#   #=> M modified_file.txt
+#  # upstreamがorigin/mainで2コミット先行し、modified_file.txtが未ステージの場合
+#  z.git.status
+#  # 出力: $'\'refs/remotes/origin/main\' by 2 commits.\n\n M modified_file.txt\n'
 z.git.status() {
   local upstream=$(git rev-parse --symbolic-full-name @{u} 2>/dev/null)
   local ahead=$(git rev-list --count "${upstream}..HEAD" 2>/dev/null)

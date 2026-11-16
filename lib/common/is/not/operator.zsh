@@ -1,14 +1,17 @@
-# verifies whether the two values are not equal
+# 2つの値が等しくないか確認する
 #
-# $1: base value
-# $2: other value
+# $1: 基準値
+# $2: 比較する値
 # REPLY: null
 # return: 0|1
 #
 # example:
-#  z.is.not.eq "a" "b" #=> 0
-#  z.is.not.eq 1 2 #=> 0
-#  z.is.not.eq "" "a" #=> 0
+#  z.is.not.eq "a" "b"
+#  # return: 0
+#  z.is.not.eq 1 2
+#  # return: 0
+#  z.is.not.eq "" "a"
+#  # return: 0
 z.is.not.eq() {
   local base=$1
   local other=$2
@@ -16,15 +19,17 @@ z.is.not.eq() {
   [[ $base != $other ]]
 }
 
-# verifies whether the provided value is not null
+# 指定した値がnullでないか確認する
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #
 # example:
-#  z.is.not.null "a" #=> 0
-#  z.is.not.null 0 #=> 0
+#  z.is.not.null "a"
+#  # return: 0
+#  z.is.not.null 0
+#  # return: 0
 z.is.not.null() {
   local value=$1
 

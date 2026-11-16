@@ -1,10 +1,12 @@
-# register z.job collection in precmd
+# precmdにz.jobの回収処理を登録する
 #
 # REPLY: null
 # return: 0|1
 #
 # example:
 #  z.job.precmd._register
+#  # return: 0
+#  # 結果: precmd_functionsにz.job.collectが登録される
 z.job.precmd._register() {
   local -a registered_functions=("${precmd_functions[@]}")
   if z.arr.includes target=z.job.collect "${registered_functions[@]}"; then

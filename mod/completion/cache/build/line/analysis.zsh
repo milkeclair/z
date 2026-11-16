@@ -1,12 +1,14 @@
-# extract a function name from a cache source line
+# キャッシュのソース行から関数名を取り出す
 #
-# $1: source line
-# $2?: source line with leading whitespace already removed
-# REPLY: function name|null
+# $1: ソース行
+# $2?: 先頭の空白を取り除いたソース行
+# REPLY: 関数名|null
 # return: 0|1
 #
 # example:
 #  z.completion.cache.build.line._function_name "z.example() {"
+#  # REPLY: "z.example"
+#  # return: 0
 z.completion.cache.build.line._function_name() {
   local line=$1
   local trimmed_line=${2-$line}

@@ -4,7 +4,7 @@ export function doubleEscape(char: string): boolean {
   return '$"\\\n'.includes(char) || char.charCodeAt(0) === 96;
 }
 
-/** Decode one ANSI quoted escape without evaluating shell expansions. */
+/** シェル展開を評価せず、ANSI引用内のエスケープを1つ復号する。 */
 export function ansiEscape(raw: string, start: number): Escape {
   let index = start + 1;
   let mask = 0;
@@ -52,7 +52,7 @@ export function ansiEscape(raw: string, start: number): Escape {
   return { value, end, byte, valid };
 }
 
-/** Remove quoting from a here-document delimiter while preserving literal expansions. */
+/** 展開を文字列のまま保ち、ヒアドキュメントの終端名から引用を取り除く。 */
 export function removeHereDocQuotes(raw: string, stripTabs: boolean, commandEnd: (start: number) => number | null): { readonly delimiter: string; readonly quoted: boolean } {
   let quote = '';
   let delimiter = '';
@@ -105,7 +105,7 @@ export function removeHereDocQuotes(raw: string, stripTabs: boolean, commandEnd:
   return { delimiter, quoted };
 }
 
-/** Locate the physical span of a logical delimiter line, preserving all source text. */
+/** ソース全文を保ちながら、論理的な終端行に対応する物理的な範囲を見つける。 */
 export function hereDocEnd(
   text: string, start: number,
   request: { readonly delimiter: string; readonly quoted: boolean; readonly stripTabs: boolean },

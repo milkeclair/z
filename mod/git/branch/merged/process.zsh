@@ -1,12 +1,14 @@
-# show merged branches
-# default without "main" "master" "develop" "release" and current branch
+# マージ済みのブランチを表示する
+# 既定では"main"、"master"、"develop"、"release"と現在のブランチを除く
 #
-# $exclude_branches?: space-separated branch names to exclude
-# REPLY: space-separated merged branches
+# $exclude_branches?: 空白区切りの除外ブランチ名
+# REPLY: 空白区切りのマージ済みブランチ
 # return: null
 #
 # example:
-#   z.git.branch._merged.get
+#  # 現在のmainへfeature/aだけがマージ済みの場合
+#  z.git.branch._merged.get
+#  # REPLY: "feature/a"
 z.git.branch._merged.get() {
   z.git.branch._merged.get.excludes "$@"
   local exclude_branches=($REPLY)

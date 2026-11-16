@@ -1,10 +1,12 @@
-# stop proxy daemon for z.wtproxy.stop
+# z.wtproxy.stop用のプロキシデーモンを停止する
 #
 # REPLY: null
-# return: 0 if daemon is stopped, otherwise 1
+# return: デーモンを停止できた場合は0、それ以外は1
 #
 # example:
+#  # PIDファイルが正しいデーモンを指し、TERM送信に成功する場合
 #  z.wtproxy.stop._daemon
+#  # return: 0
 z.wtproxy.stop._daemon() {
   z.wtproxy._config.value pid_file || return 1
   local pid_file=$REPLY

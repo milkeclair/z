@@ -1,41 +1,25 @@
-# LSP function snapshots
+# LSPの関数snapshot
 
-The connection owns a FunctionSnapshot for its lifetime. A refresh takes the previous snapshot and returns the next value.
-The hydrator retains the generic readonly AST. The functions field is a separate compatibility view for the existing mutable Func[] provider interfaces.
+接続はその有効期間中、FunctionSnapshotを所有します。更新時は前のsnapshotを受け取り、次の値を返します。hydratorは汎用のreadonlyなASTを保持し、functionsフィールドは既存の変更可能なFunc[]向けインターフェースのための、独立した互換情報です。
 
-## Project selection
+## プロジェクトの選択
 
-Initialization selects the first local workspace folder, then rootUri, then the legacy rootPath.
-Clients without workspace information use zPath as a fallback, including its existing default of ~/.z.
-Configuration changes to this fallback apply when a workspace root was not selected.
-File-backed .zsh buffers inside the selected project override disk content. Other projects and URI schemes are excluded from this snapshot.
+初期化では、最初のローカルworkspaceフォルダ、rootUri、従来のrootPathの順に選びます。workspace情報を持たないクライアントでは、既存の既定値~/.zも含めてzPathを代わりに使います。この設定の変更はworkspaceルートが選ばれなかった場合に適用します。選択したプロジェクト内のファイルに対応する.zshバッファはディスク内容より優先し、他のプロジェクトとURIスキームはこのsnapshotに含めません。
 
-## Updates and reuse
+## 更新と再利用
 
-TextDocuments emits its content-change event on both open and edits.
-The connection synchronously refreshes on content changes, saves, closes and watched-file notifications.
-Requests arriving immediately after an edit therefore use the updated snapshot.
-Diagnostic-refresh notifications alone are coalesced, honor client capabilities, and are cancelled on shutdown.
+TextDocumentsは、open時と編集時の両方で内容変更のイベントを発行します。接続は内容変更・保存・close・監視ファイルの通知を処理し、編集直後の要求にも更新内容を反映します。診断更新の通知は集約し、クライアントの対応機能を確認して送信し、shutdown時には取り消します。
 
-Unchanged file entries reuse their ASTs. When every file entry and the project options are unchanged, the function snapshot and compatibility array are reused too.
-Edits in files without function definitions reuse the compatibility view while replacing the changed AST entry.
-Each connection creates its own empty compatibility view.
+変更のないファイルはASTを再利用します。全エントリとプロジェクト設定が同じなら、関数snapshotと互換用配列も再利用します。関数定義のないファイルの編集では、変更されたASTだけを置き換えて互換情報を再利用します。空の互換情報は接続ごとに作成します。
 
-The snapshot also owns a readonly map from current hydrated file entries to their compatibility projections.
-A function-file edit rebuilds only that file's arguments, documentation and definition targets; unchanged file projections retain their references.
-Merged arrays and name groups follow the current hydrator file order, including disk-before-buffer-only precedence after a save.
-Each refreshed map contains only current files with function definitions, so edits, removals and root changes release obsolete cached entries without retaining earlier snapshots.
+snapshotは、現在の付加済みファイルエントリから互換情報へのreadonlyな対応表も所有します。関数を含むファイルを編集した場合は、そのファイルの引数・ドキュメント・定義の参照先だけを再構築し、他のファイルの参照を保ちます。配列と名前のグループはhydratorのファイル順に統合し、保存後もディスクのファイルをバッファだけのファイルより優先します。各更新後の対応表には現在の関数を持つファイルだけを含め、編集・削除・ルート変更で古いキャッシュを解放し、過去のsnapshotを保持しません。
 
-## Compatibility projection
+## 互換情報への変換
 
-The projection derives names, one-based declaration lines, argument metadata and legacy documentation values from the hydrated AST.
-Named argument positions, rest positions and argument ordering retain the old Func[] conventions.
-The legacy UI formatters consume this projected documentation, so open and new-file documentation comes from the same snapshot as the function and argument data.
+ASTから名前、1始まりの宣言行、引数のメタデータ、従来形式のドキュメントを取り出します。名前付き引数や残りの引数の位置、引数の順序は既存のFunc[]の規則を保ちます。既存のUI整形処理はこのドキュメントを使うため、開いているファイルや新規ファイルの説明も、関数・引数と同じsnapshotから取得します。
 
-Language features use the name index and cached document ASTs for call/position queries.
-A separate diagnostic snapshot derives command resolution and parameter checks from the same AST, including lexer, parser and hydration diagnostics. See [diagnostics](../diagnostics/README.md).
+言語機能は名前索引とキャッシュ済みの文書ASTで、呼び出しと位置を検索します。独立した診断snapshotも同じASTからコマンド解決と引数の検証を導き、Lexer・Parser・hydratorの診断を含めます。[診断](../diagnostics/README.md)を参照してください。
 
-## Verification
+## 検証
 
-Run npm test in the ls directory. It first cleans the existing build output and emits the Node server before running tests.
-The stdio integration tests launch that real emitted server, send LSP requests/notifications, and use temporary on-disk files plus open buffers.
+lsディレクトリでnpm testを実行します。既存のビルド成果物を削除し、Nodeサーバーを生成してからテストします。stdio結合テストでは生成した実サーバーを起動してLSP要求と通知を送り、一時的なディスク上のファイルと開いたバッファを使って確認します。

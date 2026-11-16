@@ -1,12 +1,15 @@
-# check if commit cycle is valid
+# コミットサイクルが有効か確認する
 #
-# $1: commit cycle
+# $1: コミットサイクル
 # REPLY: null
 # return: 0|1
 #
 # example:
-#   z.git.commit.tdd._cycle.is.valid "red" #=> true
-#   z.git.commit.tdd._cycle.is.valid "invalid_cycle" #=> false
+#  z.git.commit.tdd._cycle.is.valid "red"
+#  # return: 0
+#  z.git.commit.tdd._cycle.is.valid "invalid_cycle"
+#  # 出力: コミットコマンドのヘルプ
+#  # return: 1
 z.git.commit.tdd._cycle.is.valid() {
   z.git.commit.tdd._cycle.list && local cycle_list="${REPLY[*]}"
   local cycle=$1

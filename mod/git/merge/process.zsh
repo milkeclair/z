@@ -1,11 +1,14 @@
-# safer merge
+# 安全性を高めたmerge
 #
-# $1: target branch to merge into current branch
+# $1: 現在のブランチへマージする対象のブランチ
 # REPLY: null
 # return: null
 #
 # example:
+#  # 作業ツリーがクリーンで、mainのマージに成功する場合
 #  z.git.merge main
+#  # return: 0
+#  # 結果: 現在のブランチへmainの変更が取り込まれる
 z.git.merge() {
   local target_branch=$1
 

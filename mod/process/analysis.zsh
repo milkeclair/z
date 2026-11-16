@@ -1,13 +1,15 @@
-# resolve one process selector to distinct positive PIDs
+# 1つのプロセス指定から、重複のない正のPIDを解決する
 #
-# $pid?: process ID (1..2147483647)
-# $port?: TCP listening port (1..65535; requires lsof)
-# $name?: exact process name from ps comm (requires ps)
-# REPLY: matching PIDs on success
-# return: 0 if resolved, otherwise 1
+# $pid?: プロセスID（1..2147483647）
+# $port?: TCP待受ポート（1..65535、lsofが必要）
+# $name?: ps commと完全一致で照合するプロセス名（psが必要）
+# REPLY: 成功時に一致したPID
+# return: 解決できた場合は0、それ以外は1
 #
 # example:
-#  z.process._pids port=3000
+#  z.process._pids pid=12345
+#  # REPLY: ("12345")
+#  # return: 0
 z.process._pids() {
   if ! z.int.is.eq $# 1; then
     z.io.error "Specify exactly one of pid=, port=, or name="
@@ -74,18 +76,23 @@ z.process._pids() {
   REPLY=("${(@u)pids}")
 }
 
-# print process IDs, names and visible TCP listening ports
-# accepts at most one selector; with none, lists all processes
+# プロセスID・名前・取得可能なTCP待受ポートを表示する
+# 絞り込みの指定は最大1つ。指定がなければ全プロセスを一覧する
 #
-# $pid?: positive process ID
-# $port?: TCP listening port used to select processes
-# $name?: exact process name from ps comm
-# REPLY: tab-separated rows without the header
-# return: 0 on success, otherwise 1
+# $pid?: 正のプロセスID
+# $port?: プロセスの選択に使うTCP待受ポート
+# $name?: ps commと完全一致で照合するプロセス名
+# REPLY: ヘッダーを除いたタブ区切りの行
+# return: 成功時は0、それ以外は1
 #
 # example:
-#  z.process.list
-#  z.process.list port=3000
+#  # PID12345のnodeがTCP3000を待ち受けている場合
+#  z.process.list pid=12345
+#  # 出力:
+#  # PID<TAB>NAME<TAB>PORTS
+#  # 12345<TAB>node<TAB>3000
+#  # REPLY: $'12345\tnode\t3000'
+#  # return: 0
 z.process.list() {
   local -A selected=()
   local pid name

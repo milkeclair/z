@@ -1,14 +1,15 @@
-# prepare a job directory after argument validation
+# 引数を検証してからジョブディレクトリを用意する
 #
-# $name: job name
-# $command: child function name
-# $on_success?: parent success callback function name
-# $on_failure?: parent failure callback function name
-# REPLY: job id and job directory
+# $name: ジョブ名
+# $command: 子で実行する関数名
+# $on_success?: 親プロセスの成功時コールバック関数名
+# $on_failure?: 親プロセスの失敗時コールバック関数名
+# REPLY: ジョブIDとジョブディレクトリ
 # return: null
 #
 # example:
-#  z.job.run._prepare name=example command=z.example.build
+#  z.job.run._prepare name=version command=z.version
+#  # REPLYの例: ("20260623T121530000000000.100.1" "/tmp/z/job/100/jobs/20260623T121530000000000.100.1")
 z.job.run._prepare() {
   z.arg.named name "$@" && local name=$REPLY
   z.arg.named command "$@" && local command=$REPLY
@@ -38,15 +39,18 @@ z.job.run._prepare() {
   REPLY=("$id" "$dir")
 }
 
-# spawn a job child process
+# ジョブの子プロセスを起動する
 #
-# $id: job id
-# $dir: job directory
-# REPLY: child process id
+# $id: ジョブID
+# $dir: ジョブのディレクトリ
+# REPLY: 子プロセスのID
 # return: 0|1
 #
 # example:
-#  z.job.run._spawn id=job dir=/tmp/z/job/123/jobs/job
+#  # ジョブのメタデータと保存先を準備済みの場合
+#  z.job.run._spawn id=job dir=/tmp/z/job/100/jobs/job
+#  # REPLYの例: "12345"（起動した子プロセスのPID）
+#  # return: 0
 z.job.run._spawn() {
   z.arg.named id "$@" && local id=$REPLY
   z.arg.named dir "$@" && local dir=$REPLY
@@ -60,15 +64,18 @@ z.job.run._spawn() {
   REPLY="$!"
 }
 
-# execute a job command in the child process
+# 子プロセスでジョブのコマンドを実行する
 #
-# $id: job id
-# $dir: job directory
+# $id: ジョブID
+# $dir: ジョブのディレクトリ
 # REPLY: null
-# return: command status
+# return: コマンドの終了コード
 #
 # example:
-#  z.job.run._child id=job dir=/tmp/z/job/123/jobs/job
+#  # メタデータ内のコマンドが7で終了する場合
+#  z.job.run._child id=job dir=/tmp/z/job/100/jobs/job
+#  # return: 7
+#  # 保存後: statusファイルはfailure、exitファイルは7
 z.job.run._child() {
   z.arg.named id "$@" && local id=$REPLY
   z.arg.named dir "$@" && local dir=$REPLY

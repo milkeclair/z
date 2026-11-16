@@ -1,11 +1,14 @@
-# resolve dependencies of a z modifier
+# z modの依存関係を解決する
 #
-# $1: mod name
-# REPLY: dependency mod names followed by the requested mod name
-# return: 0 if dependencies can be resolved, otherwise 1
+# $1: mod名
+# REPLY: 依存するmod名に要求されたmod名を続けたもの
+# return: 依存関係を解決できた場合は0、それ以外は1
 #
 # example:
+#  # wtproxyがgitだけに依存する場合
 #  z.mod.dependencies.resolve wtproxy
+#  # REPLY: ("git" "wtproxy")
+#  # return: 0
 z.mod.dependencies.resolve() {
   z.mod._store.ensure
   z.arg.first "$@"
@@ -18,14 +21,19 @@ z.mod.dependencies.resolve() {
   REPLY=("${resolved_mod_names[@]}")
 }
 
-# resolve dependencies recursively
+# 依存関係を再帰的に解決する
 #
-# $1: mod name
+# $1: mod名
 # REPLY: null
-# return: 0 if dependencies can be resolved, otherwise 1
+# return: 依存関係を解決できた場合は0、それ以外は1
 #
 # example:
-#  z.mod.dependencies._resolve wtproxy
+#  # gitが登録済みで依存を持たない場合
+#  local resolved_mod_names=()
+#  local -A resolving_mod_name_map=() resolved_mod_name_map=()
+#  z.mod.dependencies._resolve git
+#  # return: 0
+#  # 変更後: resolved_mod_names=("git")
 z.mod.dependencies._resolve() {
   z.arg.first "$@"
   local mod_name=$REPLY

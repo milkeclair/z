@@ -8,7 +8,7 @@ z.t.describe "z.git.commit._arg.extract.opts"; {
         opts_1 "-m" \
         opts_2 "commit message" \
         opts_3 "--amend" \
-        opts_4 "extra_option" # should be ignored
+        opts_4 "extra_option" # このコメントは無視される
 
       z.t.expect.reply.is.arr "-m" "commit message" "--amend"
     }

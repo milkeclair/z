@@ -1,34 +1,41 @@
 z_t_states[current_it_failures]=0
 
-# get the current it failures count
+# 現在のitの失敗件数を取得する
 #
-# REPLY: null
-# return: number of failures in current it
+# REPLY: 現在のitの失敗件数
+# return: null
 #
 # example:
-#  z.t._state.current_it_failures  #=> 0
+#  z_t_states[current_it_failures]=0
+#  z.t._state.current_it_failures
+#  # REPLY: 0
 z.t._state.current_it_failures() {
   REPLY=$z_t_states[current_it_failures]
 }
 
-# increment the current it failures count
+# 現在のitの失敗件数を増やす
 #
 # REPLY: null
 # return: null
 #
 # example:
+#  # current_it_failures=0の場合
 #  z.t._state.current_it_failures.increment
+#  z.t._state.current_it_failures
+#  # REPLY: 1
 z.t._state.current_it_failures.increment() {
   (( z_t_states[current_it_failures]++ ))
 }
 
-# reset the current it failures count
+# 現在のitの失敗件数をリセットする
 #
 # REPLY: null
 # return: null
 #
 # example:
 #  z.t._state.current_it_failures.reset
+#  z.t._state.current_it_failures
+#  # REPLY: 0
 z.t._state.current_it_failures.reset() {
   z_t_states[current_it_failures]=0
 }

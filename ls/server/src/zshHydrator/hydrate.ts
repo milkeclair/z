@@ -23,7 +23,7 @@ export function documentationOf(node: FunctionDefinitionNode | DocBlockNode): Fu
 export function directivesOf(node: CommentNode): ControlComment['directives'] {
   return isHydratedComment(node) ? node.hydration.directives : [];
 }
-/** Return one enriched AST, with immutable updates and shared comment references. */
+/** 変更時に新しい値を作り、コメントの参照を共有しながら、情報を付加した単一のASTを返す。 */
 export function hydrateAst(ast: FileNode, source: string, options: HydrationOptions = {}): FileNode {
   const documents = new Map<number, FunctionDocumentation>();
   const exampleComments = new Set<number>();

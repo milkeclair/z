@@ -1,12 +1,14 @@
-# check if arguments contain origin
+# 引数にoriginが含まれるか確認する
 #
-# $@: arguments
+# $@: 引数
 # REPLY: null
 # return: 0|1
 #
 # example:
-#   z.git._hp.arg.has.origin origin develop #=> true
-#   z.git._hp.arg.has.origin develop #=> false
+#  z.git._hp.arg.has.origin origin develop
+#  # return: 0
+#  z.git._hp.arg.has.origin develop
+#  # return: 1
 z.git._hp.arg.has.origin() {
   for arg in "$@"; do
     if z.is.eq "$arg" "origin"; then
@@ -16,16 +18,19 @@ z.git._hp.arg.has.origin() {
   return 1
 }
 
-# check if arguments contain develop or dev
+# 引数にdevelopまたはdevが含まれるか確認する
 #
-# $@: arguments
+# $@: 引数
 # REPLY: null
 # return: 0|1
 #
 # example:
-#   z.git._hp.arg.has.develop origin develop #=> true
-#   z.git._hp.arg.has.develop origin dev #=> true
-#   z.git._hp.arg.has.develop origin main #=> false
+#  z.git._hp.arg.has.develop origin develop
+#  # return: 0
+#  z.git._hp.arg.has.develop origin dev
+#  # return: 0
+#  z.git._hp.arg.has.develop origin main
+#  # return: 1
 z.git._hp.arg.has.develop() {
   for arg in "$@"; do
     if z.is.eq "$arg" "dev" || z.is.eq "$arg" "develop"; then

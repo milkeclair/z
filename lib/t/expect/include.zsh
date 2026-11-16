@@ -1,13 +1,15 @@
-# expect that actual includes expect
+# 実際の値に期待値が含まれることを検証する
 #
-# $1: actual value
-# $2: expected substring
-# $skip_unmock?: skip_unmock
+# $1: 実際の値
+# $2: 期待する部分文字列
+# $skip_unmock?: モック解除を省略するか
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t.expect.includes $actual $expect
+#  # 失敗件数0から実行する場合
+#  z.t.expect.includes "hello world" "world"
+#  # 変更後の失敗件数: 0
 z.t.expect.includes() {
   local actual=$1
   local expect=$2
@@ -26,16 +28,18 @@ z.t.expect.includes() {
   z.t.mock.unmock.all skip_unmock=$skip_unmock
 }
 
-# expect that actual excludes expect
+# 実際の値に期待値が含まれないことを検証する
 #
-# $1: actual value
-# $2: expected substring
-# $skip_unmock?: skip_unmock
+# $1: 実際の値
+# $2: 期待する部分文字列
+# $skip_unmock?: モック解除を省略するか
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t.expect.excludes $actual $expect
+#  # 失敗件数0から実行する場合
+#  z.t.expect.excludes "hello world" "missing"
+#  # 変更後の失敗件数: 0
 z.t.expect.excludes() {
   local actual=$1
   local expect=$2

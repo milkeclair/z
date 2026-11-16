@@ -1,11 +1,13 @@
-# check if a function exists
+# 関数が存在するか確認する
 #
-# $1: function name
+# $1: 関数名
 # REPLY: null
-# return 0|1
+# return: 0|1
 #
 # example:
-#  if z.fn.exists my_func
+#  # my_funcが未登録の場合
+#  z.fn.exists my_func
+#  # return: 1
 z.fn.exists() {
   z.fn._ensure_store
 

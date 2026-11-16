@@ -1,23 +1,28 @@
 z_t_states[pendings]=0
 
-# get the number of pending tests
+# 保留したテスト数を取得する
 #
-# REPLY: null
-# return: number of pending tests
+# REPLY: 保留したテスト数
+# return: null
 #
 # example:
-#  z.t._state.pendings  #=> 3
+#  z_t_states[pendings]=3
+#  z.t._state.pendings
+#  # REPLY: 3
 z.t._state.pendings() {
   REPLY=${z_t_states[pendings]}
 }
 
-# increment the number of pending tests by 1
+# 保留したテスト数を1増やす
 #
 # REPLY: null
 # return: null
 #
 # example:
+#  # pendings=0の場合
 #  z.t._state.pendings.increment
+#  z.t._state.pendings
+#  # REPLY: 1
 z.t._state.pendings.increment() {
   (( z_t_states[pendings]++ ))
 }

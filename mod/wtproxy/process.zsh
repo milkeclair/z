@@ -1,21 +1,26 @@
-# show wtproxy status
+# wtproxyの状態を表示する
 #
 # REPLY: null
 # return: null
 #
 # example:
+#  # 有効な設定があり、activeなし・プロキシ停止中の場合
 #  z.wtproxy
+#  # 出力:
+#  # active: none
+#  # proxy: stopped
 z.wtproxy() {
   z.wtproxy.status
 }
 
-# show wtproxy help
+# wtproxyのヘルプを表示する
 #
 # REPLY: null
 # return: null
 #
 # example:
 #  z.wtproxy.help
+#  # 表示例（一部、余白を省略）: init: z.wtproxy.init ?proxy_port_N=<port> ?force=true
 z.wtproxy.help() {
   z.io.empty
   z.io indent=1 "Usage:"
@@ -54,27 +59,32 @@ z.wtproxy.help() {
   z.io indent=2 "state:   \${XDG_STATE_HOME:-\$HOME/.local/state}/wtproxy/<project>.state"
 }
 
-# create the initial wtproxy configuration file
+# wtproxyの初期設定ファイルを作成する
 #
-# $@: named configuration values
+# $@: 名前付きの設定値
 # REPLY: null
-# return: 0 if the file is created, otherwise 1
+# return: ファイルを作成できた場合は0、それ以外は1
 #
 # example:
-#  z.wtproxy.init
+#  # 有効なGitプロジェクトで、設定ファイルが未作成の場合
+#  z.wtproxy.init proxy_port_1=3000
+#  # return: 0
+#  # 保存される行の例: Z_WTPROXY_PROXY_PORT_1=3000
 z.wtproxy.init() {
   z.wtproxy.init._config.file "$@"
 }
 
-# print Docker Compose environment values or run a command with them
+# Docker Composeの環境変数を表示するか、その環境でコマンドを実行する
 #
-# $@?: command to run with environment values
+# $@?: 環境変数を渡して実行するコマンド
 # REPLY: null
-# return: command status if a command is given, 0 if printed, otherwise 1
+# return: コマンド指定時はその終了コード、表示した場合は0、それ以外は1
 #
 # example:
-#  z.wtproxy.env
-#  z.wtproxy.env docker compose up
+#  # Compose名がsample_feat_example_b671591e、worktreeポートが3001の場合
+#  z.wtproxy.env sh -c 'printf "%s\n" "$COMPOSE_PROJECT_NAME"'
+#  # 出力: sample_feat_example_b671591e
+#  # return: 0
 z.wtproxy.env() {
   z.wtproxy._entry.current || return 1
   local -A entry=("${(@)REPLY}")
@@ -101,25 +111,32 @@ z.wtproxy.env() {
   z.io.line ${env_values[@]}
 }
 
-# activate current worktree and print its proxy entry
+# 現在のworktreeを有効にし、そのプロキシエントリを表示する
 #
 # REPLY: null
-# return: 0 if current entry is available, otherwise 1
+# return: 現在のエントリを取得できた場合は0、それ以外は1
 #
 # example:
+#  # 現在のworktreeが/tmp/worktreeで、有効な設定を取得できる場合
 #  z.wtproxy.use
+#  # return: 0
+#  # 保存後のactive: "/tmp/worktree"
+#  # 表示例（一部）: path: /tmp/worktree
 z.wtproxy.use() {
   z.wtproxy._entry.current activate=true || return 1
   z.wtproxy._print.entry "${(@)REPLY}"
 }
 
-# activate current worktree and start proxy daemon
+# 現在のworktreeを有効にし、プロキシデーモンを起動する
 #
 # REPLY: null
-# return: 0 if proxy is started, otherwise 1
+# return: プロキシを起動できた場合は0、それ以外は1
 #
 # example:
+#  # 待受ポートが空いており、プロキシを起動できる場合
 #  z.wtproxy.start
+#  # return: 0
+#  # 結果: 現在のworktreeが有効になり、プロキシが待受を開始する
 z.wtproxy.start() {
   z.wtproxy._entry.current activate=true || return 1
   local -A entry=("${(@)REPLY}")
@@ -127,13 +144,15 @@ z.wtproxy.start() {
   z.wtproxy._print.entry "${(@kv)entry}"
 }
 
-# stop proxy daemon
+# プロキシデーモンを停止する
 #
 # REPLY: null
 # return: null
 #
 # example:
+#  # プロキシが動作中で、停止に成功した場合
 #  z.wtproxy.stop
+#  # 出力: stopped
 z.wtproxy.stop() {
   if z.wtproxy.stop._daemon; then
     z.io "stopped"
@@ -142,13 +161,17 @@ z.wtproxy.stop() {
   fi
 }
 
-# print active entry and proxy daemon status
+# 有効なエントリとプロキシデーモンの状態を表示する
 #
 # REPLY: null
 # return: null
 #
 # example:
+#  # 有効な設定があり、activeなし・プロキシ停止中の場合
 #  z.wtproxy.status
+#  # 出力:
+#  # active: none
+#  # proxy: stopped
 z.wtproxy.status() {
   if z.wtproxy._entry.active; then
     z.wtproxy._print.entry "${(@)REPLY}"
@@ -163,13 +186,19 @@ z.wtproxy.status() {
   fi
 }
 
-# remove current worktree entry and its Docker resources
+# 現在のworktreeエントリとそのDockerリソースを削除する
 #
 # REPLY: null
-# return: 0 if current entry is removed, otherwise 1
+# return: 現在のエントリを削除できた場合は0、それ以外は1
 #
 # example:
+#  # /tmp/worktreeが唯一のエントリで、Dockerリソースの削除と保存が成功する場合
 #  z.wtproxy.rm
+#  # return: 0
+#  # 出力:
+#  # removed: /tmp/worktree
+#  # entries: 0
+#  # docker_resource_project: sample_feat_example_b671591e
 z.wtproxy.rm() {
   z.wtproxy.rm._current.entry || return 1
   local -A entry=("${(@)REPLY}")
@@ -189,13 +218,18 @@ z.wtproxy.rm() {
   fi
 }
 
-# remove stale worktree entries from state
+# 状態から古いworktreeエントリを取り除く
 #
 # REPLY: null
-# return: 0 if state is updated, otherwise 1
+# return: 状態を更新できた場合は0、それ以外は1
 #
 # example:
+#  # 不存在のworktreeが1件だけあり、そのComposeリソースも削除できる場合
 #  z.wtproxy.prune
+#  # return: 0
+#  # 出力:
+#  # entries: 0
+#  # docker_resource_projects: sample_feat_example_b671591e
 z.wtproxy.prune() {
   z.wtproxy.prune._stale || return 1
   local -A result=("${(@)REPLY}")

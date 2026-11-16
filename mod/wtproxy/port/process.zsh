@@ -1,12 +1,15 @@
-# allocate a worktree port for a worktree port key
+# worktreeポートキーに対応するworktreeポートを割り当てる
 #
-# $1: worktree path
-# $2: worktree port key
-# REPLY: allocated port
-# return: 0 if a port is allocated, otherwise 1
+# $1: worktreeのパス
+# $2: worktreeポートキー
+# REPLY: 割り当てたポート
+# return: ポートを割り当てられた場合は0、それ以外は1
 #
 # example:
-#  z.wtproxy._port.allocate /path/to/worktree worktree_port_1
+#  # proxy_port_1=3000、既存の割当なし、TCP3001が空いている場合
+#  z.wtproxy._port.allocate /tmp/worktree worktree_port_1
+#  # REPLY: 3001
+#  # return: 0
 z.wtproxy._port.allocate() {
   local worktree_path=$1
   local port_key=$2

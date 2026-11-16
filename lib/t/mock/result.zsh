@@ -1,12 +1,16 @@
-# get the call arguments of the last call to the mocked function
-# function name can be omitted to get the last mocked function
+# モックした関数の最後の呼び出しの引数を取得する
+# 関数名を省略すると、最後にモックした関数を取得する
 #
-# $name?: function name
-# REPLY: array of arguments
+# $name?: 関数名
+# REPLY: 引数の配列
 # return: null
 #
 # example:
+#  z.t.mock name=my_func
+#  my_func arg1 arg2
 #  z.t.mock.result name=my_func
+#  # REPLY: ("arg1 arg2")
+#  z.t.mock.unmock name=my_func
 z.t.mock.result() {
   z.arg.named name $@ && local func_name=$REPLY
 

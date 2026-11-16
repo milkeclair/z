@@ -1,13 +1,13 @@
-# format exclude patterns
+# 除外パターンを整形する
 #
-# $exclude_exts?: array of file extensions to exclude (e.g. "md" "txt")
-# $exclude_dirs?: array of directories to exclude (e.g. "docs" "tests")
-# REPLY: a string containing the exclude patterns for file extensions and directories
+# $exclude_exts?: 除外する拡張子の配列（例: "md" "txt"）
+# $exclude_dirs?: 除外するディレクトリの配列（例: "docs" "tests"）
+# REPLY: ファイル拡張子とディレクトリの除外パターンを含む文字列
 # return: null
 #
 # example:
-#   z.git.stats._commit.details.excludes exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
-#   #=> REPLY="\.(md|txt)$ (docs|tests)/"
+#  z.git.stats._commit.details.excludes exclude_exts="md txt" exclude_dirs="docs tests"
+#  # REPLY: "\.(md|txt)$ (docs|tests)/"
 z.git.stats._commit.details.excludes() {
   z.arg.named exclude_exts $@ && local exclude_exts_raw=$REPLY
   z.arg.named exclude_dirs $@ && local exclude_dirs_raw=$REPLY

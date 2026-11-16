@@ -1,38 +1,45 @@
 typeset -A z_t_mock_calls=()
 typeset z_t_mock_call_sep=$'\x1e'
 
-# mock calls management
+# モックの呼び出しの管理
 #
-# REPLY: null
+# REPLY: モックの呼び出し記録の配列
 # return: null
 #
 # example:
-#  z.t._state.mock_calls  #=> ("call1" "call2" ...)
+#  z_t_mock_calls=(my_func "arg1 arg2")
+#  z.t._state.mock_calls
+#  # REPLY: ("arg1 arg2")
 z.t._state.mock_calls() {
   REPLY=("${z_t_mock_calls[@]}")
 }
 
-# get mock calls by function name
+# 関数名に対応するモックの呼び出しを取得する
 #
-# $1: function name
-# REPLY: null
-# return: mock calls
+# $1: 関数名
+# REPLY: モックの呼び出し
+# return: null
 #
 # example:
-#  z.t._state.mock_calls.context "my_func"  #=> "mock calls for my_func"
+#  z.t._state.mock_calls.set name=my_func value="arg1 arg2"
+#  z.t._state.mock_calls.context my_func
+#  # REPLY: "arg1 arg2"
 z.t._state.mock_calls.context() {
   REPLY=${z_t_mock_calls[$1]}
 }
 
-# add a mock call
+# モックの呼び出しを追加する
 #
-# $name: function name
-# $@: arguments
+# $name: 関数名
+# $@: 引数
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t._state.mock_calls.add name=my_func "arg1" "arg2"
+#  # my_funcの呼び出し記録が空の場合
+#  z.t._state.mock_calls.add name=my_func arg1 arg2
+#  z.t._state.mock_calls.context my_func
+#  # REPLY: "arg1 arg2"
 z.t._state.mock_calls.add() {
   local REPLY
   z.arg.named name $@ && local func_name=$REPLY
@@ -45,15 +52,17 @@ z.t._state.mock_calls.add() {
   fi
 }
 
-# set mock calls for a function
+# 関数のモック呼び出しを設定する
 #
-# $name: function name
-# $value: value
+# $name: 関数名
+# $value: 値
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t._state.mock_calls.set name=my_func "value=new value"
+#  z.t._state.mock_calls.set name=my_func value="new value"
+#  z.t._state.mock_calls.context my_func
+#  # REPLY: "new value"
 z.t._state.mock_calls.set() {
   z.arg.named name $@ && local func_name=$REPLY
   z.arg.named value $@ && local value=$REPLY
@@ -61,14 +70,17 @@ z.t._state.mock_calls.set() {
   z_t_mock_calls[$func_name]=$value
 }
 
-# unset mock calls for a function
+# 関数のモック呼び出しを削除する
 #
-# $1: function name
+# $1: 関数名
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t._state.mock_calls.unset "my_func"
+#  # my_funcに呼び出し記録がある場合
+#  z.t._state.mock_calls.unset my_func
+#  z.t._state.mock_calls.context my_func
+#  # REPLY: ""
 z.t._state.mock_calls.unset() {
   unset "z_t_mock_calls[$1]" 2>/dev/null
 }

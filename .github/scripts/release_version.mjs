@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-/** Parse a canonical stable version that both z and the Marketplace can use. */
+/** z本体とMarketplaceで共用できる、正規化された安定版バージョンを解析する。 */
 export function parseVersion(version) {
   const match = typeof version === 'string' && /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/.exec(version);
   if (!match || match[0] !== version) throw new Error('Use a stable version such as 2.4.0, without a v prefix.');
@@ -10,7 +10,7 @@ export function parseVersion(version) {
   return parts;
 }
 
-/** Compare two canonical stable versions. */
+/** 正規化された安定版のバージョン2つを比較する。 */
 export function compareVersions(left, right) {
   const a = parseVersion(left), b = parseVersion(right);
   for (let index = 0; index < a.length; index++) {
@@ -19,14 +19,14 @@ export function compareVersions(left, right) {
   return 0;
 }
 
-/** Keep recovery of an older draft from moving the Latest release backwards. */
+/** 古いDraftの復旧によってLatestリリースが過去の版へ戻らないようにする。 */
 export function shouldMakeLatest(version, latestTag) {
   parseVersion(version);
   if (latestTag === null) return true;
   return compareVersions(version, latestTag.replace(/^v/, '')) > 0;
 }
 
-/** Locate the managed z.version function without changing the remaining helpers. */
+/** 他の補助関数を変更せず、管理対象のz.version関数を見つける。 */
 function versionMatch(source) {
   const matches = [...source.matchAll(/(^z\.version\(\)\s*\{\s*z\.io ")v([^"\r\n]+)("\s*\})/gm)];
   if (matches.length !== 1) throw new Error('Expected one managed z.version function in version.zsh.');
@@ -34,12 +34,12 @@ function versionMatch(source) {
   return matches[0];
 }
 
-/** Read the release version embedded in version.zsh. */
+/** version.zshに記載されたリリースバージョンを読む。 */
 export function sourceVersion(source) {
   return versionMatch(source)[2];
 }
 
-/** Require matching versions in source, npm metadata and its lockfile. */
+/** ソース、npmメタデータ、lockfileのバージョンが一致することを要求する。 */
 export function assertVersions(source, manifest, lock, version) {
   parseVersion(version);
   if (sourceVersion(source) !== version || manifest.version !== version ||
@@ -50,7 +50,7 @@ export function assertVersions(source, manifest, lock, version) {
 
 export const VERSION_FILES = Object.freeze(['version.zsh', 'ls/package.json', 'ls/package-lock.json']);
 
-/** Calculate the exact allowed metadata edits without modifying inputs or the filesystem. */
+/** 入力やファイルを変更せず、許可されたメタデータ変更を正確に計算する。 */
 export function versionFiles(source, manifestText, lockText, version) {
   parseVersion(version);
   const manifest = JSON.parse(manifestText), lock = JSON.parse(lockText);
@@ -73,7 +73,7 @@ export function versionFiles(source, manifestText, lockText, version) {
   };
 }
 
-/** Write only the exact version-file edits for a new release. */
+/** 新しいリリースに必要なバージョンファイルの変更だけを書き込む。 */
 export function updateVersions(directory, version) {
   const texts = VERSION_FILES.map(name => fs.readFileSync(path.join(directory, name), 'utf8'));
   for (const [name, content] of Object.entries(versionFiles(...texts, version))) {

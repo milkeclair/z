@@ -1,27 +1,31 @@
 typeset -A z_t_current_idx=([describe]=0 [context]=0 [it]=0)
 
-# get the current index for a context
+# contextの現在のインデックスを取得する
 #
-# $1: context ("describe"|"context"|"it")
-# REPLY: null
-# return: current index
+# $1: テストの区分（"describe"|"context"|"it"）
+# REPLY: 現在のインデックス
+# return: null
 #
 # example:
-#  z.t._state.current_idx "describe"  #=> 0
+#  z.t._state.current_idx.set describe value=1
+#  z.t._state.current_idx describe
+#  # REPLY: 1
 z.t._state.current_idx() {
   local context=$1
   REPLY=${z_t_current_idx[$context]}
 }
 
-# set the current index for a context
+# contextの現在のインデックスを設定する
 #
-# $value: index value
-# $@: context ("describe"|"context"|"it")
+# $value: インデックス値
+# $@: テストの区分（"describe"|"context"|"it"）
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t._state.current_idx.set "describe" value=1
+#  z.t._state.current_idx.set describe value=1
+#  z.t._state.current_idx describe
+#  # REPLY: 1
 z.t._state.current_idx.set() {
   local REPLY
   z.arg.named value $@ && local value=$REPLY
@@ -30,14 +34,17 @@ z.t._state.current_idx.set() {
   z_t_current_idx[$context]=$value
 }
 
-# add to the current index for a context
+# 指定したcontextの現在のインデックスを増やす
 #
-# $1: context ("describe"|"context"|"it")
-# REPLY: null
-# return: new index value
+# $1: テストの区分（"describe"|"context"|"it"）
+# REPLY: 新しいインデックス値
+# return: null
 #
 # example:
-#  z.t._state.current_idx.add "describe"
+#  z_t_logs=("Suite")
+#  z.t._state.current_idx.add describe
+#  # REPLY: 1
+#  # 変更後: z_t_current_idx[describe]=1、contextとitは0
 z.t._state.current_idx.add() {
   local context=$1
   local logs=($z_t_logs)

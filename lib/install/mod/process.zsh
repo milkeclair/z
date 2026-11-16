@@ -1,12 +1,14 @@
-# list available and installed mods from the selected distribution branch
-# green: installed, orange: different contents, red: not installed
-# local edits are also shown as update-available
+# 選択した配布ブランチの利用可能なmodと導入済みmodを一覧する
+# 緑: 導入済み、オレンジ: 内容が異なる、赤: 未導入
+# ローカルでの編集も更新ありとして表示する
 #
 # REPLY: null
 # return: 0|1
 #
 # example:
+#  # git modが導入済みで配布内容と一致する場合
 #  z.install.mod.list
+#  # 表示例（一部、緑色）: git [installed]
 z.install.mod.list() {
   local work_dir=$(mktemp -d)
   z.dir.exists "$work_dir" || return 1
@@ -39,15 +41,18 @@ z.install.mod.list() {
   REPLY=""
 }
 
-# fetch the selected distribution's mod directory into a work directory
+# 選択した配布内容のmodディレクトリを作業ディレクトリへ取得する
 #
-# $dir: existing work directory
-# $branch?: distribution branch (default: main)
-# REPLY: extracted mod directory
+# $dir: 存在する作業ディレクトリ
+# $branch?: 配布ブランチ（既定: main）
+# REPLY: 取り出したmodディレクトリ
 # return: 0|1
 #
 # example:
+#  # mainのアーカイブがz-mainへ展開された場合
 #  z.install.mod._fetch dir=/tmp/mod-list branch=main
+#  # REPLY: "/tmp/mod-list/z-main/mod"
+#  # return: 0
 z.install.mod._fetch() {
   z.arg.named dir "$@" && local dir=$REPLY
   z.arg.named branch "$@" default=main && local branch=$REPLY
@@ -67,14 +72,17 @@ z.install.mod._fetch() {
   REPLY="$roots[1]/mod"
 }
 
-# install or update every distribution mod after one confirmation
-# local-only mods and files directly under mod are preserved
+# 1回の確認後に配布対象の全modを導入または更新する
+# ローカルだけにあるmodとmod直下のファイルは保持する
 #
 # REPLY: null
 # return: 0|1
 #
 # example:
+#  # 確認にyを入力し、取得・準備・切替が成功した場合
 #  z.install.mod.all
+#  # return: 0
+#  # 結果: 配布対象の全modが導入・更新される
 z.install.mod.all() {
   z.is.null "$z_root" && return 1
   local install_dir=$z_root

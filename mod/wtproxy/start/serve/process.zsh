@@ -1,13 +1,15 @@
-# accept a client connection and start piping to upstream
+# クライアント接続を受け付け、上流との中継を開始する
 #
-# $1: listener file descriptor
-# $2: target port key
-# $@?: listener file descriptors to close in the pipe child
+# $1: 待受ファイルディスクリプタ
+# $2: 対象のポートキー
+# $@?: 中継の子プロセスで閉じる待受ファイルディスクリプタ
 # REPLY: null
 # return: null
 #
 # example:
+#  # FD10が待受中で、activeのworktree_port_1が3001の場合
 #  z.wtproxy.start._serve.accept 10 worktree_port_1
+#  # 結果: localhostからの接続が127.0.0.1:3001へ中継される
 z.wtproxy.start._serve.accept() {
   local listener_fd=$1
   local target_key=$2
@@ -61,14 +63,16 @@ z.wtproxy.start._serve.accept() {
   z.io.null ztcp -c $upstream_fd
 }
 
-# clean up proxy listener file descriptors and pid file
+# プロキシの待受ファイルディスクリプタとPIDファイルを片付ける
 #
-# $@: listener file descriptors
+# $@: 待受ファイルディスクリプタの一覧
 # REPLY: null
 # return: null
 #
 # example:
+#  # このデーモンがFD11、12、13を待受用に開いている場合
 #  z.wtproxy.start._serve.cleanup 11 12 13
+#  # 結果: 待受FD11、12、13が閉じられる
 z.wtproxy.start._serve.cleanup() {
   for pid in $z_wtproxy_serve_pipe_pids; do
     z.io.null kill -TERM "$pid"

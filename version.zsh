@@ -1,21 +1,25 @@
-# echo the current version
+# 現在のバージョンを表示する
 #
 # REPLY: null
 # return: null
 #
 # example:
-#  z.version #=> v... (current version)
+#  # インストール済みバージョンがv3.1.0の場合
+#  z.version
+#  # 出力: v3.1.0
 z.version() {
   z.io "v3.1.0"
 }
 
-# echo the latest version from GitHub
+# GitHubから取得した最新バージョンを表示する
 #
 # REPLY: null
 # return: null
 #
 # example:
-#  z.version.latest #=> v... (latest version)
+#  # GitHubの最新リリースがv3.1.0の場合
+#  z.version.latest
+#  # 出力: v3.1.0
 z.version.latest() {
   local api_url="https://api.github.com/repos/milkeclair/z/releases/latest"
   local response
@@ -29,13 +33,15 @@ z.version.latest() {
   z.io $tag_name
 }
 
-# echo the release note of the current version
+# 現在のバージョンのリリースノートを表示する
 #
 # REPLY: null
 # return: null
 #
 # example:
-#  z.version.latest.note #=> "release note for v... (latest version)"
+#  # 最新リリースの本文が「不具合を修正しました。」の場合
+#  z.version.latest.note
+#  # 出力: 不具合を修正しました。
 z.version.latest.note() {
   local api_url="https://api.github.com/repos/milkeclair/z/releases/latest"
   local response
@@ -49,13 +55,15 @@ z.version.latest.note() {
   z.io "$body"
 }
 
-# echo the release note of the current version
+# 現在のバージョンのリリースノートを表示する
 #
 # REPLY: null
 # return: null
 #
 # example:
-#  z.version.note #=> "release note for v... (current version)"
+#  # インストール済みバージョンのリリース本文が「不具合を修正しました。」の場合
+#  z.version.note
+#  # 出力: 不具合を修正しました。
 z.version.note() {
   local current_version=$(z.version)
   local api_url="https://api.github.com/repos/milkeclair/z/releases/tags/${current_version}"

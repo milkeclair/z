@@ -1,12 +1,16 @@
-# unmock a function
-# function name can be omitted to unmock the last mocked function
+# 関数のモックを解除する
+# 関数名を省略すると、最後にモックした関数のモックを解除する
 #
-# $name?: function name
+# $name?: 関数名
 # REPLY: null
 # return: null
 #
 # example:
+#  # my_funcが"hello"を表示する関数の場合
+#  z.t.mock name=my_func behavior='z.io "mocked"'
 #  z.t.mock.unmock name=my_func
+#  my_func
+#  # 出力: hello
 z.t.mock.unmock() {
   z.arg.named name $@ && local func_name=$REPLY
   local nonfunctional="_nonfunctional"
@@ -37,15 +41,17 @@ z.t.mock.unmock() {
   fi
 }
 
-# unmock all mocked functions
-# skip unmocking if the argument is "skip_unmock"
+# すべての関数のモックを解除する
+# 引数が"skip_unmock"ならモック解除を省略する
 #
-# $skip_unmock?: skip unmock
+# $skip_unmock?: モック解除を省略するか
 # REPLY: null
 # return: null
 #
 # example:
+#  # my_funcとother_funcをモック済みの場合
 #  z.t.mock.unmock.all
+#  # 結果: 両方の関数が元の実装へ戻る
 z.t.mock.unmock.all() {
   z.arg.named skip_unmock $@ && local skip_unmock=$REPLY
 
@@ -57,14 +63,15 @@ z.t.mock.unmock.all() {
   fi
 }
 
-# check if unmocking is not skipped
+# モック解除を省略しないか確認する
 #
-# $1?: skip unmock
+# $1?: モック解除を省略するか
 # REPLY: null
-# return 0|1
+# return: 0|1
 #
 # example:
-#  if z.t.mock.unmock._is_not_skippable true; then ... fi
+#  z.t.mock.unmock._is_not_skippable true
+#  # return: 1
 z.t.mock.unmock._is_not_skippable() {
   local skip_unmock=$1
 

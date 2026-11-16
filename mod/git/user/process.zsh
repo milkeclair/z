@@ -1,28 +1,37 @@
-# display git user info (name and email) for both local and global configurations
+# Gitのローカル設定とグローバル設定のユーザー名・メールアドレスを表示する
 #
 # REPLY: null
 # return: null
 #
 # example:
-#   z.git.user
-#   #=> --- local user info ---
-#   #   user.name: milkeclair
-#   #   user.email: milkeclair@example.com...
+#  # local/globalの名前がmilkeclair、メールがmilkeclair@example.comの場合
+#  z.git.user
+#  # 出力:
+#  # --- local user info ---
+#  # user.name: milkeclair
+#  # user.email: milkeclair@example.com
+#  #
+#  # --- global user info ---
+#  # user.name: milkeclair
+#  # user.email: milkeclair@example.com
 z.git.user() {
   z.git.user.local
   z.io.line
   z.git.user.global
 }
 
-# display local git user info (name and email)
+# Gitのローカル設定のユーザー名・メールアドレスを表示する
 #
 # REPLY: null
 # return: null
 #
 # example:
-#   z.git.user.local
-#   #=> user.name: milkeclair
-#   #   user.email: milkeclair@example.com
+#  # ローカル設定の名前がmilkeclair、メールがmilkeclair@example.comの場合
+#  z.git.user.local
+#  # 出力:
+#  # --- local user info ---
+#  # user.name: milkeclair
+#  # user.email: milkeclair@example.com
 z.git.user.local() {
   z.io "--- local user info ---"
   local user_name=$(git config --local user.name)
@@ -31,15 +40,18 @@ z.git.user.local() {
   z.io "user.email: $user_email"
 }
 
-# display global git user info (name and email)
+# Gitのグローバル設定のユーザー名・メールアドレスを表示する
 #
 # REPLY: null
 # return: null
 #
 # example:
-#   z.git.user.global
-#   #=> user.name: milkeclair
-#   #   user.email: milkeclair@example.com
+#  # グローバル設定の名前がmilkeclair、メールがmilkeclair@example.comの場合
+#  z.git.user.global
+#  # 出力:
+#  # --- global user info ---
+#  # user.name: milkeclair
+#  # user.email: milkeclair@example.com
 z.git.user.global() {
   z.io "--- global user info ---"
   local user_name=$(git config --global user.name)

@@ -1,28 +1,26 @@
 # z.git
 
-A modifier for git operations.
-Provides conventional commit messages, branch management, author statistics, and more.
+Git操作用のmodです。規約に沿ったコミットメッセージ、ブランチ管理、作成者ごとの統計などを提供します。
 
-## Installation
+## インストール
 
 `z.install.mod git`
 
-## Overview
+## 概要
 
-`z.git` acts as a wrapper around git commands.
-Undefined subcommands are delegated to `git` as-is.
+`z.git`はGitコマンドのラッパーです。定義されていないサブコマンドは、そのまま`git`へ渡します。
 
 ```zsh
 z.git status   # => git status
 z.git diff     # => git diff
 ```
 
-## Commands
+## コマンド
 
 ### add
 
 - `z.git.add`
-  - safer `git add` that rejects `git add .` to encourage explicit file specification
+  - `git add .`を拒否し、ファイルを明示的に指定するようにしたgit addです。
 
 ```zsh
 z.git.add file1.txt file2.txt  # OK
@@ -32,9 +30,9 @@ z.git.add .                    # NG
 ### branch
 
 - `z.git.branch` / `z.git.b`
-  - alias for `git branch`
+  - `git branch`の別名
 - `z.git.branch.all` / `z.git.b.a`
-  - alias for `git branch -a`
+  - `git branch -a`の別名
 
 ```zsh
 z.git.b
@@ -42,18 +40,18 @@ z.git.b.a
 ```
 
 - `z.git.branch.current`
-  - display the current branch name
+  - 現在のブランチ名を表示します。
 
 ```zsh
 z.git.branch.current  #=> "main"
 ```
 
 - `z.git.branch.label.current`
-  - return the current branch label
-  - returns `detached-<short HEAD>` when HEAD is detached
+  - 現在のブランチのラベルを返します。
+  - HEADがdetachedの場合は`detached-<short HEAD>`を返します。
 - `z.git.branch.label.for <path>`
-  - return the branch label for a worktree path
-  - returns `detached-<short HEAD>` when the path is detached
+  - worktreeパスに対応するブランチのラベルを返します。
+  - そのパスがdetachedの場合は`detached-<short HEAD>`を返します。
 
 ```zsh
 z.git.branch.label.current
@@ -66,11 +64,11 @@ echo $REPLY  #=> "feature/example"
 ### commit
 
 - `z.git.commit` / `z.git.c`
-  - commit
+  - コミットします。
 - `z.git.commit.tdd` / `z.git.c.r` / `z.git.c.g`
-  - tdd commit with red/green cycle tag
+  - red/greenサイクルのタグを付けてTDDのコミットを作成します。
 - `z.git.commit.help`
-  - display commit usage
+  - コミットの使い方を表示します。
 
 ```zsh
 z.git.c feat "add new feature"
@@ -80,10 +78,9 @@ z.git.c fix "resolve bug" TICKET-123
 # => fix: #TICKET-123 resolve bug
 ```
 
-If ticket is omitted (without `-nt`), it is automatically extracted from the branch name.
-For example, on branch `feature/some-description-123`, `123` is used as the ticket number.
+チケット番号を省略し、`-nt`も指定しなかった場合は、ブランチ名から自動で取り出します。例えば`feature/some-description-123`では、`123`をチケット番号として使います。
 
-TDD commits include a cycle tag in the message.
+TDDのコミットメッセージにはサイクルのタグを付けます。
 
 ```zsh
 z.git.c.r test "add failing test" TICKET-123
@@ -96,12 +93,12 @@ z.git.c.g test "make test pass" TICKET-123
 ### fetch
 
 - `z.git.fetch`
-  - run `git fetch --prune`
+  - `git fetch --prune`を実行します。
 
 ### log
 
 - `z.git.log`
-  - display user info and a pretty-formatted commit log
+  - ユーザー情報と整形したコミットログを表示します。
 
 ```zsh
 z.git.log
@@ -112,7 +109,7 @@ z.git.log
 ### merge
 
 - `z.git.merge`
-  - safer merge that rejects dirty working tree and runs `fetch --prune` before merging
+  - 作業ツリーに変更があれば拒否し、マージ前に`fetch --prune`を実行します。
 
 ```zsh
 z.git.merge main
@@ -121,7 +118,7 @@ z.git.merge main
 ### mode
 
 - `z.git.mode` / `z.git`
-  - mode for git operations
+  - Git操作用の対話モードです。
 
 ```zsh
 z.git.mode
@@ -131,7 +128,7 @@ z.git.mode
 ### pull
 
 - `z.git.pull`
-  - pull based on the current branch context
+  - 現在のブランチの状況に応じてpullします。
 
 ```zsh
 z.git.pull                  # auto-detect
@@ -139,41 +136,41 @@ z.git.pull origin develop   # delegate to git pull as-is
 z.git.pull dev              # pull from develop branch
 ```
 
-Behavior:
+動作:
 
-- If arguments contain `origin`, delegate to `git pull` as-is
-- If arguments contain `dev` or `develop`, run `git pull origin develop`
-- If current branch is `pr/<number>`, resolve the PR head branch and run `git pull origin <head-branch>`
-- Otherwise, run `git pull origin <current_branch>`
+- 引数に`origin`が含まれれば、そのまま`git pull`へ渡します。
+- 引数に`dev`または`develop`が含まれれば、`git pull origin develop`を実行します。
+- 現在のブランチが`pr/<number>`なら、PRのheadブランチを解決して`git pull origin <head-branch>`を実行します。
+- それ以外は`git pull origin <current_branch>`を実行します。
 
 ### push
 
 - `z.git.push`
-  - push based on the current branch context
+  - 現在のブランチの状況に応じてpushします。
 
 ```zsh
 z.git.push                  # auto-detect
 z.git.push origin develop   # delegate to git push as-is
 ```
 
-Behavior:
+動作:
 
-- If arguments contain `origin`, delegate to `git push` as-is
-- If current branch is `pr/<number>`, resolve the PR head branch and run `git push --set-upstream origin HEAD:<head-branch>`
-- Otherwise, run `git push --set-upstream origin <current_branch>`
+- 引数に`origin`が含まれれば、そのまま`git push`へ渡します。
+- 現在のブランチが`pr/<number>`なら、PRのheadブランチを解決して`git push --set-upstream origin HEAD:<head-branch>`を実行します。
+- それ以外は`git push --set-upstream origin <current_branch>`を実行します。
 
 ### stats
 
 - `z.git.stats`
-  - display per-author commit statistics in a table
+  - 作成者ごとのコミット統計を表形式で表示します。
 
 ```zsh
 z.git.stats
 z.git.stats exclude_exts="md txt" exclude_dirs="docs tests"
 ```
 
-- `exclude_exts`: file extensions to exclude (default: `log`, `lock`)
-- `exclude_dirs`: directories to exclude (default: `node_modules`, `dist`)
+- `exclude_exts`: 除外する拡張子（既定: `log`、`lock`）
+- `exclude_dirs`: 除外するディレクトリ（既定: `node_modules`、`dist`）
 
 ```
 ┌──────────────────────┬────────────┬────────────┬────────────┬────────────┐
@@ -188,7 +185,7 @@ z.git.stats exclude_exts="md txt" exclude_dirs="docs tests"
 ### status
 
 - `z.git.status`
-  - display `git status --short` with upstream ahead info
+  - upstreamとの差分も含め、`git status --short`を表示します。
 
 ```zsh
 z.git.status
@@ -199,11 +196,11 @@ z.git.status
 ### user
 
 - `z.git.user`
-  - display local and global git user info
+  - Gitのローカルとグローバルのユーザー情報を表示します。
 - `z.git.user.local`
-  - display local git user info
+  - Gitのローカルのユーザー情報を表示します。
 - `z.git.user.global`
-  - display global git user info
+  - Gitのグローバルのユーザー情報を表示します。
 
 ```zsh
 z.git.user
@@ -217,11 +214,11 @@ z.git.user
 ```
 
 - `z.git.user.set` / `z.git.user.set.local`
-  - set local git user info
+  - Gitのローカルのユーザー情報を設定します。
 - `z.git.user.set.global`
-  - set global git user info
+  - Gitのグローバルのユーザー情報を設定します。
 
-Both require `user.name` and `user.email` as arguments.
+どちらも`user.name`と`user.email`を引数に指定します。
 
 ```zsh
 z.git.user.set "milkeclair" "milkeclair@example.com"
@@ -229,19 +226,18 @@ z.git.user.set.global "milkeclair" "milkeclair@example.com"
 ```
 
 - `z.git.user.set.from.global`
-  - copy global `user.name` and `user.email` into the current repository's local configuration
+  - グローバルな`user.name`と`user.email`を現在のリポジトリのローカル設定へコピーします。
 
 ```zsh
 z.git.user.set.from.global
 ```
 
-Both global values must be set and non-empty. If either value is missing, the existing local identity is preserved.
-Global values and unrelated local configuration remain unchanged. Configuration write failures return a non-zero status.
+グローバルな両方の値が設定済みで、空でない必要があります。どちらかがなければ、既存のローカルのユーザー情報を保持します。グローバルの値と無関係なローカル設定は変更せず、設定の書き込みに失敗した場合は0以外の終了コードを返します。
 
 ### wt
 
 - `z.git.wt.current.root`
-  - return the current git worktree root
+  - 現在のGit worktreeのルートを返します。
 
 ```zsh
 z.git.wt.current.root

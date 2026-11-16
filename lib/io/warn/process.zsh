@@ -1,13 +1,14 @@
-# printing provided arguments in one line without newline at the end to standard output
+# 渡された引数を改行なしで標準出力へ1行に表示する
 #
-# $@: arguments
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #
 # example:
 #  z.io.warn.oneline "warn message"
+#  # 出力: warn message（黄色、末尾改行なし）
 z.io.warn.oneline() {
   z.arg.named color $@ default=yellow && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
@@ -21,16 +22,19 @@ z.io.warn.oneline() {
   z.io.oneline $args
 }
 
-# printing provided arguments line by line to standard output
+# 渡された引数を標準出力へ1行ずつ表示する
 #
-# $@: arguments
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #
 # example:
 #  z.io.warn.line "warn1" "warn2"
+#  # 出力（黄色）:
+#  # warn1
+#  # warn2
 z.io.warn.line() {
   z.arg.named color $@ default=yellow && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY

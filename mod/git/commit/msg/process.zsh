@@ -1,16 +1,16 @@
-# build commit message
+# コミットメッセージを組み立てる
 #
-# $tag: commit tag (e.g. feat, fix)
-# $message: commit message
-# $ticket?: ticket number (optional)
-# $cycle?: tdd cycle (optional)
+# $tag: コミットタグ（例: feat、fix）
+# $message: コミットメッセージ
+# $ticket?: チケット番号（任意）
+# $cycle?: TDDサイクル（任意）
 #
-# REPLY: commit message
+# REPLY: コミットメッセージ
 # return: null
 #
 # example:
-#   z.git.commit._msg.build tag="feat" message="add new feature" ticket="TICKET-123" cycle="red"
-#   #=> "feat: #TICKET-123 [red] add new feature"
+#  z.git.commit._msg.build tag="feat" message="add new feature" ticket="TICKET-123" cycle="red"
+#  # REPLY: "feat: #TICKET-123 [red] add new feature"
 z.git.commit._msg.build() {
   z.arg.named tag $@ && local tag=$REPLY
   z.arg.named message $@ && local message=$REPLY

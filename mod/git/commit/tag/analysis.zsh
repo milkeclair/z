@@ -1,10 +1,11 @@
-# list of valid commit tags
+# 有効なコミットタグの一覧
 #
-# REPLY: array of valid commit tags
+# REPLY: 有効なコミットタグの配列
 # return: null
 #
 # example:
-#   z.git.commit._tag.list #=> ("feat" "fix" "chore" "docs" "style" "refactor" "test")
+#  z.git.commit._tag.list
+#  # REPLY: ("feat" "fix" "chore" "docs" "style" "refactor" "test")
 z.git.commit._tag.list() {
   local tags=(
     feat

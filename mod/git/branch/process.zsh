@@ -1,45 +1,61 @@
-# git branch alias
+# git branchの別名
 #
-# $@: git branch options and arguments
+# $@: git branchのオプションと引数
 # REPLY: null
 # return: null
 #
 # example:
-#   z.git.b -a # show all branches
+#  # mainを選択中で、ブランチがmainとfeature-branchだけの場合
+#  z.git.b -a
+#  # 表示例:
+#  #   feature-branch
+#  # * main
 z.git.b() {
   z.git.branch "$@"
 }
 
-# alias for `git branch -a`
+# git branch -aの別名
 #
 # REPLY: null
 # return: null
 #
 # example:
-#   z.git.b.a # show all branches
+#  # mainを選択中で、ブランチがmainとfeature-branchだけの場合
+#  z.git.b.a
+#  # 表示例:
+#  #   feature-branch
+#  # * main
 z.git.b.a() {
   z.git.branch.all
 }
 
-# git branch alias
+# git branchの別名
 #
-# $@: git branch options and arguments
+# $@: git branchのオプションと引数
 # REPLY: null
 # return: null
 #
 # example:
-#   z.git.branch -a # show all branches
+#  # mainを選択中で、ブランチがmainとfeature-branchだけの場合
+#  z.git.branch -a
+#  # 表示例:
+#  #   feature-branch
+#  # * main
 z.git.branch() {
   git branch "$@"
 }
 
-# alias for `git branch -a`
+# git branch -aの別名
 #
 # REPLY: null
 # return: null
 #
 # example:
-#   z.git.branch.all # show all branches
+#  # mainを選択中で、ブランチがmainとfeature-branchだけの場合
+#  z.git.branch.all
+#  # 表示例:
+#  #   feature-branch
+#  # * main
 z.git.branch.all() {
   z.git.branch -a
 }

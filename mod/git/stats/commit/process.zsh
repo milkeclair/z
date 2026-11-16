@@ -1,14 +1,15 @@
-# process commit stats for a list of authors
+# 作成者の一覧に対してコミット統計を処理する
 #
-# $authors: an array of author names
-# $exclude_exts?: array of file extensions to exclude (e.g. "md" "txt")
-# $exclude_dirs?: array of directories to exclude (e.g. "docs" "tests")
-# REPLY: an array of commit map entries (strings in the format "author:details:commit_count")
+# $authors: 作成者名の配列
+# $exclude_exts?: 除外する拡張子の配列（例: "md" "txt"）
+# $exclude_dirs?: 除外するディレクトリの配列（例: "docs" "tests"）
+# REPLY: コミット情報の配列（各要素は"author:details:commit_count"形式）
 # return: null
 #
 # example:
-#   z.git.stats._commit.map authors=("Alice" "Bob") exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
-#   #=> REPLY=("Alice:1000 500:50" "Bob:800 300:40")
+#  # Aliceのコミットが50件、追加1000行、削除500行の場合
+#  z.git.stats._commit.map authors="Alice" exclude_exts=md exclude_dirs=docs
+#  # REPLY: ("Alice:1000 500:50")
 z.git.stats._commit.map() {
   z.arg.named authors $@ && local authors_raw=$REPLY
   z.arg.named exclude_exts $@ && local exclude_exts=($REPLY)
@@ -37,16 +38,18 @@ z.git.stats._commit.map() {
   REPLY=("${commit_map[@]}")
 }
 
-# sum inserted and deleted lines to get total lines changed
+# 追加行数と削除行数を合計して変更行数を求める
 #
-# $author: author name
-# $exclude_exts?: array of file extensions to exclude (e.g. "md" "txt")
-# $exclude_dirs?: array of directories to exclude (e.g. "docs" "tests")
-# REPLY: total number of lines changed by the author
+# $author: 作成者名
+# $exclude_exts?: 除外する拡張子の配列（例: "md" "txt"）
+# $exclude_dirs?: 除外するディレクトリの配列（例: "docs" "tests"）
+# REPLY: 追加行数と削除行数を空白で区切った文字列
 # return: null
 #
 # example:
-#   z.git.stats._commit.details author="milkeclair" exclude_exts=("md" "txt") exclude_dirs=("docs" "tests")
+#  # 対象の履歴が追加3行、削除1行の場合
+#  z.git.stats._commit.details author=milkeclair exclude_exts=md exclude_dirs=docs
+#  # REPLY: "3 1"
 z.git.stats._commit.details() {
   z.arg.named author $@ && local author=$REPLY
   z.arg.named exclude_exts $@ && local exclude_exts_raw=$REPLY
@@ -75,16 +78,16 @@ z.git.stats._commit.details() {
   REPLY="$inserted_total $deleted_total"
 }
 
-# count the number of lines changed
+# 変更行数を数える
 #
-# $inserted: number of lines inserted
-# $deleted: number of lines deleted
-# REPLY: total number of lines changed
+# $inserted: 追加行数
+# $deleted: 削除行数
+# REPLY: 変更行数の合計
 # return: null
 #
 # example:
-#   z.git.stats._commit.sum_lines inserted=1000 deleted=500
-#   #=> 1500
+#  z.git.stats._commit.sum_lines inserted=1000 deleted=500
+#  # REPLY: 1500
 z.git.stats._commit.sum_lines() {
   z.arg.named inserted $@ && local inserted=$REPLY
   z.arg.named deleted $@ && local deleted=$REPLY

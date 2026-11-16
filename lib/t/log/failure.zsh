@@ -1,21 +1,27 @@
-# get failure records
+# 失敗の記録を取得する
 #
-# REPLY: failure records
+# REPLY: 失敗の記録
 # return: null
 #
 # example:
+#  z_t_failure_records=("1:2:3:4")
 #  z.t._log.failure
+#  # REPLY: ("1:2:3:4")
 z.t._log.failure() {
   z.t._state.failure_records
 }
 
-# remember failure record
+# 失敗の記録を保存する
 #
 # REPLY: null
 # return: null
 #
 # example:
+#  z_t_logs=("Suite" "Context" "Case" "Error")
+#  z_t_current_idx=(describe 1 context 2 it 3)
+#  z_t_failure_records=()
 #  z.t._log.failure.remember
+#  # 変更後: z_t_failure_records=("1:2:3:4")
 z.t._log.failure.remember() {
   local error_idx=${#z_t_logs[@]}
 
@@ -29,14 +35,17 @@ z.t._log.failure.remember() {
   z.t._state.failure_records.add "$d_idx:$c_idx:$i_idx:$error_idx"
 }
 
-# add failure log with color
+# 失敗ログに色を付けて追加する
 #
-# $color: color
+# $color: 色
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t._log.failure.add "red"
+#  z_t_logs=("Suite")
+#  z_t_current_idx=(describe 1 context 0 it 0)
+#  z.t._log.failure.add color=red
+#  # 変更後: z_t_logs[1]は赤色の"Suite"
 z.t._log.failure.add() {
   z.arg.named color $@ && local color=$REPLY
 
@@ -69,14 +78,17 @@ z.t._log.failure.add() {
   fi
 }
 
-# process failure log
+# 失敗ログを処理する
 #
-# $message: error message
+# $message: エラーメッセージ
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t._log.failure.handle "error message"
+#  # 失敗件数0、compact=falseから実行する場合
+#  z.t._log.failure.handle message="error message"
+#  # 変更後の失敗件数: 1
+#  # 結果: error messageのログと失敗の記録が追加される
 z.t._log.failure.handle() {
   z.arg.named message $@ && local error_message=$REPLY
 

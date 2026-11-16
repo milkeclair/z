@@ -1,10 +1,13 @@
-# get wtproxy configuration values from environment variables
+# 環境変数からwtproxyの設定値を取得する
 #
-# REPLY: configuration hash as key-value pairs
+# REPLY: 設定のキーと値の組
 # return: null
 #
 # example:
+#  # 他のZ_WTPROXY_PROXY_PORT_Nは未設定の場合
+#  local Z_WTPROXY_PROXY_PORT_1=3000
 #  z.wtproxy._config.port.env.values
+#  # REPLY: ("proxy_port_1" "3000")
 z.wtproxy._config.port.env.values() {
   zmodload zsh/parameter
 

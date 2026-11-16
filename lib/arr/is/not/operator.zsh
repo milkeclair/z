@@ -1,13 +1,15 @@
-# check if two arrays are not equal
+# 2つの配列が等しくないか確認する
 #
-# $1: first array (as a single string with spaces)
-# $2: second array (as a single string with spaces)
+# $1: 1つ目の配列（空白区切りの1つの文字列）
+# $2: 2つ目の配列（空白区切りの1つの文字列）
 # REPLY: null
 # return: 0|1
 #
 # example:
-#  z.arr.is.not.eq "apple banana cherry" "apple banana cherry"  #=> 1 (false)
-#  z.arr.is.not.eq "apple banana cherry" "apple grape cherry"  #=> 0 (true)
+#  z.arr.is.not.eq "apple banana cherry" "apple banana cherry"
+#  # return: 1
+#  z.arr.is.not.eq "apple banana cherry" "apple grape cherry"
+#  # return: 0
 z.arr.is.not.eq() {
   local arr1=($1)
   local arr2=($2)

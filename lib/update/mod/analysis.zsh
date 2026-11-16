@@ -1,12 +1,15 @@
-# resolve installed mods and their dependencies from source metadata
+# ソースのメタデータから導入済みmodとその依存関係を解決する
 #
-# $source: source directory
-# $@: mod names after the source argument
-# REPLY: dependency-ordered unique mod names
+# $source: ソースディレクトリ
+# $@: ソース引数の後に続くmod名
+# REPLY: 依存順に並べて重複を除いたmod名
 # return: 0|1
 #
 # example:
+#  # sourceにcompletionと、その依存modのjobがある場合
 #  z.update.mod._resolve source=/tmp/source completion
+#  # REPLY: ("job" "completion")
+#  # return: 0
 z.update.mod._resolve() {
   z.arg.named source "$@"
   local source_dir=$REPLY

@@ -1,10 +1,14 @@
-# list all defined functions and show their source files
+# 定義済みの関数をすべて一覧し、定義元のファイルを表示する
 #
 # REPLY: null
 # return: null
 #
 # example:
+#  # PWD=/tmp/exampleでmy_funcだけを登録済みの場合
 #  z.fn.list
+#  # 出力:
+#  # my_func
+#  #   Defined in /tmp/example
 z.fn.list() {
   z.fn._ensure_store
 
@@ -17,14 +21,16 @@ z.fn.list() {
   done
 }
 
-# show the definition of a registered function
+# 登録済み関数の定義を表示する
 #
-# $1: function name
+# $1: 関数名
 # REPLY: null
 # return: null
 #
 # example:
+#  # PWD=/tmp/exampleでmy_funcを登録済みの場合
 #  z.fn.show my_func
+#  # 出力例（先頭行）: Defined in: /tmp/example
 z.fn.show() {
   z.fn._ensure_store
 

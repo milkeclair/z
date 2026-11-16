@@ -1,14 +1,17 @@
-# copy current mod data and replace selected mods in a prepared installation
+# 現在のmodデータをコピーし、準備したインストール先で選択したmodを置換する
 #
-# $source: source directory
-# $current: current installation directory
-# $dir: prepared installation directory
-# $@: selected mod names after the named arguments
+# $source: ソースディレクトリ
+# $current: 現在のインストール先ディレクトリ
+# $dir: 準備済みのインストール先ディレクトリ
+# $@: 名前付き引数の後に続く選択したmod名
 # REPLY: null
 # return: 0|1
 #
 # example:
+#  # 必要なディレクトリが存在し、コピーに成功する場合
 #  z.update.mod._copy source=/tmp/source current=~/.z dir=/tmp/update/next job
+#  # return: 0
+#  # 結果: /tmp/update/next/mod/jobが配布内容へ更新される
 z.update.mod._copy() {
   z.arg.named source "$@"
   local source_dir=$REPLY

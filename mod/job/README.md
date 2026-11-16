@@ -1,25 +1,23 @@
 # z.job
 
-A modifier for running functions as background jobs and collecting their results later.
+関数をバックグラウンドジョブで実行し、後から結果を回収するmodです。
 
-## Installation
+## インストール
 
 `z.install.mod job`
 
-## Overview
+## 概要
 
-`z.job` runs a function in a child process.
-The child process writes its status, exit code, stdout, stderr, and result file under a job directory.
-The parent shell collects finished jobs and runs callbacks.
+`z.job`は子プロセスで関数を実行します。子プロセスがジョブディレクトリへ状態・終了コード・標準出力・標準エラー・結果ファイルを書き込み、親シェルが完了したジョブを回収してコールバックを実行します。
 
-Use it when a function can run asynchronously and the parent shell only needs the result after the command finishes.
+非同期で実行でき、処理終了後に親シェルが結果を受け取ればよい関数に使います。
 
-## Workflow
+## 処理の流れ
 
-1. Define a job command function.
-2. Define optional success or failure callback functions.
-3. Start the job with `z.job.run`.
-4. Let `z.job.collect` run from `precmd`, or call it manually.
+1. ジョブのコマンド関数を定義します。
+2. 必要に応じて成功時・失敗時のコールバック関数を定義します。
+3. `z.job.run`でジョブを開始します。
+4. `precmd`から`z.job.collect`を実行するか、手動で呼び出します。
 
 ```zsh
 my.cache.build() {
@@ -38,25 +36,25 @@ my.cache.load() {
 z.job.run name=cache command=my.cache.build on_success=my.cache.load
 ```
 
-## Commands
+## コマンド
 
 ### run
 
 - `z.job.run`
-  - start a background job
-  - return the job id in `REPLY`
-  - register `z.job.collect` in `precmd`
+  - バックグラウンドジョブを開始します。
+  - `REPLY`にジョブIDを返します。
+  - `precmd`へ`z.job.collect`を登録します。
 
-Arguments:
+引数:
 
 - `name`
-  - job name
+  - ジョブ名
 - `command`
-  - function to run in the child process
+  - 子プロセスで実行する関数
 - `on_success`
-  - callback function to run when the job succeeds
+  - ジョブ成功時のコールバック関数
 - `on_failure`
-  - callback function to run when the job fails
+  - ジョブ失敗時のコールバック関数
 
 ```zsh
 z.job.run name=cache command=my.cache.build on_success=my.cache.load
@@ -66,11 +64,11 @@ local job_id=$REPLY
 ### collect
 
 - `z.job.collect`
-  - collect finished jobs
-  - run callbacks
-  - remove collected job directories
-  - return collected job ids in `REPLY`
-  - return `1` when any callback fails
+  - 完了したジョブを回収します。
+  - コールバックを実行します。
+  - 回収済みのジョブディレクトリを削除します。
+  - 回収したジョブIDを`REPLY`へ返します。
+  - コールバックが1つでも失敗した場合は`1`を返します。
 
 ```zsh
 z.job.collect
@@ -80,8 +78,8 @@ echo $REPLY
 ### list
 
 - `z.job.list`
-  - print jobs as tab-separated lines: `<id> <name> <status>`
-  - return the same lines in `REPLY`
+  - `<id> <name> <status>`形式のタブ区切りの行でジョブを表示します。
+  - 同じ行を`REPLY`へ返します。
 
 ```zsh
 z.job.list
@@ -90,7 +88,7 @@ z.job.list
 ### status
 
 - `z.job.status id=<id>`
-  - print the current job status and return it in `REPLY`
+  - 現在のジョブの状態を表示し、`REPLY`へ返します。
 
 ```zsh
 z.job.status id="$job_id"
@@ -99,7 +97,7 @@ z.job.status id="$job_id"
 ### is.running
 
 - `z.job.is.running id=<id>`
-  - return true when the job status is `running` and the recorded process is alive
+  - ジョブの状態が`running`で記録されたプロセスが生存していれば、trueを返します。
 
 ```zsh
 if z.job.is.running id="$job_id"; then
@@ -110,26 +108,25 @@ fi
 ### cancel
 
 - `z.job.cancel id=<id>`
-  - kill the child process when a pid exists
-  - remove the job directory
+  - PIDがあれば子プロセスを終了します。
+  - ジョブディレクトリを削除します。
 
 ```zsh
 z.job.cancel id="$job_id"
 ```
 
-## Job Command
+## ジョブのコマンド
 
-The command function runs in a child process.
-It receives these named arguments:
+コマンド関数は子プロセスで動作し、次の名前付き引数を受け取ります。
 
 - `id`
-  - job id
+  - ジョブID
 - `name`
-  - job name
+  - ジョブ名
 - `dir`
-  - job directory
+  - ジョブディレクトリ
 - `result`
-  - file path for durable command output
+  - コマンドの出力を保存するファイルのパス
 
 ```zsh
 my.job.command() {
@@ -139,30 +136,30 @@ my.job.command() {
 }
 ```
 
-The child process writes:
+子プロセスが書き込む状態:
 
-- `running` before calling the command
-- `success` when the command exits with `0`
-- `failure` when the command exits with a non-zero status
+- コマンド呼び出し前: `running`
+- 終了コードが`0`: `success`
+- 終了コードが0以外: `failure`
 
-The command must be available after sourcing `main.zsh` in the child process.
+子プロセスで`main.zsh`をsourceした後に、コマンドを呼び出せる必要があります。
 
-## Callback
+## コールバック
 
-Callbacks run in the parent shell when `z.job.collect` collects a finished job.
+`z.job.collect`が完了済みのジョブを回収すると、親シェルでコールバックを実行します。
 
-Callback functions receive these named arguments:
+コールバック関数が受け取る名前付き引数:
 
 - `id`
-  - job id
+  - ジョブID
 - `name`
-  - job name
+  - ジョブ名
 - `dir`
-  - job directory
+  - ジョブディレクトリ
 - `result`
-  - result file path
+  - 結果ファイルのパス
 - `exit_status`
-  - child command exit status
+  - 子のコマンドの終了コード
 
 ```zsh
 my.job.success() {
@@ -174,46 +171,40 @@ my.job.success() {
 }
 ```
 
-`on_success` runs for `success`.
-`on_failure` runs for `failure`.
-If no callback is configured, the job is still collected and removed.
+`success`では`on_success`、`failure`では`on_failure`を実行します。コールバックの指定がなくても、ジョブを回収して削除します。
 
-## Lifecycle
+## ライフサイクル
 
-Job statuses:
+ジョブの状態:
 
 - `queued`
 - `running`
 - `success`
 - `failure`
 
-`z.job.collect` waits for `queued` jobs until their child PID is registered, and
-skips jobs whose child process is still alive. If a `queued` or `running` job has
-a recorded PID that is no longer alive, it is collected as `failure`. The status
-is checked again before marking failure so a child that finished during the
-liveness check keeps its saved success or failure result.
+`z.job.collect`は、`queued`のジョブでは子のPIDが登録されるまで待ち、子が生存しているジョブは回収しません。`queued`または`running`で、記録されたPIDが既に終了していれば`failure`として回収します。失敗にする前に状態を再確認するため、生存確認中に完了した子の成功・失敗の記録は保持します。
 
-## Files
+## ファイル
 
-Job files are stored under:
+ジョブのファイルは次の場所に保存します。
 
 ```zsh
 /tmp/z/job/$$/jobs/<job-id>
 ```
 
-Files:
+ファイル:
 
 - `meta`
-  - sourceable metadata for the job
+  - sourceできるジョブのメタデータ
 - `pid`
-  - child process id
+  - 子プロセスのID
 - `status`
-  - `queued`, `running`, `success`, or `failure`
+  - `queued`・`running`・`success`・`failure`
 - `exit`
-  - child command exit status
+  - 子のコマンドの終了コード
 - `result`
-  - output for callbacks
+  - コールバック用の出力
 - `stdout`
-  - child process stdout
+  - 子の標準出力
 - `stderr`
-  - child process stderr
+  - 子の標準エラー

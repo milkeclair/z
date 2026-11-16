@@ -1,13 +1,15 @@
-# get the rest of a string after removing a matching prefix
+# 一致する接頭辞を除いた残りの文字列を取得する
 #
-# $1: string
-# $2: regex to match at the beginning
-# REPLY: the rest of the string after the matched prefix, or empty if no match
+# $1: 文字列
+# $2: 先頭で照合する正規表現
+# REPLY: 接頭辞に一致した後の残りの文字列。一致しなければ空
 # return: null
 #
 # example:
-#  z.str.match.rest "hello_world" "hello_" #=> "world"
-#  z.str.match.rest "foo-bar-baz" "foo-"   #=> "bar-baz"
+#  z.str.match.rest "hello_world" "hello_"
+#  # REPLY: "world"
+#  z.str.match.rest "foo-bar-baz" "foo-"
+#  # REPLY: "bar-baz"
 z.str.match.rest() {
   local str=$1
   local regex=$2
@@ -19,17 +21,19 @@ z.str.match.rest() {
   fi
 }
 
-# get the nth element from a string that matches a regex
+# 正規表現に一致する文字列のn番目の要素を取得する
 #
-# $1: string (space-separated elements)
-# $2: regex
-# $index: 1-based index of the matching element to return
-# REPLY: the nth matching element, or empty if not found
+# $1: 文字列（空白区切りの要素）
+# $2: 正規表現
+# $index: 返す一致要素のインデックス（1始まり）
+# REPLY: n番目の一致要素。見つからなければ空
 # return: null
 #
 # example:
-#  z.str.match.nth "one two three" "^o" index=1   #=> "one"
-#  z.str.match.nth "apple banana cherry" "^a" index=2 #=> "banana"
+#  z.str.match.nth "one two three" "^o" index=1
+#  # REPLY: "one"
+#  z.str.match.nth "apple apricot cherry" "^a" index=2
+#  # REPLY: "apricot"
 z.str.match.nth() {
   z.arg.named index $@ && local index=$REPLY
   z.arg.named.shift index $@

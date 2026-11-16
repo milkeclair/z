@@ -1,10 +1,13 @@
-# reload the home directory's Zsh configuration in the current shell
+# ホームディレクトリのZsh設定を現在のシェルで読み直す
 #
-# REPLY: value left by the sourced configuration
-# return: source exit status
+# REPLY: sourceした設定が残した値
+# return: sourceの終了コード
 #
 # example:
+#  # ~/.zshrcでREPLY="ready"を設定し、最後にreturn 0する場合
 #  z.reload
+#  # REPLY: "ready"
+#  # return: 0
 z.reload() {
   source "$HOME/.zshrc"
 }

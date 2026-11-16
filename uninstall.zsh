@@ -96,15 +96,17 @@ z.uninstall._bye() {
   echo "👋"
 }
 
-# uninstall z
+# zをアンインストールする
 #
-# $1: install dir (default: $HOME/.z)
+# $1: インストール先（既定: $HOME/.z）
 # REPLY: null
 # return: null
 #
 # example:
-#   1. z.uninstall
-#   2. z.uninstall /path/to/dir
+#  # 有効なインストール先で、削除確認へyを入力した場合
+#  z.uninstall /tmp/z-example
+#  # return: 0
+#  # 結果: /tmp/z-exampleのzが削除される
 z.uninstall() {
   local install_dir="${1:-$HOME/.z}"
 
@@ -184,14 +186,16 @@ z.uninstall.mod._show_completion() {
   echo "✅ mod uninstall completed: $mod_name"
 }
 
-# uninstall z modifier
+# zのmodをアンインストールする
 #
-# $1: mod name
+# $1: mod名
 # REPLY: null
 # return: null
 #
 # example:
-#   z.uninstall.mod git
+#  # 有効なzへgit modを導入済みで、削除確認へyを入力した場合
+#  z.uninstall.mod git
+#  # 結果: インストール先のmod/gitが削除される
 z.uninstall.mod() {
   local mod_name=$1
   local mod_target_dir="$Z_ROOT/mod/$mod_name"

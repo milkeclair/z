@@ -1,11 +1,13 @@
-# extract a z function name from a declaration line
+# 宣言行からzの関数名を取り出す
 #
-# $1: source line
-# REPLY: function name|null
+# $1: ソース行
+# REPLY: 関数名|null
 # return: 0|1
 #
 # example:
 #  z.completion.function.name._declaration "z.example() {"
+#  # REPLY: "z.example"
+#  # return: 0
 z.completion.function.name._declaration() {
   local line=$1
 
@@ -29,13 +31,18 @@ z.completion.function.name._declaration() {
   REPLY="$function_name"
 }
 
-# find the z function name from completion words
+# 補完対象の単語からzの関数名を見つける
 #
-# REPLY: function name|null
+# REPLY: 関数名|null
 # return: 0|1
 #
 # example:
+#  # z.arg.getが読み込み済みの場合
+#  local words=(z.arg.get value)
+#  local CURRENT=2
 #  z.completion.function.name._words
+#  # REPLY: "z.arg.get"
+#  # return: 0
 z.completion.function.name._words() {
   local current=$CURRENT # 現在のカーソル位置
   if z.int.is.gt $current ${#words[@]}; then

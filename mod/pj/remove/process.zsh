@@ -1,11 +1,14 @@
-# display numbered registration names on standard error
+# 登録名を番号付きで標準エラーへ表示する
 #
-# $@: project names in display order
+# $@: 表示順に並べたプロジェクト名
 # REPLY: null
 # return: null
 #
 # example:
 #  z.pj.remove._menu first second
+#  # 標準エラー:
+#  # 1) first
+#  # 2) second
 z.pj.remove._menu() {
   local index=1
   local name
@@ -15,13 +18,16 @@ z.pj.remove._menu() {
   done
 }
 
-# select a registered project without modifying the registry
+# 登録内容を変更せず、登録済みのプロジェクトを選ぶ
 #
-# REPLY: selected name, or empty when cancelled
+# REPLY: 選択した名前。キャンセル時は空
 # return: 0|1
 #
 # example:
+#  # 登録名がfirst、secondで、1を入力した場合
 #  z.pj.remove._select
+#  # REPLY: "first"
+#  # return: 0
 z.pj.remove._select() {
   z.pj.file._names
   local names=("${(@)REPLY}")
@@ -54,14 +60,17 @@ z.pj.remove._select() {
   return 1
 }
 
-# delete only the plain registration file for a validated name
+# 検証済みの名前に対応する通常の登録ファイルだけを削除する
 #
-# $1: project name
+# $1: プロジェクト名
 # REPLY: null
 # return: 0|1
 #
 # example:
+#  # exampleの登録ファイルが存在する場合
 #  z.pj.remove._entry example
+#  # return: 0
+#  # 結果: exampleの登録ファイルが削除される
 z.pj.remove._entry() {
   z.pj.file._path "$1" || return 1
   local file=$REPLY

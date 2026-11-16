@@ -186,15 +186,16 @@ z.install._add_to_zshrc() {
   echo "   to apply changes: source ~/.zshrc"
 }
 
-# install z, preserving individually installed mods on update
+# zを導入し、更新時には個別に導入したmodを保持する
 #
-# $1?: install dir (default: $HOME/.z)
+# $1?: インストール先（既定: $HOME/.z）
 # REPLY: null
 # return: null
 #
 # example:
-#   1. z.install
-#   2. z.install /path/to/dir
+#  # ダウンロードと展開に成功した場合
+#  z.install /tmp/z-example
+#  # 結果: /tmp/z-example/main.zsh と lib が配置される
 z.install() {
   local install_dir=${1:-$HOME/.z}
   local github_repo="milkeclair/z"
@@ -343,14 +344,16 @@ z.install.mod._show_completion() {
   echo "✅ mod installation completed: $mod_name"
 }
 
-# install z modifier
+# zのmodを導入する
 #
-# $1: mod name
+# $1: mod名
 # REPLY: null
 # return: null
 #
 # example:
-#   z.install.mod git
+#  # インストール済みのzへgit modを導入する場合
+#  z.install.mod git
+#  # 結果: mod/git が配置され、z.git が使えるようになる
 z.install.mod() {
   local mod_name=$1
   local github_repo="milkeclair/z"

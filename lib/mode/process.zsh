@@ -1,12 +1,16 @@
-# Interactive mode for executing commands with a given prefix.
+# 指定した接頭辞でコマンドを実行する対話モード。
 #
-# $split?: string to insert between prefix and command (default: " ")
-# $@: prefix command and its arguments
+# $split?: 接頭辞とコマンドの間に挿入する文字列（既定: " "）
+# $@: 接頭辞となるコマンドとその引数
 # REPLY: null
 # return: null
 #
 # example:
-#  z.mode git split=" "   # starts a REPL where commands are executed as "git <command>"
+#  z.mode git split=" "
+#  # 入力例: status
+#  # 実行されるコマンド: git status
+#  # 続けてexitを入力した場合
+#  # return: 1
 z.mode() {
   local REPLY
 

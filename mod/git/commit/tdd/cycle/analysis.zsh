@@ -1,10 +1,11 @@
-# list of valid commit cycles
+# 有効なコミットサイクルの一覧
 #
-# REPLY: array of valid commit cycles
+# REPLY: 有効なコミットサイクルの配列
 # return: null
 #
 # example:
-#   z.git.commit.tdd._cycle.list #=> ("red" "green")
+#  z.git.commit.tdd._cycle.list
+#  # REPLY: ("red" "green")
 z.git.commit.tdd._cycle.list() {
   local tdd_cycles=(
     red

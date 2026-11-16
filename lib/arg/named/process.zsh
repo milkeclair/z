@@ -1,13 +1,13 @@
-# remove named argument from arguments
+# 引数から名前付き引数を取り除く
 #
-# $1: name of the argument (e.g. option)
-# $@: arguments
-# REPLY: arguments without the named argument
+# $1: 引数名（例: option）
+# $@: 引数
+# REPLY: 指定した名前付き引数を除いた引数
 # return: null
 #
 # example:
 #  z.arg.named.shift option option=value other_arg
-#  REPLY="other_arg"
+#  # REPLY: ("other_arg")
 z.arg.named.shift() {
   local name=$1
   shift 2>/dev/null

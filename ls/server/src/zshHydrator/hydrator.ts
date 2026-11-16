@@ -62,8 +62,8 @@ export function refreshZshHydrator({
   readonly previous: ZshHydrator;
   readonly projectRoot: string;
   readonly documents: readonly TextDocument[] | TextDocuments<TextDocument>;
-  // Reconcile these disk paths alongside buffer changes; omit for a full scan.
-  // Relative paths are resolved against projectRoot.
+  // バッファの変更と同時にこれらのディスクパスを照合する。省略すると全走査する。
+  // 相対パスはprojectRootを基準に解決する。
   readonly changedPaths?: readonly string[];
 }): ZshHydrator {
   if (projectRoot === '') return { ...EmptyZshHydrator, options };
@@ -166,7 +166,7 @@ function updateHydratorFromInputs(previous: ZshHydrator, documents: readonly Doc
     }
   }
   for (const input of documents) files.set(input.relativePath, documentEntry({ previous, input }));
-  // Disk candidates retain sorted precedence; document-only candidates follow open order.
+  // ディスク上の候補は整列順の優先度を保ち、文書だけに存在する候補は開いた順に並べる。
   const entries = [...diskPaths].sort().flatMap(filename => {
     const entry = files.get(filename);
     return entry ? [entry] : [];

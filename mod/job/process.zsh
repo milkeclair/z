@@ -1,14 +1,17 @@
-# run a background job
+# バックグラウンドでジョブを実行する
 #
-# $name: job name
-# $command: child function name
-# $on_success?: parent success callback function name
-# $on_failure?: parent failure callback function name
-# REPLY: job id
+# $name: ジョブ名
+# $command: 子で実行する関数名
+# $on_success?: 親プロセスの成功時コールバック関数名
+# $on_failure?: 親プロセスの失敗時コールバック関数名
+# REPLY: ジョブID
 # return: 0|1
 #
 # example:
-#  z.job.run name=example command=z.example.build on_success=z.example.load
+#  z.job.run name=version command=z.version
+#  # REPLYの例: "20260623T121530000000000.100.1"
+#  # return: 0
+#  # 完了後にz.job.collectで回収する
 z.job.run() {
   z.arg.named name "$@" && local name=$REPLY
   z.arg.named command "$@" && local command=$REPLY
@@ -46,13 +49,16 @@ z.job.run() {
   return 0
 }
 
-# collect finished jobs
+# 終了済みのジョブを回収する
 #
-# REPLY: collected job ids
+# REPLY: 回収したジョブID
 # return: 0|1
 #
 # example:
+#  # 完了済みジョブがこの1件だけある場合
 #  z.job.collect
+#  # REPLY: ("20260623T121530000000000.100.1")
+#  # return: 0
 z.job.collect() {
   z.job.file._jobs && local jobs_dir=$REPLY
   if z.dir.not.exists "$jobs_dir"; then
@@ -72,14 +78,17 @@ z.job.collect() {
   return 0
 }
 
-# cancel a job
+# ジョブをキャンセルする
 #
-# $id: job id
+# $id: ジョブID
 # REPLY: null
 # return: 0|1
 #
 # example:
+#  # 指定したジョブをキャンセルできた場合
 #  z.job.cancel id=20260623T121530000000000.100.1
+#  # return: 0
+#  # 結果: 子プロセスが停止し、そのジョブのディレクトリが削除される
 z.job.cancel() {
   z.arg.named id "$@" && local id=$REPLY
   z.is.null "$id" && return 1

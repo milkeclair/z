@@ -1,13 +1,14 @@
-# printing provided arguments in one line without newline at the end to standard output
+# 渡された引数を改行なしで標準出力へ1行に表示する
 #
-# $@: arguments
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #
 # example:
 #  z.io.success.oneline "success message"
+#  # 出力: success message（緑色、末尾改行なし）
 z.io.success.oneline() {
   z.arg.named color $@ default=green && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
@@ -21,16 +22,19 @@ z.io.success.oneline() {
   z.io.oneline $args
 }
 
-# printing provided arguments line by line to standard output
+# 渡された引数を標準出力へ1行ずつ表示する
 #
-# $@: arguments
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #
 # example:
 #  z.io.success.line "success1" "success2"
+#  # 出力（緑色）:
+#  # success1
+#  # success2
 z.io.success.line() {
   z.arg.named color $@ default=green && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY

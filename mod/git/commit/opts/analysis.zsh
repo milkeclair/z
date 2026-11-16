@@ -1,12 +1,12 @@
-# extract commit options
+# コミットオプションを取り出す
 #
-# $@: commit args
-# REPLY: array of valid commit options
+# $@: コミット引数
+# REPLY: 有効なコミットオプションの配列
 # return: null
 #
 # example:
-#   z.git.commit._opts.extract -m "commit message" -ca -ae
-#   #=> ("--amend" "--allow-empty")
+#  z.git.commit._opts.extract -m "commit message" -ca -ae
+#  # REPLY: ("--amend" "--allow-empty")
 z.git.commit._opts.extract() {
   local opts=()
   local valid_opts=()

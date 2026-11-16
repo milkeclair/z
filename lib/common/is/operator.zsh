@@ -1,27 +1,29 @@
-# verifies whether the provided value is truthy or not
-# truthy values:
-#   - true or 0
-#   - non-empty string (that doesn't look like a path)
-#   - existing directory path
-#   - existing file path
+# 指定した値を真として扱うか確認する
+# 真として扱う値:
+#   - true または 0
+#   - パスの形式ではない空でない文字列
+#   - 存在するディレクトリのパス
+#   - 存在するファイルのパス
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #
 # example:
-#  z.is.truthy "true" #=> 0
-#  z.is.truthy 0 #=> 0
-#  z.is.truthy "/path/to/existing/dir" #=> 0
-#  z.is.truthy "/path/to/existing/file" #=> 0
-#  z.is.truthy "some string" #=> 0
-#
-#  z.is.truthy #=> 1
-#  z.is.truthy "" #=> 1
-#  z.is.truthy "false" #=> 1
-#  z.is.truthy 1 #=> 1
-#  z.is.truthy "/path/to/non-existing/dir" #=> 1
-#  z.is.truthy "/path/to/non-existing/file" #=> 1
+#  z.is.truthy "true"
+#  # return: 0
+#  z.is.truthy 0
+#  # return: 0
+#  z.is.truthy "some string"
+#  # return: 0
+#  z.is.truthy
+#  # return: 1
+#  z.is.truthy ""
+#  # return: 1
+#  z.is.truthy "false"
+#  # return: 1
+#  z.is.truthy 1
+#  # return: 1
 z.is.truthy() {
   local value=$1
 
@@ -39,30 +41,32 @@ z.is.truthy() {
   return 1
 }
 
-# verifies whether the provided value is falsy or not
-# falsy values:
-#   - false or 1
-#   - null (empty string)
-#   - non-existing directory path
-#   - non-existing file path
+# 指定した値を偽として扱うか確認する
+# 偽として扱う値:
+#   - false または 1
+#   - null（空文字列）
+#   - 存在しないディレクトリのパス
+#   - 存在しないファイルのパス
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #
 # example:
-#  z.is.falsy #=> 0
-#  z.is.falsy "false" #=> 0
-#  z.is.falsy 1 #=> 0
-#  z.is.falsy "" #=> 0
-#  z.is.falsy "/path/to/non-existing/dir" #=> 0
-#  z.is.falsy "/path/to/non-existing/file" #=> 0
-#
-#  z.is.falsy "true" #=> 1
-#  z.is.falsy 0 #=> 1
-#  z.is.falsy "some string" #=> 1
-#  z.is.falsy "/path/to/existing/dir" #=> 1
-#  z.is.falsy "/path/to/existing/file" #=> 1
+#  z.is.falsy
+#  # return: 0
+#  z.is.falsy "false"
+#  # return: 0
+#  z.is.falsy 1
+#  # return: 0
+#  z.is.falsy ""
+#  # return: 0
+#  z.is.falsy "true"
+#  # return: 1
+#  z.is.falsy 0
+#  # return: 1
+#  z.is.falsy "some string"
+#  # return: 1
 z.is.falsy() {
   local value=$1
 
@@ -81,22 +85,28 @@ z.is.falsy() {
   return 1
 }
 
-# verifies whether the provided value is true or not
-# true values:
-#   - true or 0
+# 指定した値がtrueか確認する
+# trueとして扱う値:
+#   - true または 0
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #
 # example:
-#  z.is.true true #=> 0
-#  z.is.true 0 #=> 0
+#  z.is.true true
+#  # return: 0
+#  z.is.true 0
+#  # return: 0
 #
-#  z.is.true false #=> 1
-#  z.is.true 1 #=> 1
-#  z.is.true "some string" #=> 1
-#  z.is.true "" #=> 1
+#  z.is.true false
+#  # return: 1
+#  z.is.true 1
+#  # return: 1
+#  z.is.true "some string"
+#  # return: 1
+#  z.is.true ""
+#  # return: 1
 z.is.true() {
   local value=$1
 
@@ -106,22 +116,28 @@ z.is.true() {
   return 1
 }
 
-# verifies whether the provided value is false or not
-# false values:
-#   - false or 1
+# 指定した値がfalseか確認する
+# falseとして扱う値:
+#   - false または 1
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #
 # example:
-#  z.is.false false #=> 0
-#  z.is.false 1 #=> 0
+#  z.is.false false
+#  # return: 0
+#  z.is.false 1
+#  # return: 0
 #
-#  z.is.false true #=> 1
-#  z.is.false 0 #=> 1
-#  z.is.false "some string" #=> 1
-#  z.is.false "" #=> 1
+#  z.is.false true
+#  # return: 1
+#  z.is.false 0
+#  # return: 1
+#  z.is.false "some string"
+#  # return: 1
+#  z.is.false ""
+#  # return: 1
 z.is.false() {
   local value=$1
 
@@ -131,17 +147,20 @@ z.is.false() {
   return 1
 }
 
-# verifies whether the two values are equal
+# 2つの値が等しいか確認する
 #
-# $1: base value
-# $2: other value
+# $1: 基準値
+# $2: 比較する値
 # REPLY: null
 # return: 0|1
 #
 # example:
-#  z.is.eq "a" "a" #=> 0
-#  z.is.eq 1 1 #=> 0
-#  z.is.eq "" "" #=> 0
+#  z.is.eq "a" "a"
+#  # return: 0
+#  z.is.eq 1 1
+#  # return: 0
+#  z.is.eq "" ""
+#  # return: 0
 z.is.eq() {
   local base=$1
   local other=$2
@@ -149,15 +168,17 @@ z.is.eq() {
   [[ $base == $other ]]
 }
 
-# verifies whether the provided value is null or not
+# 指定した値がnullか確認する
 #
-# $1: value
+# $1: 値
 # REPLY: null
 # return: 0|1
 #
 # example:
-#  z.is.null "" #=> 0
-#  z.is.null #=> 0
+#  z.is.null ""
+#  # return: 0
+#  z.is.null
+#  # return: 0
 z.is.null() {
   local value=$1
 

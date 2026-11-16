@@ -1,12 +1,13 @@
-# get a wtproxy configuration value for the initial file
+# 初期ファイル用のwtproxy設定値を取得する
 #
-# $1: configuration key
-# $@: named configuration values
-# REPLY: configuration value|null
+# $1: 設定キー
+# $@: 名前付きの設定値
+# REPLY: 設定値|null
 # return: null
 #
 # example:
 #  z.wtproxy.init._config.port.value proxy_port_1 proxy_port_1=3000
+#  # REPLY: "3000"
 z.wtproxy.init._config.port.value() {
   local key=$1 && shift
   z.arg.named $key $@
@@ -24,14 +25,16 @@ z.wtproxy.init._config.port.value() {
   REPLY="$value"
 }
 
-# get configuration keys for the initial file
+# 初期ファイル用の設定キーを取得する
 #
-# $@: named configuration values
-# REPLY: configuration keys
+# $@: 名前付きの設定値
+# REPLY: 設定キーの一覧
 # return: null
 #
 # example:
+#  # 既定の3ポート以外に環境変数の追加指定がない場合
 #  z.wtproxy.init._config.port.keys proxy_port_4=8080
+#  # REPLY: ("proxy_port_1" "proxy_port_2" "proxy_port_3" "proxy_port_4")
 z.wtproxy.init._config.port.keys() {
   z.group "default values"; {
     z.hash.keys z_wtproxy_default_config_values

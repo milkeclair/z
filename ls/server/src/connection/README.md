@@ -1,74 +1,38 @@
-# AST-based language features
+# ASTを使う言語機能
 
-## Snapshot
+## スナップショット
 
-Each server connection owns a `FunctionSnapshot`:
+各サーバー接続が`FunctionSnapshot`を所有します。
 
-- `hydrator` holds project files with hydrated syntax trees and documentation.
-- `targets` maps a static function name to its definition and exact name node.
-- `documents` maps each open local `.zsh` URI to its version, content and hydration.
-- `functions` provides the existing display/diagnostic compatibility view.
+- `hydrator`: 構文木にドキュメントなどの情報を付加したプロジェクトファイルを保持します。
+- `targets`: 静的な関数名を、その定義と正確な名前ノードへ対応付けます。
+- `documents`: 開いているローカルの`.zsh`のURIを、バージョン・内容・付加済み情報へ対応付けます。
+- `functions`: 既存の表示・診断向けの互換情報を提供します。
 
-A project document and its function targets reference the same hydrated tree.
-An open document outside the project receives its own cached hydration for cursor
-queries; project files supply the definitions offered by language features.
-Closing an external document releases that entry.
+プロジェクト内の文書と関数の参照先は、情報を付加した同じ構文木を参照します。プロジェクト外で開いた文書にはカーソル位置の検索用に独立した解析結果をキャッシュします。言語機能が提示する定義はプロジェクトのファイルから取得し、外部文書を閉じるとそのキャッシュを解放します。
 
-`refreshFunctionSnapshot` takes the previous snapshot and returns the next one.
-Unchanged document entries retain their identity. Editing only a caller reuses
-the function index and compatibility view.
+`refreshFunctionSnapshot`は前のsnapshotを受け取り、次のsnapshotを返します。変更のない文書のエントリは同じ参照を保ち、呼び出し元だけの編集では関数索引と互換情報を再利用します。
 
-## Cursor and function queries
+## カーソルと関数の検索
 
-`cursorAt` checks the document version, locates the syntax path, and uses the
-token table to handle a caret at EOF or after whitespace. Token lookup uses
-binary search. `callAt` selects the nearest simple command within its command
-substitution or subshell boundary.
+`cursorAt`は文書のバージョンを確認して構文上の経路を探し、EOFや空白直後のカーソルにはトークン表を使います。トークンは二分探索で探します。`callAt`はコマンド置換やsubshellの境界内で、最も近い単純コマンドを選びます。
 
-Completion replaces a static command word. An empty command slot is determined
-from AST ownership and the adjacent token. Names containing shell syntax are
-quoted on insertion. Multiline command words yield no completion edit because
-LSP completion edits must stay on one line.
+補完では静的なコマンドの単語を置換します。空のコマンド位置はASTの所有関係と隣接トークンから判断し、シェル構文を含む名前は引用して挿入します。LSPの補完編集は1行に収める必要があるため、複数行のコマンド名には補完編集を返しません。
 
-Hover and definition resolve actual command names and declaration names.
-Definition locations use the exact name range and an encoded file URI. Duplicate
-names prefer the nearest preceding definition in the same file, then another
-definition in that file, then the first indexed project definition. Completion
-and its documentation use the same choice.
+Hoverと定義への移動は、実際のコマンド名と宣言名を解決します。定義位置には正確な名前の範囲とエンコードしたファイルURIを使います。同名の定義は、同じファイルの直前にある最も近い定義、同じファイルの他の定義、プロジェクト索引の先頭の定義の順に優先します。補完とその説明も同じ選択に従います。
 
-Comments, redirect targets, here-document contents and opaque expressions yield
-no function-name actions. Explicit `builtin` and `command` modifiers
-select execution outside project function resolution. `exec` can invoke functions
-and retains normal function resolution.
+コメント、リダイレクト先、ヒアドキュメントの内容、詳細を解析しない式には関数名の操作を返しません。明示的な`builtin`と`command`はプロジェクト関数の解決対象外を実行します。`exec`は関数を呼べるため、通常の関数解決を保ちます。
 
-## Argument documentation
+## 引数のドキュメント
 
-Signature help and call-argument hover use `SimpleCommand.arguments`. A quoted
-or multiline argument remains one syntax word. Documented `name=value`
-arguments select their named parameter after shell quoting is removed from the
-static key, including `"name=value"` and `"name=$value"`; positional words select
-their ordinal parameter and then a documented rest parameter. This describes syntax words;
-runtime expansion can produce a different number of shell arguments.
+Signature Helpと呼び出し引数のHoverは`SimpleCommand.arguments`を使います。引用された引数や複数行の引数も、構文上は1つの単語として保持します。`name=value`の名前付き引数は、静的なキーから引用を取り除いて対応する引数を選びます。`"name=value"`や`"name=$value"`も対象です。位置引数は順番に対応する引数を選び、その後は文書に記載された残りの引数へ対応付けます。これは構文上の単語の説明であり、実行時の展開では引数の数が変わる場合があります。
 
-Within a function, argument hover recognizes direct positional parameter parts
-and simple aliases declared with `$1`, `${1}`, static named hash access, or the
-`REPLY` immediately following `z.arg.named ... &&`. Alias lookup visits preceding
-commands in enclosing list scopes with the existing iterative AST walker.
-A later direct assignment replaces the earlier alias. This is a local syntax
-query, rather than shell control-flow evaluation.
+関数内の引数Hoverは、直接の位置パラメータと、`$1`・`${1}`・静的な名前付き連想配列アクセス・`z.arg.named ... &&`直後の`REPLY`で宣言された単純な別名を認識します。既存の反復型AST探索を使い、外側のリストスコープで先行するコマンドを調べます。後続の直接代入は以前の別名を置き換えます。シェルの制御フローを評価するのではなく、ローカルの構文を検索します。
 
-Expression details retained as raw parameter/arithmetic expansions stay within
-the parser's existing representation. Semantic diagnostics use the same hydrated AST through the
-[diagnostic snapshot](../diagnostics/README.md).
+パラメータ展開や算術展開として元の文字列を保持する式の詳細は、既存Parserの表現に従います。意味的な診断も[診断snapshot](../diagnostics/README.md)を通して同じASTを使います。
 
-## Resources and verification
+## リソースと検証
 
-Language-feature requests reuse cached syntax and documentation. Their temporary
-state consists of cursor paths, lookup candidates and result items. Alias lookup
-visits the enclosing function and uses stack-safe traversal. Completion enumerates
-indexed names; definition and hover look up one name before choosing a candidate.
-No request reads source files from disk or invokes the lexer.
+言語機能の要求は、キャッシュ済みの構文とドキュメントを再利用します。一時状態はカーソル経路・検索候補・結果です。別名の検索は対象の関数内を調べ、深い構造でもスタックを使い切らない探索を行います。補完では索引済みの名前を列挙し、定義への移動とHoverでは1つの名前を検索して候補を選びます。要求ごとにディスクのソースを読んだりLexerを実行したりしません。
 
-Tests cover cursor ownership, quoted names, exact locations, multiline arguments,
-alias scopes and snapshot identity. The stdio tests start the compiled Node server
-and exercise document notifications and protocol requests through the SDK client.
+テストではカーソルの所有関係、引用された名前、正確な位置、複数行の引数、別名のスコープ、snapshotの参照維持を確認します。stdioテストはコンパイル済みNodeサーバーを起動し、SDKクライアントで文書の通知とプロトコル要求を実行します。

@@ -1,11 +1,12 @@
-# get the environment variable name from the proxy port key
+# プロキシポートキーに対応する環境変数名を取得する
 #
-# $1: proxy port key
-# REPLY: environment variable name
+# $1: プロキシポートキー
+# REPLY: 環境変数名
 # return: null
 #
 # example:
 #  z.wtproxy._port.proxy.env.key proxy_port_1
+#  # REPLY: "Z_WTPROXY_PROXY_PORT_1"
 z.wtproxy._port.proxy.env.key() {
   local key=$1
 
@@ -15,14 +16,16 @@ z.wtproxy._port.proxy.env.key() {
   REPLY="$z_wtproxy_proxy_port_env_prefix$port_index"
 }
 
-# get the index from the proxy port environment variable name
+# プロキシポート環境変数名からインデックスを取得する
 #
-# $1: environment variable name
-# REPLY: port index|null
-# return: 0 if the name is a numbered proxy port environment variable, otherwise 1
+# $1: 環境変数名
+# REPLY: ポートのインデックス|null
+# return: 連番のプロキシポート環境変数名の場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy._port.proxy.env.index Z_WTPROXY_PROXY_PORT_1
+#  # REPLY: "1"
+#  # return: 0
 z.wtproxy._port.proxy.env.index() {
   local env_name=$1
 

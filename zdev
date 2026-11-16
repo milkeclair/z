@@ -10,9 +10,9 @@ z.io "File watching..."
 
 local fswatch_opts=(-r lib test mod)
 
-# fsevents_monitor is not supported in WSL, so poll_monitor will be used instead.
-# Using the default monitor (inotify) will detect file access events. 
-# However, all event names will be PlatformSpecific, making it impossible to sort events.
+# WSLではfsevents_monitorを使えないため、poll_monitorを使用する。
+# 既定の監視方式（inotify）はファイルへのアクセスも検出する。
+# ただしイベント名がすべてPlatformSpecificとなり、種類を区別できない。
 if z.str.includes $(uname -r) "WSL"; then
   fswatch_opts+=(-m poll_monitor)
 else

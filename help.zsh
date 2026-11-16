@@ -1,14 +1,15 @@
-# display help information
-# if no argument is given, display the README
-# if a function name is given, display the doc comment of the function
+# ヘルプを表示する
+# 引数がなければREADMEを表示する
+# 関数名が指定されていれば、その関数のドキュメントコメントを表示する
 #
-# $1?: function name
+# $1?: 関数名
 # REPLY: null
 # return: null
 #
 # example:
-#  z.help #=> display README
-#  z.help z.arr.count #=> display doc comment of z.arr.count
+#  z.help z.arr.count
+#  # 出力の先頭: 配列の要素数を数える
+#  # 続いて引数・REPLY・exampleのドキュメントを表示する
 z.help() {
   local function_name=$1
 
@@ -20,16 +21,17 @@ z.help() {
   z.help._show_function_docs $function_name
 }
 
-# display help information for a specific modifier
+# 指定したmodのヘルプを表示する
 #
-# $1: modifier name
-# $2?: function name
+# $1: mod名
+# $2?: 関数名
 # REPLY: null
 # return: null
 #
 # example:
-#  z.help mod git #=> display README of git mod
-#  z.help mod git z.git.commit #=> display doc comment of z.git.commit
+#  z.help.mod git z.git.commit
+#  # 出力の先頭: git commitを実行する
+#  # 続いて引数・exampleのドキュメントを表示する
 z.help.mod() {
   local mod_name=$1
   local function_name=$2
@@ -95,7 +97,7 @@ z.help._strip_comment_prefix() {
 
   setopt local_options EXTENDED_GLOB
 
-  # keep empty lines(@f)
+  # 空行を保つ（@f）
   for line in "${(@f)docs}"; do
     z.help._trim_left_whitespace "$line"
     local trimmed_line=$REPLY
@@ -120,10 +122,10 @@ z.help._normalize_docs() {
   for line in "${(@f)docs}"; do
     z.help._leading_whitespace "$line"
     local indentation=$REPLY
-    # keep example comment indentation
+    # 使用例のコメントのインデントを保つ
     # e.g.
     #  example:
-    #   z.arr.count my_array #<= this line has 1 space indentation
+    #   z.arr.count my_array #<= この行は空白1個でインデントされている
     line=${line//\\n/$'\n'$indentation}
     normalized+=("$line")
   done

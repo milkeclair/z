@@ -1,11 +1,12 @@
-# strip color codes from a string
+# 文字列からカラーコードを取り除く
 #
-# $1: string with color codes
-# REPLY: string without color codes
+# $1: カラーコードを含む文字列
+# REPLY: カラーコードを除いた文字列
 # return: null
 #
 # example:
-#  z.str.color.strip $'\033[31mHello\033[0m' #=> "Hello"
+#  z.str.color.strip $'\033[31mHello\033[0m'
+#  # REPLY: "Hello"
 z.str.color.strip() {
   local message=$1
 
@@ -18,15 +19,16 @@ z.str.color.strip() {
   REPLY=$stripped
 }
 
-# decorate a string with color codes
+# 文字列にカラーコードを付ける
 #
-# $color: color name
-# $message: string to decorate
-# REPLY: decorated string
+# $color: 色
+# $message: 装飾する文字列
+# REPLY: 装飾した文字列
 # return: null
 #
 # example:
-#  z.str.color.decorate color=red message="Hello" #=> $'\033[31mHello\033[0m'
+#  z.str.color.decorate color=red message="Hello"
+#  # REPLY: $'\033[31mHello\033[0m'
 z.str.color.decorate() {
   z.arg.named color $@ && local color=$REPLY
   z.arg.named message $@ && local message=$REPLY
@@ -46,98 +48,105 @@ z.str.color.decorate() {
   fi
 }
 
-# decorate a string with red color
+# 文字列に赤色を付ける
 #
-# $1: string to decorate
-# REPLY: decorated string
+# $1: 装飾する文字列
+# REPLY: 装飾した文字列
 # return: null
 #
 # example:
-#  z.str.color.red "Hello" #=> $'\033[31mHello\033[0m'
+#  z.str.color.red "Hello"
+#  # REPLY: $'\033[31mHello\033[0m'
 z.str.color.red() {
   local message=$1
 
   z.str.color.decorate color=red message=$message
 }
 
-# decorate a string with green color
+# 文字列に緑色を付ける
 #
-# $1: string to decorate
-# REPLY: decorated string
+# $1: 装飾する文字列
+# REPLY: 装飾した文字列
 # return: null
 #
 # example:
-#  z.str.color.green "Hello" #=> $'\033[32mHello\033[0m'
+#  z.str.color.green "Hello"
+#  # REPLY: $'\033[32mHello\033[0m'
 z.str.color.green() {
   local message=$1
 
   z.str.color.decorate color=green message=$message
 }
 
-# decorate a string with yellow color
+# 文字列に黄色を付ける
 #
-# $1: string to decorate
-# REPLY: decorated string
+# $1: 装飾する文字列
+# REPLY: 装飾した文字列
 # return: null
 #
 # example:
-#  z.str.color.yellow "Hello" #=> $'\033[33mHello\033[0m'
+#  z.str.color.yellow "Hello"
+#  # REPLY: $'\033[33mHello\033[0m'
 z.str.color.yellow() {
   local message=$1
 
   z.str.color.decorate color=yellow message=$message
 }
 
-# decorate a string with blue color
+# 文字列に青色を付ける
 #
-# $1: string to decorate
-# REPLY: decorated string
+# $1: 装飾する文字列
+# REPLY: 装飾した文字列
 # return: null
 #
 # example:
-#  z.str.color.blue "Hello" #=> $'\033[34mHello\033[0m'
+#  z.str.color.blue "Hello"
+#  # REPLY: $'\033[34mHello\033[0m'
 z.str.color.blue() {
   local message=$1
 
   z.str.color.decorate color=blue message=$message
 }
 
-# decorate a string with magenta color
+# 文字列にマゼンタを付ける
 #
-# $1: string to decorate
-# REPLY: decorated string
+# $1: 装飾する文字列
+# REPLY: 装飾した文字列
 # return: null
 #
 # example:
-#  z.str.color.magenta "Hello" #=> $'\033[35mHello\033[0m'
+#  z.str.color.magenta "Hello"
+#  # REPLY: $'\033[35mHello\033[0m'
 z.str.color.magenta() {
   local message=$1
 
   z.str.color.decorate color=magenta message=$message
 }
 
-# decorate a string with cyan color
+# 文字列にシアンを付ける
 #
-# $1: string to decorate
-# REPLY: decorated string
+# $1: 装飾する文字列
+# REPLY: 装飾した文字列
 # return: null
 #
 # example:
-#  z.str.color.cyan "Hello" #=> $'\033[36mHello\033[0m'
+#  z.str.color.cyan "Hello"
+#  # REPLY: $'\033[36mHello\033[0m'
 z.str.color.cyan() {
   local message=$1
 
   z.str.color.decorate color=cyan message=$message
 }
 
-# decorate a string with white color
+# 文字列に白色を付ける
 #
-# $1: string to decorate
-# REPLY: decorated string
+# $1: 装飾する文字列
+# REPLY: 装飾した文字列
 # return: null
 #
 # example:
-#  z.str.color.white "Hello" #=> $'\033[37mHello\033[0m'
+#  z.str.color.white "Hello"
+#  # REPLY: $'\033[37mHello\033[0m'
 z.str.color.white() {
   local message=$1
 

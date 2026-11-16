@@ -1,13 +1,14 @@
-# format a test heading
+# テストの見出しを整形する
 #
-# $1: indentation
-# $2: color name
-# $3: message
-# REPLY: formatted heading
+# $1: インデント
+# $2: 色
+# $3: メッセージ
+# REPLY: 整形済みの見出し
 # return: null
 #
 # example:
 #  z.t._log.format "  " green "My Test Suite"
+#  # REPLY: $'\033[32m  My Test Suite\033[0m'
 z.t._log.format() {
   local indentation=$1
   local color_name=$2

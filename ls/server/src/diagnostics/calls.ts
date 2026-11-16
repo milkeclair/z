@@ -109,7 +109,7 @@ export type CallAnalysis = {
   readonly targets: ReadonlyMap<SimpleCommandNode, FunctionDefinitionNode>;
 };
 
-/** Embedded and outside-workspace definitions stay local rather than joining workspace targets. */
+/** 埋め込みコードやworkspace外の定義はローカルに保ち、workspaceの参照先には追加しない。 */
 function localDefinitions(snapshot: FunctionSnapshot, file: ZshFileHydration): ReadonlyMap<string, readonly FunctionDefinitionNode[]> {
   const local = new Map<string, FunctionDefinitionNode[]>();
   if (snapshot.hydrator.files.get(file.file) === file) return local;
@@ -125,13 +125,13 @@ function localDefinitions(snapshot: FunctionSnapshot, file: ZshFileHydration): R
   return local;
 }
 
-/** Prefer the closest preceding definition while retaining existing forward-reference behavior. */
+/** 既存の前方参照の動作を保ちながら、直前にある最も近い定義を優先する。 */
 function localDefinition(definitions: ReadonlyMap<string, readonly FunctionDefinitionNode[]>, name: string, offset: number) {
   const candidates = definitions.get(name) ?? [];
   return candidates.findLast(definition => definition.range.start.offset <= offset) ?? candidates[0];
 }
 
-/** Reuse resolved function bindings for code-argument analysis and map only reported locations. */
+/** 解決済みの関数参照をコード引数の解析でも再利用し、報告する位置だけを変換する。 */
 export function analyzeCalls(snapshot: FunctionSnapshot, file: ZshFileHydration,
   commands: readonly SimpleCommandNode[], context: ResolutionContext, options: CallAnalysisOptions = {}): CallAnalysis {
   const diagnostics: Diagnostics[] = [];
@@ -171,7 +171,7 @@ export function analyzeCalls(snapshot: FunctionSnapshot, file: ZshFileHydration,
   return { diagnostics, targets };
 }
 
-/** Preserve the existing diagnostics-only API for callers that do not need function bindings. */
+/** 関数の参照先を必要としない呼び出し元向けに、既存の診断のみを返すAPIを保つ。 */
 export function callDiagnostics(snapshot: FunctionSnapshot, file: ZshFileHydration,
   commands: readonly SimpleCommandNode[], context: ResolutionContext): readonly Diagnostics[] {
   return analyzeCalls(snapshot, file, commands, context).diagnostics;

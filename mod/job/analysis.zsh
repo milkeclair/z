@@ -1,12 +1,16 @@
-# print and return a job status
+# ジョブの状態を表示して返す
 #
-# $id: job id
-# stdout: job status
-# REPLY: job status|null
+# $id: ジョブID
+# stdout: ジョブの状態
+# REPLY: ジョブの状態|null
 # return: 0|1
 #
 # example:
+#  # 指定したジョブがsuccess状態で残っている場合
 #  z.job.status id=20260623T121530000000000.100.1
+#  # 出力: success
+#  # REPLY: "success"
+#  # return: 0
 z.job.status() {
   z.arg.named id "$@" && local id=$REPLY
   z.is.null "$id" && return 1
@@ -21,14 +25,17 @@ z.job.status() {
   REPLY="$result"
 }
 
-# print and return queued jobs
+# 待機中のジョブを表示して返す
 #
-# stdout: tab-separated job lines (empty when no jobs exist)
-# REPLY: tab-separated job lines
+# stdout: タブ区切りのジョブの行（ジョブがなければ空）
+# REPLY: タブ区切りのジョブの行
 # return: null
 #
 # example:
+#  # 指定のID・名前example・状態queuedのジョブが1件ある場合
 #  z.job.list
+#  # 表示例: 20260623T121530000000000.100.1<TAB>example<TAB>queued
+#  # REPLY: $'20260623T121530000000000.100.1\texample\tqueued'
 z.job.list() {
   z.job.file._jobs
   local jobs_dir=$REPLY

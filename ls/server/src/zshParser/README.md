@@ -1,9 +1,8 @@
-# Generic Zsh parser
+# 汎用Zsh Parser
 
-The lexer, parser and AST utilities provide shell syntax independently of a language-server connection.
-The AST uses readonly records and a discriminated node union derived from the represented nodes.
+Lexer、Parser、ASTのユーティリティは、Language Serverの接続から独立してシェル構文を提供します。ASTはreadonlyなレコードと、表現するノードから導いた識別可能なunion型を使います。
 
-## Parse source
+## ソースの解析
 
 ```ts
 import { Lexer } from './lexer';
@@ -22,33 +21,22 @@ const query = createQueryContext(parsed.ast);
 const location = locate(query, source.indexOf('helper'));
 ```
 
-Lexer diagnostics and parser diagnostics are returned separately.
-The parser keeps partial nodes and diagnostics for unfinished input.
+LexerとParserの診断は別々に返します。未完成の入力に対しても、部分的なノードと診断を保持します。
 
-## Syntax and source coordinates
+## 構文とソース位置
 
-The main hierarchy is File -> List -> ListItem -> Sublist -> Pipeline -> Command.
-If, loop and case commands expose their conditions, words, branches and bodies.
-Command and process substitutions expose parsed list bodies.
-Conditions and arithmetic expressions retain expression text and ranges as containers.
-Here-documents retain the raw body, delimiter, quoting flags and closing range on their redirect.
+主な階層はFile → List → ListItem → Sublist → Pipeline → Commandです。If・loop・caseコマンドは条件・単語・分岐・本体を公開し、コマンド置換とプロセス置換は解析済みのList本体を公開します。条件と算術式は式の文字列と範囲を入れ物として保持し、ヒアドキュメントは元の本体・終端名・引用のフラグ・終了範囲をリダイレクト上に保持します。
 
-All source ranges are end-exclusive and use UTF-16 offsets and columns.
-Tokens live in the parse result's token table. Use tokenAtOffset or tokensInRange from the parser module to recover source tokens.
-Raw text and word parts preserve source spelling.
+ソース範囲の終端はその位置を含まず、オフセットと列はUTF-16単位です。トークンは解析結果のトークン表に保持し、ParserモジュールのtokenAtOffsetまたはtokensInRangeで取得します。元の文字列と単語のpartsは、ソースの記述を保ちます。
 
-Simple commands retain their arguments and redirects.
-Source/declaration classification is additional semantic information; references in that information may share syntax nodes.
+単純コマンドは引数とリダイレクトを保持します。sourceや宣言の分類は追加のsemantic情報であり、そこから構文ノードへの参照を共有する場合があります。
 
-## Explore and transform
+## 探索と変換
 
-- syntaxChildren and forEachChild enumerate immediate owned syntax children.
-- walk and findAll follow those children by default.
-- includeRelated also follows the comment index, leading documentation blocks and semantic references. Shared objects are visited once.
-- createQueryContext and locate distinguish syntax paths from comment/documentation ownership. A leading comment can precede its function's syntax range.
-- mapAst rebuilds changed paths immutably and preserves shared references. Create a new query context for the returned AST.
+- syntaxChildrenとforEachChildは、直接所有する構文上の子ノードを列挙します。
+- walkとfindAllは既定でその子ノードを辿ります。
+- includeRelatedを指定すると、コメント索引、先行するドキュメントブロック、semantic参照も辿ります。共有オブジェクトを訪問するのは1回です。
+- createQueryContextとlocateは、構文上の経路とコメント・ドキュメントの所有関係を区別します。先行コメントは関数の構文範囲より前に存在できます。
+- mapAstは変更された経路を新しい値で再構築し、共有参照を保ちます。返されたASTには新しい検索コンテキストを作成してください。
 
-walk visitors can return 'skip' to omit a subtree or 'stop' to end traversal.
-Traversal, mapping and position lookup use explicit frames for deep ASTs.
-Parser nesting is bounded and reports a processing-limit diagnostic with a partial AST.
-Horizontal command, argument and pipeline sequences are processed iteratively.
+walkのvisitorは、部分木を省略する'skip'、探索を終了する'stop'を返せます。深いASTの探索・変換・位置検索は明示的なフレームを使います。Parserの入れ子には上限があり、部分ASTとprocessing-limit診断を返します。コマンド・引数・パイプラインの横方向の列は反復処理します。

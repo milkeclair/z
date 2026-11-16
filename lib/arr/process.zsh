@@ -1,12 +1,13 @@
-# join array elements with a delimiter
+# 配列の要素を区切り文字で結合する
 #
-# $delimiter?: delimiter, default: space
-# $@: array elements
-# REPLY: joined string
+# $delimiter?: 区切り文字（既定: 空白）
+# $@: 配列の要素
+# REPLY: 結合した文字列
 # return: null
 #
 # example:
-#  z.arr.join "a" "b" "c" #=> REPLY="a b c"
+#  z.arr.join "a" "b" "c"
+#  # REPLY: "a b c"
 z.arr.join() {
   local -a input_args=("$@")
   local -A parsed_named=([delimiter]=" ")
@@ -18,16 +19,18 @@ z.arr.join() {
   REPLY="${arr[*]}"
 }
 
-# split a string into an array by a delimiter
+# 文字列を区切りで分割して配列にする
 #
-# $delimiter?: delimiter, default: space
-# $@: string to split
-# REPLY: array elements
+# $delimiter?: 区切り文字（既定: 空白）
+# $@: 分割する文字列
+# REPLY: 配列の要素
 # return: null
 #
 # example:
-#  z.arr.split delimiter="," "a,b,c" #=> REPLY=("a" "b" "c")
-#  z.arr.split "a b c"         #=> REPLY=("a" "b" "c")
+#  z.arr.split delimiter="," "a,b,c"
+#  # REPLY: ("a" "b" "c")
+#  z.arr.split "a b c"
+#  # REPLY: ("a" "b" "c")
 z.arr.split() {
   z.arg.named delimiter "$@" default=" " && local delimiter=$REPLY
   z.arg.named.shift delimiter "$@"
@@ -39,16 +42,17 @@ z.arr.split() {
   REPLY=("${arr[@]}")
 }
 
-# perform global substitution on array elements
+# 配列の要素を全体的に置換する
 #
-# $search: search string
-# $replace: replace string
-# $@: array elements
-# REPLY: array elements after substitution
+# $search: 検索する文字列
+# $replace: 置換後の文字列
+# $@: 配列の要素
+# REPLY: 置換後の配列の要素
 # return: null
 #
 # example:
-#  z.arr.gsub search=a replace=x "a b a" "c a d" #=> REPLY=("x b x" "c x d")
+#  z.arr.gsub search=a replace=x "a b a" "c a d"
+#  # REPLY: ("x b x" "c x d")
 z.arr.gsub() {
   local args=("$@")
 
@@ -67,16 +71,18 @@ z.arr.gsub() {
   REPLY=("${result[@]}")
 }
 
-# sort array elements
+# 配列の要素を整列する
 #
-# $by?: sort by (asc|desc), default: asc
-# $@: array elements
-# REPLY: sorted array elements
+# $by?: 並び順（asc|desc、既定: asc）
+# $@: 配列の要素
+# REPLY: 整列した配列の要素
 # return: null
 #
 # example:
-#  z.arr.sort by=asc "b" "c" "a" #=> REPLY=("a" "b" "c")
-#  z.arr.sort by=desc "b" "c" "a" #=> REPLY=("c" "b" "a")
+#  z.arr.sort by=asc "b" "c" "a"
+#  # REPLY: ("a" "b" "c")
+#  z.arr.sort by=desc "b" "c" "a"
+#  # REPLY: ("c" "b" "a")
 z.arr.sort() {
   z.arg.named by "$@" default=asc
   local sort_by=$REPLY
@@ -97,14 +103,15 @@ z.arr.sort() {
   esac
 }
 
-# remove duplicate elements from an array
+# 配列の重複要素を取り除く
 #
-# $@: array elements
-# REPLY: array elements with duplicates removed
+# $@: 配列の要素
+# REPLY: 重複を除いた配列の要素
 # return: null
 #
 # example:
-#  z.arr.unique "a" "b" "a" "c" "b" #=> REPLY=("a" "b" "c")
+#  z.arr.unique "a" "b" "a" "c" "b"
+#  # REPLY: ("a" "b" "c")
 z.arr.unique() {
   local arr=("$@")
   local -A seen
@@ -120,15 +127,16 @@ z.arr.unique() {
   REPLY=("${result[@]}")
 }
 
-# find differences between two arrays
+# 2つの配列の差分を求める
 #
-# $base: base array (as a single string with spaces)
-# $other: other array (as a single string with spaces)
-# REPLY: array of differences
+# $base: 基準の配列（空白区切りの1つの文字列）
+# $other: 比較する配列（空白区切りの1つの文字列）
+# REPLY: 差分の配列
 # return: null
 #
 # example:
-#  z.arr.diff base="a b c" other="b c d" #=> REPLY=("a" "d")
+#  z.arr.diff base="a b c" other="b c d"
+#  # REPLY: ("a" "d")
 z.arr.diff() {
   z.arg.named base "$@" && local base=$REPLY
   z.arg.named other "$@" && local other=$REPLY
@@ -166,15 +174,16 @@ z.arr.diff() {
   REPLY=("${result[@]}")
 }
 
-# find intersection between two arrays
+# 2つの配列の積集合を求める
 #
-# $base: base array (as a single string with spaces)
-# $other: other array (as a single string with spaces)
-# REPLY: array of intersection elements
+# $base: 基準の配列（空白区切りの1つの文字列）
+# $other: 比較する配列（空白区切りの1つの文字列）
+# REPLY: 積集合の要素の配列
 # return: null
 #
 # example:
-#  z.arr.intersect base="a b c" other="b c d" #=> REPLY=("b" "c")
+#  z.arr.intersect base="a b c" other="b c d"
+#  # REPLY: ("b" "c")
 z.arr.intersect() {
   z.arg.named base "$@" && local base=$REPLY
   z.arg.named other "$@" && local other=$REPLY
@@ -206,15 +215,16 @@ z.arr.intersect() {
   REPLY=("${result[@]}")
 }
 
-# find union of two arrays
+# 2つの配列の和集合を求める
 #
-# $base: base array (as a single string with spaces)
-# $other: other array (as a single string with spaces)
-# REPLY: array of union elements
+# $base: 基準の配列（空白区切りの1つの文字列）
+# $other: 比較する配列（空白区切りの1つの文字列）
+# REPLY: 和集合の要素の配列
 # return: null
 #
 # example:
-#  z.arr.union base="a b c" other="b c d e" #=> REPLY=("a" "b" "c" "d" "e")
+#  z.arr.union base="a b c" other="b c d e"
+#  # REPLY: ("a" "b" "c" "d" "e")
 z.arr.union() {
   z.arg.named base "$@" && local base=$REPLY
   z.arg.named other "$@" && local other=$REPLY
@@ -250,14 +260,15 @@ z.arr.union() {
   REPLY=("${result[@]}")
 }
 
-# reverse the order of array elements
+# 配列の要素を逆順に並べる
 #
-# $@: array elements
-# REPLY: array elements in reverse order
+# $@: 配列の要素
+# REPLY: 逆順に並べた配列の要素
 # return: null
 #
 # example:
-#  z.arr.reverse "a" "b" "c" #=> REPLY=("c" "b" "a")
+#  z.arr.reverse "a" "b" "c"
+#  # REPLY: ("c" "b" "a")
 z.arr.reverse() {
   local arr=("$@")
   local result=()
@@ -269,16 +280,17 @@ z.arr.reverse() {
   REPLY=("${result[@]}")
 }
 
-# slice an array
+# 配列の一部を切り出す
 #
-# $offset?: offset to start slicing (0-based index)
-# $to?: index to end slicing (exclusive, 0-based index)
-# $@: array elements
-# REPLY: sliced array elements
+# $offset?: 切り出し開始位置（0始まり）
+# $to?: 切り出し終端のインデックス（その位置を含まない、0始まり）
+# $@: 配列の要素
+# REPLY: 切り出した配列の要素
 # return: null
 #
 # example:
-#  z.arr.slice offset=2 to=5 "a" "b" "c" "d" "e" #=> REPLY=("c" "d" "e")
+#  z.arr.slice offset=2 to=5 "a" "b" "c" "d" "e"
+#  # REPLY: ("c" "d" "e")
 z.arr.slice() {
   local args=("$@")
   z.arg.named offset "${args[@]}" && local offset=$REPLY

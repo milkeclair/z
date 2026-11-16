@@ -1,10 +1,13 @@
-# register z completion definitions for current candidates
+# 現在の候補に対するzの補完定義を登録する
 #
 # REPLY: null
 # return: 0|1
 #
 # example:
+#  # compinit済みで、z.arg.getが候補に含まれる場合
 #  z.completion.compdef._register
+#  # return: 0
+#  # 変更後: _comps[z.arg.get]="_z_completion"
 z.completion.compdef._register() {
   if z.int.is.zero ${+functions[compdef]}; then
     return 1
@@ -24,13 +27,15 @@ z.completion.compdef._register() {
   done
 }
 
-# hide private z functions from command position completion
+# コマンド位置の補完から非公開のz関数を隠す
 #
 # REPLY: null
 # return: 0|1
 #
 # example:
 #  z.completion.compdef._ignore_private
+#  # return: 0
+#  # 結果: コマンド補完のignored-patternsに"z.*._*"が含まれる
 z.completion.compdef._ignore_private() {
   local context=':completion:*:*:-command-:*:functions'
   local private_pattern='z.*._*'

@@ -1,15 +1,14 @@
-# determine if a hash does not have a given key
+# 連想配列に指定したキーがないか確認する
 #
-# $key: key to check
-# $1: name of the hash
+# $key: 確認するキー
+# $1: 連想配列名
 # REPLY: null
 # return: 0\1
 #
 # example:
-#   local -A hash
-#   hash[name]="John"
-#   z.hash.has.not.key hash key=age
-#   echo $?  # outputs 0
+#  local -A hash=(name "John")
+#  z.hash.has.not.key hash key=age
+#  # return: 0
 z.hash.has.not.key() {
   z.arg.named.shift key $@ && local hash_name=$REPLY
   z.arg.named key $@ && local key=$REPLY
@@ -19,18 +18,17 @@ z.hash.has.not.key() {
   (( ! ${(P)+ref} ))
 }
 
-# determine if a hash does not have a value for a given key
+# 連想配列の指定したキーに値がないか確認する
 #
-# $key: key to check
-# $1: name of the hash
+# $key: 確認するキー
+# $1: 連想配列名
 # REPLY: null
 # return: 0\1
 #
 # example:
-#   local -A hash
-#   hash[name]=""
-#   z.hash.has.not.value hash key=name
-#   echo $?  # outputs 0
+#  local -A hash=(name "")
+#  z.hash.has.not.value hash key=name
+#  # return: 0
 z.hash.has.not.value() {
   z.arg.named key $@ && local key=$REPLY
   z.arg.named.shift key $@ && local hash_name=$REPLY

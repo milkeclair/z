@@ -1,10 +1,12 @@
-# get exit status of last command
+# 直前のコマンドの終了コードを取得する
 #
-# REPLY: exit status of last command
+# REPLY: 直前のコマンドの終了コード
 # return: null
 #
 # example:
-#  z.status #=> returns the exit status of the last command
+#  false
+#  z.status
+#  # REPLY: 1
 z.status() {
   REPLY=$?
 }

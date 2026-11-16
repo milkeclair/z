@@ -1,12 +1,13 @@
-# get a composite state key for a worktree port
+# worktreeポートの複合状態キーを取得する
 #
-# $1: worktree path
-# $2: port key
-# REPLY: composite state key
+# $1: worktreeのパス
+# $2: ポートキー
+# REPLY: 複合状態キー
 # return: null
 #
 # example:
-#  z.wtproxy._state.port.state_key /path/to/worktree worktree_port_1
+#  z.wtproxy._state.port.state_key /tmp/worktree worktree_port_1
+#  # REPLY: "/tmp/worktree|worktree_port_1"
 z.wtproxy._state.port.state_key() {
   local worktree_path=$1
   local port_key=$2
@@ -14,15 +15,18 @@ z.wtproxy._state.port.state_key() {
   REPLY="${worktree_path}|${port_key}"
 }
 
-# get a stored worktree port
+# 保存済みのworktreeポートを取得する
 #
-# $1: worktree path
-# $2: port key
-# REPLY: stored port|null
+# $1: worktreeのパス
+# $2: ポートキー
+# REPLY: 保存したポート|null
 # return: null
 #
 # example:
-#  z.wtproxy._state.port.get /path/to/worktree worktree_port_1
+#  z.wtproxy._state.init
+#  z.wtproxy._state.port.set /tmp/worktree worktree_port_1 3001
+#  z.wtproxy._state.port.get /tmp/worktree worktree_port_1
+#  # REPLY: "3001"
 z.wtproxy._state.port.get() {
   local worktree_path=$1
   local port_key=$2

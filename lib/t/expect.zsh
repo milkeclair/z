@@ -1,13 +1,15 @@
-# expect that actual equals expect
+# 実際の値が期待値と等しいことを検証する
 #
-# $1: actual value
-# $2: expected value
-# $skip_unmock?: skip_unmock
+# $1: 実際の値
+# $2: 期待値
+# $skip_unmock?: モック解除を省略するか
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t.expect $actual $expect
+#  # 失敗件数0から実行する場合
+#  z.t.expect "actual" "actual"
+#  # 変更後の失敗件数: 0
 z.t.expect() {
   local actual=$1
   local expect=$2
@@ -30,16 +32,18 @@ z.t.expect() {
   z.t.mock.unmock.all skip_unmock=$skip_unmock
 }
 
-# expect that actual does not equal expect
+# 実際の値が期待値と等しくないことを検証する
 #
-# $1: actual value
-# $2: expected value
-# $skip_unmock?: skip_unmock
+# $1: 実際の値
+# $2: 期待値
+# $skip_unmock?: モック解除を省略するか
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t.expect.not $actual $expect
+#  # 失敗件数0から実行する場合
+#  z.t.expect.not "actual" "expected"
+#  # 変更後の失敗件数: 0
 z.t.expect.not() {
   local actual=$1
   local expect=$2

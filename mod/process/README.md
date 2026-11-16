@@ -1,6 +1,6 @@
 # z.process
 
-Install the `process` mod with `z.install.mod process`.
+`z.install.mod process`で`process` modを導入します。
 
 ```zsh
 z.process.list
@@ -11,19 +11,8 @@ z.process.kill port=3000
 z.process.kill name=node
 ```
 
-`z.process.list` prints tab-separated PID, process name and TCP listening
-ports. With no selector it lists all processes; one `pid=`, `port=` or
-`name=` selector filters the rows. Multiple ports are comma-separated;
-`-` means no TCP listeners were reported. Only ports visible to the current
-user can be listed. `REPLY` contains the rows without the header.
+`z.process.list`はPID・プロセス名・TCP待受ポートをタブ区切りで表示します。指定がなければ全件、`pid=`・`port=`・`name=`のいずれかを1つ指定すると絞り込みます。複数のポートはカンマ区切りとし、`-`はTCP待受が報告されなかったことを表します。取得できるのは現在のユーザーから見えるポートだけです。`REPLY`にはヘッダーを除いた行を返します。
 
-Names match `ps -A -o comm=` exactly, including any OS name-length limit.
-Listing ports and selecting by port require `lsof`. Port selection targets
-TCP listeners and listing shows all reported listening ports of each selected
-process.
+名前は`ps -A -o comm=`と完全一致で照合し、OSの名前長制限も適用されます。ポートの一覧取得とポートによる絞り込みには`lsof`が必要です。ポート指定はTCP待受を対象とし、一覧には選択した各プロセスの報告された全待受ポートを表示します。
 
-`z.process.kill` requires exactly one selector and sends SIGTERM to every
-matching PID. Success means that the signal was sent; the command returns
-immediately without waiting for exit. `REPLY` contains successfully signaled
-PIDs. Invalid selectors, no matches, lookup errors and signal failures return
-status 1.
+`z.process.kill`では対象の指定を1つだけ渡し、一致する全PIDへSIGTERMを送ります。成功は送信できたことを意味し、プロセスの終了を待たず直ちに戻ります。`REPLY`は送信に成功したPIDです。指定不正、該当なし、照会失敗、送信失敗では終了コード1を返します。

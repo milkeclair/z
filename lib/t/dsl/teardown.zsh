@@ -1,10 +1,12 @@
-# teardown function to be called at the end of tests
+# テスト終了時に呼び出す後片付け用の関数
 #
 # REPLY: null
 # return: null
 #
 # example:
+#  # テスト終了時に、失敗件数0の場合
 #  z.t.teardown
+#  # 結果: モックと一時ファイルを片付け、成功の要約を表示する
 z.t.teardown() {
   z.t.mock.unmock.all
   z.t._remove_tmp_dir

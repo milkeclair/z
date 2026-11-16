@@ -12,7 +12,7 @@ type Frame = {
 
 const backtick = String.fromCharCode(96);
 
-/** Read a balanced lexical region; return its exclusive end or null at EOF. */
+/** 対応する区切りまで字句領域を読み、終端の直後の位置を返す。EOFならnullを返す。 */
 export function delimitedEnd(text: string, start: number, kind: DelimiterKind, mode: 'shell' | 'hereDocWord' = 'shell'): number | null {
   const stack: Frame[] = [{ kind, cases: [], commandStart: true }];
   let index = start + (kind === 'arithmetic' || kind === 'condition' || kind === 'dollarSingle' ? 2 : 1);
@@ -127,7 +127,7 @@ export function hereDocDelimiter(raw: string, stripTabs = false): { readonly del
   return removeHereDocQuotes(raw, stripTabs, (start) => delimitedEnd(raw, start + 1, 'paren', 'hereDocWord'));
 }
 
-/** Read a quoted delimiter header without treating its contents as shell syntax. */
+/** 内容をシェル構文として扱わず、引用された終端名を読む。 */
 export function hereDocHeader(text: string, start: number): { readonly delimiter: string; readonly quoted: boolean; readonly stripTabs: boolean; readonly end: number } | null {
   const stripTabs = text[start + 2] === '-';
   let index = start + (stripTabs ? 3 : 2);

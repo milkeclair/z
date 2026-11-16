@@ -1,11 +1,12 @@
-# define a z modifier
+# zのmodを定義する
 #
-# $1: mod name
+# $1: mod名
 # REPLY: null
 # return: null
 #
 # example:
 #  z.mod git
+#  # 変更後: z_mod_current="git"、z_mod_names[git]=true
 z.mod() {
   z.mod._store.ensure
   z.arg.first "$@"
@@ -16,16 +17,18 @@ z.mod() {
   z_mod_names[$mod_name]=true
 }
 
-# add dependencies to the current z modifier
+# 現在のz modに依存関係を追加する
 #
-# $@: dependency mod names
+# $@: 依存するmod名
 # REPLY: null
-# return: 0 if current mod exists, otherwise 1
+# return: 現在のmodが存在する場合は0、それ以外は1
 #
 # example:
 #  z.mod wtproxy; {
 #    z.mod.depends git
 #  }
+#  z.mod.dependencies wtproxy
+#  # REPLY: ("git")
 z.mod.depends() {
   z.mod._store.ensure
 
@@ -44,13 +47,14 @@ z.mod.depends() {
   z_mod_depends[$z_mod_current]=$REPLY
 }
 
-# reset z modifier definitions
+# z modの定義をリセットする
 #
 # REPLY: null
 # return: null
 #
 # example:
 #  z.mod.reset
+#  # 変更後: z_mod_names=()、z_mod_depends=()、z_mod_current=""
 z.mod.reset() {
   typeset -gA z_mod_names=()
   typeset -gA z_mod_depends=()

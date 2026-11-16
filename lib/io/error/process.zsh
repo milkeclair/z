@@ -1,13 +1,14 @@
-# printing provided arguments in one line without newline at the end to stderr
+# 渡された引数を改行なしで標準エラーへ1行に表示する
 #
-# $@: arguments
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #
 # example:
 #  z.io.error.oneline "error message"
+#  # 標準エラー: error message（赤色、末尾改行なし）
 z.io.error.oneline() {
   z.arg.named color $@ default=red && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
@@ -21,16 +22,19 @@ z.io.error.oneline() {
   print -u2 -n -- $args
 }
 
-# printing provided arguments line by line to stderr
+# 渡された引数を標準エラーへ1行ずつ表示する
 #
-# $@: arguments
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #
 # example:
 #  z.io.error.line "error1" "error2"
+#  # 標準エラー（赤色）:
+#  # error1
+#  # error2
 z.io.error.line() {
   z.arg.named color $@ default=red && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY

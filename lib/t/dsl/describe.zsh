@@ -1,11 +1,14 @@
-# describe a test suite
+# テストスイートを定義する
 #
-# $1: description
+# $1: 説明
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t.describe "My Test Suite"; {some tests}
+#  z.t.describe "My Test Suite"; {
+#    z.t.it "値が一致する"; { z.t.expect 1 1; }
+#  }
+#  # 結果: 失敗件数は増えない
 z.t.describe() {
   local REPLY
   local description=$1
@@ -19,14 +22,17 @@ z.t.describe() {
   z.t._state.skip.it.set "false"
 }
 
-# xdescribe a test suite (marked as pending)
+# テストスイートをxdescribeで定義する（保留扱い）
 #
-# $1: description
+# $1: 説明
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t.xdescribe "My Pending Test Suite"; {some tests}
+#  z.t.xdescribe "My Pending Test Suite"; {
+#    z.t.it "後で実装する"; { z.t.expect 1 2; }
+#  }
+#  # 結果: このdescribe内の検証は保留になり、失敗件数は増えない
 z.t.xdescribe() {
   local REPLY
   local description=$1

@@ -1,10 +1,13 @@
-# get worktree port keys from configuration
+# 設定からworktreeポートキーを取得する
 #
-# REPLY: numbered worktree port keys
-# return: 0 if configuration is available, otherwise 1
+# REPLY: 連番のworktreeポートキー
+# return: 設定を取得できた場合は0、それ以外は1
 #
 # example:
+#  # 既定の3ポートが有効な場合
 #  z.wtproxy._port.keys
+#  # REPLY: ("worktree_port_1" "worktree_port_2" "worktree_port_3")
+#  # return: 0
 z.wtproxy._port.keys() {
   z.wtproxy._config || return 1
   local -A config=("${(@)REPLY}")
@@ -12,13 +15,16 @@ z.wtproxy._port.keys() {
   z.wtproxy._port.keys.from_config config
 }
 
-# get proxy ports from configuration
+# 設定からプロキシポートを取得する
 #
-# REPLY: proxy port
-# return: 0 if configuration is available, otherwise 1
+# REPLY: プロキシポート
+# return: 設定を取得できた場合は0、それ以外は1
 #
 # example:
+#  # 既定の3ポートを使う場合
 #  z.wtproxy._port.proxies
+#  # REPLY: ("3000" "5432" "5173")
+#  # return: 0
 z.wtproxy._port.proxies() {
   z.wtproxy._config || return 1
   local -A config=("${(@)REPLY}")
@@ -36,13 +42,15 @@ z.wtproxy._port.proxies() {
   REPLY=("${ports[@]}")
 }
 
-# get ports already assigned in state
+# 状態に割り当て済みのポートを取得する
 #
-# REPLY: assigned ports
+# REPLY: 割り当て済みのポート
 # return: null
 #
 # example:
+#  z_wtproxy_state_port=("/tmp/worktree|worktree_port_1" 3001)
 #  z.wtproxy._port.used
+#  # REPLY: ("3001")
 z.wtproxy._port.used() {
   local ports=()
 
@@ -54,14 +62,17 @@ z.wtproxy._port.used() {
   REPLY=("${ports[@]}")
 }
 
-# get the proxy port for a worktree port key
+# worktreeポートキーに対応するプロキシポートを取得する
 #
-# $1: worktree port key
-# REPLY: proxy port
-# return: 0 if key exists, otherwise 1
+# $1: worktreeポートキー
+# REPLY: プロキシポート
+# return: キーが存在する場合は0、それ以外は1
 #
 # example:
+#  # proxy_port_1=3000の設定の場合
 #  z.wtproxy._port.proxy worktree_port_1
+#  # REPLY: "3000"
+#  # return: 0
 z.wtproxy._port.proxy() {
   local port_key=$1
 

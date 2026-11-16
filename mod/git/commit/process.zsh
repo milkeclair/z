@@ -1,60 +1,68 @@
-# git commit alias
+# git commitの別名
 #
-# $1: commit tag
-# $2: commit message
-# $3?: ticket number
-# $@: commit options (e.g. -nt, -ca, -ae)
+# $1: コミットタグ
+# $2: コミットメッセージ
+# $3?: チケット番号
+# $@: コミットオプション（例: -nt、-ca、-ae）
 # REPLY: null
 # return: null
 #
 # example:
-#   z.git.c feat "add new feature" TICKET-123 -ca
+#  # コミット可能な変更がある場合
+#  z.git.c feat "add new feature" TICKET-123
+#  # 新しいコミットのメッセージ: "feat: #TICKET-123 add new feature"
 z.git.c() {
   z.git.commit "$@" # zls: ignore
 }
 
-# tdd commit alias for red cycle
+# TDDのredサイクル用コミットの別名
 #
-# $1: commit tag
-# $2: commit message
-# $3?: ticket number
-# $@: commit options (e.g. -nt, -ca, -ae)
+# $1: コミットタグ
+# $2: コミットメッセージ
+# $3?: チケット番号
+# $@: コミットオプション（例: -nt、-ca、-ae）
 # REPLY: null
 # return: null
 #
 # example:
-#   z.git.c.r feat "add new feature" TICKET-123 -ca -ae
+#  # 空コミットを許可する場合
+#  z.git.c.r test "add failing test" TICKET-123 -ae
+#  # 新しいコミットのメッセージ: "test: #TICKET-123 [red] add failing test"
 z.git.c.r() {
   z.git.commit.tdd red "$@" # zls: ignore
 }
 
-# tdd commit alias for green cycle
+# TDDのgreenサイクル用コミットの別名
 #
-# $1: commit tag
-# $2: commit message
-# $3?: ticket number
-# $@: commit options (e.g. -nt, -ca, -ae)
+# $1: コミットタグ
+# $2: コミットメッセージ
+# $3?: チケット番号
+# $@: コミットオプション（例: -nt、-ca、-ae）
 # REPLY: null
 # return: null
 #
 # example:
-#   z.git.c.g feat "add new feature" TICKET-123 -ca -ae
+#  # 空コミットを許可する場合
+#  z.git.c.g test "make test pass" TICKET-123 -ae
+#  # 新しいコミットのメッセージ: "test: #TICKET-123 [green] make test pass"
 z.git.c.g() {
   z.git.commit.tdd green "$@" # zls: ignore
 }
 
-# git commit
+# git commitを実行する
 #
-# $1: commit tag
-# $2: commit message
-# $3?: ticket number
-# $@: commit options (e.g. -nt, -ca, -ae)
+# $1: コミットタグ
+# $2: コミットメッセージ
+# $3?: チケット番号
+# $@: コミットオプション（例: -nt、-ca、-ae）
 #
 # REPLY: null
 # return: null
 #
 # example:
-#   z.git.commit feat "add new feature" TICKET-123 -ca
+#  # コミット可能な変更がある場合
+#  z.git.commit feat "add new feature" TICKET-123
+#  # 新しいコミットのメッセージ: "feat: #TICKET-123 add new feature"
 z.git.commit() {
   z.git.commit._arg.is.enough $@ || return 1
 
@@ -77,19 +85,21 @@ z.git.commit() {
   z.git.commit._with_committer "$REPLY" ${opts[@]}
 }
 
-# tdd commit
+# TDDのコミット
 #
-# $1: commit cycle (red, green)
-# $2: commit tag
-# $3: commit message
-# $4?: ticket number (optional)
-# $@: commit options (e.g. -nt, -ca, -ae)
+# $1: コミットサイクル（red、green）
+# $2: コミットタグ
+# $3: コミットメッセージ
+# $4?: チケット番号（任意）
+# $@: コミットオプション（例: -nt、-ca、-ae）
 #
 # REPLY: null
 # return: null
 #
 # example:
-#   z.git.commit.tdd red feat "add new feature" TICKET-123 -ca -ae
+#  # 空コミットを許可する場合
+#  z.git.commit.tdd red test "add failing test" TICKET-123 -ae
+#  # 新しいコミットのメッセージ: "test: #TICKET-123 [red] add failing test"
 z.git.commit.tdd() {
   local cycle=$1 && shift
 
@@ -115,16 +125,18 @@ z.git.commit.tdd() {
   z.git.commit._with_committer "$REPLY" ${opts[@]}
 }
 
-# commit with committer info
+# コミッター情報を指定してコミットする
 #
-# $1: commit message
-# $@: commit options (e.g. -nt, -ca, -ae)
+# $1: コミットメッセージ
+# $@: コミットオプション（例: -nt、-ca、-ae）
 #
 # REPLY: null
 # return: null
 #
 # example:
-#   z.git.commit._with_committer "feat: add new feature" -ca
+#  # コミット可能な変更がある場合
+#  z.git.commit._with_committer "feat: add new feature"
+#  # 新しいコミットのメッセージ: "feat: add new feature"
 z.git.commit._with_committer() {
   local message=$1 && shift
 
@@ -135,13 +147,14 @@ z.git.commit._with_committer() {
   z.git.commit.help._committer
 }
 
-# show help for git commit
+# git commitのヘルプを表示する
 #
 # REPLY: null
 # return: null
 #
 # example:
-#   z.git.commit.help
+#  z.git.commit.help
+#  # 表示例（一部）: commit:   z.git.c [tag] message ?[ticket] ?[-nt|-ca|-ae]
 z.git.commit.help() {
   z.git.commit._tag.list && local tags=$REPLY
 

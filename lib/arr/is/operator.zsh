@@ -1,13 +1,15 @@
-# check if two arrays are equal
+# 2つの配列が等しいか確認する
 #
-# $1: first array (as a single string with spaces)
-# $2: second array (as a single string with spaces)
+# $1: 1つ目の配列（空白区切りの1つの文字列）
+# $2: 2つ目の配列（空白区切りの1つの文字列）
 # REPLY: null
 # return: 0|1
 #
 # example:
-#  z.arr.is.eq "apple banana cherry" "apple banana cherry"  #=> 0 (true)
-#  z.arr.is.eq "apple banana cherry" "apple grape cherry"  #=> 1 (false)
+#  z.arr.is.eq "apple banana cherry" "apple banana cherry"
+#  # return: 0
+#  z.arr.is.eq "apple banana cherry" "apple grape cherry"
+#  # return: 1
 z.arr.is.eq() {
   local arr1=($1)
   local arr2=($2)
@@ -26,16 +28,18 @@ z.arr.is.eq() {
   return 0
 }
 
-# check if all array elements satisfy a condition
+# 配列の全要素が条件を満たすか確認する
 #
-# $operation: operation to evaluate for each element (use 'arg' as placeholder for element)
-# $@: array elements
+# $operation: 各要素に適用する処理（要素の代わりに'arg'を使う）
+# $@: 配列の要素
 # REPLY: null
 # return: 0|1
 #
 # example:
-#  z.arr.is.all_true "1" "2" "3" operation="z.int.is_positive arg"  #=> 0 (true)
-#  z.arr.is.all_true "1" "-2" "3" operation="z.int.is_positive arg"  #=> 1 (false)
+#  z.arr.is.all_true "1" "2" "3" operation="z.int.is.not.zero"
+#  # return: 0
+#  z.arr.is.all_true "1" "0" "3" operation="z.int.is.not.zero"
+#  # return: 1
 z.arr.is.all_true() {
   z.arg.named operation $@
   z.arr.gsub $REPLY search="arg" replace="\$item"
@@ -51,16 +55,18 @@ z.arr.is.all_true() {
   return 0
 }
 
-# check if all array elements do not satisfy a condition
+# 配列の全要素が条件を満たさないか確認する
 #
-# $operation: operation to evaluate for each element (use 'arg' as placeholder for element)
-# $@: array elements
+# $operation: 各要素に適用する処理（要素の代わりに'arg'を使う）
+# $@: 配列の要素
 # REPLY: null
 # return: 0|1
 #
 # example:
-#  z.arr.is.all_false "-1" "-2" "-3" operation="z.int.is_positive arg"  #=> 0 (true)
-#  z.arr.is.all_false "-1" "2" "-3" operation="z.int.is_positive arg"  #=> 1 (false)
+#  z.arr.is.all_false "0" "0" "0" operation="z.int.is.not.zero"
+#  # return: 0
+#  z.arr.is.all_false "0" "2" "0" operation="z.int.is.not.zero"
+#  # return: 1
 z.arr.is.all_false() {
   z.arg.named operation $@
   z.arr.gsub $REPLY search="arg" replace="\$item"

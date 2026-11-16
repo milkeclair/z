@@ -1,12 +1,13 @@
-# determine which file extensions and directories to exclude from commit stats analysis
-# if not specified, use default values(log, lock)
+# コミット統計で除外する拡張子とディレクトリを決める
+# 指定がなければ既定値（log、lock）を使う
 #
-# $exclude_exts?: array of file extensions to exclude (e.g. "md" "txt")
-# REPLY: array of file extensions to exclude
+# $exclude_exts?: 除外する拡張子の配列（例: "md" "txt"）
+# REPLY: 除外する拡張子の配列
 # return: null
 #
 # example:
-#   z.git.stats._exclude.exts exclude_exts=("md" "txt") #=> ("md" "txt")
+#  z.git.stats._exclude.exts exclude_exts=md
+#  # REPLY: ("md")
 z.git.stats._exclude.exts() {
   z.arg.named exclude_exts $@ && local exts=($REPLY)
   if z.is.null $REPLY; then
@@ -19,15 +20,16 @@ z.git.stats._exclude.exts() {
   REPLY=("${exts[@]}")
 }
 
-# determine which directories to exclude from commit stats analysis
-# if not specified, use default values(node_modules, dist)
+# コミット統計で除外するディレクトリを決める
+# 指定がなければ既定値（node_modules、dist）を使う
 #
-# $exclude_dirs?: array of directories to exclude (e.g. "docs" "tests")
-# REPLY: array of directories to exclude
+# $exclude_dirs?: 除外するディレクトリの配列（例: "docs" "tests"）
+# REPLY: 除外するディレクトリの配列
 # return: null
 #
 # example:
-#   z.git.stats._exclude.dirs exclude_dirs=("docs" "tests") #=> ("docs" "tests")
+#  z.git.stats._exclude.dirs exclude_dirs=docs
+#  # REPLY: ("docs")
 z.git.stats._exclude.dirs() {
   z.arg.named exclude_dirs $@ && local dirs=($REPLY)
   if z.is.null $REPLY; then

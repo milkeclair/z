@@ -1,10 +1,12 @@
-# get current git worktree root
+# 現在のGit worktreeのルートを取得する
 #
-# REPLY: absolute path to the worktree root
-# return: 0 if root is found, otherwise 1
+# REPLY: worktreeルートの絶対パス
+# return: ルートが見つかった場合は0、それ以外は1
 #
 # example:
-#  z.git.wt.current.root #=> "/path/to/worktree"
+#  # カレントディレクトリが/tmp/worktree内の場合
+#  z.git.wt.current.root
+#  # REPLY: "/tmp/worktree"
 z.git.wt.current.root() {
   local worktree_path
   worktree_path=$(git rev-parse --show-toplevel)
@@ -14,13 +16,15 @@ z.git.wt.current.root() {
   REPLY="${worktree_path:A}"
 }
 
-# get current git worktree common git directory
+# 現在のGit worktreeの共通Gitディレクトリを取得する
 #
-# REPLY: absolute path to the common git directory
-# return: 0 if common git directory is found, otherwise 1
+# REPLY: Gitの共通ディレクトリの絶対パス
+# return: Gitの共通ディレクトリが見つかった場合は0、それ以外は1
 #
 # example:
-#  z.git.wt.current.common_dir #=> "/path/to/repo/.git"
+#  # メインリポジトリのGitディレクトリが/tmp/repo/.gitの場合
+#  z.git.wt.current.common_dir
+#  # REPLY: "/tmp/repo/.git"
 z.git.wt.current.common_dir() {
   local common_dir
   common_dir=$(git rev-parse --git-common-dir)

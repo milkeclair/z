@@ -1,11 +1,14 @@
-# check if a remote host is localhost
+# リモートホストがlocalhostか確認する
 #
-# $1: remote host
+# $1: リモートホスト
 # REPLY: null
-# return: 0 if host is localhost, otherwise 1
+# return: ホストがlocalhostの場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy.start._serve.host.is.localhost 127.0.0.1
+#  # return: 0
+#  z.wtproxy.start._serve.host.is.localhost 192.0.2.1
+#  # return: 1
 z.wtproxy.start._serve.host.is.localhost() {
   local host=$1
 

@@ -1,5 +1,5 @@
 typeset -gA z_t_states
 
-# state management module
+# 状態管理モジュール
 z.t._state() {
 }

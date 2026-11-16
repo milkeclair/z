@@ -1,11 +1,12 @@
-# get exclude branches from arguments or use default ones
+# 引数から除外ブランチを取得し、指定がなければ既定値を使う
 #
-# $exclude_branches?: space-separated branch names to exclude
-# REPLY: array of branch names to exclude
+# $exclude_branches?: 空白区切りの除外ブランチ名
+# REPLY: 除外するブランチ名の配列
 # return: null
 #
 # example:
-#   z.git.branch._merged.get.excludes exclude_branches="main master feature/a"
+#  z.git.branch._merged.get.excludes exclude_branches="main master feature/a"
+#  # REPLY: ("main" "master" "feature/a")
 z.git.branch._merged.get.excludes() {
   local exclude_branches=(main master develop release)
 
@@ -18,14 +19,15 @@ z.git.branch._merged.get.excludes() {
   REPLY=("${exclude_branches[@]}")
 }
 
-# remove symbols like "*", "+" from branch name
+# ブランチ名から"*"や"+"などの記号を取り除く
 #
-# $1: branch name
-# REPLY: normalized branch name
+# $1: ブランチ名
+# REPLY: 正規化したブランチ名
 # return: null
 #
 # example:
-#   z.git.branch._merged.get.remove_symbols "* feature/branch" #=> "feature/branch"
+#  z.git.branch._merged.get.remove_symbols "* feature/branch"
+#  # REPLY: "feature/branch"
 z.git.branch._merged.get.remove_symbols() {
   z.str.trim "$1" && local trimmed=$REPLY
   if z.str.start_with "$trimmed" "*" || z.str.start_with "$trimmed" "+"; then

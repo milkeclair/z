@@ -1,16 +1,18 @@
-# write job metadata
+# ジョブのメタデータを書き込む
 #
-# $id: job id
-# $name: job name
-# $command: command function name
-# $dir: job directory
-# $on_success?: success callback function name
-# $on_failure?: failure callback function name
+# $id: ジョブID
+# $name: ジョブ名
+# $command: コマンド関数名
+# $dir: ジョブのディレクトリ
+# $on_success?: 成功時のコールバック関数名
+# $on_failure?: 失敗時のコールバック関数名
 # REPLY: null
 # return: null
 #
 # example:
-#  z.job.meta._write id=job name=example command=z.example.run dir=/tmp/job
+#  # /tmp/jobが存在する場合
+#  z.job.meta._write id=job name=example command=z.version dir=/tmp/job
+#  # /tmp/job/metaの一部: z_job_name="example"、z_job_command="z.version"
 z.job.meta._write() {
   z.arg.named id "$@" && local id=$REPLY
   z.arg.named name "$@" && local name=$REPLY
@@ -33,14 +35,17 @@ z.job.meta._write() {
   done
 }
 
-# read job metadata
+# ジョブのメタデータを読む
 #
-# $dir: job directory
+# $dir: ジョブのディレクトリ
 # REPLY: null
 # return: 0|1
 #
 # example:
-#  z.job.meta._read dir=/tmp/z/job/123/jobs/id
+#  # metaにz_job_name="example"とz_job_command="z.version"が保存されている場合
+#  z.job.meta._read dir=/tmp/job
+#  # return: 0
+#  # 読み込み後: z_job_name="example"、z_job_command="z.version"
 z.job.meta._read() {
   z.arg.named dir "$@" && local dir=$REPLY
   z.is.null "$dir" && return 1

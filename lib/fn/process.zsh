@@ -1,13 +1,16 @@
-# register a function
-# avoids namespace pollution
+# 関数を登録する
+# 名前空間への影響を避ける
 #
-# $1: function name
-# $2: function body
+# $1: 関数名
+# $2: 関数本体
 # REPLY: null
 # return: null
 #
 # example:
-#  z.fn my_func 'z.io "Hello, World!"'
+#  # my_funcが未登録の場合
+#  z.fn my_func 'REPLY="hello"'
+#  z.fn.call my_func
+#  # REPLY: "hello"
 z.fn() {
   z.fn._ensure_store
 
@@ -27,15 +30,18 @@ z.fn() {
   z_fn_source[$name]=$PWD
 }
 
-# call a registered function
+# 登録済みの関数を呼び出す
 #
-# $1: function name
-# $@?: function arguments
-# REPLY: function return value
-# return: function return status
+# $1: 関数名
+# $@?: 関数の引数
+# REPLY: 関数の返す値
+# return: 関数の終了コード
 #
 # example:
+#  # my_funcが未登録の場合
+#  z.fn my_func 'REPLY="$1"'
 #  z.fn.call my_func arg1 arg2
+#  # REPLY: "arg1"
 z.fn.call() {
   z.fn._ensure_store
 
@@ -50,14 +56,17 @@ z.fn.call() {
   ${z_fn_set[$name]} "$@"
 }
 
-# delete a registered function
+# 登録済み関数を削除する
 #
-# $1: function name
+# $1: 関数名
 # REPLY: null
 # return: null
 #
 # example:
+#  # my_funcを登録済みの場合
 #  z.fn.delete my_func
+#  z.fn.exists my_func
+#  # return: 1
 z.fn.delete() {
   z.fn._ensure_store
 
@@ -75,13 +84,15 @@ z.fn.delete() {
   unset "z_fn_source[$name]"
 }
 
-# delete all registered functions
+# 登録済み関数をすべて削除する
 #
 # REPLY: null
 # return: null
 #
 # example:
 #  z.fn.delete_all
+#  z.hash.keys z_fn_set
+#  # REPLY: ()
 z.fn.delete_all() {
   z.fn._ensure_store
 
@@ -94,15 +105,18 @@ z.fn.delete_all() {
   z_fn_source=()
 }
 
-# edit a registered function
+# 登録済みの関数を編集する
 #
-# $1: function name
-# $2: new function body
+# $1: 関数名
+# $2: 新しい関数本体
 # REPLY: null
 # return: null
 #
 # example:
-#  z.fn.edit my_func 'z.io "New Body"'
+#  # my_funcを登録済みの場合
+#  z.fn.edit my_func 'REPLY="new"'
+#  z.fn.call my_func
+#  # REPLY: "new"
 z.fn.edit() {
   z.fn._ensure_store
 
@@ -124,13 +138,15 @@ z.fn.edit() {
   z_fn_source[$name]=$PWD
 }
 
-# ensure that the function store is initialized
+# 関数の保存領域が初期化されていることを保証する
 #
 # REPLY: null
 # return: null
 #
 # example:
+#  # 保存領域が未初期化の場合
 #  z.fn._ensure_store
+#  # 状態: z_fn_set=()、z_fn_source=()
 z.fn._ensure_store() {
   z.var.exists z_fn_set || typeset -gA z_fn_set
   z.var.exists z_fn_source || typeset -gA z_fn_source

@@ -1,15 +1,17 @@
-# printing provided arguments
+# 渡された引数を表示する
 #
-# $@: arguments
-# $message?: explicit message, including empty text and named-argument-like text
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $message?: 空文字列や名前付き引数に似た文字列も含めた、明示的なメッセージ
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #
 # example:
-#  z.io "hello" "world" #=> hello world
-#  z.io message="color=red" #=> color=red
+#  z.io "hello" "world"
+#  # 出力: hello world（末尾に改行）
+#  z.io message="color=red"
+#  # 出力: color=red（末尾に改行）
 z.io() {
   z.arg.named color "$@" && local color=$REPLY
   z.arg.named indent "$@" && local indent=$REPLY
@@ -34,29 +36,32 @@ z.io() {
   print -r -- "${args[@]}"
 }
 
-# printing empty line
+# 空行を出力する
 #
 # REPLY: null
 # return: null
 #
 # example:
 #  z.io.empty
+#  # 出力: 改行1文字
 z.io.empty() {
   print -- ""
 }
 
-# printing provided arguments in one line without newline at the end
+# 渡された引数を改行なしで1行に表示する
 #
-# $@: arguments
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #
 # example:
-#  z.io.oneline "hello" "world" #=> hello world
+#  z.io.oneline "hello" "world"
+#  # 出力: hello world（末尾に改行なし）
 #  z.io.oneline "hello"
-#  z.io.oneline "world"         #=> helloworld
+#  z.io.oneline "world"
+#  # 出力: helloworld（末尾に改行なし）
 z.io.oneline() {
   z.arg.named color $@ && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
@@ -73,25 +78,28 @@ z.io.oneline() {
   print -n -- $args
 }
 
-# clear the terminal screen
+# 端末の画面を消去する
 #
 # REPLY: null
 # return: null
 #
 # example:
 #  z.io.clear
+#  # 出力: $'\033c\n'（端末を初期化する制御文字）
 z.io.clear() {
   print "\033c"
 }
 
-# execute command and redirect both stdout and stderr to /dev/null
+# コマンドを実行し、標準出力と標準エラーを/dev/nullへ送る
 #
-# $@: command and its arguments
+# $@: コマンドとその引数
 # REPLY: null
 # return: null
 #
 # example:
-#  z.io.null ls -la
+#  z.io.null print "hello"
+#  # 出力: なし
+#  # return: 0
 z.io.null() {
   z.arr.count $@
   if z.int.is.eq $REPLY 0; then
@@ -101,17 +109,19 @@ z.io.null() {
   fi
 }
 
-# printing provided arguments line by line
+# 渡された引数を1行ずつ表示する
 #
-# $@: arguments
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #
 # example:
-#  z.io.line "hello" "world" #=> hello\nworld
-#  z.io.line #=> (empty line)
+#  z.io.line "hello" "world"
+#  # 出力: $'hello\nworld\n'
+#  z.io.line
+#  # 出力: $'\n'
 z.io.line() {
   z.arg.named color $@ && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
@@ -135,27 +145,30 @@ z.io.line() {
   print -l -- $lines
 }
 
-# reading a line from standard input and storing it in REPLY
+# 標準入力から1行を読み、REPLYへ保存する
 #
-# REPLY: input line
+# REPLY: 入力行
 # return: null
 #
 # example:
-#  z.io.read #=> REPLY="input line"
+#  # 標準入力にhelloと入力してEnterを押す場合
+#  z.io.read
+#  # REPLY: "hello"
 z.io.read() {
   read -r REPLY
 }
 
-# printing provided arguments with green color
+# 渡された引数を緑色で表示する
 #
-# $@: arguments
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #
 # example:
 #  z.io.success "Operation completed successfully."
+#  # 出力: Operation completed successfully.（緑色）
 z.io.success() {
   z.arg.named color $@ default=green && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
@@ -165,16 +178,17 @@ z.io.success() {
   z.io $REPLY color=$color indent=$indent
 }
 
-# printing provided arguments with yellow color
+# 渡された引数を黄色で表示する
 #
-# $@: arguments
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #
 # example:
 #  z.io.warn "This is a warning message."
+#  # 出力: This is a warning message.（黄色）
 z.io.warn() {
   z.arg.named color $@ default=yellow && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY
@@ -184,16 +198,17 @@ z.io.warn() {
   z.io $REPLY color=$color indent=$indent
 }
 
-# printing provided arguments to stderr
+# 渡された引数を標準エラーへ表示する
 #
-# $@: arguments
-# $color?: color name
-# $indent?: indent level
+# $@: 引数
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #
 # example:
 #  z.io.error "error message"
+#  # 標準エラー: error message（赤色）
 z.io.error() {
   z.arg.named color $@ default=red && local color=$REPLY
   z.arg.named indent $@ && local indent=$REPLY

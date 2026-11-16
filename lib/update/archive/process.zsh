@@ -1,12 +1,15 @@
-# download one branch archive into an existing work directory
+# 既存の作業ディレクトリへブランチのアーカイブを1つダウンロードする
 #
-# $dir: work directory
-# $branch?: branch name (default: main)
-# REPLY: archive file path
+# $dir: 作業ディレクトリ
+# $branch?: ブランチ名（既定: main）
+# REPLY: アーカイブファイルのパス
 # return: 0|1
 #
 # example:
+#  # /tmp/updateが存在し、mainの取得に成功した場合
 #  z.update.archive._download dir=/tmp/update branch=main
+#  # REPLY: "/tmp/update/source.tar.gz"
+#  # return: 0
 z.update.archive._download() {
   z.arg.named dir "$@"
   local dir=$REPLY
@@ -28,15 +31,18 @@ z.update.archive._download() {
   REPLY="$file"
 }
 
-# extract a branch archive into a new directory
+# ブランチのアーカイブを新しいディレクトリへ展開する
 #
-# $file: archive file
-# $dir: new extraction directory
-# REPLY: extracted source directory
+# $file: アーカイブファイル
+# $dir: 新しい展開先ディレクトリ
+# REPLY: 取り出したソースディレクトリ
 # return: 0|1
 #
 # example:
+#  # アーカイブのルートがz-mainで、展開先が未作成の場合
 #  z.update.archive._extract file=/tmp/source.tar.gz dir=/tmp/update/source
+#  # REPLY: "/tmp/update/source/z-main"
+#  # return: 0
 z.update.archive._extract() {
   z.arg.named file "$@"
 

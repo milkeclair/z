@@ -1,25 +1,28 @@
-# get the proxy port key from the index
+# インデックスからプロキシポートキーを取得する
 #
-# $1: port index
-# REPLY: proxy port key
+# $1: ポートのインデックス
+# REPLY: プロキシポートキー
 # return: null
 #
 # example:
 #  z.wtproxy._port.proxy.key 1
+#  # REPLY: "proxy_port_1"
 z.wtproxy._port.proxy.key() {
   local port_index=$1
 
   REPLY="$z_wtproxy_proxy_port_key_prefix$port_index"
 }
 
-# get the index from the proxy port key
+# プロキシポートキーからインデックスを取得する
 #
-# $1: proxy port key
-# REPLY: port index|null
-# return: 0 if for numbered proxy port keys, otherwise 1
+# $1: プロキシポートキー
+# REPLY: ポートのインデックス|null
+# return: 連番のプロキシポートキーの場合は0、それ以外は1
 #
 # example:
 #  z.wtproxy._port.proxy.index proxy_port_1
+#  # REPLY: "1"
+#  # return: 0
 z.wtproxy._port.proxy.index() {
   local key=$1
 
@@ -32,14 +35,16 @@ z.wtproxy._port.proxy.index() {
   return 1
 }
 
-# get the environment variable value for a proxy port
+# プロキシポートに対応する環境変数の値を取得する
 #
-# $1: proxy port key
-# REPLY: environment variable value
+# $1: プロキシポートキー
+# REPLY: 環境変数の値
 # return: null
 #
 # example:
+#  local Z_WTPROXY_PROXY_PORT_1=3000
 #  z.wtproxy._port.proxy.env proxy_port_1
+#  # REPLY: "3000"
 z.wtproxy._port.proxy.env() {
   local key=$1
 

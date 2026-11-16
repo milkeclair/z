@@ -1,10 +1,14 @@
-# get the current worktree entry before removing it
+# 現在のworktreeのエントリを削除前に取得する
 #
-# REPLY: entry hash as key-value pairs
-# return: 0 if current entry exists, otherwise 1
+# REPLY: エントリのキーと値の組
+# return: 現在のエントリが存在する場合は0、それ以外は1
 #
 # example:
+#  # 現在のworktreeが/tmp/worktreeで、状態ファイルにエントリがある場合
 #  z.wtproxy.rm._current.entry
+#  local -A entry=($REPLY)
+#  # entry[path]: "/tmp/worktree"
+#  # return: 0
 z.wtproxy.rm._current.entry() {
   z.git.wt.current.root || return 1
   local worktree_path=$REPLY
@@ -12,15 +16,21 @@ z.wtproxy.rm._current.entry() {
   z.wtproxy._state.with_lock z.wtproxy.rm._current.entry.locked "$worktree_path"
 }
 
-# remove the current worktree entry while state lock is held
+# 状態のロックを保持しながら現在のworktreeエントリを削除する
 #
-# $1: worktree path
-# $2: expected compose project name
-# REPLY: remove result hash as key-value pairs
-# return: 0 if current entry is removed, otherwise 1
+# $1: worktreeのパス
+# $2: 期待するComposeプロジェクト名
+# REPLY: 削除結果のキーと値の組
+# return: 現在のエントリを削除できた場合は0、それ以外は1
 #
 # example:
-#  z.wtproxy.rm._current.locked /path/to/worktree project_branch_hash
+#  # /tmp/worktreeが唯一のエントリで、Compose名が一致する場合
+#  z.wtproxy.rm._current.locked /tmp/worktree sample_feat_example_b671591e
+#  local -A result=($REPLY)
+#  # result[removed_path]: "/tmp/worktree"
+#  # result[removed_project]: "sample_feat_example_b671591e"
+#  # result[entries_count]: 0
+#  # return: 0
 z.wtproxy.rm._current.locked() {
   local worktree_path=$1
   local expected_project=$2

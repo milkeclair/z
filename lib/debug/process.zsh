@@ -1,11 +1,17 @@
-# Available commands:
+# 使用できるコマンド:
 #  c, continue
 #  p <var>
 #  h, help
 #  q, quit, exit
 #
 # example:
-#   z.debug
+#  REPLY="hello"
+#  z.debug.enable
+#  z.debug
+#  # 入力例: p REPLY
+#  # 表示: hello
+#  # 続けてcを入力すると元の処理へ戻る
+#  # REPLY: "hello"
 z.debug() {
   local _saved_reply=$REPLY
   [[ $Z_DEBUG -eq 1 ]] && return 0
@@ -60,24 +66,26 @@ z.debug() {
   print -- ""
 }
 
-# enable interactive debug prompts
+# 対話形式のデバッグ入力を有効にする
 #
 # REPLY: null
 # return: null
 #
 # example:
 #  z.debug.enable
+#  # 変更後: Z_DEBUG=0（デバッグ有効）
 z.debug.enable() {
   Z_DEBUG=0
 }
 
-# disable interactive debug prompts
+# 対話形式のデバッグ入力を無効にする
 #
 # REPLY: null
 # return: null
 #
 # example:
 #  z.debug.disable
+#  # 変更後: Z_DEBUG=1（デバッグ無効）
 z.debug.disable() {
   Z_DEBUG=1
 }

@@ -1,15 +1,13 @@
-# convert a hash to an array of "key:value" strings
+# 連想配列を"key:value"形式の文字列の配列へ変換する
 #
-# $1: name of the hash
-# REPLY: array of "key:value" strings
+# $1: 連想配列名
+# REPLY: "key:value"形式の文字列の配列
 # return: null
 #
 # example:
-#   local -A hash
-#   hash[name]="John"
-#   hash[age]="30"
-#   z.hash.to_arr hash
-#   echo $REPLY  # outputs ("name:John" "age:30")
+#  local -A hash=(name "John")
+#  z.hash.to_arr hash
+#  # REPLY: ("name:John")
 z.hash.to_arr() {
   local hash_name=$1
   local arr=()
@@ -21,22 +19,20 @@ z.hash.to_arr() {
   REPLY=("${arr[@]}")
 }
 
-# merge two hashes into one
+# 2つの連想配列を1つに統合する
 #
-# $base: name of the base hash
-# $other: name of the other hash
-# REPLY: array of key-value pairs (key1 value1 key2 value2 ...)
+# $base: 基準の連想配列名
+# $other: 比較する連想配列名
+# REPLY: キーと値の組の配列（key1 value1 key2 value2 ...）
 # return: null
 #
 # example:
-#   local -A hash1
-#   hash1[name]="John"
-#   local -A hash2
-#   hash2[age]="30"
-#   
-#   z.hash.merge base=hash1 other=hash2
-#   local -A merged=($REPLY)
-#   echo ${merged[name]}  # outputs "John"
+#  local -A hash1=(name "John")
+#  local -A hash2=(age "30")
+#  z.hash.merge base=hash1 other=hash2
+#  local -A merged=($REPLY)
+#  # merged[name]: "John"
+#  # merged[age]: "30"
 z.hash.merge() {
   z.arg.named base $@ && local base=$REPLY
   z.arg.named other $@ && local other=$REPLY

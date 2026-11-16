@@ -1,11 +1,14 @@
-# collect one job directory
+# 1つのジョブディレクトリを回収する
 #
-# $dir: job directory
-# REPLY: collected job id|null
+# $dir: ジョブのディレクトリ
+# REPLY: 回収したジョブID|null
 # return: 0|1
 #
 # example:
-#  z.job.collect._one dir=/tmp/z/job/123/jobs/job
+#  # ジョブが完了し、コールバックも成功する場合
+#  z.job.collect._one dir=/tmp/z/job/100/jobs/20260623T121530000000000.100.1
+#  # REPLY: "20260623T121530000000000.100.1"
+#  # return: 0
 z.job.collect._one() {
   z.arg.named dir "$@" && local dir=$REPLY
   z.is.null "$dir" && return 1
@@ -52,15 +55,17 @@ z.job.collect._one() {
   return 0
 }
 
-# run a callback for a collected job
+# 回収したジョブのコールバックを実行する
 #
-# $dir: job directory
-# $status: collected status
+# $dir: ジョブのディレクトリ
+# $status: 回収した状態
 # REPLY: null
 # return: 0|1
 #
 # example:
-#  z.job.collect._callback dir=/tmp/z/job/123/jobs/job status=success
+#  # メタデータで成功時コールバックが未設定の場合
+#  z.job.collect._callback dir=/tmp/z/job/100/jobs/20260623T121530000000000.100.1 status=success
+#  # return: 0
 z.job.collect._callback() {
   z.arg.named dir "$@" && local dir=$REPLY
   z.arg.named status "$@" && local job_status=$REPLY

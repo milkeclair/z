@@ -1,37 +1,32 @@
 # z.completion
 
-A modifier for completing z function names and showing function docs in zsh completion.
+Zshの補完でzの関数名を補完し、関数ドキュメントを表示するmodです。
 
-## Installation
+## インストール
 
 `z.install.mod completion`
 
-This also installs `job` when it is missing.
+`job`がなければ、同時に導入します。
 
-## Overview
+## 概要
 
-`z.completion` registers zsh completion definitions for public `z.*` functions.
+`z.completion`は、公開された`z.*`関数のZsh補完を登録します。
 
-Use it when you want terminal-side completion for z functions without starting the language server.
+Language Serverを起動せず、端末側でzの関数を補完したい場合に使います。
 
-## Setup
+## 設定
 
-Call `z.completion.enable` after zsh completion is available.
+Zshの補完が利用できる状態になってから`z.completion.enable`を呼び出します。
 
 ```zsh
 z.completion.enable
 ```
 
-## Behavior
+## 動作
 
-### Function name completion
+### 関数名の補完
 
-For `z.<Tab>`, completion lists root namespaces such as `z.arg.` and `z.str.` once each.
-Selecting a namespace keeps the trailing dot and does not insert a space, so you can continue completing within it.
-For a deeper prefix such as `z.str.` or `z.str.color.`, completion lists all matching public functions, including deeper descendants.
-Each candidate is displayed on its own line, both in command and argument positions.
-Aliases and external commands remain available as candidates.
-Other commands use the previously registered command completion.
+`z.<Tab>`では、`z.arg.`や`z.str.`のようなルートの名前空間を1回ずつ表示します。名前空間を選ぶと末尾のドットを保って空白を挿入せず、その中の補完を続けられます。`z.str.`や`z.str.color.`のような深い接頭辞では、さらに下位のものも含む一致した公開関数をすべて表示します。コマンド位置・引数位置とも候補を1行ずつ並べ、別名と外部コマンドも引き続き候補に含めます。他のコマンドには、以前登録されたコマンド補完を使います。
 
 ```zsh
 z.arg.na<Tab>
@@ -39,31 +34,28 @@ z.arg.na<Tab>
 # => z.arg.named.shift
 ```
 
-### Docs message
+### ドキュメントの表示
 
 ```zsh
 z.arg.named <Tab>
-# shows docs for z.arg.named
+# z.arg.namedのドキュメントを表示する
 ```
 
-Docs highlight argument names in cyan, the `REPLY`, `return`, and `example`
-headings in yellow, and indented examples in green. Other text keeps the terminal default color.
+引数名はシアン、`REPLY`・`return`・`example`の見出しは黄色、インデントされた使用例は緑で表示します。それ以外の文章は端末の既定色を使います。
 
-Function name completion takes priority.
-For example, `z.arg.n<Tab>` shows function candidates and does not show docs in the same completion attempt.
+関数名の補完を優先します。例えば`z.arg.n<Tab>`では関数の候補を表示し、同じ補完操作ではドキュメントを表示しません。
 
-## Cache
+## キャッシュ
 
-`z.completion.enable` builds the function name synchronously, then starts a background job to build the docs cache.
+`z.completion.enable`は関数名のキャッシュを同期的に作成し、ドキュメントのキャッシュを作るバックグラウンドジョブを起動します。
 
-Unfinished docs jobs are cancelled when the shell exits or completion is enabled again.
-Jobs that have already finished keep their results available for collection.
+シェルの終了時や補完の再有効化時には、未完了のドキュメントジョブをキャンセルします。完了済みのジョブの結果は、回収できるよう保持します。
 
-The cache variables are:
+キャッシュ用の変数:
 
 - `z_completion_function_names`
-  - public z function names used for candidate completion
+  - 補完候補に使う公開z関数の名前
 - `z_completion_docs`
-  - docs indexed by function name
+  - 関数名をキーとするドキュメント
 - `z_completion_cache_ready`
-  - whether the docs cache has finished loading
+  - ドキュメントのキャッシュを読み込み終えたか

@@ -1,11 +1,13 @@
-# check if state has a worktree path
+# 状態にworktreeパスが存在するか確認する
 #
-# $1: worktree path
+# $1: worktreeのパス
 # REPLY: null
-# return: 0 if path exists in state, otherwise 1
+# return: 状態にパスが存在する場合は0、それ以外は1
 #
 # example:
-#  z.wtproxy._state.path.has /path/to/worktree
+#  z_wtproxy_state_paths=(/tmp/worktree)
+#  z.wtproxy._state.path.has /tmp/worktree
+#  # return: 0
 z.wtproxy._state.path.has() {
   local target_path=$1
   local worktree_path

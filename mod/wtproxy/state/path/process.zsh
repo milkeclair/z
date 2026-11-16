@@ -1,11 +1,14 @@
-# remove a worktree path from state
+# 状態からworktreeパスを削除する
 #
-# $1: worktree path
+# $1: worktreeのパス
 # REPLY: null
 # return: null
 #
 # example:
-#  z.wtproxy._state.path.remove /path/to/worktree
+#  # /tmp/worktreeだけが登録済みの場合
+#  z.wtproxy._state.path.remove /tmp/worktree
+#  # 変更後: z_wtproxy_state_paths=()
+#  # 結果: そのパスのブランチ・Compose名・ポートの記録も消える
 z.wtproxy._state.path.remove() {
   local target_path=$1
   local remaining=()

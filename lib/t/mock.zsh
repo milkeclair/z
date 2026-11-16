@@ -1,12 +1,16 @@
-# mock a function or external command
+# 関数または外部コマンドをモックする
 #
-# $name: function or command name
-# $behavior? [code | 'call_original']: commands to execute
+# $name: 関数名またはコマンド名
+# $behavior? [code | 'call_original']: 実行するコマンド
 # REPLY: null
 # return: null
 #
 # example:
+#  # my_funcが"hello"を表示する関数の場合
 #  z.t.mock name=my_func behavior=call_original
+#  my_func
+#  # 出力: hello
+#  z.t.mock.unmock name=my_func
 z.t.mock() {
   z.arg.named name $@ && local func_name=$REPLY
   z.arg.named behavior $@ && local behavior=$REPLY

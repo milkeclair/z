@@ -1,11 +1,15 @@
-# context within a test suite
+# テストスイート内のcontext
 #
-# $1: context description
+# $1: contextの説明
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t.context "When something happens"; {some tests}
+#  # 有効なdescribe内で実行する場合
+#  z.t.context "引数がある場合"; {
+#    z.t.it "値を返す"; { z.t.expect "a" "a"; }
+#  }
+#  # 結果: 失敗件数は増えない
 z.t.context() {
   local REPLY
   local context=$1
@@ -31,14 +35,17 @@ z.t.context() {
   fi
 }
 
-# xcontext within a test suite (marked as pending)
+# テストスイート内のxcontext（保留扱い）
 #
-# $1: context description
+# $1: contextの説明
 # REPLY: null
 # return: null
 #
 # example:
-#  z.t.xcontext "When something happens"; {some tests}
+#  z.t.xcontext "後で実装する場合"; {
+#    z.t.it "値を返す"; { z.t.expect "a" "b"; }
+#  }
+#  # 結果: このcontext内の検証は保留になり、失敗件数は増えない
 z.t.xcontext() {
   local REPLY
   local context=$1

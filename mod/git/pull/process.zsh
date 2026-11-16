@@ -1,13 +1,16 @@
-# pull latest changes for current branch
-# if current branch is pr/123, pull latest changes for that PR
-# if current branch is develop, pull latest changes for develop branch
-# if arguments contain "origin", pull with those arguments
+# 現在のブランチの最新の変更を取得する
+# 現在のブランチがpr/123なら、そのPRの最新の変更を取得する
+# 現在のブランチがdevelopなら、developブランチの最新の変更を取得する
+# 引数に"origin"があれば、その引数でpullする
 #
 # REPLY: null
 # return: null
 #
 # example:
-#   z.git.pull #=> pull latest changes for current branch
+#  # mainブランチで、origin/mainと同期済みの場合
+#  z.git.pull
+#  # 出力の先頭: Pulling latest changes for current branch main
+#  # return: 0
 z.git.pull() {
   if z.git._hp.arg.has.origin "$@"; then
     git pull "$@"
@@ -22,27 +25,33 @@ z.git.pull() {
   z.git.pull._pr || z.git.pull._current
 }
 
-# pull latest changes for develop branch
+# developブランチの最新の変更を取得する
 #
 # REPLY: null
 # return: null
 #
 # example:
-#   z.git.pull._develop #=> pull latest changes for develop branch
+#  # origin/developを正常に取得できる場合
+#  z.git.pull._develop
+#  # 出力の先頭: Pulling latest changes from develop branch
+#  # return: 0
 z.git.pull._develop() {
   z.io "Pulling latest changes from develop branch"
   z.io.empty
   git pull origin develop
 }
 
-# pull latest changes for PR branch
+# PRブランチの最新の変更を取得する
 #
 # REPLY: null
 # return: null
 #
 # example:
-#   # if current branch is pr/123
-#   z.git.pull._pr #=> pull latest changes for PR #123
+#  # ブランチがpr/123で、PR #123のheadがfeature/exampleの場合
+#  # origin/feature/exampleを正常に取得できることが前提
+#  z.git.pull._pr
+#  # 出力の先頭: Pulling latest changes for PR #123
+#  # return: 0
 z.git.pull._pr() {
   z.git.branch.current._get
   local current_branch=$REPLY
@@ -67,13 +76,16 @@ z.git.pull._pr() {
   fi
 }
 
-# pull latest changes for current branch
+# 現在のブランチの最新の変更を取得する
 #
 # REPLY: null
 # return: null
 #
 # example:
-#   z.git.pull._current #=> pull latest changes for current branch
+#  # mainブランチで、origin/mainと同期済みの場合
+#  z.git.pull._current
+#  # 出力の先頭: Pulling latest changes for current branch main
+#  # return: 0
 z.git.pull._current() {
   z.git.branch.current._get
   local current_branch=$REPLY
