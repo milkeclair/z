@@ -2,7 +2,7 @@
 #
 # $1: 文字列
 # REPLY: null
-# 0|1を返す
+# return: 0|1
 #
 # example:
 #  z.str.is.not.empty ""
@@ -18,7 +18,7 @@ z.str.is.not.empty() {
 # $1: 文字列
 # $2: 正規表現
 # REPLY: null
-# 0|1を返す
+# return: 0|1
 #
 # example:
 #  z.str.is.not.match "hello" "^h.*o$"  #=> 1 (false)
@@ -34,7 +34,7 @@ z.str.is.not.match() {
 #
 # $1: 文字列
 # REPLY: null
-# 0|1を返す
+# return: 0|1
 #
 # example:
 #  z.str.is.not.path_like "/usr/local/bin"  #=> 1 (false)

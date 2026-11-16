@@ -2,7 +2,7 @@
 #
 # $1: 関数名
 # REPLY: null
-# 0|1を返す
+# return: 0|1
 #
 # example:
 #  if z.fn.not.exists my_func

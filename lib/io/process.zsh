@@ -2,8 +2,8 @@
 #
 # $@: 引数
 # $message?: 空文字列や名前付き引数に似た文字列も含めた、明示的なメッセージ
-# $color?: 色名
-# $indent?: インデントの段階
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #
@@ -48,8 +48,8 @@ z.io.empty() {
 # 渡された引数を改行なしで1行に表示する
 #
 # $@: 引数
-# $color?: 色名
-# $indent?: インデントの段階
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #
@@ -104,8 +104,8 @@ z.io.null() {
 # 渡された引数を1行ずつ表示する
 #
 # $@: 引数
-# $color?: 色名
-# $indent?: インデントの段階
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #
@@ -149,8 +149,8 @@ z.io.read() {
 # 渡された引数を緑色で表示する
 #
 # $@: 引数
-# $color?: 色名
-# $indent?: インデントの段階
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #
@@ -168,8 +168,8 @@ z.io.success() {
 # 渡された引数を黄色で表示する
 #
 # $@: 引数
-# $color?: 色名
-# $indent?: インデントの段階
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #
@@ -187,8 +187,8 @@ z.io.warn() {
 # 渡された引数を標準エラーへ表示する
 #
 # $@: 引数
-# $color?: 色名
-# $indent?: インデントの段階
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #

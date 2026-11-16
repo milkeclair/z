@@ -3,7 +3,7 @@
 # $1: 文字列
 # $2: 部分文字列
 # REPLY: null
-# 0|1を返す
+# return: 0|1
 #
 # example:
 #  z.str.includes "hello world" "lo wo"  #=> 0 (true)
@@ -20,7 +20,7 @@ z.str.includes() {
 # $1: 文字列
 # $2: 部分文字列
 # REPLY: null
-# 0|1を返す
+# return: 0|1
 #
 # example:
 #  z.str.excludes "hello world" "lo wo"  #=> 1 (false)
@@ -37,7 +37,7 @@ z.str.excludes() {
 # $1: 文字列
 # $2: 接頭辞
 # REPLY: null
-# 0|1を返す
+# return: 0|1
 #
 # example:
 #  z.str.start_with "hello world" "hello"  #=> 0 (true)
@@ -54,7 +54,7 @@ z.str.start_with() {
 # $1: 文字列
 # $2: 接尾辞
 # REPLY: null
-# 0|1を返す
+# return: 0|1
 #
 # example:
 #  z.str.end_with "hello world" "world"  #=> 0 (true)

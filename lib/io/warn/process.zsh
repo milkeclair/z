@@ -1,8 +1,8 @@
 # 渡された引数を改行なしで標準出力へ1行に表示する
 #
 # $@: 引数
-# $color?: 色名
-# $indent?: インデントの段階
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #
@@ -24,8 +24,8 @@ z.io.warn.oneline() {
 # 渡された引数を標準出力へ1行ずつ表示する
 #
 # $@: 引数
-# $color?: 色名
-# $indent?: インデントの段階
+# $color?: 色
+# $indent?: インデント
 # REPLY: null
 # return: null
 #

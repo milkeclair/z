@@ -12,7 +12,7 @@ typeset -gA z_color_palette=(
 
 # 名前からカラーコードを取得する
 #
-# $1: 色名
+# $1: 色
 # REPLY: カラーコード
 # return: null
 #
@@ -26,7 +26,7 @@ z.str.color() {
 
 # 指定した段階で文字列をインデントする
 #
-# $level: インデントの段階（空白2個を1段階とする）
+# $level: インデント（空白2個を1段階とする）
 # $message: インデントする文字列
 # REPLY: インデントした文字列
 # return: null

@@ -20,7 +20,7 @@ z.str.color.strip() {
 
 # 文字列にカラーコードを付ける
 #
-# $color: 色名
+# $color: 色
 # $message: 装飾する文字列
 # REPLY: 装飾した文字列
 # return: null

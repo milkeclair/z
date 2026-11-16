@@ -61,7 +61,7 @@ z.t.mock.unmock.all() {
 #
 # $1?: モック解除を省略するか
 # REPLY: null
-# 0|1を返す
+# return: 0|1
 #
 # example:
 #  if z.t.mock.unmock._is_not_skippable true; then ... fi
