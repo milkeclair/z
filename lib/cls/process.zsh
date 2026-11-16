@@ -1,11 +1,14 @@
-# Begin a class definition in the current shell.
+# 現在のシェルでクラス定義を開始する。
 #
-# $1: class name
-# REPLY: unchanged
+# $1: クラス名
+# REPLY: 変更しない
 # return: 0|1
 #
 # example:
-#  z.cls.draw Counter; { z.cls.attr count 0; z.cls.drew; }
+#  # 前提: Counterが未登録で、他のクラスを定義していない
+#  z.cls.draw Counter
+#  # return: 0
+#  # 変更後: Counterを定義中
 z.cls.draw() {
   z.cls.store._ensure
 
@@ -24,15 +27,18 @@ z.cls.draw() {
   z_cls_drawing=$1
 }
 
-# Register a scalar attribute and its default value in the active class.
+# 定義中のクラスにスカラー属性と初期値を登録する。
 #
-# $1: attribute name
-# $2: default value, including an empty string
-# REPLY: unchanged
+# $1: 属性名
+# $2: 空文字列を含む属性の初期値
+# REPLY: 変更しない
 # return: 0|1
 #
 # example:
+#  # 前提: z.cls.draw Counterで定義を開始している
 #  z.cls.attr count 0
+#  # return: 0
+#  # 変更後: Counterの属性countの初期値は0
 z.cls.attr() {
   z.cls.store._ensure
 
@@ -52,18 +58,22 @@ z.cls.attr() {
   z_cls_class_attrs[$z_cls_drawing]+="$1 "
 }
 
-# Begin a method block, or register an explicitly supplied body.
-# Place z.cls.fn.done on its own statement after an unquoted method body.
+# メソッド本体の収集を開始するか、引数で渡された本体を登録する。
+# 引用しない本体の末尾には、独立した文としてz.cls.fn.doneを置く。
 #
-# $1: method name
-# $2?: inline body
-# REPLY: unchanged
+# $1: メソッド名
+# $2?: 引数で指定する本体
+# REPLY: 変更しない
 # return: 0|1
 #
 # example:
+#  # 前提: Counterを定義中で、属性countを登録している
 #  z.cls.fn increment
 #    (( ++count ))
+#    REPLY=$count
 #  z.cls.fn.done
+#  # return: 0
+#  # 変更後: Counterにincrementメソッドを登録済み
 z.cls.fn() {
   z.cls.store._ensure
 
@@ -89,13 +99,16 @@ z.cls.fn() {
   z.cls.capture._start "${1:-invalid}" "${(j:|:)funcstack[2,-1]}" "${funcfiletrace[1]%:*}" "$invalid"
 }
 
-# Publish the active class after all methods have been collected.
+# メソッドの収集を終えたクラスを公開する。
 #
-# REPLY: unchanged
+# REPLY: 変更しない
 # return: 0|1
 #
 # example:
+#  # 前提: Counterを定義中で、全メソッドの収集が完了している
 #  z.cls.drew
+#  # return: 0
+#  # 変更後: Counterを公開済み。z.cls.new Counterで実体を作れる
 z.cls.drew() {
   z.cls.store._ensure
 
@@ -108,13 +121,16 @@ z.cls.drew() {
   z_cls_drawing=''
 }
 
-# Discard an unfinished definition and restore its DEBUG interception.
+# 未完了の定義を破棄し、元のDEBUGトラップを復元する。
 #
-# REPLY: unchanged
+# REPLY: 変更しない
 # return: 0
 #
 # example:
+#  # 前提: Counterを定義中で、まだ公開していない
 #  z.cls.abort
+#  # return: 0
+#  # 変更後: Counterの未公開定義を破棄し、元のDEBUGトラップを復元済み
 z.cls.abort() {
   z.cls.store._ensure
   z.cls.capture._stop
@@ -141,15 +157,20 @@ z.cls.abort() {
   return 0
 }
 
-# Create an independent instance with a readonly reference binding.
+# 独立した実体を作成し、参照をreadonly変数へ代入する。
 #
-# $1: published class name
-# $2: variable receiving the instance reference; declare it local in the caller when needed
-# REPLY: opaque instance reference
+# $1: 公開済みのクラス名
+# $2: 実体参照を受け取る変数名。必要に応じて呼出元でlocal宣言する
+# REPLY: 実体参照
 # return: 0|1
 #
 # example:
+#  # 前提: Counterを公開済み。PIDが12345で、初回の実体作成である場合の例
+#  local counter=""
 #  z.cls.new Counter counter
+#  # return: 0
+#  # REPLY: "z_cls_12345_1"
+#  # 変更後: counter="z_cls_12345_1"。counterはreadonly
 z.cls.new() {
   z.cls.store._ensure
 
@@ -184,14 +205,17 @@ z.cls.new() {
   REPLY=$z_cls_id
 }
 
-# Remove an instance, its generated commands, and its saved attributes.
+# 実体、生成したコマンド、保存済みの属性を削除する。
 #
-# $1: instance variable name or reference
-# REPLY: unchanged
+# $1: 実体の変数名または参照
+# REPLY: 変更しない
 # return: 0|1
 #
 # example:
+#  # 前提: counterが非実行中の実体を参照している
 #  z.cls.delete counter
+#  # return: 0
+#  # 変更後: 実体の状態と生成したコマンドを解放済み。counterの値は維持
 z.cls.delete() {
   z.cls.store._ensure
 

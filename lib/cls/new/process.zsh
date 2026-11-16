@@ -1,8 +1,8 @@
-# Check constructor arguments and the caller's destination binding before allocation.
+# 実体の作成前に、引数と呼出元の代入先変数を検証する。
 #
-# $1: published class name
-# $2: ordinary writable scalar binding
-# REPLY: unchanged
+# $1: 公開済みのクラス名
+# $2: 書込み可能な通常のスカラー変数名
+# REPLY: 変更しない
 # return: 0|1
 z.cls.new._validate() {
   if ! z.int.is.eq $# 2 || z.is.null "${z_cls_classes[$1]:-}" || ! z.cls.is._attribute "$2"; then

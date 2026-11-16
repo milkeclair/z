@@ -1,9 +1,9 @@
-# Classes
+# クラス
 
-Class definitions are ordinary Zsh files. Load z first, then source the
-definition file. Method bodies stay unquoted shell code.
+クラス定義は通常のZshファイルです。zを読み込んだ後に定義ファイルをsourceします。
+メソッド本体は、引用しないシェルコードとして記述できます。
 
-Save this as `counter.zsh`:
+次の定義を`counter.zsh`へ保存します。
 
 ```zsh
 z.cls.draw Counter; {
@@ -23,7 +23,7 @@ z.cls.draw Counter; {
 }
 ```
 
-Create instances and call their generated commands:
+実体を作成すると、メソッドと属性の取得・更新用コマンドを呼び出せます。
 
 ```zsh
 source ./counter.zsh
@@ -41,13 +41,14 @@ print -r -- "$REPLY"  # 11
 z.cls.delete counter
 ```
 
-## References and variable scope
+## 参照と変数のスコープ
 
-`z.cls.new Class variable` assigns an opaque instance reference to the named
-variable and to `REPLY`, then marks the variable readonly. The binding follows
-ordinary Zsh variable scope; assigning another reference or constructing again
-in the same variable is rejected.
-Declare the variable `local` in the caller to create a local binding:
+`z.cls.new Class variable`は、指定した変数と`REPLY`へ実体参照を代入し、
+指定した変数をreadonlyにします。参照を持つ変数は通常のZshのスコープに従います。
+同じ変数への再代入や、同じ変数を使った実体の再生成は拒否されます。
+
+以下の例は、それぞれの前の実行例とは独立したシェルで、Counterの定義を
+読み込んだ状態から実行します。ローカルな参照を作る場合は、呼出元で変数をlocal宣言します。
 
 ```zsh
 z.cls.new Counter counter
@@ -66,8 +67,8 @@ counter.count.get
 print -r -- "$REPLY"  # 10
 ```
 
-Copying a reference shares the same instance. Reference expansion can invoke
-its methods and accessors from any variable holding that reference:
+続けて参照をコピーすると、同じ実体の状態を共有できます。
+参照を展開したコマンド名は、その参照を持つ変数からメソッドや属性を呼び出します。
 
 ```zsh
 typeset -r other=$counter
@@ -76,91 +77,78 @@ typeset -r other=$counter
 print -r -- "$REPLY"  # 11
 ```
 
-The short form `counter.increment` resolves the currently visible `counter`
-variable each time. The expanded form `"$other.increment"` calls through the
-copied reference directly. A new instance requires a fresh binding, such as a
-same-named `local` in an inner scope. Declare copied references with `typeset -r` or `local -r`
-when they should also reject direct shell assignment.
+短い形式の`counter.increment`は、呼出し時に見えるcounter変数から実体を解決します。
+`"$other.increment"`は、コピー済みの参照から直接呼び出します。
+新しい実体には、内側のスコープで宣言した同名localなど、新しい代入先が必要です。
+コピーした参照も再代入から保護する場合は、`typeset -r`または`local -r`を使います。
 
-`z.cls.delete variable` or `z.cls.delete "$reference"` releases the instance.
-Reference bindings retain their readonly values after deletion; all references
-to the deleted instance become invalid. Release instances explicitly when
-finished; leaving a variable scope alone does not free their state.
+`z.cls.delete variable`または`z.cls.delete "$reference"`で実体を解放します。
+削除後も参照変数の値とreadonly属性は残りますが、その実体への参照は全て無効になります。
+変数のスコープを抜けるだけでは実体の状態を解放しないため、使い終わったら明示的に削除します。
 
-## Definition and invocation rules
+## 定義と呼出しの規則
 
-- Use one class definition at a time. Class names are unique in a shell.
-- Names use letters, digits, and underscores, starting with a letter or
-  underscore. The `z_cls_` prefix is reserved.
-- Attribute defaults are scalar values, including empty strings. Attributes
-  can become indexed or associative arrays in a method; their type and values
-  are preserved between calls. Array setters accept their elements, and
-  associative setters accept key/value pairs.
-- Attribute names must be ordinary parameters. Zsh special parameters and
-  `REPLY`/`reply` are reserved.
-- New instance bindings must be writable ordinary scalar variables; creation
-  makes them readonly. Their attributes remain mutable.
-- Put `z.cls.fn name` and `z.cls.fn.done` on separate, unconditional statements.
-  Quotes, comments, here-documents, pipelines, conditionals, and ordinary loops
-  remain Zsh syntax inside the method.
-- `z.cls.fn name 'body'` also accepts a short inline body.
-- `z.cls.drew` publishes the class. `z.cls.abort` discards an unfinished
-  definition. An unfinished method is discarded when execution leaves its
-  defining source context.
-- Arguments, standard output/error, `REPLY`, and exit status pass through.
-  Attribute updates persist on explicit `return`, including nonzero status.
-- Methods of one active instance share its restored attributes. Different
-  instances remain independent. Reentering an active instance through a
-  different instance's call is rejected.
-- Ordinary shell process isolation applies to subshells and command
-  substitutions. Use `REPLY` for results when mutations must persist.
+- 同時に定義できるクラスは1つです。クラス名はシェル内で一意にします。
+- 名前には英字・数字・アンダースコアを使えます。先頭は英字かアンダースコアです。
+  `z_cls_`で始まる名前は内部用に予約しています。
+- 属性の初期値は、空文字列を含むスカラーです。メソッド内で添字配列や連想配列へ
+  変更した場合も、型と値を次回の呼出しへ保持します。
+  添字配列のsetterには要素を、連想配列のsetterにはキーと値の組を渡します。
+- 属性名は通常の変数名にします。Zshの特殊パラメータと`REPLY`・`reply`は予約名です。
+- 実体参照の代入先は、書込み可能な通常のスカラー変数にします。
+  作成後はreadonlyになりますが、属性は引き続き更新できます。
+- `z.cls.fn name`と`z.cls.fn.done`は、独立した無条件の文として記述します。
+  本体内の引用、コメント、ヒアドキュメント、パイプ、条件分岐、通常のループはZshの構文です。
+- `z.cls.fn name 'body'`で短い本体を引数として登録することもできます。
+- `z.cls.drew`でクラスを公開し、`z.cls.abort`で未完了の定義を破棄します。
+  メソッドの終了前に定義元の実行コンテキストを抜けた場合も、未完了の定義を破棄します。
+- 引数、標準出力・標準エラー、`REPLY`、終了コードをそのまま渡します。
+  0以外の終了コードを含め、明示的なreturnでも属性の更新を保存します。
+- 同じ実体への入れ子の呼出しは、復元済みの属性を共有します。
+  別の実体の呼出しを経由して、実行中の実体へ戻る再入は拒否します。
+- サブシェルやコマンド置換には、通常のシェルのプロセス分離が適用されます。
+  状態の更新を残す必要がある結果には`REPLY`を使います。
 
-## Public API and internal helpers
+## 公開APIと内部関数
 
-The public class API is draw, attr, fn, fn.done, drew, abort, new and delete.
-Internal helper names have a final segment beginning with an underscore, following
-z's completion convention. Shell completion and z-ls hide those helpers by default;
-z-ls can include them with its showPrivateFunctions setting. This naming convention
-does not restrict Zsh from calling the functions directly.
+公開APIはdraw、attr、fn、fn.done、drew、abort、new、deleteの8関数です。
+内部の補助関数は、zの既存規約に従い、関数名の最後の区切りをアンダースコアから始めます。
+シェル補完とz-lsは通常、この補助関数を候補から除外します。
+z-lsではshowPrivateFunctions設定で表示できます。この規約は、Zshからの直接呼出しを制限するものではありません。
 
-Shared z predicates validate integers, type flags, names and registry entries.
-Shared collection getters preserve literal elements. Class accessors additionally
-retain scalar-versus-array result shape and resolve attributes in their owning
-scope through reserved internal parameter names.
+整数、型フラグ、名前、登録状態の検証にはzの共通APIを使います。
+共有getterは文字列の要素を保持します。クラスのgetterはさらにスカラーと配列の結果形式を保ち、
+予約した内部変数名を使って、属性を所有するスコープから値を取得します。
 
-## Runtime and editing
+## 実行時の処理と編集
 
-Method collection temporarily uses Zsh's DEBUG trap to record commands while
-suppressing their execution. The previous function or list DEBUG handler and
-the DEBUG timing / local-trap options are restored at the end marker. Existing
-DEBUG handlers are suspended while collecting a body. Zsh reconstructs the
-stored code, so comments and original formatting are not retained at runtime.
+メソッド本体の収集では、ZshのDEBUGトラップを一時的に使い、
+コマンドを実行せずに記録します。終了マーカーで、元の関数形式またはリスト形式の
+DEBUGトラップと、実行タイミング・localtrapsの設定を復元します。
+収集中は元のDEBUGトラップを一時停止します。Zshがコードを復元するため、
+実行時に保存する本体には元のコメントや整形を保持しません。
 
-The definition file remains valid shell syntax for syntax highlighting and
-body diagnostics.
+定義ファイルは通常のシェル構文を保つため、シンタックスハイライトと本体の診断を利用できます。
 
-## Runtime costs
+## 実行時の費用
 
-Ordinary scalar accessors read or update only their saved value. Method calls
-restore their attributes and save ordinary strings, decimal integers, indexed
-arrays and associative arrays using parameter expansion. Uncommon parameter
-flags use canonical typeset output from the attribute's own scope.
+通常のスカラー属性の取得・更新は、その属性の保存値だけを扱います。
+メソッド呼出しでは属性を復元し、通常の文字列・10進整数・添字配列・連想配列を
+パラメータ展開で保存します。特殊なパラメータ属性では、その属性を所有するスコープで
+typesetの出力を取得します。
 
-Generated command names keep their existing behavior. Their short programs
-are cached by operation/member and copied with functions -c, which shares the
-compiled program internally. This avoids storing and compiling an individual
-body for every instance command. User replacements are compared against the
-exact registered programs before cleanup.
+生成するコマンド名の動作は同じです。短い呼出し本体を処理とメンバーごとにキャッシュし、
+`functions -c`でコンパイル済みの本体を共有します。実体のコマンドごとに本体を保存・コンパイルする費用を抑えます。
+削除前には登録した本体との一致を確認し、利用者が置き換えた関数を保護します。
 
-Function-name entries and instance state still scale with the number of
-instances and attributes. Method attribute copying remains proportional to the
-attribute count and value size. Deleting instances releases their state, commands
-and inactive-state entries.
+関数名の登録と実体の状態は、実体数・属性数に応じて増えます。
+メソッドの属性コピーは属性数と値の大きさに比例します。
+実体の削除で、状態、生成したコマンド、実行状態の管理要素を解放します。
 
-After the last instance is deleted, empty instance tables are rebuilt to release
-their capacity and unset lookup entries. Class definitions and shared command
-programs remain cached for the shell session.
+最後の実体を削除した後は、実体用の空テーブルを作り直し、
+容量と未設定の検索ノードを解放します。クラス定義と共有する呼出し本体は、
+そのシェルのセッション内でキャッシュを保持します。
 
-The allocator may keep freed memory for reuse by the same Zsh process, so RSS
-need not return to its startup value. Process exit releases all of its memory.
-Runtime cleanup uses ordinary Zsh and requires no native module.
+解放したメモリを同じZshプロセスで再利用するためにアロケータが保持すると、
+RSSは起動時の値まで戻らないことがあります。プロセスの終了時には全メモリを解放します。
+クリーンアップは通常のZshだけで動作し、ネイティブモジュールは必要ありません。

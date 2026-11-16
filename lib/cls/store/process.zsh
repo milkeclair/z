@@ -1,6 +1,6 @@
-# Initialize class definitions, instance state, and capture bookkeeping.
+# クラス定義、実体の状態、本体収集用の管理変数を初期化する。
 #
-# REPLY: unchanged
+# REPLY: 変更しない
 # return: 0
 z.cls.store._ensure() {
   z.is.eq "${z_cls_store_ready:-0}" 1 && z.var.exists z_cls_dispatch_programs && return 0

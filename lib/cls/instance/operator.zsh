@@ -1,8 +1,8 @@
-# Check the exact program expected by this command before reuse or removal.
-# Recognize older shared-program keys and literal wrappers during reloads.
+# 再利用や削除の前に、コマンドの本体が登録済みの内容と一致するか検証する。
+# 再読込時には、以前の共有本体のキーや個別に保存した呼出し関数も認識する。
 #
-# $1: generated command name
-# REPLY: unchanged
+# $1: 生成済みのコマンド名
+# REPLY: 変更しない
 # return: 0|1
 z.cls.instance._owns() {
   local z_cls_program=${functions[$1]-}

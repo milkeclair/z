@@ -1,10 +1,10 @@
-# Install temporary DEBUG interception for one method block.
+# 1つのメソッド本体を収集するため、一時的なDEBUGトラップを設定する。
 #
-# $1: method name
-# $2: defining caller stack
-# $3: defining source file
-# $4: discard the invalid definition when 1
-# REPLY: unchanged
+# $1: メソッド名
+# $2: 定義元の呼出しスタック
+# $3: 定義元のファイル
+# $4: 1の場合は不正な定義を破棄する
+# REPLY: 変更しない
 # return: 0
 z.cls.capture._start() {
   typeset -g z_cls_capture_discard=${4:-0}
@@ -34,9 +34,9 @@ z.cls.capture._start() {
   z_cls_capture_method=$1
 }
 
-# Restore the previous DEBUG handler and its timing option.
+# 元のDEBUGトラップと実行タイミングの設定を復元する。
 #
-# REPLY: unchanged
+# REPLY: 変更しない
 # return: 0
 z.cls.capture._stop() {
   z.is.not.null "${z_cls_capture_method:-}" || return 0
@@ -56,11 +56,11 @@ z.cls.capture._stop() {
   return 0
 }
 
-# Collect a pending command and skip its execution, or finish at the marker.
-# A changed caller stack aborts a definition that left its source unexpectedly.
+# コマンドを実行せずに収集し、終了マーカーで本体の収集を終える。
+# 呼出しスタックが変わった場合は、定義元から抜けた未完了の定義を破棄する。
 #
-# $1: Zsh's reconstructed command text
-# REPLY: unchanged
+# $1: Zshが復元したコマンドの文字列
+# REPLY: 変更しない
 # return: 0
 z.cls.capture._debug() {
   z.is.not.null "${z_cls_capture_method:-}" || return 0

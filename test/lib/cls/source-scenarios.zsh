@@ -2,9 +2,9 @@
 export Z_ROOT=${0:A:h:h:h:h}
 source "$Z_ROOT/main.zsh"
 
-# Report a failed scenario and stop its isolated shell.
-# $@: failure description
-# return: exits with status 1
+# シナリオの失敗を報告し、隔離したシェルを終了する。
+# $@: 失敗の説明
+# return: 1でシェルを終了する
 scenario.fail() {
   z.io.error "$*"
   exit 1

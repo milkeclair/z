@@ -1,10 +1,10 @@
-# Validate a resolved operation before dispatch or attribute restoration.
+# 呼出しや属性の復元に進む前に、解決済みの処理を検証する。
 #
-# $1: resolved instance reference
-# $2: method, get, or set
-# $3: member name
-# $4: original binding or reference for error reporting
-# REPLY: unchanged
+# $1: 解決済みの実体参照
+# $2: method、get、setのいずれか
+# $3: メンバー名
+# $4: エラーに表示する、元の変数名または参照
+# REPLY: 変更しない
 # return: 0|1
 z.cls.instance.call._validate() {
   local z_cls_instance=$1
@@ -31,14 +31,14 @@ z.cls.instance.call._validate() {
   return 0
 }
 
-# Access an ordinary saved scalar, restoring attribute scope for other cases.
+# 保存済みの通常スカラーを直接扱い、それ以外は属性のスコープを復元して処理する。
 #
-# $1: inactive instance reference
-# $2: get or set
-# $3: attribute name
-# $@?: accessor arguments
-# REPLY: accessor result
-# return: accessor exit status
+# $1: 非実行中の実体参照
+# $2: getまたはset
+# $3: 属性名
+# $@?: 取得・更新に渡す引数
+# REPLY: 取得・更新の結果
+# return: 取得・更新の終了コード
 z.cls.instance.call._access() {
   local z_cls_instance=$1
   local z_cls_operation=$2
@@ -78,14 +78,14 @@ z.cls.instance.call._access() {
   z.cls.instance.call._run "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
 }
 
-# Own restored attributes through execution, persistence, and active-state cleanup.
+# 処理の実行、属性の保存、実行中フラグの解除まで、復元した属性を同じスコープに保つ。
 #
-# $1: inactive instance reference
-# $2: method, get, or set
-# $3: member name
-# $@?: operation arguments
-# REPLY: operation result
-# return: operation exit status
+# $1: 非実行中の実体参照
+# $2: method、get、setのいずれか
+# $3: メンバー名
+# $@?: 処理に渡す引数
+# REPLY: 処理の結果
+# return: 処理の終了コード
 z.cls.instance.call._run() {
   local z_cls_instance=$1
   local z_cls_operation=$2

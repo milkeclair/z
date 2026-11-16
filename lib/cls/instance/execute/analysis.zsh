@@ -1,7 +1,7 @@
-# Read a restored attribute without normalizing its value or array shape.
+# 復元済みの属性について、値とスカラー・配列の形式を保って取得する。
 #
-# $1: attribute name
-# REPLY: exact scalar or array value
+# $1: 属性名
+# REPLY: 元の形式を保ったスカラーまたは配列の値
 # return: 0|1
 z.cls.instance.execute._get() {
   local z_cls_name=$1

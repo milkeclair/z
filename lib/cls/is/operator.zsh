@@ -1,7 +1,7 @@
-# Check a class, instance, attribute, or method identifier.
+# クラス・実体・属性・メソッドの識別子を検証する。
 #
-# $1: identifier
-# REPLY: unchanged
+# $1: 識別子
+# REPLY: 変更しない
 # return: 0|1
 z.cls.is._name() {
   local name=${1:-}
@@ -11,10 +11,10 @@ z.cls.is._name() {
     ! z.str.start_with "$name" z_cls_
 }
 
-# Check that an attribute can be restored as an ordinary local parameter.
+# 通常のローカル変数として復元できる属性名を検証する。
 #
-# $1: attribute name
-# REPLY: unchanged
+# $1: 属性名
+# REPLY: 変更しない
 # return: 0|1
 z.cls.is._attribute() {
   z.cls.is._name "${1:-}" &&

@@ -1,8 +1,8 @@
-# Update a restored scalar or array while keeping its native parameter flags.
+# Zshの属性フラグを保ちながら、復元済みのスカラーまたは配列を更新する。
 #
-# $1: attribute name
-# $@?: new value or array elements
-# REPLY: unchanged
+# $1: 属性名
+# $@?: 新しい値または配列の要素
+# REPLY: 変更しない
 # return: 0|1
 z.cls.instance.execute._set() {
   local z_cls_name=$1

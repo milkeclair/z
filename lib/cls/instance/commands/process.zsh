@@ -1,8 +1,8 @@
-# Validate command names before an instance changes the shell.
+# 実体の作成でシェルを変更する前に、生成するコマンド名を検証する。
 #
-# $@: proposed command names
-# REPLY: unchanged
-# return: 0 if every name is available or owned, otherwise 1 with an error
+# $@: 生成するコマンド名
+# REPLY: 変更しない
+# return: 全ての名前が利用可能または所有済みなら0、それ以外はエラーを表示して1
 z.cls.instance.commands._validate() {
   local REPLY=""
   local z_cls_member
@@ -27,10 +27,10 @@ z.cls.instance.commands._validate() {
   return 0
 }
 
-# Install shared dispatch programs and count their instance references.
+# 共有する呼出し本体を登録し、実体からの参照数を数える。
 #
-# $@: validated command names
-# REPLY: unchanged
+# $@: 検証済みのコマンド名
+# REPLY: 変更しない
 # return: 0
 z.cls.instance.commands._install() {
   local z_cls_member

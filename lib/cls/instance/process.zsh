@@ -1,12 +1,12 @@
-# Restore one instance's attributes, execute an operation, and persist changes.
-# Same-instance nested calls reuse the active local scope.
+# 実体の属性を復元して処理を実行し、変更を保存する。
+# 同じ実体への入れ子の呼出しでは、実行中のローカルスコープを再利用する。
 #
-# $1: instance variable name or reference
-# $2: method, get, or set
-# $3: method or attribute name
-# $@?: operation arguments
-# REPLY: operation result
-# return: operation exit status
+# $1: 実体の変数名または参照
+# $2: method、get、setのいずれか
+# $3: メソッド名または属性名
+# $@?: 処理に渡す引数
+# REPLY: 処理の結果
+# return: 処理の終了コード
 z.cls.instance._call() {
   local z_cls_instance=${(P)1:-}
   local z_cls_operation=$2
@@ -25,14 +25,14 @@ z.cls.instance._call() {
   fi
 }
 
-# Run a method in a child function scope, or access a restored attribute.
+# 子の関数スコープでメソッドを実行するか、復元済みの属性を取得・更新する。
 #
-# $1: instance name
-# $2: method, get, or set
-# $3: method or attribute name
-# $@?: operation arguments
-# REPLY: operation result
-# return: operation exit status
+# $1: 実体の参照
+# $2: method、get、setのいずれか
+# $3: メソッド名または属性名
+# $@?: 処理に渡す引数
+# REPLY: 処理の結果
+# return: 処理の終了コード
 z.cls.instance._execute() {
   local z_cls_target=$1
   local z_cls_kind=$2
@@ -57,13 +57,13 @@ z.cls.instance._execute() {
   esac
 }
 
-# Save one restored attribute without spawning a subshell for ordinary values.
-# Return 1 for uncommon flags so the caller snapshots in the attribute scope.
+# 通常の値ではサブシェルを作らず、復元済みの属性を1つ保存する。
+# 特殊な属性フラグでは1を返し、属性を所有する呼出元で宣言を取得する。
 #
-# $1: instance reference
-# $2: attribute name
-# REPLY: unchanged
-# return: 0 when saved, 1 when canonical typeset output is needed
+# $1: 実体参照
+# $2: 属性名
+# REPLY: 変更しない
+# return: 保存できた場合は0、typesetの出力が必要な場合は1
 z.cls.instance._snapshot() {
   local z_cls_snapshot_key="$1:$2"
   local z_cls_snapshot_name=$2
@@ -106,10 +106,10 @@ z.cls.instance._snapshot() {
   esac
 }
 
-# Release a validated instance's commands and stored attributes.
+# 検証済みの実体について、生成したコマンドと保存済みの属性を解放する。
 #
-# $1: existing inactive instance reference
-# REPLY: unchanged
+# $1: 存在する非実行中の実体参照
+# REPLY: 変更しない
 # return: 0
 z.cls.instance._release() {
   local z_cls_id=$1

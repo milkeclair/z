@@ -1,9 +1,9 @@
-# Enumerate the public and reference commands for one class instance.
+# 実体の変数名と参照から呼べるコマンド名を列挙する。
 #
-# $1: class name
-# $2: public binding name
-# $3: opaque instance reference
-# REPLY: array of command names, including an empty array for an empty class
+# $1: クラス名
+# $2: 実体の参照を持つ変数名
+# $3: 実体参照
+# REPLY: コマンド名の配列。メンバーがない場合は空配列
 # return: 0
 z.cls.instance._commands() {
   local z_cls_class=$1
