@@ -210,15 +210,3 @@ z.io.error() {
 
   print -u2 -- $args
 }
-
-# print literal arguments without interpreting escapes or formatting options
-#
-# $@: literal text arguments
-# REPLY: null
-# return: output exit status
-#
-# example:
-#  z.io.literal 'a\nb' color=red
-z.io.literal() {
-  print -r -- "$@"
-}
