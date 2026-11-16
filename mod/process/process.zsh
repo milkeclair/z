@@ -8,11 +8,11 @@
 # return: 0 if all selected PIDs were signaled, otherwise 1
 #
 # example:
-#  z.kill pid=12345
-#  z.kill port=3000
-#  z.kill name=node
-z.kill() {
-  if ! z.kill._pids "$@"; then
+#  z.process.kill pid=12345
+#  z.process.kill port=3000
+#  z.process.kill name=node
+z.process.kill() {
+  if ! z.process._pids "$@"; then
     z.return
     return 1
   fi

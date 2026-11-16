@@ -7,8 +7,8 @@
 # return: 0 if resolved, otherwise 1
 #
 # example:
-#  z.kill._pids port=3000
-z.kill._pids() {
+#  z.process._pids port=3000
+z.process._pids() {
   if ! z.int.is.eq $# 1; then
     z.io.error "Specify exactly one of pid=, port=, or name="
     return 1

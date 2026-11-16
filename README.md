@@ -52,15 +52,15 @@ are replaced with the selected branch's contents and reloaded.
 
 `z.help <function_name>` displays the function docs. If no doc block is found, it displays `Document not found`.
 
-### Terminate processes
+### Processes
 
-Install the `kill` mod with `z.install.mod kill`, then use exactly one
+Install the `process` mod with `z.install.mod process`, then use exactly one
 selector to send SIGTERM:
 
 ```zsh
-z.kill pid=12345
-z.kill port=3000
-z.kill name=node
+z.process.kill pid=12345
+z.process.kill port=3000
+z.process.kill name=node
 ```
 
 Port selection requires `lsof` and targets TCP listeners. Name selection
