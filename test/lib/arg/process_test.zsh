@@ -138,17 +138,14 @@ z.t.describe "z.arg.parse"; {
       local -a parsed_args=("old")
       local REPLY="unchanged"
 
-      z.arg.parse input=input_args named=parsed_named rest=parsed_args
-      local result_code=$?
-      local result_reply=$REPLY
-
-      z.t.expect "$result_code" 0
-      z.t.expect "$result_reply" ""
+      z.arg.parse input=input_args named=parsed_named rest=parsed_args && local result_reply=$REPLY
+      z.t.expect.status.is.true
+      z.t.expect.is.null "$result_reply"
       z.t.expect "${parsed_named[delimiter]}" ","
       z.t.expect "${#parsed_args[@]}" 5
       z.t.expect "${parsed_args[1]}" "first"
       z.t.expect "${parsed_args[2]}" "other=two words"
-      z.t.expect "${parsed_args[3]}" ""
+      z.t.expect.is.null "${parsed_args[3]}"
       z.t.expect "${parsed_args[4]}" "--"
       z.t.expect "${parsed_args[5]}" "named=payload"
       z.t.expect "${#input_args[@]}" 6
@@ -179,7 +176,7 @@ z.t.describe "z.arg.parse"; {
 
       z.t.expect "${parsed_named[delimiter]}" " "
       z.t.expect "${parsed_named[flag]}" 0
-      z.t.expect "${parsed_named[empty]}" ""
+      z.t.expect.is.null "${parsed_named[empty]}"
       z.t.expect "${#parsed_args[@]}" 0
     }
   }
@@ -225,7 +222,7 @@ z.t.describe "z.arg.parse"; {
       z.t.expect "${#parsed_args[@]}" 3
       z.t.expect "${parsed_args[1]}" "true"
       z.t.expect "${parsed_args[2]}" "null"
-      z.t.expect "${parsed_args[3]}" ""
+      z.t.expect.is.null "${parsed_args[3]}"
     }
   }
 
@@ -275,15 +272,12 @@ z.t.describe "z.arg.parse"; {
       local REPLY="unchanged"
 
       z.arg.parse input=input_args named=parsed_named 2>/dev/null
-      local missing_code=$?
+      z.t.expect.status.is.false
       z.arg.parse input=input_args named=parsed_named unknown=parsed_args 2>/dev/null
-      local unknown_code=$?
+      z.t.expect.status.is.false
       z.arg.parse input=missing_array named=parsed_named rest=parsed_args 2>/dev/null
-      local undeclared_code=$?
+      z.t.expect.status.is.false
 
-      z.t.expect "$missing_code" 1
-      z.t.expect "$unknown_code" 1
-      z.t.expect "$undeclared_code" 1
       z.t.expect "${parsed_named[key]}" "default"
       z.t.expect "${parsed_args[1]}" "old"
     }
@@ -301,7 +295,7 @@ z.t.describe "z.arg.parse"; {
       z.t.expect "${#parsed_args[@]}" 5
       z.t.expect "${parsed_args[1]}" "true"
       z.t.expect "${parsed_args[2]}" "null"
-      z.t.expect "${parsed_args[3]}" ""
+      z.t.expect.is.null "${parsed_args[3]}"
       z.t.expect "${parsed_args[4]}" "input=data"
       z.t.expect "${parsed_args[5]}" 'x=$(print literal)'
     }
