@@ -9,7 +9,7 @@
 #  z.completion.complete._command
 #  # 関数候補の例: z.arg.get
 z.completion.complete._command() {
-  local current_word=${words[$CURRENT]:-}
+  local current_word=${PREFIX-${words[$CURRENT]:-}}
   if z.str.start_with "$current_word" z. &&
     z.int.is.zero ${#precommands:|builtin_precommands}; then
     _alternative \
@@ -33,6 +33,8 @@ z.completion.complete._command() {
 #  # 補完候補: z.arg.get
 #  # return: 0
 z.completion.complete._run() {
+  z.completion.code._complete && return 0
+
   if z.completion.complete._functions; then
     return
   fi
@@ -51,7 +53,7 @@ z.completion.complete._run() {
 #  # 補完候補: z.arg.get
 #  # return: 0
 z.completion.complete._functions() {
-  local current_word=${words[$CURRENT]:-}
+  local current_word=${PREFIX-${words[$CURRENT]:-}}
   if ! z.str.start_with "$current_word" "z."; then
     return 1
   fi

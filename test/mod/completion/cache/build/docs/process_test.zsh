@@ -138,3 +138,23 @@ z.t.describe "z.completion.cache.build.docs._from_file"; {
     }
   }
 }
+
+z.t.describe "z.completion.cache.build.docs._from_file code仕様"; {
+  z.t.it "実際のコメントから型情報を構築し、注釈削除後は残さない"; {
+    local fixture_dir=$(mktemp -d)
+    local fixture_file=$fixture_dir/code.zsh
+    z.fixture.cached_code() { :; }
+    z.file.write path="$fixture_file" content=$'# $name: name\n# $code? [code | \'call_original\']: commands\nz.fixture.cached_code() {'
+    z.completion.cache.build.docs._from_file "$fixture_file"
+    local specs=$z_completion_argument_specs[z.fixture.cached_code]
+
+    z.t.expect "$specs" $'named name plain\nnamed code code call_original'
+    z.file.write path="$fixture_file" content=$'# $name: name\n# $code?: commands\nz.fixture.cached_code() {'
+    z.completion.cache.build.docs._from_file "$fixture_file"
+    local after=$z_completion_argument_specs[z.fixture.cached_code]
+
+    z.t.expect.is.null "$after"
+    unfunction z.fixture.cached_code
+    z.dir.remove path="$fixture_dir"
+  }
+}

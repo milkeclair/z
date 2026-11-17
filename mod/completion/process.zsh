@@ -1,4 +1,5 @@
 typeset -gA z_completion_docs=()
+typeset -gA z_completion_argument_specs=()
 typeset -ga z_completion_function_names=()
 typeset -g z_completion_cache_ready=false
 typeset -g z_completion_cache_job_id=""

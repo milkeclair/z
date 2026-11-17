@@ -104,6 +104,12 @@ z.t.describe "z.completion.complete._run"; {
 }
 
 z.t.describe "z.completion.complete._functions"; {
+  z.t.it "カーソルより後ろの文字を保って関数名を補完する"; {
+    local actual=$(z92_terminal "$terminal_fd" $'input=z.fixture.ala\002' setup="setopt complete_in_word")
+
+    z.t.expect "$actual" $'matches:lines=1:1\nbuffer=z.fixture.alpha '
+  }
+
   z.t.context "current wordがz関数prefixの場合"; {
     z.t.it "引数位置でも実際の候補を1行1件で表示する"; {
       local actual=$(z92_terminal "$terminal_fd" "input=z.arg.named z.fixture.")

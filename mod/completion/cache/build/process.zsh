@@ -27,6 +27,7 @@ z.completion.cache.build._names() {
 #  # 変更後: z_completion_docs[z.example]="使用例"
 z.completion.cache.build._docs() {
   z_completion_docs=()
+  z_completion_argument_specs=()
 
   local files=(
     "${z_root}"/*.zsh(N)
