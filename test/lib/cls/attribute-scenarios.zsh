@@ -3,8 +3,10 @@ export Z_ROOT=${0:A:h:h:h:h}
 source "$Z_ROOT/main.zsh"
 
 # シナリオの失敗を報告し、隔離したシェルを終了する。
+#
 # $@: 失敗の説明
-# return: 1でシェルを終了する
+# REPLY: null
+# return: 1
 scenario.fail() {
   z.io.error "$*"
   exit 1
@@ -83,7 +85,9 @@ case $1 in
     first.value
     [[ $REPLY == 1 ]] || scenario.fail "state not saved on return"
     ;;
-
+  *)
+    scenario.fail "Unknown class scenario: $1"
+    ;;
 esac
 unsetopt nounset
 exit 0

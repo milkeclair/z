@@ -11,7 +11,6 @@ z.cls.new._validate() {
   fi
 
   local z_cls_binding=$2
-
   local z_cls_binding_type=${parameters[$z_cls_binding]:-}
 
   if z.str.includes "$z_cls_binding_type" readonly ||

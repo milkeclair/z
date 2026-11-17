@@ -14,6 +14,7 @@ z.cls.instance._call() {
 
   z.is.not.null "${z_cls_instances[$1]:-}" && z_cls_instance=$1
   z.cls.instance.call._validate "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$1" || return 1
+
   shift 3
 
   if z.is.not.null "${z_cls_active[$z_cls_instance]:-}"; then

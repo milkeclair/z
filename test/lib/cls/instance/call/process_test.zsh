@@ -121,7 +121,7 @@ z.t.describe "z.cls.instance.call._access"; {
 }
 
 z.t.describe "z.cls.instance.call._run"; {
-  z.t.context "メソッドが非zeroで戻る場合"; {
+  z.t.context "メソッドが0以外で戻る場合"; {
     z.t.it "更新とREPLYを保ちactive状態を解放する"; {
       () {
         z.cls.draw DirectRunScope
@@ -132,10 +132,11 @@ z.t.describe "z.cls.instance.call._run"; {
         z.cls.new DirectRunScope object
 
         z.cls.instance.call._run "$object" method fail
-        local -A observed=(result $? reply "$REPLY")
+        local call_status=$?
+        local call_reply=$REPLY
 
-        z.t.expect "$observed[result]" 7
-        z.t.expect "$observed[reply]" failed
+        z.t.expect "$call_status" 7
+        z.t.expect "$call_reply" failed
 
         z.var.exists "z_cls_active[$object]"
 

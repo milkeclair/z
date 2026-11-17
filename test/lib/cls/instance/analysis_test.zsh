@@ -2,7 +2,7 @@ source ${z_main}
 
 z.t.describe "z.cls.instance._commands"; {
   z.t.context "属性とメソッドがある場合"; {
-    z.t.it "両prefixのコマンドを列挙する"; {
+    z.t.it "両方の接頭辞のコマンドを列挙する"; {
       z.cls.store._ensure
       z_cls_class_methods[CommandList]='increment '
       z_cls_class_attrs[CommandList]='count '
@@ -21,7 +21,11 @@ z.t.describe "z.cls.instance._commands"; {
 
       z.cls.instance._commands EmptyCommandList object ref
 
-      z.t.expect.includes "${(t)REPLY}" array
+      local reply_type=${(t)REPLY}
+      local reply_count=${#REPLY}
+
+      z.t.expect "$reply_count" 0
+      z.t.expect.includes "$reply_type" array
     }
   }
 }

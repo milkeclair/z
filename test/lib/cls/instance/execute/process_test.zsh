@@ -22,7 +22,7 @@ z.t.describe "z.cls.instance.execute._set"; {
         z.cls.instance.execute._set items "" "two words"
 
         z.t.expect "${#items}" 2
-        z.t.expect "$items[1]" ""
+        z.t.expect.is.null "$items[1]"
         z.t.expect "$items[2]" "two words"
       }
     }

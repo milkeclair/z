@@ -24,7 +24,7 @@ z.t.describe "z.cls.draw"; {
 
 z.t.describe "z.cls.attr"; {
   z.t.context "定義中の属性の場合"; {
-    z.t.it "defaultを保持する"; {
+    z.t.it "初期値を保持する"; {
       z.cls.draw DirectAttr
 
       z.cls.attr literal false
@@ -84,7 +84,7 @@ z.t.describe "z.cls.drew"; {
       z.cls.drew
 
       z.t.expect "$z_cls_classes[DirectPublish]" 1
-      z.t.expect "$z_cls_drawing" ''
+      z.t.expect.is.null "$z_cls_drawing"
     }
   }
 }
@@ -92,32 +92,31 @@ z.t.describe "z.cls.drew"; {
 z.t.describe "z.cls.abort"; {
   z.t.context "呼出元にreadonly argがある場合"; {
     z.t.it "呼出元を変更せずに定義を破棄する"; {
-      local -A observations=()
       z.cls.draw ReadonlyAbort
       z.cls.attr count 0
 
       () {
         local -r arg=untouched
+
         z.cls.abort
-        observations[status]=$?
-        observations[arg]=$arg
+
+        z.t.expect.status.is.true
+        z.t.expect "$arg" untouched
       }
 
-      z.t.expect "$observations[status]" 0
-      z.t.expect "$observations[arg]" untouched
-      z.t.expect "$z_cls_drawing" ''
+      z.t.expect.is.null "$z_cls_drawing"
     }
   }
 
   z.t.context "未公開の定義がある場合"; {
-    z.t.it "defaultと本体を破棄する"; {
+    z.t.it "初期値と本体を破棄する"; {
       z.cls.draw DirectAbort
       z.cls.attr count 0
       z.cls.fn value 'REPLY=$count'
 
       z.cls.abort
 
-      z.t.expect "$z_cls_drawing" ''
+      z.t.expect.is.null "$z_cls_drawing"
 
       z.var.exists 'z_cls_defaults[DirectAbort:count]'
 
@@ -176,7 +175,7 @@ z.t.describe "z.cls.new"; {
     }
   }
 
-  z.t.context "二重underscoreから始まる属性を使う場合"; {
+  z.t.context "二重アンダースコアから始まる属性を使う場合"; {
     z.t.it "内部変数と衝突せず状態を保存する"; {
       () {
         z.cls.draw FormerPrefix
@@ -203,30 +202,30 @@ z.t.describe "z.cls.new"; {
 
   z.t.context "argを参照名として使う場合"; {
     z.t.it "readonly化した参照を返し、取得と削除ができる"; {
-      local -A observations=()
       z.cls.draw ArgumentBinding
       z.cls.attr count 3
       z.cls.drew
 
       () {
         local arg=""
-        z.cls.new ArgumentBinding arg
-        observations[created]=$?
-        arg.count.get
-        observations[value]=$REPLY
-        z.cls.delete arg
-        observations[deleted]=$?
-      }
 
-      z.t.expect "$observations[created]" 0
-      z.t.expect "$observations[value]" 3
-      z.t.expect "$observations[deleted]" 0
+        z.cls.new ArgumentBinding arg
+
+        z.t.expect.status.is.true
+
+        arg.count.get
+
+        z.t.expect.reply 3
+
+        z.cls.delete arg
+
+        z.t.expect.status.is.true
+      }
     }
   }
 
   z.t.context "呼出元に別のreadonly argがある場合"; {
     z.t.it "既存の変数を変えずに生成と削除ができる"; {
-      local -A observations=()
       z.cls.draw ReadonlyArgument
       z.cls.attr count 7
       z.cls.drew
@@ -234,19 +233,20 @@ z.t.describe "z.cls.new"; {
       () {
         local -r arg=untouched
         local object=""
-        z.cls.new ReadonlyArgument object
-        observations[created]=$?
-        object.count.get
-        observations[value]=$REPLY
-        z.cls.delete object
-        observations[deleted]=$?
-        observations[arg]=$arg
-      }
 
-      z.t.expect "$observations[created]" 0
-      z.t.expect "$observations[value]" 7
-      z.t.expect "$observations[deleted]" 0
-      z.t.expect "$observations[arg]" untouched
+        z.cls.new ReadonlyArgument object
+
+        z.t.expect.status.is.true
+
+        object.count.get
+
+        z.t.expect.reply 7
+
+        z.cls.delete object
+
+        z.t.expect.status.is.true
+        z.t.expect "$arg" untouched
+      }
     }
   }
 
@@ -335,9 +335,8 @@ z.t.describe "z.cls.delete"; {
   }
 }
 
-z.t.describe "z.cls source integration"; {
+z.t.describe "z.clsのsource連携"; {
   z.t.context "sourceでクラスを定義する場合"; {
-
     z.t.it "大量削除後も生存中の参照とクラス定義、ユーザー関数を保持する"; {
       zsh -f "$z_root/test/lib/cls/reference-scenarios.zsh" cleanup-recreate
 
@@ -514,17 +513,17 @@ z.t.describe "z.cls source integration"; {
   }
 }
 
-z.t.describe "z.cls public API"; {
-  z.t.context "補完の関数名cacheを構築する場合"; {
+z.t.describe "z.clsの公開API"; {
+  z.t.context "補完の関数名キャッシュを構築する場合"; {
     z.t.it "公開DSLの8関数だけを候補にする"; {
       source "$z_root/mod/completion/function/is/operator.zsh"
       source "$z_root/mod/completion/cache/build/process.zsh"
       local -a z_completion_function_names=()
+      local function_name=""
 
       z.completion.cache.build._names
 
       local -a class_names=()
-      local function_name
 
       for function_name in "${z_completion_function_names[@]}"; do
         z.str.start_with "$function_name" z.cls. && class_names+=("$function_name")

@@ -33,7 +33,7 @@ z.t.describe "z.cls.capture._stop"; {
       z.cls.capture._stop
 
       z.t.expect "$functions[TRAPDEBUG]" "$original_debug"
-      z.t.expect "$z_cls_capture_method" ''
+      z.t.expect.is.null "$z_cls_capture_method"
 
       unfunction TRAPDEBUG
     }

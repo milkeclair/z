@@ -49,7 +49,7 @@ z.t.describe "z.cls.instance._execute"; {
     }
   }
 
-  z.t.context "メソッドが非zeroで戻る場合"; {
+  z.t.context "メソッドが0以外で戻る場合"; {
     z.t.it "終了状態を保持する"; {
       z.cls.store._ensure
       z_cls_instances[execute_ref]=Execute
@@ -95,7 +95,7 @@ z.t.describe "z.cls.instance._snapshot"; {
   }
 
   z.t.context "基数付き整数の場合"; {
-    z.t.it "canonical snapshotが必要であると返す"; {
+    z.t.it "typesetの宣言取得が必要であると返す"; {
       () {
         z.cls.store._ensure
         local -i 16 number=255

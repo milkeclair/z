@@ -11,7 +11,7 @@ z.t.describe "z.cls.new._validate"; {
         z.cls.new._validate NewValidate object
 
         z.t.expect.status.is.true
-        z.t.expect "$object" ""
+        z.t.expect.is.null "$object"
       }
     }
   }

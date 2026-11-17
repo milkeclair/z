@@ -53,8 +53,11 @@ z.t.describe "z.cls.instance.execute._get"; {
 
         z.cls.instance.execute._get items
 
-        z.t.expect.includes "${(t)REPLY}" array
-        z.t.expect "${#REPLY}" 0
+        local reply_type=${(t)REPLY}
+        local reply_count=${#REPLY}
+
+        z.t.expect "$reply_count" 0
+        z.t.expect.includes "$reply_type" array
       }
     }
   }

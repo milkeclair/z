@@ -108,7 +108,7 @@ z.cls.fn() {
 #  # 前提: Counterを定義中で、全メソッドの収集が完了している
 #  z.cls.drew
 #  # return: 0
-#  # 変更後: Counterを公開済み。z.cls.new Counterで実体を作れる
+#  # 変更後: Counterを公開済み。z.cls.new Counter counterで実体を作れる
 z.cls.drew() {
   z.cls.store._ensure
 

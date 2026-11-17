@@ -14,7 +14,7 @@ z.t.describe "z.cls.store._ensure"; {
     }
   }
 
-  z.t.context "ready flagだけが残る場合"; {
+  z.t.context "初期化フラグだけが残る場合"; {
     z.t.it "不足したストアを初期化する"; {
       unset z_cls_dispatch_programs
       z_cls_store_ready=1

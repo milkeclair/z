@@ -17,6 +17,7 @@ z.cls.instance._commands() {
     for z_cls_member in ${=z_cls_class_methods[$z_cls_class]}; do
       z_cls_wrappers+=("$z_cls_prefix.$z_cls_member")
     done
+
     for z_cls_member in ${=z_cls_class_attrs[$z_cls_class]}; do
       z_cls_wrappers+=("$z_cls_prefix.$z_cls_member.get")
       z_cls_wrappers+=("$z_cls_prefix.$z_cls_member.set")
