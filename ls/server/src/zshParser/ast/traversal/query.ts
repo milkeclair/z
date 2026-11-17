@@ -1,5 +1,14 @@
-import { List } from 'immutable';
-import type { AstNode, CommentNode, DocBlockNode, FileNode, FunctionDefinitionNode } from '..';
+import * as Immutable from 'immutable';
+import type {
+  AstNode,
+  CommandSubstitutionNode,
+  CommentNode,
+  DocBlockNode,
+  FileNode,
+  FunctionDefinitionNode,
+  ProcessSubstitutionNode,
+  RedirectNode,
+} from '..';
 import { again, done, loop } from '../../../util/loop';
 import { lowerBound } from '../../../util/search';
 import { pushStack, type Stack } from '../../../util/stack';
@@ -22,15 +31,19 @@ export function createQueryContext(file: FileNode): QueryContext {
       ? []
       : findAll(file, 'functionDefinition').flatMap((target) => {
           const docBlock = target.leadingDoc;
+
           if (!docBlock) {
             return [];
           }
+
           const context: DocContext = { docBlock, target };
+
           return docBlock.comments.map((comment): readonly [number, DocContext] => [
             comment.range.start.offset,
             context,
           ]);
         });
+
   return { file, documentationByOffset: new Map(entries) };
 }
 
@@ -38,16 +51,22 @@ export function commentAt(file: FileNode, offset: number): CommentNode | null {
   if (!Number.isSafeInteger(offset)) {
     return null;
   }
+
   const index = lowerBound(
     file.comments.length,
     (index) => file.comments[index].range.end.offset <= offset,
   );
   const comment = file.comments[index];
+
   return comment && comment.range.start.offset <= offset ? comment : null;
 }
 
 export type AstLocation =
-  | { readonly kind: 'syntax'; readonly node: AstNode; readonly path: readonly AstNode[] }
+  | {
+      readonly kind: 'syntax';
+      readonly node: AstNode;
+      readonly path: readonly AstNode[];
+    }
   | {
       readonly kind: 'comment';
       readonly node: CommentNode;
@@ -55,7 +74,11 @@ export type AstLocation =
       readonly target: FunctionDefinitionNode | null;
     };
 
-type PositionScore = { readonly owned: boolean; readonly start: number; readonly end: number };
+type PositionScore = {
+  readonly owned: boolean;
+  readonly start: number;
+  readonly end: number;
+};
 
 type PositionFrame = TraversalFrame & {
   readonly parent: PositionFrame | null;
@@ -74,12 +97,53 @@ function mark(range: AstNode['range'] | null, offset: number): PositionScore | n
   return range ? ownedSpan(range.start.offset, range.end.offset, offset) : null;
 }
 
+function redirectPositionScore(
+  node: RedirectNode,
+  offset: number,
+  fallback: PositionScore,
+): PositionScore {
+  const headerEnd = node.target?.range.end.offset ?? node.range.start.offset + node.operator.length;
+
+  return (
+    ownedSpan(node.range.start.offset, headerEnd, offset) ??
+    (node.hereDocument
+      ? ownedSpan(
+          node.hereDocument.range.start.offset,
+          node.hereDocument.close?.end.offset ?? node.hereDocument.range.end.offset,
+          offset,
+        )
+      : null) ??
+    fallback
+  );
+}
+
+function substitutionPositionScore(
+  node: CommandSubstitutionNode | ProcessSubstitutionNode,
+  offset: number,
+  fallback: PositionScore,
+): PositionScore {
+  const backtick = node.raw.charCodeAt(0) === 96;
+  const opening = ownedSpan(
+    node.range.start.offset,
+    node.range.start.offset + (backtick ? 1 : 2),
+    offset,
+  );
+  const closed = node.raw.endsWith(backtick ? String.fromCharCode(96) : ')');
+
+  return (
+    opening ??
+    (closed ? ownedSpan(node.range.end.offset - 1, node.range.end.offset, offset) : null) ??
+    fallback
+  );
+}
+
 function positionScore(node: AstNode, offset: number): PositionScore {
   const fallback: PositionScore = {
     owned: false,
     start: node.range.start.offset,
     end: node.range.end.offset,
   };
+
   switch (node.kind) {
     case 'file':
     case 'list':
@@ -123,36 +187,11 @@ function positionScore(node: AstNode, offset: number): PositionScore {
           offset,
         ) ?? fallback
       );
-    case 'redirect': {
-      const headerEnd =
-        node.target?.range.end.offset ?? node.range.start.offset + node.operator.length;
-      return (
-        ownedSpan(node.range.start.offset, headerEnd, offset) ??
-        (node.hereDocument
-          ? ownedSpan(
-              node.hereDocument.range.start.offset,
-              node.hereDocument.close?.end.offset ?? node.hereDocument.range.end.offset,
-              offset,
-            )
-          : null) ??
-        fallback
-      );
-    }
+    case 'redirect':
+      return redirectPositionScore(node, offset, fallback);
     case 'commandSubstitution':
-    case 'processSubstitution': {
-      const backtick = node.raw.charCodeAt(0) === 96;
-      const opening = ownedSpan(
-        node.range.start.offset,
-        node.range.start.offset + (backtick ? 1 : 2),
-        offset,
-      );
-      const closed = node.raw.endsWith(backtick ? String.fromCharCode(96) : ')');
-      return (
-        opening ??
-        (closed ? ownedSpan(node.range.end.offset - 1, node.range.end.offset, offset) : null) ??
-        fallback
-      );
-    }
+    case 'processSubstitution':
+      return substitutionPositionScore(node, offset, fallback);
     case 'hereDocument':
     case 'comment':
     case 'docBlock':
@@ -170,7 +209,9 @@ function positionScore(node: AstNode, offset: number): PositionScore {
     case 'arithmeticExpansion':
       return { ...fallback, owned: true };
   }
+
   const exhaustive: never = node;
+
   return exhaustive;
 }
 
@@ -178,38 +219,36 @@ function betterPosition(candidate: PositionFrame, best: PositionFrame): boolean 
   if (candidate.score.owned !== best.score.owned) {
     return candidate.score.owned;
   }
+
   if (!candidate.score.owned && candidate.score.start !== best.score.start) {
     return candidate.score.start > best.score.start;
   }
+
   const width = candidate.score.end - candidate.score.start;
   const previousWidth = best.score.end - best.score.start;
+
   return width < previousWidth || (width === previousWidth && candidate.depth > best.depth);
 }
 
-export function locate(query: QueryContext, offset: number): AstLocation | null {
-  const file = query.file;
-  if (!Number.isSafeInteger(offset)) {
-    return null;
-  }
-  if (offset < file.range.start.offset || offset > file.range.end.offset) {
-    return null;
-  }
-  if (offset === file.eof.range.start.offset) {
-    return { kind: 'syntax', node: file.eof, path: [file, file.eof] };
-  }
-  const comment = commentAt(file, offset);
-  if (comment) {
-    const context = query.documentationByOffset.get(comment.range.start.offset);
-    return {
-      kind: 'comment',
-      node: comment,
-      docBlock: context?.docBlock ?? null,
-      target: context?.target ?? null,
-    };
-  }
-  if (!contains(file, offset)) {
-    return null;
-  }
+function childPositionFrame(parent: PositionFrame, node: AstNode, offset: number): PositionFrame {
+  const score = positionScore(node, offset);
+  const inherited =
+    !score.owned &&
+    parent.score.owned &&
+    score.start === parent.score.start &&
+    score.end === parent.score.end;
+  const child: PositionFrame = {
+    node: node,
+    children: syntaxChildCursor(node),
+    depth: parent.depth + 1,
+    parent,
+    score: inherited ? { ...score, owned: true } : score,
+  };
+
+  return child;
+}
+
+function closestSyntaxFrame(file: FileNode, offset: number): PositionFrame {
   const first: PositionFrame = {
     node: file,
     children: syntaxChildCursor(file),
@@ -217,50 +256,92 @@ export function locate(query: QueryContext, offset: number): AstLocation | null 
     parent: null,
     score: positionScore(file, offset),
   };
-  const initial: { readonly stack: Stack<PositionFrame> | null; readonly best: PositionFrame } = {
+  const initial: {
+    readonly stack: Stack<PositionFrame> | null;
+    readonly best: PositionFrame;
+  } = {
     stack: pushStack(first),
     best: first,
   };
   const best = loop<typeof initial, PositionFrame>(initial, (progress) => {
     const stack = progress.stack;
+
     if (!stack) {
       return done(progress.best);
     }
+
     const parent = stack.value;
     const candidate = parent.children;
+
     if (!candidate) {
       return again({ ...progress, stack: stack.next });
     }
+
     const advanced = { ...parent, children: candidate.tail() };
     const remaining = pushStack(advanced, stack.next);
+
     if (!contains(candidate.node, offset)) {
       return again({ ...progress, stack: remaining });
     }
-    const score = positionScore(candidate.node, offset);
-    const inherited =
-      !score.owned &&
-      parent.score.owned &&
-      score.start === parent.score.start &&
-      score.end === parent.score.end;
-    const child: PositionFrame = {
-      node: candidate.node,
-      children: syntaxChildCursor(candidate.node),
-      depth: parent.depth + 1,
-      parent,
-      score: inherited ? { ...score, owned: true } : score,
-    };
+
+    const child = childPositionFrame(parent, candidate.node, offset);
+
     return again({
       stack: pushStack(child, remaining),
       best: betterPosition(child, progress.best) ? child : progress.best,
     });
   });
-  const path = loop<
-    { readonly frame: PositionFrame | null; readonly nodes: List<AstNode> },
+
+  return best;
+}
+
+function syntaxPath(frame: PositionFrame): readonly AstNode[] {
+  return loop<
+    {
+      readonly frame: PositionFrame | null;
+      readonly nodes: Immutable.List<AstNode>;
+    },
     readonly AstNode[]
-  >({ frame: best, nodes: List() }, (progress) =>
+  >({ frame: frame, nodes: Immutable.List() }, (progress) =>
     progress.frame
       ? again({ frame: progress.frame.parent, nodes: progress.nodes.push(progress.frame.node) })
       : done(progress.nodes.reverse().toArray()),
   );
-  return { kind: 'syntax', node: best.node, path };
+}
+
+export function locate(query: QueryContext, offset: number): AstLocation | null {
+  const file = query.file;
+
+  if (!Number.isSafeInteger(offset)) {
+    return null;
+  }
+
+  if (offset < file.range.start.offset || offset > file.range.end.offset) {
+    return null;
+  }
+
+  if (offset === file.eof.range.start.offset) {
+    return { kind: 'syntax', node: file.eof, path: [file, file.eof] };
+  }
+
+  const comment = commentAt(file, offset);
+
+  if (comment) {
+    const context = query.documentationByOffset.get(comment.range.start.offset);
+
+    return {
+      kind: 'comment',
+      node: comment,
+      docBlock: context?.docBlock ?? null,
+      target: context?.target ?? null,
+    };
+  }
+
+  if (!contains(file, offset)) {
+    return null;
+  }
+
+  const frame = closestSyntaxFrame(file, offset);
+
+  return { kind: 'syntax', node: frame.node, path: syntaxPath(frame) };
 }

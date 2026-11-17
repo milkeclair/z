@@ -12,22 +12,23 @@ import {
 } from '../main';
 import type { FunctionSnapshot } from '../refreshFunctions/main';
 import { DocumentDiagnosticReportKind, TextDocument, TextDocuments } from '../vscode_type';
+
 type RequestState = {
   readonly snapshot: FunctionSnapshot;
   readonly diagnosticSnapshot: DiagnosticSnapshot;
   readonly showPrivateFunctions: boolean;
 };
-export function registerLanguageFeatures({
-  connection,
-  documents,
-  currentState,
-}: {
+
+type LanguageFeatureContext = {
   readonly connection: Connection;
   readonly documents: TextDocuments<TextDocument>;
   readonly currentState: () => RequestState;
-}): void {
+};
+
+function registerCompletion({ connection, documents, currentState }: LanguageFeatureContext): void {
   connection.onCompletion((params) => {
     const { snapshot, diagnosticSnapshot, showPrivateFunctions } = currentState();
+
     return zCompletion({
       params,
       documents,
@@ -44,11 +45,15 @@ export function registerLanguageFeatures({
       typeof data === 'object' && data !== null && 'uri' in data && typeof data.uri === 'string'
         ? data.uri
         : '';
+
     return zCompletionResolve(result, snapshot, diagnosticSnapshot.files.get(uri)?.codePrograms);
   });
+}
 
+function registerNavigation({ connection, documents, currentState }: LanguageFeatureContext): void {
   connection.onHover((params) => {
     const { snapshot, diagnosticSnapshot } = currentState();
+
     return zHover({
       params,
       documents,
@@ -59,6 +64,7 @@ export function registerLanguageFeatures({
 
   connection.onSignatureHelp((params) => {
     const { snapshot, diagnosticSnapshot } = currentState();
+
     return zSignatureHelp({
       params,
       documents,
@@ -69,6 +75,7 @@ export function registerLanguageFeatures({
 
   connection.onDefinition((params) => {
     const { snapshot, diagnosticSnapshot } = currentState();
+
     return zDefinition({
       params,
       documents,
@@ -76,7 +83,9 @@ export function registerLanguageFeatures({
       programs: diagnosticSnapshot.files.get(params.textDocument.uri)?.codePrograms,
     });
   });
+}
 
+function registerColoring({ connection, documents, currentState }: LanguageFeatureContext): void {
   connection.languages.semanticTokens.on((params) => {
     const { diagnosticSnapshot } = currentState();
     const document = documents.get(params.textDocument.uri);
@@ -86,12 +95,20 @@ export function registerLanguageFeatures({
           programs: diagnosticSnapshot.files.get(document.uri)?.codePrograms ?? [],
         })
       : { data: [] };
+
     return { data: [...result.data] };
   });
+}
 
+function registerDiagnostics({
+  connection,
+  documents,
+  currentState,
+}: LanguageFeatureContext): void {
   connection.languages.diagnostics.on((params) => {
     const { diagnosticSnapshot } = currentState();
     const document = documents.get(params.textDocument.uri);
+
     return {
       kind: DocumentDiagnosticReportKind.Full,
       resultId: document ? diagnosticSnapshot.files.get(document.uri)?.resultId : undefined,
@@ -107,6 +124,14 @@ export function registerLanguageFeatures({
       diagnostics: diagnosticSnapshot,
       previousResultIds: params.previousResultIds,
     });
+
     return { items: report.items.map((item) => ({ ...item, items: [...item.items] })) };
   });
+}
+
+export function registerLanguageFeatures(context: LanguageFeatureContext): void {
+  registerCompletion(context);
+  registerNavigation(context);
+  registerColoring(context);
+  registerDiagnostics(context);
 }

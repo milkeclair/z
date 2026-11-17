@@ -22,6 +22,7 @@ export type FileDiagnostics = {
   readonly project: boolean;
   readonly resultId: string;
 };
+
 export type DiagnosticSnapshot = {
   readonly revision: number;
   readonly targets: FunctionTargets;
@@ -63,6 +64,7 @@ function resolutionContext(
     autoloads: new Set(facts.flatMap((file) => [...file.declarations.autoloads])),
     builtins: new Set(facts.flatMap((file) => [...file.declarations.builtins])),
   };
+
   if (
     environment === previous.environment &&
     projectRoot === previous.projectRoot &&
@@ -74,6 +76,7 @@ function resolutionContext(
   ) {
     return previous;
   }
+
   return { ...declarations, environment, projectRoot };
 }
 
@@ -82,9 +85,69 @@ function suppressed(
   diagnostics: readonly Diagnostics[],
 ): readonly Diagnostics[] {
   const controls = collectIgnoreControls(file);
+
   return diagnostics.filter(
     (diagnostic) => !ignored(controls, diagnostic.range.start.line, diagnostic.code),
   );
+}
+
+type DiagnosticInput = {
+  readonly file: ZshFileHydration;
+  readonly version: number | null;
+  readonly project: boolean;
+};
+
+function diagnosticInputs(snapshot: FunctionSnapshot): ReadonlyMap<string, DiagnosticInput> {
+  const projectInputs: ReadonlyMap<string, DiagnosticInput> = new Map(
+    [...snapshot.hydrator.files.values()].map((file): readonly [string, DiagnosticInput] => [
+      pathToFileURL(file.sourceFile).href,
+      { file, version: null, project: true },
+    ]),
+  );
+  const inputs: ReadonlyMap<string, DiagnosticInput> = new Map([
+    ...projectInputs,
+    ...[...snapshot.documents].map(([uri, document]): readonly [string, DiagnosticInput] => [
+      uri,
+      { file: document.file, version: document.version, project: projectInputs.has(uri) },
+    ]),
+  ]);
+
+  return inputs;
+}
+
+function diagnoseFile(
+  snapshot: FunctionSnapshot,
+  input: DiagnosticInput,
+  facts: FileFacts,
+  context: ResolutionContext,
+  revision: number,
+): FileDiagnostics {
+  const local = input.project
+    ? context
+    : resolutionContext([facts], context.environment, context.projectRoot, context);
+  const effective = input.project
+    ? context
+    : {
+        ...context,
+        aliases: new Set([...context.aliases, ...local.aliases]),
+        globalAliases: new Set([...context.globalAliases, ...local.globalAliases]),
+        suffixAliases: new Set([...context.suffixAliases, ...local.suffixAliases]),
+        autoloads: new Set([...context.autoloads, ...local.autoloads]),
+        builtins: new Set([...context.builtins, ...local.builtins]),
+      };
+  const embedded = analyzeEmbeddedCode(snapshot, input.file, facts.calls, effective);
+
+  return {
+    ...input,
+    facts,
+    resultId: String(revision),
+    codePrograms: embedded.programs,
+    items: suppressed(input.file, [...facts.base, ...embedded.diagnostics]).toSorted(
+      (left, right) =>
+        left.range.start.line - right.range.start.line ||
+        left.range.start.character - right.range.start.character,
+    ),
+  };
 }
 
 export function refreshDiagnosticSnapshot({
@@ -96,24 +159,7 @@ export function refreshDiagnosticSnapshot({
   readonly environment: ShellEnvironment;
   readonly previous?: DiagnosticSnapshot;
 }): DiagnosticSnapshot {
-  type Input = {
-    readonly file: ZshFileHydration;
-    readonly version: number | null;
-    readonly project: boolean;
-  };
-  const projectInputs: ReadonlyMap<string, Input> = new Map(
-    [...snapshot.hydrator.files.values()].map((file): readonly [string, Input] => [
-      pathToFileURL(file.sourceFile).href,
-      { file, version: null, project: true },
-    ]),
-  );
-  const inputs: ReadonlyMap<string, Input> = new Map([
-    ...projectInputs,
-    ...[...snapshot.documents].map(([uri, document]): readonly [string, Input] => [
-      uri,
-      { file: document.file, version: document.version, project: projectInputs.has(uri) },
-    ]),
-  ]);
+  const inputs = diagnosticInputs(snapshot);
   const facts = new Map(
     [...inputs].map(([uri, input]) => [
       uri,
@@ -137,9 +183,9 @@ export function refreshDiagnosticSnapshot({
     ([uri, input]): readonly (readonly [string, FileDiagnostics])[] => {
       const cached = previous.files.get(uri);
       const current = facts.get(uri);
-      if (!current) {
-        return [];
-      }
+
+      if (!current) return [];
+
       if (
         cached &&
         cached.file === input.file &&
@@ -149,41 +195,13 @@ export function refreshDiagnosticSnapshot({
         previous.context === context
       ) {
         return [[uri, cached]];
-      } else {
-        const local = input.project
-          ? context
-          : resolutionContext([current], environment, context.projectRoot, context);
-        const effective = input.project
-          ? context
-          : {
-              ...context,
-              aliases: new Set([...context.aliases, ...local.aliases]),
-              globalAliases: new Set([...context.globalAliases, ...local.globalAliases]),
-              suffixAliases: new Set([...context.suffixAliases, ...local.suffixAliases]),
-              autoloads: new Set([...context.autoloads, ...local.autoloads]),
-              builtins: new Set([...context.builtins, ...local.builtins]),
-            };
-        const embedded = analyzeEmbeddedCode(snapshot, input.file, current.calls, effective);
-        return [
-          [
-            uri,
-            {
-              ...input,
-              facts: current,
-              resultId: String(revision),
-              codePrograms: embedded.programs,
-              items: suppressed(input.file, [...current.base, ...embedded.diagnostics]).toSorted(
-                (left, right) =>
-                  left.range.start.line - right.range.start.line ||
-                  left.range.start.character - right.range.start.character,
-              ),
-            },
-          ],
-        ];
       }
+
+      return [[uri, diagnoseFile(snapshot, input, current, context, revision)]];
     },
   );
   const files: ReadonlyMap<string, FileDiagnostics> = new Map(entries);
+
   if (
     previous.context === context &&
     previous.targets === snapshot.targets &&
@@ -192,5 +210,6 @@ export function refreshDiagnosticSnapshot({
   ) {
     return previous;
   }
+
   return { revision, files, targets: snapshot.targets, context };
 }

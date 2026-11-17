@@ -1,4 +1,4 @@
-import { List } from 'immutable';
+import * as Immutable from 'immutable';
 import type { CodeProgram } from '../../embeddedCode';
 import { codeRanges, textPosition } from '../../embeddedCode/sourceMap';
 import { again, done, loop } from '../../util/loop';
@@ -29,9 +29,10 @@ const keywords: ReadonlySet<string> = new Set([
   'coproc',
   'end',
 ]);
+
 type Progress = {
-  readonly spans: List<Span>;
-  readonly words: List<SourceRange>;
+  readonly spans: Immutable.List<Span>;
+  readonly words: Immutable.List<SourceRange>;
   readonly remaining: number;
 };
 
@@ -46,6 +47,7 @@ function add(
   if (state.remaining <= 0 || state.spans.size >= maxSpans) {
     return state;
   }
+
   const length = Math.min(range.end.offset - range.start.offset, state.remaining);
   const bounded =
     length < range.end.offset - range.start.offset
@@ -61,8 +63,10 @@ function add(
         priority: program.depth * 100 + priority,
       }),
     );
+
   return { ...state, remaining: state.remaining - length, spans: state.spans.concat(physical) };
 }
+
 function classify(
   state: Progress,
   node: AstNode,
@@ -71,6 +75,7 @@ function classify(
 ): Progress {
   if (node.kind === 'word') {
     const number = node.raw.length > 0 && [...node.raw].every((char) => char >= '0' && char <= '9');
+
     return add(
       { ...state, words: state.words.push(node.range) },
       node.range,
@@ -80,15 +85,18 @@ function classify(
       maxSpans,
     );
   }
+
   if (node.kind === 'commandName') {
     return add(state, node.range, 'function', 30, program, maxSpans);
   }
+
   if (node.kind === 'functionDefinition') {
     return node.names.reduce(
       (current, name) => add(current, name.range, 'function', 30, program, maxSpans),
       state,
     );
   }
+
   if (
     node.kind === 'variableReference' ||
     node.kind === 'parameterExpansion' ||
@@ -96,15 +104,20 @@ function classify(
   ) {
     return add(state, node.range, 'variable', 40, program, maxSpans);
   }
+
   return node.kind === 'precommandModifier' ||
     node.kind === 'pipelineModifier' ||
     node.kind === 'pipelineTiming'
     ? add(state, node.range, 'keyword', 20, program, maxSpans)
     : state;
 }
-/** 内側のASTに従って分類し、物理的に連続する元文書の範囲へ戻す。 */
-export function programSpans(program: CodeProgram, maxSpans: number): readonly Span[] {
-  const initial: Progress = { spans: List(), words: List(), remaining: program.content.length * 8 };
+
+function syntaxSpans(program: CodeProgram, maxSpans: number): Progress {
+  const initial: Progress = {
+    spans: Immutable.List(),
+    words: Immutable.List(),
+    remaining: program.content.length * 8,
+  };
   const syntax = foldAst(program.file.ast, initial, (state, node) => {
     const classified = classify(state, node, program, maxSpans);
     const keyword =
@@ -115,6 +128,7 @@ export function programSpans(program: CodeProgram, maxSpans: number): readonly S
       'keyword' in node && 'close' in node && node.close
         ? add(keyword, node.close, 'keyword', 20, program, maxSpans)
         : keyword;
+
     return {
       state:
         'thenKeyword' in node && node.thenKeyword
@@ -122,9 +136,11 @@ export function programSpans(program: CodeProgram, maxSpans: number): readonly S
           : closed,
     };
   });
-  if (syntax.remaining <= 0 || syntax.spans.size >= maxSpans) {
-    return syntax.spans.toArray();
-  }
+
+  return syntax;
+}
+
+function tokenSpans(program: CodeProgram, syntax: Progress, maxSpans: number): readonly Span[] {
   const sortedWords = syntax.words
     .toArray()
     .toSorted((left, right) => left.start.offset - right.start.offset);
@@ -150,6 +166,7 @@ export function programSpans(program: CodeProgram, maxSpans: number): readonly S
                 covered.end < token.range.end.offset
               ? 'keyword'
               : null;
+
       return {
         wordIndex: covered.index,
         coveredEnd: covered.end,
@@ -167,5 +184,17 @@ export function programSpans(program: CodeProgram, maxSpans: number): readonly S
     },
     { wordIndex: 0, coveredEnd: -1, rendering: syntax },
   );
+
   return result.rendering.spans.toArray();
+}
+
+/** 内側のASTに従って分類し、物理的に連続する元文書の範囲へ戻す。 */
+export function programSpans(program: CodeProgram, maxSpans: number): readonly Span[] {
+  const syntax = syntaxSpans(program, maxSpans);
+
+  if (syntax.remaining <= 0 || syntax.spans.size >= maxSpans) {
+    return syntax.spans.toArray();
+  }
+
+  return tokenSpans(program, syntax, maxSpans);
 }

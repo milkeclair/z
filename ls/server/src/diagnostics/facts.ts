@@ -1,11 +1,16 @@
-import { List, OrderedMap, OrderedSet } from 'immutable';
+import * as Immutable from 'immutable';
 import { protocolRange } from '../connection/ast/cursor';
 import { literalWord } from '../refreshFunctions/word';
 import { again, done, loop } from '../util/loop';
 import { DiagnosticSeverity } from '../vscode_type';
 import type { ZshFileHydration } from '../zshHydrator';
 import { documentationOf } from '../zshHydrator';
-import type { FunctionDefinitionNode, SimpleCommandNode, WordNode } from '../zshParser/ast';
+import type {
+  AstNode,
+  FunctionDefinitionNode,
+  SimpleCommandNode,
+  WordNode,
+} from '../zshParser/ast';
 import { foldAst } from '../zshParser/ast';
 import { formatDiagnostics } from './format';
 import { moduleBuiltins } from './modules';
@@ -18,33 +23,42 @@ export type Declarations = {
   readonly autoloads: ReadonlySet<string>;
   readonly builtins: ReadonlySet<string>;
 };
+
 export type FileFacts = {
   readonly calls: readonly SimpleCommandNode[];
   readonly base: readonly Diagnostics[];
   readonly declarations: Declarations;
 };
+
 type DeclarationSets = {
-  readonly aliases: OrderedSet<string>;
-  readonly globalAliases: OrderedSet<string>;
-  readonly suffixAliases: OrderedSet<string>;
-  readonly autoloads: OrderedSet<string>;
-  readonly builtins: OrderedSet<string>;
+  readonly aliases: Immutable.OrderedSet<string>;
+  readonly globalAliases: Immutable.OrderedSet<string>;
+  readonly suffixAliases: Immutable.OrderedSet<string>;
+  readonly autoloads: Immutable.OrderedSet<string>;
+  readonly builtins: Immutable.OrderedSet<string>;
 };
+
 type Usage = {
   readonly definition: FunctionDefinitionNode;
   readonly depth: number;
-  readonly positions: OrderedSet<number>;
-  readonly names: OrderedSet<string>;
+  readonly positions: Immutable.OrderedSet<number>;
+  readonly names: Immutable.OrderedSet<string>;
   readonly all: boolean;
   readonly uncertain: boolean;
 };
-type Scope = { readonly definition: FunctionDefinitionNode; readonly depth: number };
+
+type Scope = {
+  readonly definition: FunctionDefinitionNode;
+  readonly depth: number;
+};
+
 type FactsProgress = {
-  readonly calls: List<SimpleCommandNode>;
-  readonly usages: OrderedMap<FunctionDefinitionNode, Usage>;
-  readonly active: List<Scope>;
+  readonly calls: Immutable.List<SimpleCommandNode>;
+  readonly usages: Immutable.OrderedMap<FunctionDefinitionNode, Usage>;
+  readonly active: Immutable.List<Scope>;
   readonly declarations: DeclarationSets;
 };
+
 function identifier(name: string): boolean {
   return (
     name.length > 0 &&
@@ -57,11 +71,14 @@ function identifier(name: string): boolean {
     )
   );
 }
+
 export function simpleParameter(raw: string): string | null {
   const name = raw[1] === '{' && raw.endsWith('}') ? raw.slice(2, -1) : raw.slice(1);
+
   if (!raw.startsWith('$')) {
     return null;
   }
+
   if (
     name === '@' ||
     name === '*' ||
@@ -70,7 +87,9 @@ export function simpleParameter(raw: string): string | null {
   ) {
     return name;
   }
+
   const bracket = name.indexOf('[');
+
   return bracket > 0 &&
     name.endsWith(']') &&
     identifier(name.slice(0, bracket)) &&
@@ -78,64 +97,87 @@ export function simpleParameter(raw: string): string | null {
     ? name.slice(bracket + 1, -1)
     : null;
 }
+
 function use(usage: Usage, name: string): Usage {
   if (name === '@' || name === '*') {
     return { ...usage, all: true };
   }
+
   return [...name].every((char) => char >= '0' && char <= '9')
     ? { ...usage, positions: usage.positions.add(Number(name)) }
     : { ...usage, names: usage.names.add(name) };
 }
+
 function wordUsage(word: WordNode, usage: Usage): Usage {
   return word.parts.reduce((previous, part) => {
     if (part.kind === 'variableReference') {
       const current = use(previous, part.name.value);
-      const rest = word.raw.slice(part.range.end.offset - word.range.start.offset),
-        close = rest.indexOf(']');
+      const rest = word.raw.slice(part.range.end.offset - word.range.start.offset);
+      const close = rest.indexOf(']');
+
       return rest.startsWith('[') && close > 1 && identifier(rest.slice(1, close))
         ? use(current, rest.slice(1, close))
         : current;
     }
+
     if (part.kind === 'parameterExpansion') {
       const name = simpleParameter(part.raw);
+
       return name === null ? { ...previous, uncertain: true } : use(previous, name);
     }
+
     return part.kind === 'arithmeticExpansion' ? { ...previous, uncertain: true } : previous;
   }, usage);
 }
+
 function collectDeclarations(command: SimpleCommandNode, sets: DeclarationSets): DeclarationSets {
   const name = command.commandName && literalWord(command.commandName.word);
+
   if (name === 'autoload') {
     const names = command.arguments.flatMap((word) => {
       const value = literalWord(word);
+
       return value && !value.startsWith('-') && !value.startsWith('+')
         ? [value.slice(value.lastIndexOf('/') + 1)]
         : [];
     });
+
     return { ...sets, autoloads: sets.autoloads.union(names) };
   }
+
   if (name === 'zmodload') {
     return { ...sets, builtins: sets.builtins.union(moduleBuiltins(command)) };
   }
+
   if (name !== 'alias') {
     return sets;
   }
+
   type Target = 'aliases' | 'globalAliases' | 'suffixAliases';
-  return command.arguments.reduce<{ readonly target: Target; readonly sets: DeclarationSets }>(
+
+  return command.arguments.reduce<{
+    readonly target: Target;
+    readonly sets: DeclarationSets;
+  }>(
     (previous, word) => {
       const value = literalWord(word);
+
       if (!value) {
         return previous;
       }
+
       if (value.startsWith('-')) {
         const target = value.includes('s')
           ? 'suffixAliases'
           : value.includes('g')
             ? 'globalAliases'
             : previous.target;
+
         return { ...previous, target };
       }
+
       const equals = value.indexOf('=');
+
       return equals > 0
         ? {
             ...previous,
@@ -149,6 +191,7 @@ function collectDeclarations(command: SimpleCommandNode, sets: DeclarationSets):
     { target: 'aliases', sets },
   ).sets;
 }
+
 function scopeUsage(
   file: ZshFileHydration,
   definition: FunctionDefinitionNode,
@@ -157,16 +200,18 @@ function scopeUsage(
   return {
     definition,
     depth,
-    positions: OrderedSet(),
-    names: OrderedSet(),
+    positions: Immutable.OrderedSet(),
+    names: Immutable.OrderedSet(),
     all: false,
     uncertain: file.parserDiagnostics.length > 0 || file.lexerDiagnostics.length > 0,
   };
 }
+
 function unusedArguments(usage: Usage): readonly Diagnostics[] {
   if (usage.all || usage.uncertain) {
     return [];
   }
+
   return (documentationOf(usage.definition)?.parameters ?? []).flatMap(
     (parameter): readonly Diagnostics[] => {
       const used =
@@ -175,15 +220,18 @@ function unusedArguments(usage: Usage): readonly Diagnostics[] {
           : parameter.kind === 'namedParameterDoc'
             ? usage.names.has(parameter.name)
             : false;
+
       if (used) {
         return [];
       }
+
       const name =
         parameter.kind === 'positionalParameterDoc'
           ? '$' + parameter.position
           : parameter.kind === 'namedParameterDoc'
             ? parameter.name
             : '$' + parameter.parameter;
+
       return [
         {
           severity: DiagnosticSeverity.Warning,
@@ -196,70 +244,73 @@ function unusedArguments(usage: Usage): readonly Diagnostics[] {
     },
   );
 }
-export function collectFileFacts(file: ZshFileHydration): FileFacts {
-  const initial: FactsProgress = {
-    calls: List(),
-    usages: OrderedMap(),
-    active: List(),
-    declarations: {
-      aliases: OrderedSet(),
-      globalAliases: OrderedSet(),
-      suffixAliases: OrderedSet(),
-      autoloads: OrderedSet(),
-      builtins: OrderedSet(),
-    },
-  };
-  const facts = foldAst(file.ast, initial, (previous, node, depth) => {
-    const active = loop(previous.active, (scopes) => {
-      const last = scopes.last();
-      return last && last.depth >= depth ? again(scopes.pop()) : done(scopes);
-    });
-    const scoped: FactsProgress =
-      node.kind === 'functionDefinition'
-        ? {
-            ...previous,
-            active: active.push({ definition: node, depth }),
-            usages: previous.usages.set(node, scopeUsage(file, node, depth)),
-          }
-        : { ...previous, active };
-    const current = scoped.active.last();
-    const declared: FactsProgress =
-      node.kind === 'simpleCommand'
-        ? {
-            ...scoped,
-            calls: node.commandName ? scoped.calls.push(node) : scoped.calls,
-            declarations: collectDeclarations(node, scoped.declarations),
-          }
-        : scoped;
-    const usage = current && declared.usages.get(current.definition);
-    if (!usage) {
-      return { state: declared };
-    }
-    const named =
-      node.kind === 'simpleCommand' &&
-      node.commandName &&
-      literalWord(node.commandName.word) === 'z.arg.named'
-        ? node.arguments[0] && literalWord(node.arguments[0])
-        : null;
-    const read = named ? use(usage, named) : usage;
-    const words = node.kind === 'word' ? wordUsage(node, read) : read;
-    const uncertain =
-      node.kind === 'opaqueCommand' ||
-      node.kind === 'unknown' ||
-      (node.kind === 'hereDocument' && !node.quoted);
-    return {
-      state: {
-        ...declared,
-        usages: declared.usages.set(
-          usage.definition,
-          uncertain ? { ...words, uncertain: true } : words,
-        ),
-      },
-    };
+
+function enterFunctionScope(
+  file: ZshFileHydration,
+  previous: FactsProgress,
+  node: AstNode,
+  depth: number,
+): FactsProgress {
+  const active = loop(previous.active, (scopes) => {
+    const last = scopes.last();
+
+    return last && last.depth >= depth ? again(scopes.pop()) : done(scopes);
   });
-  const base: readonly Diagnostics[] = [
-    ...formatDiagnostics(file),
-    ...facts.usages.valueSeq().flatMap(unusedArguments),
+  const scoped: FactsProgress =
+    node.kind === 'functionDefinition'
+      ? {
+          ...previous,
+          active: active.push({ definition: node, depth }),
+          usages: previous.usages.set(node, scopeUsage(file, node, depth)),
+        }
+      : { ...previous, active };
+
+  return scoped;
+}
+
+function argumentUsage(usage: Usage, node: AstNode): Usage {
+  const named =
+    node.kind === 'simpleCommand' &&
+    node.commandName &&
+    literalWord(node.commandName.word) === 'z.arg.named'
+      ? node.arguments[0] && literalWord(node.arguments[0])
+      : null;
+  const read = named ? use(usage, named) : usage;
+  const words = node.kind === 'word' ? wordUsage(node, read) : read;
+  const uncertain =
+    node.kind === 'opaqueCommand' ||
+    node.kind === 'unknown' ||
+    (node.kind === 'hereDocument' && !node.quoted);
+
+  return uncertain ? { ...words, uncertain: true } : words;
+}
+
+function collectNodeFacts(
+  file: ZshFileHydration,
+  previous: FactsProgress,
+  node: AstNode,
+  depth: number,
+): FactsProgress {
+  const scoped = enterFunctionScope(file, previous, node, depth);
+
+  const current = scoped.active.last();
+  const declared: FactsProgress =
+    node.kind === 'simpleCommand'
+      ? {
+          ...scoped,
+          calls: node.commandName ? scoped.calls.push(node) : scoped.calls,
+          declarations: collectDeclarations(node, scoped.declarations),
+        }
+      : scoped;
+  const usage = current && declared.usages.get(current.definition);
+
+  if (!usage) return declared;
+
+  return { ...declared, usages: declared.usages.set(usage.definition, argumentUsage(usage, node)) };
+}
+
+function syntaxDiagnostics(file: ZshFileHydration): readonly Diagnostics[] {
+  return [
     ...file.lexerDiagnostics.map(
       (diagnostic): Diagnostics => ({
         severity: DiagnosticSeverity.Error,
@@ -288,7 +339,34 @@ export function collectFileFacts(file: ZshFileHydration): FileFacts {
       }),
     ),
   ];
+}
+
+export function collectFileFacts(file: ZshFileHydration): FileFacts {
+  const initial: FactsProgress = {
+    calls: Immutable.List(),
+    usages: Immutable.OrderedMap(),
+    active: Immutable.List(),
+    declarations: {
+      aliases: Immutable.OrderedSet(),
+      globalAliases: Immutable.OrderedSet(),
+      suffixAliases: Immutable.OrderedSet(),
+      autoloads: Immutable.OrderedSet(),
+      builtins: Immutable.OrderedSet(),
+    },
+  };
+
+  const facts = foldAst(file.ast, initial, (previous, node, depth) => ({
+    state: collectNodeFacts(file, previous, node, depth),
+  }));
+
+  const base: readonly Diagnostics[] = [
+    ...formatDiagnostics(file),
+    ...facts.usages.valueSeq().flatMap(unusedArguments),
+    ...syntaxDiagnostics(file),
+  ];
+
   const sets = facts.declarations;
+
   return {
     calls: facts.calls.toArray(),
     base,
