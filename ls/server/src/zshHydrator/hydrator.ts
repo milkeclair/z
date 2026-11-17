@@ -1,34 +1,19 @@
-import fs from 'fs';
 import { globSync } from 'glob';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import type { TextDocument, TextDocuments } from '../vscode_type';
 import type { HydrationOptions } from './directive';
 import {
-  createZshFileHydration,
-  type HydratedFunction,
-  type ZshFileHydration,
-} from './fileHydration';
-
-type DiskFingerprint = {
-  readonly kind: 'disk';
-  readonly mtimeMs: number;
-  readonly ctimeMs: number;
-  readonly size: number;
-};
-
-type DocumentFingerprint = {
-  readonly kind: 'document';
-  readonly content: string;
-  readonly version: number;
-  readonly length: number;
-};
-
-type Fingerprint = DiskFingerprint | DocumentFingerprint;
-
-type ZshHydrationEntry = ZshFileHydration & {
-  readonly fingerprint: Fingerprint;
-};
+  hydrateDiskFile,
+  hydrateOpenDocument,
+  isRegularFile,
+  type ZshHydrationEntry,
+} from './entry';
+import { type HydratedFunction } from './fileHydration';
+import {
+  collectOpenProjectDocuments,
+  isTrackedDiskPath,
+  relativeProjectPath,
+  type DocumentInput,
+} from './inputs';
 
 export type ZshHydrator = {
   readonly projectRoot: string;
@@ -42,12 +27,6 @@ export const EmptyZshHydrator: ZshHydrator = {
   options: {},
   files: new Map(),
   diskPaths: new Set(),
-};
-
-type DocumentInput = {
-  readonly relativePath: string;
-  readonly absolutePath: string;
-  readonly document: TextDocument;
 };
 
 export function createZshHydrator(
@@ -83,7 +62,7 @@ export function refreshZshHydrator({
   const compatible =
     previous.projectRoot === projectRoot &&
     JSON.stringify(previous.options) === JSON.stringify(options);
-  const inputs = documentInputs(projectRoot, documentList(documents));
+  const inputs = collectOpenProjectDocuments(projectRoot, documents);
   const prior = compatible ? previous : { ...EmptyZshHydrator, options };
   const next =
     changedPaths !== undefined && compatible
@@ -130,13 +109,13 @@ function createHydratorFromInputs({
   const diskEntries = diskFiles.flatMap((relativePath) => {
     const document = documentsByPath.get(relativePath);
     const entry = document
-      ? documentEntry({ previous, input: document })
-      : diskEntry({ previous, projectRoot, relativePath });
+      ? hydrateOpenDocument({ previous, input: document })
+      : hydrateDiskFile({ previous, projectRoot, relativePath });
     return entry ? [entry] : [];
   });
   const documentOnlyEntries = documents
     .filter((document) => !diskFileSet.has(document.relativePath))
-    .map((input) => documentEntry({ previous, input }));
+    .map((input) => hydrateOpenDocument({ previous, input }));
   const entries = [...diskEntries, ...documentOnlyEntries];
 
   return {
@@ -145,38 +124,6 @@ function createHydratorFromInputs({
     files: new Map(entries.map((entry) => [entry.file, entry])),
     diskPaths: diskFileSet,
   };
-}
-
-function projectPath(projectRoot: string, filename: string): string | null {
-  const relative = path.relative(projectRoot, path.resolve(projectRoot, filename));
-  return relative &&
-    relative !== '..' &&
-    !relative.startsWith('..' + path.sep) &&
-    !path.isAbsolute(relative) &&
-    relative.endsWith('.zsh')
-    ? relative
-    : null;
-}
-
-function diskPath(relative: string): boolean {
-  return !relative
-    .split(path.sep)
-    .some((segment) => segment === '.git' || segment === 'node_modules');
-}
-
-function diskExists(filename: string): boolean {
-  try {
-    return fs.statSync(filename).isFile();
-  } catch (error) {
-    if (
-      error instanceof Error &&
-      'code' in error &&
-      (error.code === 'ENOENT' || error.code === 'ENOTDIR' || error.code === 'EISDIR')
-    ) {
-      return false;
-    }
-    throw error;
-  }
 }
 
 function updateHydratorFromInputs(
@@ -189,7 +136,7 @@ function updateHydratorFromInputs(
   const open = new Map(documents.map((input) => [input.relativePath, input]));
   const pending = new Set(
     changedPaths
-      .map((filename) => projectPath(previous.projectRoot, filename))
+      .map((filename) => relativeProjectPath(previous.projectRoot, filename))
       .filter((filename): filename is string => filename !== null),
   );
   for (const [filename, entry] of previous.files) {
@@ -205,14 +152,14 @@ function updateHydratorFromInputs(
   for (const filename of pending) {
     const document = open.get(filename);
     if (document) {
-      if (diskPath(filename) && diskExists(document.absolutePath)) {
+      if (isTrackedDiskPath(filename) && isRegularFile(document.absolutePath)) {
         diskPaths.add(filename);
       } else {
         diskPaths.delete(filename);
       }
     } else {
-      const entry = diskPath(filename)
-        ? diskEntry({ previous, projectRoot: previous.projectRoot, relativePath: filename })
+      const entry = isTrackedDiskPath(filename)
+        ? hydrateDiskFile({ previous, projectRoot: previous.projectRoot, relativePath: filename })
         : null;
       if (entry) {
         files.set(filename, entry);
@@ -224,7 +171,7 @@ function updateHydratorFromInputs(
     }
   }
   for (const input of documents) {
-    files.set(input.relativePath, documentEntry({ previous, input }));
+    files.set(input.relativePath, hydrateOpenDocument({ previous, input }));
   }
   // ディスク上の候補は整列順の優先度を保ち、文書だけに存在する候補は開いた順に並べる。
   const entries = [...diskPaths].sort().flatMap((filename) => {
@@ -238,141 +185,4 @@ function updateHydratorFromInputs(
     }
   }
   return { ...previous, diskPaths, files: new Map(entries.map((entry) => [entry.file, entry])) };
-}
-
-function diskEntry({
-  previous,
-  projectRoot,
-  relativePath,
-}: {
-  readonly previous: ZshHydrator;
-  readonly projectRoot: string;
-  readonly relativePath: string;
-}): ZshHydrationEntry | null {
-  try {
-    const absolutePath = path.join(projectRoot, relativePath);
-    const stat = fs.statSync(absolutePath);
-    if (!stat.isFile()) {
-      return null;
-    }
-    const fingerprint: DiskFingerprint = {
-      kind: 'disk',
-      mtimeMs: stat.mtimeMs,
-      ctimeMs: stat.ctimeMs,
-      size: stat.size,
-    };
-    const cached = previous.files.get(relativePath);
-
-    if (cached && sameFingerprint(cached.fingerprint, fingerprint)) {
-      return cached;
-    } else {
-      return {
-        ...createZshFileHydration({
-          sourceFile: absolutePath,
-          file: relativePath,
-          content: fs.readFileSync(absolutePath, 'utf-8'),
-          options: previous.options,
-        }),
-        fingerprint,
-      };
-    }
-  } catch (error) {
-    if (
-      error instanceof Error &&
-      'code' in error &&
-      (error.code === 'ENOENT' || error.code === 'ENOTDIR' || error.code === 'EISDIR')
-    ) {
-      return null;
-    }
-    throw error;
-  }
-}
-
-function documentEntry({
-  previous,
-  input,
-}: {
-  readonly previous: ZshHydrator;
-  readonly input: DocumentInput;
-}): ZshHydrationEntry {
-  const content = input.document.getText();
-  const fingerprint: DocumentFingerprint = {
-    kind: 'document',
-    content,
-    version: input.document.version,
-    length: content.length,
-  };
-  const cached = previous.files.get(input.relativePath);
-
-  if (cached && sameFingerprint(cached.fingerprint, fingerprint)) {
-    return cached;
-  } else {
-    return {
-      ...createZshFileHydration({
-        sourceFile: input.absolutePath,
-        file: input.relativePath,
-        content,
-        options: previous.options,
-      }),
-      fingerprint,
-    };
-  }
-}
-
-function sameFingerprint(left: Fingerprint, right: Fingerprint): boolean {
-  if (left.kind !== right.kind) {
-    return false;
-  } else if (left.kind === 'disk' && right.kind === 'disk') {
-    return (
-      left.mtimeMs === right.mtimeMs && left.ctimeMs === right.ctimeMs && left.size === right.size
-    );
-  } else if (left.kind === 'document' && right.kind === 'document') {
-    return (
-      left.version === right.version &&
-      left.length === right.length &&
-      left.content === right.content
-    );
-  } else {
-    return false;
-  }
-}
-
-function documentList(
-  documents: readonly TextDocument[] | TextDocuments<TextDocument>,
-): readonly TextDocument[] {
-  if ('all' in documents) {
-    return documents.all();
-  } else {
-    return documents;
-  }
-}
-
-function documentInputs(
-  projectRoot: string,
-  documents: readonly TextDocument[],
-): readonly DocumentInput[] {
-  return documents.flatMap((document) => {
-    const absolutePath = filePathFromUri(document.uri);
-    const relativePath = absolutePath ? projectPath(projectRoot, absolutePath) : null;
-
-    if (!absolutePath || !relativePath) {
-      return [];
-    } else {
-      return [
-        {
-          relativePath,
-          absolutePath,
-          document,
-        },
-      ];
-    }
-  });
-}
-
-function filePathFromUri(uri: string): string | null {
-  try {
-    return fileURLToPath(uri);
-  } catch {
-    return null;
-  }
 }

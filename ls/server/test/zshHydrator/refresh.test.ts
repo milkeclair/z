@@ -12,7 +12,7 @@ import {
 } from '../../src/zshHydrator';
 
 const roots: string[] = [];
-function fixture(): string {
+function createHydrationFixture(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-hydrator-test-'));
   roots.push(root);
   return root;
@@ -34,7 +34,7 @@ function document(root: string, name: string, version: number, content: string) 
 
 describe('zshHydrator@refresh', () => {
   test('stat後にディレクトリへ置き換わったファイルも除外する', () => {
-    const root = fixture();
+    const root = createHydrationFixture();
     const file = path.join(root, 'sample.zsh');
     fs.writeFileSync(file, 'helper() { : }\n');
     const originalRead = fs.readFileSync;
@@ -53,7 +53,7 @@ describe('zshHydrator@refresh', () => {
     expect(result.files.size).toBe(0);
   });
   test('読み取り権限などのI/Oエラーを呼び出し元へ返す', () => {
-    const root = fixture();
+    const root = createHydrationFixture();
     const file = path.join(root, 'sample.zsh');
     fs.writeFileSync(file, 'helper() { : }\n');
     const denied = Object.assign(new Error('permission denied'), { code: 'EACCES' });
@@ -71,7 +71,7 @@ describe('zshHydrator@refresh', () => {
   test.each(['removed', 'parentReplaced', 'directoryReplaced'])(
     '走査中にファイルや親ディレクトリが置き換わってもrefreshを完了する: %s',
     (change) => {
-      const root = fixture();
+      const root = createHydrationFixture();
       const replaceParent = change === 'parentReplaced';
       const firstFile = path.join(root, 'a.zsh');
       const parent = replaceParent ? path.join(root, 'directory') : root;
@@ -105,7 +105,7 @@ describe('zshHydrator@refresh', () => {
   );
 
   test('同じversionと長さで開き直した文書も内容が変われば再解析する', () => {
-    const root = fixture();
+    const root = createHydrationFixture();
     const first = refreshZshHydrator({
       previous: createZshHydrator(root),
       projectRoot: root,
@@ -128,7 +128,7 @@ describe('zshHydrator@refresh', () => {
   });
 
   test('project未選択の空状態でも解釈設定を次のrefreshへ引き継ぐ', () => {
-    const root = fixture();
+    const root = createHydrationFixture();
     fs.writeFileSync(path.join(root, 'sample.zsh'), 'helper() { : } # custom: ignore\n');
     const empty = createZshHydrator('', { directiveNamespaces: ['custom'] });
     expect(empty.options.directiveNamespaces).toEqual(['custom']);
@@ -137,7 +137,7 @@ describe('zshHydrator@refresh', () => {
   });
 
   test('隠しファイルと隠しディレクトリ内のdisk文書も読み込む', () => {
-    const root = fixture();
+    const root = createHydrationFixture();
     fs.mkdirSync(path.join(root, '.config'));
     fs.mkdirSync(path.join(root, '.git'));
     fs.mkdirSync(path.join(root, '.config', '.git'));
@@ -160,7 +160,7 @@ describe('zshHydrator@refresh', () => {
   });
 
   test('同じsizeとmtimeに戻したdiskの編集も再解析する', () => {
-    const root = fixture();
+    const root = createHydrationFixture();
     const file = path.join(root, 'sample.zsh');
     fs.writeFileSync(file, 'first() { : }\n');
     fs.utimesSync(file, 1700000000, 1700000000);
@@ -176,7 +176,7 @@ describe('zshHydrator@refresh', () => {
   });
 
   test('変更のないdiskファイルのASTを再利用し、削除ファイルを除去する', () => {
-    const root = fixture();
+    const root = createHydrationFixture();
     fs.writeFileSync(path.join(root, 'sample.zsh'), '# $1: disk\nhelper() { : }\n');
     const first = createZshHydrator(root);
     const again = refreshZshHydrator({ previous: first, projectRoot: root, documents: [] });
@@ -188,7 +188,7 @@ describe('zshHydrator@refresh', () => {
   });
 
   test('未保存テキストを優先し、版変更で古い付加情報を置き換える', () => {
-    const root = fixture();
+    const root = createHydrationFixture();
     fs.writeFileSync(path.join(root, 'sample.zsh'), '# $1: disk\nhelper() { : }\n');
     const first = createZshHydrator(root);
     const opened = document(
@@ -235,7 +235,7 @@ describe('zshHydrator@refresh', () => {
   });
 
   test('新規bufferとdot名を扱い、project外の文書を除外する', () => {
-    const root = fixture();
+    const root = createHydrationFixture();
     const state = createZshHydrator(root);
     const result = refreshZshHydrator({
       previous: state,
@@ -250,7 +250,7 @@ describe('zshHydrator@refresh', () => {
   });
 
   test('解釈設定の変更でdiskとbufferの付加情報を再生成する', () => {
-    const root = fixture();
+    const root = createHydrationFixture();
     const content = 'helper() { : } # custom: ignore\n';
     fs.writeFileSync(path.join(root, 'disk.zsh'), content);
     const opened = document(root, 'buffer.zsh', 1, content);

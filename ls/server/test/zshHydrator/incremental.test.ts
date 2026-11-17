@@ -8,7 +8,7 @@ import type { ZshHydrator } from '../../src/zshHydrator';
 import { createZshHydrator, EmptyZshHydrator, refreshZshHydrator } from '../../src/zshHydrator';
 
 const roots: string[] = [];
-function fixture() {
+function createHydrationFixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-hydrator-diff-'));
   roots.push(root);
   return root;
@@ -48,7 +48,7 @@ afterEach(() => {
 
 describe('zshHydrator incremental updates', () => {
   test('buffer編集だけならdiskを走査せず、他ファイルのASTを共有する', () => {
-    const root = fixture();
+    const root = createHydrationFixture();
     write(root, 'a.zsh', 'first() { : }\n');
     write(root, 'b.zsh', 'second() { : }\n');
     const previous = createZshHydrator(root);
@@ -77,7 +77,7 @@ describe('zshHydrator incremental updates', () => {
   });
 
   test('通知されたdiskだけstat/readし、ASTと変更前の状態を保持する', () => {
-    const root = fixture();
+    const root = createHydrationFixture();
     write(root, 'a.zsh', 'first() { : }\n');
     write(root, 'b.zsh', 'second() { : }\n');
     const previous = createZshHydrator(root);
@@ -101,7 +101,7 @@ describe('zshHydrator incremental updates', () => {
   });
 
   test('作成・削除・renameを最終disk状態から反映し、順不同通知でも全走査と一致する', () => {
-    const root = fixture();
+    const root = createHydrationFixture();
     write(root, 'z.zsh', 'last() { : }\n');
     write(root, 'old.zsh', 'old() { : }\n');
     const previous = createZshHydrator(root);
@@ -128,7 +128,7 @@ describe('zshHydrator incremental updates', () => {
   test.each(['change', 'delete', 'replace-directory'])(
     'open中のdisk %sよりbufferを優先し、closeでdiskへ戻す',
     (change) => {
-      const root = fixture();
+      const root = createHydrationFixture();
       write(root, 'file.zsh', 'disk() { : }\n');
       const opened = document(root, 'file.zsh', 1, 'live() { : }\n');
       const previous = refreshZshHydrator({
@@ -167,7 +167,7 @@ describe('zshHydrator incremental updates', () => {
   );
 
   test('buffer-only文書の保存でdisk順序へ移し、未通知のdisk文書もopen時に対象だけ確認する', () => {
-    const root = fixture();
+    const root = createHydrationFixture();
     write(root, 'z.zsh', 'same() { : }\n');
     const initial = createZshHydrator(root);
     const opened = document(root, 'a.zsh', 1, 'same() { : }\n');
@@ -200,7 +200,7 @@ describe('zshHydrator incremental updates', () => {
   });
 
   test('hiddenパスを含め、git・依存・project外・対象外拡張子のdisk通知を除外する', () => {
-    const root = fixture();
+    const root = createHydrationFixture();
     const previous = createZshHydrator(root);
     for (const file of [
       '.hidden.zsh',
@@ -235,8 +235,8 @@ describe('zshHydrator incremental updates', () => {
   });
 
   test('rootまたは解釈設定が変われば空の差分指定でも全体を作り直す', () => {
-    const first = fixture();
-    const second = fixture();
+    const first = createHydrationFixture();
+    const second = createHydrationFixture();
     write(first, 'first.zsh', 'first() { : }\n');
     write(second, 'second.zsh', 'second() { : } # custom: ignore\n');
     const previous = createZshHydrator(first);
@@ -259,7 +259,7 @@ describe('zshHydrator incremental updates', () => {
   });
 
   test('通知されたパスの権限エラーを返し、以前の状態はそのまま保持する', () => {
-    const root = fixture();
+    const root = createHydrationFixture();
     write(root, 'file.zsh', 'helper() { : }\n');
     const previous = createZshHydrator(root);
     const denied = Object.assign(new Error('denied'), { code: 'EACCES' });

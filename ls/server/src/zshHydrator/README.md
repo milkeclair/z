@@ -77,3 +77,9 @@ const directives = directivesOf(result.ast.comments[0]);
 `documentationOf`、`directivesOf`、`isHydratedDocBlock`、`isHydratedComment`で、型を保って付加情報へアクセスできます。汎用ASTの探索は明示的な構文辺と関連辺を辿り、付加データはこれらのhydrator APIから参照します。
 
 LSP接続はこのAPIを通して、ドキュメントと制御コメントの情報を付加したASTを共有します。
+
+## 実装の役割
+- `hydrator.ts`: 全走査と差分更新の選択、ファイル順とsnapshot再利用。
+- `inputs.ts`: 開いた文書の選択とプロジェクト内のパス判定。
+- `entry.ts`: ディスク・バッファの読込とfingerprint照合。
+- `documentation`と`directive.ts`: ドキュメントと制御コメントの解釈。
