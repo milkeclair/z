@@ -233,6 +233,30 @@ z.t.describe "z.arr.sort"; {
       z.t.expect.reply.is.arr "a" "c" "b"
     }
   }
+
+  z.t.context "指定位置や要素の内容が混在する場合"; {
+    z.t.it "最初のby指定を使い、空要素と他の名前付き形式の値を保持する"; {
+      z.arr.sort "" "b" by=desc "a" by=asc "default=x"
+
+      z.t.expect.reply.is.arr "default=x" "b" "a" ""
+    }
+  }
+
+  z.t.context "最初のby指定が空の場合"; {
+    z.t.it "後続のby指定も除去して既定の昇順を使う"; {
+      z.arr.sort "b" by= "a" by=desc
+
+      z.t.expect.reply.is.arr "a" "b"
+    }
+  }
+
+  z.t.context "配列に要素がない場合"; {
+    z.t.it "空配列を返す"; {
+      z.arr.sort
+
+      z.t.expect.reply.is.arr
+    }
+  }
 }
 
 z.t.describe "z.arr.unique"; {

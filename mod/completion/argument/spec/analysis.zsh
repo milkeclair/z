@@ -10,7 +10,8 @@
 z.completion.argument.spec._index() {
   local -A indexed=([last]=0)
   local row
-  for row in "${(@f)1}"; do
+  z.str.split.line "$1"
+  for row in "${REPLY[@]}"; do
     z.completion.argument.record._decode "$row"
     local fields=("${REPLY[@]}")
 

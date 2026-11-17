@@ -17,7 +17,8 @@ z.t._log.format() {
   local message="$indentation$REPLY"
 
   local code=""
-  for code in ${(v)z_color_palette}; do
+  z.hash.values z_color_palette
+  for code in "${REPLY[@]}"; do
     message=${message//$code/}
   done
 

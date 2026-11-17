@@ -52,7 +52,7 @@ z.completion.function.name._words() {
   local i=0
   for ((i=current; i>=1; i--)); do
     local word=${words[$i]}
-    if z.str.start_with "$word" "z." && z.int.is.positive ${+functions[$word]}; then
+    if z.str.start_with "$word" "z." && z.hash.has.key functions "key=$word"; then
       REPLY="$word"
       return
     fi

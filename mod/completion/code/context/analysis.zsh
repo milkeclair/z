@@ -26,7 +26,7 @@ z.completion.code.context._prefix() {
   if z.str.start_with "$value" "$candidate"; then
     REPLY=$candidate
   else
-    REPLY=${(Q)candidate}
+    z.str.unquote "$candidate"
   fi
 }
 
@@ -43,7 +43,8 @@ z.completion.code.context._prefix() {
 #  # REPLY: ("")
 z.completion.code.context._words() {
   local code_prefix=$1
-  local tokens=("${(@Z+cn+)code_prefix}")
+  z.str.split.shell "$code_prefix" comments=keep newlines=whitespace
+  local tokens=("${REPLY[@]}")
   z.str.start_with "$tokens[-1]" '#' && return 1
   local command_words=()
   local token

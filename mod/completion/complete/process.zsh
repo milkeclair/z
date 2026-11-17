@@ -59,7 +59,8 @@ z.completion.complete._functions() {
   fi
 
   z.completion.function._candidates "$current_word" || return 1
-  local candidates=("${(@f)REPLY}")
+  z.str.split.line "$REPLY"
+  local candidates=("${REPLY[@]}")
   if z.is.eq "$current_word" z. || z.int.is.positive "${z_completion_command_depth:-0}"; then
     local suffix_options=(-S "")
   else
@@ -83,7 +84,7 @@ z.completion.complete._docs() {
 
   z.completion.docs._get $function_name || return 1
   z.completion.docs._format "$REPLY"
-  if z.int.is.positive ${+compstate}; then
+  if z.var.exists compstate; then
     compstate[list]="list force messages"
   fi
   _message -r "$REPLY"

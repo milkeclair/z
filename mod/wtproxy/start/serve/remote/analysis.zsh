@@ -11,9 +11,11 @@
 z.wtproxy.start._serve.remote.host() {
   local target_fd=$1
 
-  for line in "${(@f)$(ztcp -L)}"; do
+  z.str.split.line "$(ztcp -L)"
+  for line in "${REPLY[@]}"; do
     # ztcp -Lの行形式: fd type local_host local_port remote_host remote_port
-    local words=("${(@)${(z)line}}")
+    z.str.split.shell "$line"
+    local words=("${REPLY[@]}")
     local fd=$words[1]
     local remote_host=$words[5]
 

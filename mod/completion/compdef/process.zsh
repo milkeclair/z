@@ -9,7 +9,7 @@
 #  # return: 0
 #  # 変更後: _comps[z.arg.get]="_z_completion"
 z.completion.compdef._register() {
-  if z.int.is.zero ${+functions[compdef]}; then
+  if ! z.hash.has.key functions key=compdef; then
     return 1
   fi
 
@@ -24,7 +24,7 @@ z.completion.compdef._register() {
 
   for function_name in "${z_completion_function_names[@]}"; do
     local completer="$function_name.completion._run"
-    z.int.is.zero ${+functions[$completer]} && completer=_z_completion
+    z.var.exists "functions[$completer]" || completer=_z_completion
     compdef $completer $function_name
   done
 }

@@ -10,11 +10,13 @@
 #  # 補完候補の例: z.arg.get
 z.completion.code._complete() {
   z.completion.code.is._active || return 1
-  local function_name=${(Q)words[1]}
+  z.str.unquote "$words[1]"
+  local function_name=$REPLY
   local specs=$z_completion_argument_specs[$function_name]
   z.is.not.null "$specs" || return 1
 
-  local completion_words=("${(@Q)words}")
+  z.arr.unquote "${words[@]}"
+  local completion_words=("${REPLY[@]}")
   z.completion.argument._value "$words[$CURRENT]" || return 1
   completion_words[$CURRENT]=$REPLY
   z.completion.argument._select "specs=$specs" "current=$CURRENT" words=completion_words || return 1
@@ -60,8 +62,10 @@ z.completion.code._dispatch() {
   if z.is.not.null "$prefix"; then
     compset -P "$prefix"
     # name=の後ろはcompsysがescapeしているため、分割前に引用を一段外す
-    PREFIX=${(Q)PREFIX}
-    SUFFIX=${(Q)SUFFIX}
+    z.str.unquote "$PREFIX"
+    PREFIX=$REPLY
+    z.str.unquote "$SUFFIX"
+    SUFFIX=$REPLY
   fi
 
   z.completion.code.command._complete "code=$code_prefix"

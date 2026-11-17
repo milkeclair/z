@@ -8,8 +8,8 @@
 #  z.completion.argument.record._encode named code code
 #  # REPLY: "$'named' $'code' $'code'"
 z.completion.argument.record._encode() {
-  local fields=("$@")
-  z.arr.join "${(@qqqq)fields}"
+  z.arr.quote style=ansi "$@"
+  z.arr.join "${REPLY[@]}"
 }
 
 # 保存した引数仕様をZshの字句分割と引用解除だけで復元する
@@ -22,5 +22,6 @@ z.completion.argument.record._encode() {
 #  z.completion.argument.record._decode "'named' 'code' 'code'"
 #  # REPLY: ("named" "code" "code")
 z.completion.argument.record._decode() {
-  REPLY=("${(@Q)${(z)1}}")
+  z.str.split.shell "$1"
+  z.arr.unquote "${REPLY[@]}"
 }

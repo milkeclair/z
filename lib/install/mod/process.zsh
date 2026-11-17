@@ -109,7 +109,7 @@ z.install.mod.all() {
     z.install.mod.all._confirm dir="$install_dir/mod" || return 1
     z.install.mod.all._prepare source="$source_dir" current="$install_dir/mod" dir="$work_dir/next" || return 1
 
-    if (( ${+functions[z.completion.cache._cancel]} )); then
+    if z.hash.has.key functions key=z.completion.cache._cancel; then
       z.completion.cache._cancel
     fi
 

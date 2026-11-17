@@ -257,14 +257,16 @@ z.str.camelize() {
     if z.str.is.match $char "[ _-]"; then
       capitalize_next=true
     elif $capitalize_next; then
-      result+=${(U)char}
+      z.str.upcase "$char"
+      result+=$REPLY
       capitalize_next=false
     else
       result+=$char
     fi
   done
 
-  REPLY=${(L)result[1]}${result[2,-1]}
+  z.str.downcase "$result[1]"
+  REPLY="${REPLY}${result[2,-1]}"
 }
 
 # 文字列をPascalCaseに変換する
@@ -294,7 +296,8 @@ z.str.pascalize() {
     if z.str.is.match $char "[ _-]"; then
       capitalize_next=true
     elif $capitalize_next; then
-      result+=${(U)char}
+      z.str.upcase "$char"
+      result+=$REPLY
       capitalize_next=false
     else
       result+=$char
@@ -400,7 +403,8 @@ z.str.delimitize() {
   # 大文字の前へ区切り文字を挿入する
   # 例: "helloWorld" -> "hello_World"（区切りが"_"の場合）
   z.str.gsub str="$str" search="[A-Z]" replace='${delimiter}${MATCH}'
-  result=${(L)REPLY}
+  z.str.downcase "$REPLY"
+  result=$REPLY
 
   # 指定した文字を区切り文字へ置換する
   # 例: "hello world-test" -> "hello_world_test"（区切りが"_"、replace_charsが"[ -]"の場合）
@@ -419,7 +423,7 @@ z.str.delimitize() {
   z.str.remove.prefix "$result" "$delimiter"
   result=$REPLY
 
-  REPLY=${(L)result}
+  z.str.downcase "$result"
 }
 
 # 文字列を可視化する（表示できない文字をエスケープする）

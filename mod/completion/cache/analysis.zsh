@@ -21,10 +21,14 @@ z.completion.cache._dump() {
     "typeset -g z_completion_cache_ready=false"
   )
 
+  z.hash.keys z_completion_docs
+  z.arr.sort "${REPLY[@]}"
+  local doc_names=("${REPLY[@]}")
   local key function_name
-  for key in ${(ko)z_completion_docs}; do
+  for key in "${doc_names[@]}"; do
     local value=${z_completion_docs[$key]}
-    lines+=("z_completion_docs+=(${(qqq)key} ${(qqq)value})")
+    z.arr.quote style=double "$key" "$value"
+    lines+=("z_completion_docs+=($REPLY[1] $REPLY[2])")
   done
 
   z.hash.keys z_completion_argument_specs
@@ -32,11 +36,13 @@ z.completion.cache._dump() {
   local spec_names=("${REPLY[@]}")
   for function_name in "${spec_names[@]}"; do
     local specs=${z_completion_argument_specs[$function_name]}
-    lines+=("z_completion_argument_specs+=(${(qqq)function_name} ${(qqq)specs})")
+    z.arr.quote style=double "$function_name" "$specs"
+    lines+=("z_completion_argument_specs+=($REPLY[1] $REPLY[2])")
   done
 
-  for function_name in ${z_completion_function_names[@]}; do
-    lines+=("z_completion_function_names+=(${(qqq)function_name})")
+  z.arr.quote style=double "${z_completion_function_names[@]}"
+  for function_name in "${REPLY[@]}"; do
+    lines+=("z_completion_function_names+=($function_name)")
   done
 
   lines+=("z_completion_cache_ready=true")
