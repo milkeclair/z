@@ -103,6 +103,7 @@ z92_terminal() {
   local buffer=""
   local prepare="PATH=${(q)command_path}; hash -r; "
   prepare+="unsetopt complete_in_word; "
+  prepare+="unset z_completion_code_depth z_completion_command_depth; "
   prepare+="unalias z.fixture.alias fixture-command 2>/dev/null; "
   prepare+="zstyle -d ':completion:*' ignored-patterns; "
   prepare+="zstyle -d ':completion:*:z-functions' ignored-patterns"

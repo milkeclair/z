@@ -101,14 +101,14 @@ z.t.describe "z.completion.docs._format"; {
       z.t.expect.reply ""
     }
   }
-}
 
-z.t.describe "z.completion.docs._format code型"; {
-  z.t.it "許可値のコロンも型アノテーションの一部として色分けする"; {
-    local docs="\$behavior? [code | 'a:b']: commands"
-    local expected=$'%{\e[36m%}'"\$behavior? [code | 'a:b']:"$'%{\e[0m%} commands'
-    z.completion.docs._format "$docs"
+  z.t.context "型アノテーションの許可値にコロンがある場合"; {
+    z.t.it "許可値のコロンも型アノテーションの一部として色分けする"; {
+      local docs="\$behavior? [code | 'a:b']: commands"
+      local expected=$'%{\e[36m%}'"\$behavior? [code | 'a:b']:"$'%{\e[0m%} commands'
+      z.completion.docs._format "$docs"
 
-    z.t.expect.reply "$expected"
+      z.t.expect.reply "$expected"
+    }
   }
 }
