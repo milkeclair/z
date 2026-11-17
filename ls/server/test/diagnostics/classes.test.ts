@@ -386,5 +386,19 @@ describe('hydrated class command targets', () => {
 
     expect(semantic(scenario.items)).toHaveLength(1);
     expect(semantic(scenario.items)[0].message).toContain('outside.value');
+
+    const report = scenario.diagnostics.files.get(scenario.document.uri);
+    const program = report?.codePrograms.find((entry) =>
+      entry.file.classes.definitions.some((definition) => definition.name === 'Local'),
+    );
+    const definition = program?.file.classes.definitions[0];
+
+    expect(definition?.name).toBe('Local');
+    expect(definition?.file).toBe(program?.file.ast);
+    expect(definition?.methods.map((method) => method.name)).toEqual(['value']);
+    expect(program?.file.classes.instances.map((instance) => instance.name)).toEqual([
+      'local_object',
+    ]);
+    expect(program?.root).toBe(report?.file);
   });
 });
