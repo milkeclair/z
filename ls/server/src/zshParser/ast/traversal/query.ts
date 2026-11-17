@@ -24,11 +24,14 @@ export type QueryContext = {
   readonly documentationByOffset: ReadonlyMap<number, DocContext>;
 };
 
-export function createQueryContext(file: FileNode): QueryContext {
+export function createQueryContext(
+  file: FileNode,
+  definitions?: readonly FunctionDefinitionNode[],
+): QueryContext {
   const entries =
     file.comments.length === 0
       ? []
-      : findAll(file, 'functionDefinition').flatMap((target) => {
+      : (definitions ?? findAll(file, 'functionDefinition')).flatMap((target) => {
           const docBlock = target.leadingDoc;
 
           if (!docBlock) {

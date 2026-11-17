@@ -1,8 +1,7 @@
-import { castDraft } from 'immer';
 import { produce } from '../../../util/collections';
 import type { AstNode } from '..';
 import { again, done, loop } from '../../../util/loop';
-import { pushStack, type Stack } from '../../../util/stack';
+import { pushStack, stackValues, type Stack } from '../../../util/stack';
 import { relatedChildCursor, syntaxChildCursor, type ChildCursor } from './children';
 
 export type WalkControl = void | 'skip' | 'stop';
@@ -161,13 +160,14 @@ export function findAll<K extends AstNode['kind']>(
     readonly kind: K;
   }
 >[] {
-  return produce<readonly Extract<AstNode, { readonly kind: K }>[]>([], (nodes) => {
-    walk(
-      root,
-      (node) => {
-        if (hasKind(node, kind)) nodes.push(castDraft(node));
-      },
-      options,
-    );
-  });
+  type Node = Extract<AstNode, { readonly kind: K }>;
+
+  const nodes = foldAst<Stack<Node> | null>(
+    root,
+    null,
+    (previous, node) => ({ state: hasKind(node, kind) ? pushStack(node, previous) : previous }),
+    options,
+  );
+
+  return Array.from(stackValues(nodes)).toReversed();
 }

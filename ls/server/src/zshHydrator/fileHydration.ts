@@ -38,15 +38,16 @@ export function createZshFileHydration({
 }): ZshFileHydration {
   const lexed = Lexer.tokenize(content, { sourceFile });
   const parsed = Parser.parse(lexed.tokens, { sourceFile, path: sourceFile });
-  const ast = hydrateAst(parsed.ast, content, options);
-  const definitions = findAll(ast, 'functionDefinition');
+  const parsedDefinitions = findAll(parsed.ast, 'functionDefinition');
+  const ast = hydrateAst(parsed.ast, content, options, parsedDefinitions);
+  const definitions = ast === parsed.ast ? parsedDefinitions : findAll(ast, 'functionDefinition');
 
   return {
     sourceFile,
     file,
     ast,
     tokens: parsed.tokens,
-    query: createQueryContext(ast),
+    query: createQueryContext(ast, definitions),
     functions: definitions.flatMap((definition) =>
       definition.names.map((word) => ({ name: word.raw, definition })),
     ),

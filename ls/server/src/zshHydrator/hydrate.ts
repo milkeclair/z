@@ -56,8 +56,9 @@ export function hydrateAst(
   ast: FileNode,
   source: string,
   options: HydrationOptions = {},
+  definitions = findAll(ast, 'functionDefinition'),
 ): FileNode {
-  const documentedFunctions = findAll(ast, 'functionDefinition').flatMap((definition) =>
+  const documentedFunctions = definitions.flatMap((definition) =>
     definition.leadingDoc ? [{ definition, leadingDoc: definition.leadingDoc }] : [],
   );
   const parsed = documentedFunctions.map(({ leadingDoc }) => ({
