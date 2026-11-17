@@ -10,5 +10,6 @@ export function startPeriodicRescan(
     }
   }, 60_000);
   timer.unref();
+
   return () => clearInterval(timer);
 }

@@ -11,7 +11,7 @@ import { findLineBoundaryIndex } from '../opaque/scan';
 import { readCaseBody } from './case';
 import { readConditionalLoopBody, readIfBody } from './conditional';
 import { readIterationBody } from './iteration';
-import { isWord, isWordStart, skipTerms, takeKeyword } from './syntax';
+import { isWord, isWordStart, skipCommandTerm, takeKeyword } from './syntax';
 import type { CompoundContents } from './types';
 
 const reserved = ['if', 'while', 'until', 'for', 'select', 'foreach', 'repeat', 'case'];
@@ -32,24 +32,32 @@ export function parseCompoundCommand({
   const syntax = currentToken(state).value;
   const closeWord =
     syntax === 'if' ? 'fi' : syntax === 'case' ? 'esac' : syntax === 'foreach' ? 'end' : 'done';
+
   if (syntax === 'repeat' && isWordStart(skipTrivia(advanceState(state)))) {
     const count = readWordNode(skipTrivia(advanceState(state)));
-    if (!isWord(currentToken(skipTerms(count.state)), 'do')) {
+
+    if (!isWord(currentToken(skipCommandTerm(count.state)), 'do')) {
       return parseShortRepeat(state, context, readPostBodyRedirects);
     }
   }
+
   const result = parseCompoundWithin(state, context, readPostBodyRedirects, closeWord);
+
   if (result.node.close !== null || result.state.stopped) {
     return result;
   }
+
   const boundary = findLineBoundaryIndex(state.tokens, state.index);
+
   if (state.tokens[boundary]?.kind === 'eof') {
     return result;
   }
+
   const at = state.tokens[boundary] ?? state.eof;
   const eof: Token = { ...state.eof, range: { start: at.range.start, end: at.range.start } };
   const window = { ...state, tokens: [...state.tokens.slice(0, boundary), eof], eof };
   const recovered = parseCompoundWithin(window, context, readPostBodyRedirects, closeWord);
+
   return {
     node: recovered.node,
     state: { ...recovered.state, tokens: state.tokens, eof: state.eof, index: boundary },
@@ -58,6 +66,7 @@ export function parseCompoundCommand({
 
 function listFromCommand(command: CommandNode): ListNode {
   const range = command.range;
+
   return {
     kind: 'list',
     range,
@@ -102,6 +111,7 @@ function parseShortRepeat(
   const tokens = tokenSlice(post.state, state.index, post.state.index);
   const headerRange = rangeFromTokens(tokens, keyword.range);
   const range = enclosingRange(headerRange, [result.node, ...post.redirects]);
+
   return {
     node: {
       kind: 'repeatCommand',
@@ -119,6 +129,7 @@ function parseShortRepeat(
     state: post.state,
   };
 }
+
 function readCompoundContents(
   state: ParseState,
   context: ParserContext,
@@ -138,6 +149,7 @@ function readCompoundContents(
       return readIterationBody(state, context, open.value, closeWord);
   }
 }
+
 function parseCompoundWithin(
   state: ParseState,
   context: ParserContext,
@@ -163,5 +175,6 @@ function parseCompoundWithin(
     close: close.token?.range ?? null,
     postBodyRedirects: post.redirects,
   };
+
   return { node: { ...base, ...contents.node }, state: post.state };
 }

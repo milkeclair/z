@@ -1,4 +1,4 @@
-import { List } from 'immutable';
+import * as Immutable from 'immutable';
 import { again, done, loop } from '../../../../util/loop';
 import type { SimpleCommandNode } from '../../../ast';
 import type { Token } from '../../../lexer';
@@ -56,10 +56,11 @@ function readSimpleCommandAccumulator(
 ): SimpleCommandAccumulator {
   const initial = {
     parts: accumulator,
-    args: List(accumulator.arguments),
-    assignments: List(accumulator.prefixAssignments),
-    redirects: List(accumulator.redirects),
+    args: Immutable.List(accumulator.arguments),
+    assignments: Immutable.List(accumulator.prefixAssignments),
+    redirects: Immutable.List(accumulator.redirects),
   };
+
   return loop<typeof initial, SimpleCommandAccumulator>(initial, (progress) => {
     const current = {
       ...progress.parts,
@@ -69,6 +70,7 @@ function readSimpleCommandAccumulator(
       state: skipInlineTrivia(progress.parts.state),
     };
     const token = currentToken(current.state);
+
     if (current.state.stopped || isCommandBoundary(token) || token.kind === 'comment') {
       return done({
         ...current,
@@ -77,7 +79,9 @@ function readSimpleCommandAccumulator(
         redirects: progress.redirects.toArray(),
       });
     }
+
     const parts = readNextCommandPart(current, token);
+
     return again({
       parts,
       args: progress.args.concat(parts.arguments),
@@ -94,6 +98,7 @@ function readNextCommandPart(
   if (isRedirectStart(current.state)) {
     return readRedirect(current);
   }
+
   if (
     token.kind === 'word' ||
     isProcessSubstitutionStart(current.state.tokens, current.state.index) ||
@@ -102,6 +107,7 @@ function readNextCommandPart(
   ) {
     return readSimpleCommandWord(current, token);
   }
+
   return readUnexpectedToken(current, token);
 }
 

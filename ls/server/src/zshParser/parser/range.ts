@@ -1,4 +1,4 @@
-import { Range, Seq } from 'immutable';
+import * as Immutable from 'immutable';
 import type { SourcePosition, SourceRange, Token } from '../lexer';
 
 const Empty = '';
@@ -70,10 +70,11 @@ function positionAfterText({
   readonly position: SourcePosition;
   readonly text: string;
 }): SourcePosition {
-  return Range(0, text.length).reduce((current, index) => {
+  return Immutable.Range(0, text.length).reduce((current, index) => {
     const char = text[index] ?? Empty;
     const nextChar = text[index + 1] ?? Empty;
     const newLine = char === LineFeed || (char === CarriageReturn && nextChar !== LineFeed);
+
     return {
       offset: current.offset + 1,
       line: newLine ? current.line + 1 : current.line,
@@ -84,17 +85,20 @@ function positionAfterText({
 
 export function enclosingRange(
   range: SourceRange,
-  children: readonly { readonly range: SourceRange }[],
+  children: readonly {
+    readonly range: SourceRange;
+  }[],
 ): SourceRange {
   const end = children.reduce(
     (previous, child) => (child.range.end.offset > previous.offset ? child.range.end : previous),
     range.end,
   );
+
   return { start: range.start, end };
 }
 
 export function textForRange(tokens: readonly Token[], range: SourceRange): string {
-  return Seq(tokens)
+  return Immutable.Seq(tokens)
     .filter((token) => token.range.end.offset > range.start.offset)
     .takeWhile((token) => token.range.start.offset < range.end.offset)
     .map((token) =>

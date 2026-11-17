@@ -9,9 +9,12 @@ export type FunctionTarget = {
   readonly uri: string;
   readonly definition: FunctionDefinitionNode;
   readonly nameNode: WordNode;
-  readonly info: Func & { documentation: Result };
+  readonly info: Func & {
+    documentation: Result;
+  };
   readonly source?: CodeSourceMap;
 };
+
 export type FunctionTargets = ReadonlyMap<string, readonly FunctionTarget[]>;
 
 /** 埋め込みコードの定義位置を元の文書へ戻す。 */

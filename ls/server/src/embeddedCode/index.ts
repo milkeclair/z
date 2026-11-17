@@ -1,4 +1,4 @@
-import { List } from 'immutable';
+import * as Immutable from 'immutable';
 import { protocolRange } from '../connection/ast/cursor';
 import type { CallScope, ResolutionContext } from '../diagnostics/calls';
 import { analyzeCalls } from '../diagnostics/calls';
@@ -72,11 +72,12 @@ function programTargets(
 }
 
 type AnalysisProgress = {
-  readonly pending: List<Pending>;
+  readonly pending: Immutable.List<Pending>;
   readonly textBudget: number;
-  readonly diagnostics: List<Diagnostics>;
-  readonly programs: List<CodeProgram>;
+  readonly diagnostics: Immutable.List<Diagnostics>;
+  readonly programs: Immutable.List<CodeProgram>;
 };
+
 type ExpansionContext = {
   readonly snapshot: FunctionSnapshot;
   readonly root: ZshFileHydration;
@@ -86,12 +87,14 @@ type ExpansionContext = {
   readonly sourceMap: CodeSourceMap | undefined;
   readonly ignores: IgnoreControls | undefined;
 };
+
 function embeddedSyntax(program: CodeProgram): readonly Diagnostics[] {
   if (!program.complete) {
     return [];
   }
-  const child = program.file,
-    controls = collectIgnoreControls(child);
+
+  const child = program.file;
+  const controls = collectIgnoreControls(child);
   const syntax = [
     ...child.lexerDiagnostics.map((diagnostic) => ({ ...diagnostic, source: 'z-ls/lexer' })),
     ...child.parserDiagnostics.map((diagnostic) => ({ ...diagnostic, source: 'z-ls/parser' })),
@@ -100,6 +103,7 @@ function embeddedSyntax(program: CodeProgram): readonly Diagnostics[] {
       source: 'z-ls/documentation',
     })),
   ];
+
   return syntax
     .filter((diagnostic) => !ignored(controls, diagnostic.range.start.line, diagnostic.kind))
     .map(
@@ -115,6 +119,7 @@ function embeddedSyntax(program: CodeProgram): readonly Diagnostics[] {
       }),
     );
 }
+
 function inheritedContext(
   parent: ResolutionContext,
   declarations: Declarations,
@@ -138,16 +143,19 @@ function inheritedContext(
       : parent.builtins,
   };
 }
+
 function expandArgument(
   progress: AnalysisProgress,
   argument: CodeArgument,
   context: ExpansionContext,
 ): AnalysisProgress {
   const { current, root, snapshot, maxDepth, complete, sourceMap, ignores } = context;
+
   if (argument.kind === 'limit' || current.depth >= maxDepth) {
     const report =
       complete &&
       (!ignores || !ignored(ignores, argument.word.range.start.line, 'embedded-analysis-limit'));
+
     return report
       ? {
           ...progress,
@@ -163,6 +171,7 @@ function expandArgument(
         }
       : progress;
   }
+
   const source = createCodeSourceMap(argument.word, argument.source, sourceMap);
   const localSource = sourceMap ? createCodeSourceMap(argument.word, argument.source) : source;
   const child = createZshFileHydration({
@@ -194,6 +203,7 @@ function expandArgument(
     scopes: [{ file: current.file, offset: argument.word.range.start.offset }, ...current.scopes],
     depth: current.depth + 1,
   };
+
   return {
     ...progress,
     programs: progress.programs.push(program),
@@ -201,34 +211,44 @@ function expandArgument(
     pending: progress.pending.push(pending),
   };
 }
+
 /** 明示スタックと文字数上限を共有し、診断と編集に使う埋め込みASTを一度だけ生成する。 */
 export function analyzeEmbeddedCode(
   snapshot: FunctionSnapshot,
   file: ZshFileHydration,
   calls: readonly SimpleCommandNode[],
   context: ResolutionContext,
-  limits: { readonly maxDepth?: number; readonly maxText?: number } = {},
+  limits: {
+    readonly maxDepth?: number;
+    readonly maxText?: number;
+  } = {},
 ): {
   readonly diagnostics: readonly Diagnostics[];
   readonly programs: readonly CodeProgram[];
 } {
   const maxDepth = limits.maxDepth ?? MAX_CODE_DEPTH;
   const initial: AnalysisProgress = {
-    pending: List([{ file, calls, context, scopes: [], depth: 0 }]),
-    diagnostics: List(),
-    programs: List(),
+    pending: Immutable.List([{ file, calls, context, scopes: [], depth: 0 }]),
+    diagnostics: Immutable.List(),
+    programs: Immutable.List(),
     textBudget: limits.maxText ?? MAX_CODE_TEXT,
   };
+
   return loop<
     AnalysisProgress,
-    { readonly diagnostics: readonly Diagnostics[]; readonly programs: readonly CodeProgram[] }
+    {
+      readonly diagnostics: readonly Diagnostics[];
+      readonly programs: readonly CodeProgram[];
+    }
   >(initial, (state) => {
     const current = state.pending.last();
+
     if (!current) {
       return done({ diagnostics: state.diagnostics.toArray(), programs: state.programs.toArray() });
     }
-    const sourceMap = current.program?.source,
-      complete = current.program?.complete ?? true;
+
+    const sourceMap = current.program?.source;
+    const complete = current.program?.complete ?? true;
     const ignores = sourceMap ? collectIgnoreControls(current.file) : undefined;
     const analysis = analyzeCalls(snapshot, current.file, current.calls, current.context, {
       scopes: current.scopes,
@@ -243,6 +263,7 @@ export function analyzeEmbeddedCode(
     const next = [...analysis.targets].reduce((progress, [command, target]) => {
       const batch = codeArguments(command, target, current.context, progress.textBudget, true);
       const bounded = { ...progress, textBudget: progress.textBudget - batch.inspected };
+
       return batch.arguments.reduce(
         (previous, argument) =>
           expandArgument(previous, argument, {
@@ -257,6 +278,7 @@ export function analyzeEmbeddedCode(
         bounded,
       );
     }, reported);
+
     return again(next);
   });
 }

@@ -10,14 +10,17 @@ function sameParameter(left: ParameterDoc, right: ParameterDoc): boolean {
   ) {
     return false;
   }
+
   const literals = new Set(left.literalValues ?? []);
   const otherLiterals = new Set(right.literalValues ?? []);
+
   if (
     literals.size !== otherLiterals.size ||
     ![...literals].every((value) => otherLiterals.has(value))
   ) {
     return false;
   }
+
   switch (left.kind) {
     case 'positionalParameterDoc':
       return right.kind === left.kind && left.position === right.position;
@@ -35,28 +38,36 @@ export function sameCallContracts(left: FunctionTargets, right: FunctionTargets)
   if (left === right) {
     return true;
   }
+
   if (left.size !== right.size) {
     return false;
   }
+
   return [...left].every(([name, candidates]) => {
     const next = right.get(name);
+
     return (
       next !== undefined &&
       candidates.length === next.length &&
       candidates.every((target, index) => {
         const other = next[index];
+
         if (!target || !other || target.name !== other.name || target.uri !== other.uri) {
           return false;
         }
+
         if (target.definition === other.definition) {
           return true;
         }
+
         const parameters = documentationOf(target.definition)?.parameters ?? [];
         const nextParameters = documentationOf(other.definition)?.parameters ?? [];
+
         return (
           parameters.length === nextParameters.length &&
           parameters.every((parameter, position) => {
             const otherParameter = nextParameters[position];
+
             return otherParameter !== undefined && sameParameter(parameter, otherParameter);
           })
         );

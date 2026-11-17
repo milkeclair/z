@@ -1,6 +1,7 @@
 import type { BaseNode } from '../base';
 import type { WordNode } from '../word';
 import type { HereDocumentNode } from './hereDocument';
+
 export type { HereDocumentNode } from './hereDocument';
 
 export type RedirectNode = BaseNode<'redirect'> & {

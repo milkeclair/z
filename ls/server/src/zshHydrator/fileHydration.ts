@@ -12,6 +12,7 @@ export type HydratedFunction = {
   readonly name: string;
   readonly definition: FunctionDefinitionNode;
 };
+
 export type ZshFileHydration = {
   readonly sourceFile: string;
   readonly file: string;
@@ -23,6 +24,7 @@ export type ZshFileHydration = {
   readonly parserDiagnostics: readonly ParserDiagnostic[];
   readonly hydrationDiagnostics: readonly HydrationDiagnostic[];
 };
+
 export function createZshFileHydration({
   sourceFile,
   file,
@@ -38,6 +40,7 @@ export function createZshFileHydration({
   const parsed = Parser.parse(lexed.tokens, { sourceFile, path: sourceFile });
   const ast = hydrateAst(parsed.ast, content, options);
   const definitions = findAll(ast, 'functionDefinition');
+
   return {
     sourceFile,
     file,

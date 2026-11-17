@@ -18,6 +18,7 @@ const SpecialParameterChars = new Set(['@', '*', '?', '!', '$', '-']);
 export function readExpansion(state: WordPartState): ExpansionReadResult | null {
   if (state.text.charCodeAt(state.index) === 96) {
     const end = delimitedEnd(state.text.slice(0, state.end), state.index, 'backtick') ?? state.end;
+
     return {
       node: createExpansionNode({
         kind: 'commandSubstitution',
@@ -39,6 +40,7 @@ export function readExpansion(state: WordPartState): ExpansionReadResult | null 
     const end = delimitedEnd(state.text.slice(0, state.end), state.index + 1, 'paren') ?? state.end;
     const raw = state.text.slice(state.index, end);
     const range = rangeWithinText(state.range, state.text, state.index, end);
+
     return {
       node: {
         kind: 'processSubstitution',
@@ -141,6 +143,7 @@ function findMatchingCharacter({
 }): number | null {
   const kind = open === LeftBrace ? 'brace' : 'paren';
   const end = delimitedEnd(text.slice(0, max), index, kind);
+
   return end === null ? null : end - 1;
 }
 

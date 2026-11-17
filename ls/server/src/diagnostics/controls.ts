@@ -18,11 +18,13 @@ export function collectIgnoreControls(file: ZshFileHydration): IgnoreControls {
           : [],
     ),
   );
+
   return new Map(entries);
 }
 
 /** 行全体の抑制、または指定された診断コードの抑制に一致するか判定する。 */
 export function ignored(controls: IgnoreControls, line: number, code?: string): boolean {
   const codes = controls.get(line);
+
   return codes !== undefined && (codes.size === 0 || (code !== undefined && codes.has(code)));
 }

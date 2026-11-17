@@ -1,4 +1,4 @@
-import { List, OrderedMap, OrderedSet } from 'immutable';
+import * as Immutable from 'immutable';
 import { pathToFileURL } from 'url';
 import type { Result } from '../document/type';
 import { NAMED_ARG_POSITION } from '../getFunctions/constant';
@@ -17,34 +17,40 @@ type FunctionProjection = {
   readonly functions: readonly Func[];
   readonly targets: FunctionTargets;
 };
+
 export type FileFunctionProjections = ReadonlyMap<ZshFileHydration, FunctionProjection>;
 
 /** 現在のファイル単位の変換結果を再利用し、hydratorの順序で候補を統合する。 */
 export function projectFunctions(
   hydrator: ZshHydrator,
   previous: FileFunctionProjections = new Map(),
-): FunctionProjection & { readonly fileProjections: FileFunctionProjections } {
+): FunctionProjection & {
+  readonly fileProjections: FileFunctionProjections;
+} {
   const initial = {
-    functions: List<Func>(),
-    targets: OrderedMap<string, List<FunctionTarget>>(),
-    files: OrderedMap<ZshFileHydration, FunctionProjection>(),
+    functions: Immutable.List<Func>(),
+    targets: Immutable.OrderedMap<string, Immutable.List<FunctionTarget>>(),
+    files: Immutable.OrderedMap<ZshFileHydration, FunctionProjection>(),
   };
   const projected = [...hydrator.files.values()].reduce((previousProjection, entry) => {
     if (entry.functions.length === 0) {
       return previousProjection;
     }
+
     const projection = previous.get(entry) ?? projectFileFunctions(entry);
     const targets = [...projection.targets].reduce(
       (groups, [name, candidates]) =>
-        groups.set(name, (groups.get(name) ?? List<FunctionTarget>()).concat(candidates)),
+        groups.set(name, (groups.get(name) ?? Immutable.List<FunctionTarget>()).concat(candidates)),
       previousProjection.targets,
     );
+
     return {
       functions: previousProjection.functions.concat(projection.functions),
       targets,
       files: previousProjection.files.set(entry, projection),
     };
   }, initial);
+
   return {
     functions: projected.functions.toArray(),
     targets: new Map(projected.targets.map((group) => group.toArray())),
@@ -54,8 +60,11 @@ export function projectFunctions(
 
 /** 情報を付加した1ファイルから、互換用の情報と定義の参照先を取り出す。 */
 export function projectFileFunctions(entry: ZshFileHydration): FunctionProjection {
-  const initial = { functions: List<Func>(), targets: OrderedMap<string, List<FunctionTarget>>() };
-  const projected = OrderedSet(entry.functions.map((fn) => fn.definition)).reduce(
+  const initial = {
+    functions: Immutable.List<Func>(),
+    targets: Immutable.OrderedMap<string, Immutable.List<FunctionTarget>>(),
+  };
+  const projected = Immutable.OrderedSet(entry.functions.map((fn) => fn.definition)).reduce(
     (previous, definition) => {
       const documentation = documentationOf(definition);
       const args = (documentation?.parameters ?? [])
@@ -65,15 +74,19 @@ export function projectFileFunctions(entry: ZshFileHydration): FunctionProjectio
           if (left.isNamed && right.isNamed) {
             return 0;
           }
+
           if (left.isNamed) {
             return 1;
           }
+
           if (right.isNamed) {
             return -1;
           }
+
           return left.position - right.position;
         });
       const view = legacyDocumentation(documentation);
+
       return definition.names.reduce((current, word) => {
         const info: Func = {
           name: word.raw,
@@ -84,9 +97,11 @@ export function projectFileFunctions(entry: ZshFileHydration): FunctionProjectio
         };
         const functions = current.functions.push(info);
         const name = literalWord(word);
+
         if (!name) {
           return { ...current, functions };
         }
+
         const target: FunctionTarget = {
           name,
           uri: pathToFileURL(entry.sourceFile).href,
@@ -94,12 +109,14 @@ export function projectFileFunctions(entry: ZshFileHydration): FunctionProjectio
           nameNode: word,
           info: { ...info, name, documentation: view },
         };
-        const group = current.targets.get(name) ?? List<FunctionTarget>();
+        const group = current.targets.get(name) ?? Immutable.List<FunctionTarget>();
+
         return { functions, targets: current.targets.set(name, group.push(target)) };
       }, previous);
     },
     initial,
   );
+
   return {
     functions: projected.functions.toArray(),
     targets: new Map(projected.targets.map((group) => group.toArray())),
@@ -112,6 +129,7 @@ function legacyArgument(parameter: ParameterDoc): FuncArg {
     ...(parameter.valueType ? { valueType: parameter.valueType } : {}),
     ...(parameter.literalValues ? { literalValues: parameter.literalValues } : {}),
   };
+
   switch (parameter.kind) {
     case 'positionalParameterDoc':
       return {

@@ -10,5 +10,6 @@ export function validateTextDocument({
   readonly textDocument: TextDocument;
 }): Diagnostics[] {
   const file = diagnostics.files.get(textDocument.uri);
+
   return file?.version === textDocument.version ? [...file.items] : [];
 }

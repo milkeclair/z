@@ -1,4 +1,4 @@
-import { List } from 'immutable';
+import * as Immutable from 'immutable';
 import type { FuncArg } from '../../getFunctions/type';
 import type { FunctionTarget } from '../../refreshFunctions/target';
 import { literalWord } from '../../refreshFunctions/word';
@@ -11,7 +11,9 @@ function parameterName(raw: string): string | null {
   if (!raw.startsWith('$')) {
     return null;
   }
+
   const name = raw[1] === '{' && raw.endsWith('}') ? raw.slice(2, -1) : raw.slice(1);
+
   if (
     name === '@' ||
     name === '*' ||
@@ -19,7 +21,9 @@ function parameterName(raw: string): string | null {
   ) {
     return name;
   }
+
   const bracket = name.indexOf('[');
+
   if (
     bracket > 0 &&
     name.endsWith(']') &&
@@ -32,6 +36,7 @@ function parameterName(raw: string): string | null {
     )
   ) {
     const key = name.slice(bracket + 1, -1);
+
     if (
       key.length &&
       [...key].every(
@@ -45,6 +50,7 @@ function parameterName(raw: string): string | null {
       return key;
     }
   }
+
   return null;
 }
 
@@ -52,6 +58,7 @@ function argumentByName(target: FunctionTarget, name: string | null): FuncArg | 
   if (name === null) {
     return null;
   }
+
   return (
     target.info.args.find((arg) =>
       arg.isNamed
@@ -67,15 +74,18 @@ function initializer(word: WordNode): string | null {
   const expansions = word.parts.filter(
     (part) => part.kind === 'variableReference' || part.kind === 'parameterExpansion',
   );
+
   if (expansions.length !== 1) {
     return null;
   }
+
   const expansion = expansions[0];
   const start = expansion.range.start.offset - word.range.start.offset;
   const end = expansion.range.end.offset - word.range.start.offset;
   const before = word.raw.slice(0, start);
   const after = word.raw.slice(end);
   const suffix = before === '"' && after.endsWith('"') ? after.slice(0, -1) : after;
+
   if (
     !(before === '' || before === '"') ||
     (suffix !== '' &&
@@ -83,9 +93,11 @@ function initializer(word: WordNode): string | null {
   ) {
     return null;
   }
+
   if (before === '"' && !after.endsWith('"')) {
     return null;
   }
+
   return expansion.kind === 'parameterExpansion'
     ? expansion.raw
     : '$' + expansion.name.value + suffix;
@@ -97,47 +109,65 @@ function namedReply(command: SimpleCommandNode, cursor: Cursor): string | null {
     .find(
       (node) => node.kind === 'sublist' && node.range.start.offset <= command.range.start.offset,
     );
+
   if (!sublist || sublist.kind !== 'sublist') {
     return null;
   }
+
   const index = sublist.rest.findIndex((rest) => rest.pipeline.first === command);
+
   if (index < 0 || sublist.rest[index].operator.type !== 'andIf') {
     return null;
   }
+
   const preceding = index === 0 ? sublist.first : sublist.rest[index - 1].pipeline;
+
   if (preceding.rest.length || preceding.first.kind !== 'simpleCommand') {
     return null;
   }
+
   const previous = preceding.first;
+
   if (!previous.commandName || literalWord(previous.commandName.word) !== 'z.arg.named') {
     return null;
   }
+
   return previous.arguments[0] ? literalWord(previous.arguments[0]) : null;
 }
 
 function aliasArgument(target: FunctionTarget, cursor: Cursor, name: string): FuncArg | null {
   const allowed = new Set(cursor.path);
-  type AliasState = { readonly result: FuncArg | null; readonly ancestors: List<AstNode> };
+
+  type AliasState = {
+    readonly result: FuncArg | null;
+    readonly ancestors: Immutable.List<AstNode>;
+  };
+
   return foldAst<AliasState>(
     target.definition.body,
-    { result: null, ancestors: List() },
+    { result: null, ancestors: Immutable.List() },
     (previous, node, depth) => {
-      const ancestors = previous.ancestors.take(depth).push(node),
-        state = { ...previous, ancestors };
+      const ancestors = previous.ancestors.take(depth).push(node);
+      const state = { ...previous, ancestors };
+
       if (node.range.start.offset >= cursor.offset || node.kind === 'functionDefinition') {
         return { state, control: 'skip' };
       }
+
       const scoped =
         node.kind === 'list' ||
         node.kind === 'subshellCommand' ||
         node.kind === 'commandSubstitution' ||
         node.kind === 'processSubstitution';
+
       if (scoped && !allowed.has(node)) {
         return { state, control: 'skip' };
       }
+
       if (node.kind !== 'simpleCommand') {
         return { state };
       }
+
       const declaration = node.semantic.role === 'declaration' ? node.semantic.declaration : null;
       const assignments =
         declaration?.assignments ?? (node.commandName ? [] : node.prefixAssignments);
@@ -145,6 +175,7 @@ function aliasArgument(target: FunctionTarget, cursor: Cursor, name: string): Fu
         if (assignment.name.value !== name || assignment.range.start.offset >= cursor.offset) {
           return current;
         }
+
         const raw = assignment.value ? initializer(assignment.value.value) : null;
         const key =
           raw === '$REPLY'
@@ -152,10 +183,12 @@ function aliasArgument(target: FunctionTarget, cursor: Cursor, name: string): Fu
             : raw
               ? parameterName(raw)
               : null;
+
         return assignment.operator === '=' && !assignment.subscript
           ? argumentByName(target, key)
           : null;
       }, state.result);
+
       return {
         state: {
           ancestors,
@@ -171,11 +204,14 @@ export function parameterArgument(target: FunctionTarget, cursor: Cursor): FuncA
     if (!inside(node.range, cursor.offset)) {
       continue;
     }
+
     if (node.kind === 'parameterExpansion') {
       const direct = argumentByName(target, parameterName(node.raw));
+
       if (direct) {
         return direct;
       }
+
       const name = node.raw[1] === '{' && node.raw.endsWith('}') ? node.raw.slice(2, -1) : '';
       const identifier =
         name.length > 0 &&
@@ -186,11 +222,14 @@ export function parameterArgument(target: FunctionTarget, cursor: Cursor): FuncA
             (char >= 'A' && char <= 'Z') ||
             (index > 0 && char >= '0' && char <= '9'),
         );
+
       return identifier ? aliasArgument(target, cursor, name) : null;
     }
+
     if (node.kind === 'variableReference') {
       return aliasArgument(target, cursor, node.name.value);
     }
   }
+
   return null;
 }

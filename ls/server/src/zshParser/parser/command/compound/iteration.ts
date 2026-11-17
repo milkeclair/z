@@ -1,4 +1,4 @@
-import { List } from 'immutable';
+import * as Immutable from 'immutable';
 import { again, done, loop } from '../../../../util/loop';
 import type { ArithmeticExpansionNode, WordNode } from '../../../ast';
 import { delimitedEnd } from '../../../lexer/delimiter';
@@ -15,7 +15,7 @@ import {
 } from '../../state';
 import { readWordNode } from '../../word/composite';
 import { findLineBoundaryIndex, findOperatorEndIndex } from '../opaque/scan';
-import { endAt, isWord, isWordStart, skipTerms, takeKeyword } from './syntax';
+import { endAt, isWord, isWordStart, skipCommandTerm, takeKeyword } from './syntax';
 import type { CompoundContents } from './types';
 
 type LoopHeader = {
@@ -25,14 +25,18 @@ type LoopHeader = {
   readonly arithmetic: ArithmeticExpansionNode | null;
   readonly count: WordNode | null;
 };
+
 function headerAt(state: ParseState): LoopHeader {
   return { state, variables: [], words: null, arithmetic: null, count: null };
 }
+
 function readRepeatHeader(state: ParseState): LoopHeader {
   if (isWordStart(state)) {
     const count = readWordNode(state);
+
     return { ...headerAt(count.state), count: count.node };
   }
+
   return headerAt(
     addDiagnostic({
       state,
@@ -42,6 +46,7 @@ function readRepeatHeader(state: ParseState): LoopHeader {
     }),
   );
 }
+
 function readArithmeticHeader(state: ParseState): LoopHeader {
   const start = state.index;
   const end = findOperatorEndIndex({
@@ -69,6 +74,7 @@ function readArithmeticHeader(state: ParseState): LoopHeader {
     raw: tokens.map((token) => token.value).join(''),
   };
   const invalid = end !== null && arithmeticSeparatorCount(arithmetic.raw.slice(2, -2)) !== 2;
+
   return {
     ...headerAt(
       invalid
@@ -83,51 +89,68 @@ function readArithmeticHeader(state: ParseState): LoopHeader {
     arithmetic,
   };
 }
+
 function readVariables(state: ParseState): {
   readonly state: ParseState;
   readonly variables: readonly WordNode[];
 } {
-  const initial = { current: state, names: List<WordNode>() };
+  const initial = { current: state, names: Immutable.List<WordNode>() };
+
   return loop<
     typeof initial,
-    { readonly state: ParseState; readonly variables: readonly WordNode[] }
+    {
+      readonly state: ParseState;
+      readonly variables: readonly WordNode[];
+    }
   >(initial, (progress) => {
     const token = currentToken(progress.current);
+
     if (
       token.kind !== 'word' ||
       (!progress.names.isEmpty() && (isWord(token, 'in') || isWord(token, 'do')))
     ) {
       return done({ state: progress.current, variables: progress.names.toArray() });
     }
+
     const word = readWordNode(progress.current);
+
     return again({ current: skipInlineTrivia(word.state), names: progress.names.push(word.node) });
   });
 }
+
 function readValues(state: ParseState): {
   readonly state: ParseState;
   readonly words: readonly WordNode[];
 } {
-  const initial = { current: state, words: List<WordNode>() };
-  return loop<typeof initial, { readonly state: ParseState; readonly words: readonly WordNode[] }>(
-    initial,
-    (progress) => {
-      const token = currentToken(progress.current);
-      if (
-        token.kind === 'eof' ||
-        token.kind === 'newline' ||
-        token.operatorKind === 'semicolon' ||
-        token.operatorKind === 'rightParen'
-      ) {
-        return done({ state: progress.current, words: progress.words.toArray() });
-      }
-      const word = isWordStart(progress.current) ? readWordNode(progress.current) : null;
-      return again({
-        current: word ? skipInlineTrivia(word.state) : advanceState(progress.current),
-        words: word ? progress.words.push(word.node) : progress.words,
-      });
-    },
-  );
+  const initial = { current: state, words: Immutable.List<WordNode>() };
+
+  return loop<
+    typeof initial,
+    {
+      readonly state: ParseState;
+      readonly words: readonly WordNode[];
+    }
+  >(initial, (progress) => {
+    const token = currentToken(progress.current);
+
+    if (
+      token.kind === 'eof' ||
+      token.kind === 'newline' ||
+      token.operatorKind === 'semicolon' ||
+      token.operatorKind === 'rightParen'
+    ) {
+      return done({ state: progress.current, words: progress.words.toArray() });
+    }
+
+    const word = isWordStart(progress.current) ? readWordNode(progress.current) : null;
+
+    return again({
+      current: word ? skipInlineTrivia(word.state) : advanceState(progress.current),
+      words: word ? progress.words.push(word.node) : progress.words,
+    });
+  });
 }
+
 function readVariableHeader(state: ParseState, syntax: string): LoopHeader {
   const variables = readVariables(state);
   const current =
@@ -141,16 +164,20 @@ function readVariableHeader(state: ParseState, syntax: string): LoopHeader {
       : variables.state;
   const token = currentToken(current);
   const base = { ...headerAt(current), variables: variables.variables };
+
   if (!isWord(token, 'in') && token.operatorKind !== 'leftParen' && syntax !== 'foreach') {
     return base;
   }
+
   const values = readValues(skipTrivia(advanceState(current)));
   const next =
     token.operatorKind === 'leftParen' && currentToken(values.state).operatorKind === 'rightParen'
       ? advanceState(values.state)
       : values.state;
+
   return { ...base, state: next, words: values.words };
 }
+
 export function readIterationBody(
   state: ParseState,
   context: ParserContext,
@@ -164,17 +191,20 @@ export function readIterationBody(
       : currentToken(current).operatorKind === 'arithmeticStart'
         ? readArithmeticHeader(current)
         : readVariableHeader(current, syntax);
-  const terms = skipTerms(header.state);
+  const terms = skipCommandTerm(header.state);
   const ready = syntax === 'foreach' ? terms : takeKeyword(terms, 'do').state;
   const body = context.parseNestedList(ready, endAt(closeWord));
+
   if (syntax !== 'for' && syntax !== 'select' && syntax !== 'foreach') {
     return {
       node: { kind: 'repeatCommand', count: header.count, body: body.node },
       state: body.state,
     };
   }
+
   const kind =
     syntax === 'for' ? 'forCommand' : syntax === 'select' ? 'selectCommand' : 'foreachCommand';
+
   return {
     node: {
       kind,
@@ -189,20 +219,27 @@ export function readIterationBody(
 
 function arithmeticSeparatorCount(text: string): number {
   const initial = { index: 0, count: 0 };
+
   return loop<typeof initial, number>(initial, (state) => {
     const { index, count } = state;
+
     if (index >= text.length) {
       return done(count);
     }
+
     const char = text[index];
+
     if (char === '\\') {
       return again({ index: index + 2, count });
     }
+
     if (char === '$' && (text[index + 1] === '(' || text[index + 1] === '{')) {
       const kind =
         text[index + 1] === '{' ? 'brace' : text[index + 2] === '(' ? 'arithmetic' : 'paren';
+
       return again({ index: delimitedEnd(text, index + 1, kind) ?? text.length, count });
     }
+
     if (char === '(' || char === "'" || char === '"' || text.charCodeAt(index) === 96) {
       const kind =
         char === '('
@@ -212,8 +249,10 @@ function arithmeticSeparatorCount(text: string): number {
             : char === '"'
               ? 'double'
               : 'backtick';
+
       return again({ index: delimitedEnd(text, index, kind) ?? text.length, count });
     }
+
     return again({ index: index + 1, count: count + (char === ';' ? 1 : 0) });
   });
 }

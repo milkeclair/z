@@ -8,6 +8,7 @@ import { argumentMarkdown } from './functionDoc';
 export function zArgumentHover(snapshot: FunctionSnapshot, cursor: Cursor) {
   const target = calledFunction(snapshot, cursor);
   const active = target && argumentAt(cursor) && activeArgument(target, cursor);
+
   if (target && active) {
     return {
       contents: {
@@ -16,8 +17,10 @@ export function zArgumentHover(snapshot: FunctionSnapshot, cursor: Cursor) {
       },
     };
   }
+
   const owner = ownerFunction(snapshot, cursor);
   const argument = owner && parameterArgument(owner, cursor);
+
   return owner && argument
     ? {
         contents: {

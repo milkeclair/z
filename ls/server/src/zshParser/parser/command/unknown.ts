@@ -7,7 +7,9 @@ export function createUnknownCommand(
   state: ParseState,
   token: Token,
   message: string,
-  options: { readonly consume?: boolean } = {},
+  options: {
+    readonly consume?: boolean;
+  } = {},
 ): NodeResult<UnknownNode> {
   const diagnosed = addDiagnostic({
     state,

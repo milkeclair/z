@@ -1,4 +1,4 @@
-import { List } from 'immutable';
+import * as Immutable from 'immutable';
 import { again, done, loop } from '../../../util/loop';
 import type { StringLiteralNode, WordNode, WordPartNode } from '../../ast';
 import type { SourceRange } from '../../lexer';
@@ -48,18 +48,22 @@ function sliceWordParts({
   readonly end: number;
   readonly collected: readonly WordPartNode[];
 }): readonly WordPartNode[] {
-  const initial = { index, offset: rawOffset, parts: List(collected) };
+  const initial = { index, offset: rawOffset, parts: Immutable.List(collected) };
+
   return loop<typeof initial, readonly WordPartNode[]>(initial, (current) => {
     const part = parts[current.index];
+
     if (!part || current.offset >= end) {
       return done(current.parts.toArray());
     }
+
     const length = rawFromWordPart(part).length;
     const sliced = sliceWordPart({
       part,
       start: Math.max(start, current.offset) - current.offset,
       end: Math.min(end, current.offset + length) - current.offset,
     });
+
     return again({
       index: current.index + 1,
       offset: current.offset + length,

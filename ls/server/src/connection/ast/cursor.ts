@@ -18,7 +18,12 @@ export type Cursor = {
   readonly program?: CodeProgram;
   readonly targets?: FunctionTargets;
 };
-type TokenSelection = { readonly selected: number; readonly token: Token | null };
+
+type TokenSelection = {
+  readonly selected: number;
+  readonly token: Token | null;
+};
+
 function previousSyntaxToken(
   file: ZshFileHydration,
   content: string,
@@ -29,21 +34,27 @@ function previousSyntaxToken(
       ? again(index - 1)
       : done(index),
   );
+
   return loop<TokenSelection, TokenSelection>(
     { selected, token: tokenAtOffset(file.tokens, selected) },
     (current) => {
       const token = current.token;
+
       if (!token || (token.kind !== 'whitespace' && token.kind !== 'continuation')) {
         return done(current);
       }
+
       if (token.range.start.offset === 0) {
         return done({ ...current, token: null });
       }
+
       const selected = token.range.start.offset - 1;
+
       return again({ selected, token: tokenAtOffset(file.tokens, selected) });
     },
   );
 }
+
 export function cursorAt(
   snapshot: FunctionSnapshot,
   document: TextDocument,
@@ -51,9 +62,11 @@ export function cursorAt(
   programs: readonly CodeProgram[] = [],
 ): Cursor | null {
   const cached = snapshot.documents.get(document.uri);
+
   if (!cached || cached.version !== document.version || cached.content !== document.getText()) {
     return null;
   }
+
   const scoped = programs.reduce<{
     readonly program: CodeProgram | undefined;
     readonly offset: number;
@@ -65,18 +78,22 @@ export function cursorAt(
       ) {
         return previous;
       }
+
       const mapped = codeOffset(candidate.source, inputOffset);
+
       return mapped === null ? previous : { program: candidate, offset: mapped };
     },
     { program: undefined, offset: inputOffset },
   );
   const { program, offset } = scoped;
-  const file = program?.file ?? cached.file,
-    content = program?.content ?? cached.content;
+  const file = program?.file ?? cached.file;
+  const content = program?.content ?? cached.content;
   const direct = locate(file.query, offset);
+
   if (direct?.kind === 'comment') {
     return null;
   }
+
   const token = tokenAtOffset(file.tokens, offset);
   const previous =
     token?.kind !== 'word' ||
@@ -86,6 +103,7 @@ export function cursorAt(
   const chosen = previous
     ? previousSyntaxToken(file, content, offset)
     : { selected: offset, token };
+
   if (
     chosen.token?.kind === 'comment' ||
     chosen.token?.kind === 'hereDocBody' ||
@@ -93,14 +111,19 @@ export function cursorAt(
   ) {
     return null;
   }
+
   const location = chosen.selected === offset ? direct : locate(file.query, chosen.selected);
+
   if (location?.kind === 'comment') {
     return null;
   }
+
   const path = location?.kind === 'syntax' ? location.path : [];
+
   if (path.some((node) => node.kind === 'opaqueCommand' || node.kind === 'hereDocument')) {
     return null;
   }
+
   return {
     file,
     offset,
@@ -110,6 +133,7 @@ export function cursorAt(
     ...(cached.targets ? { targets: cached.targets } : {}),
   };
 }
+
 export function callAt(cursor: Cursor): SimpleCommandNode | null {
   for (const node of cursor.path.toReversed()) {
     if (
@@ -120,28 +144,35 @@ export function callAt(cursor: Cursor): SimpleCommandNode | null {
     ) {
       return null;
     }
+
     if (node.kind === 'simpleCommand') {
       return node;
     }
   }
+
   return null;
 }
+
 export function functionCommand(command: SimpleCommandNode): boolean {
   return !command.precommandModifiers.some(
     (modifier) => modifier.type === 'builtin' || modifier.type === 'command',
   );
 }
+
 export function inside(range: SourceRange, offset: number): boolean {
   return range.start.offset <= offset && offset <= range.end.offset;
 }
+
 export function protocolRange(range: SourceRange) {
   return {
     start: { line: range.start.line, character: range.start.character },
     end: { line: range.end.line, character: range.end.character },
   };
 }
+
 function tokenAtOffset(tokens: readonly Token[], offset: number): Token | null {
   const index = lowerBound(tokens.length, (index) => tokens[index].range.end.offset <= offset);
   const token = tokens[index];
+
   return token && offset >= token.range.start.offset ? token : null;
 }

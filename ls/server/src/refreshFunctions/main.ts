@@ -37,7 +37,9 @@ export function refreshFunctionSnapshot({
   documents,
   changedPaths,
   previous = createFunctionSnapshot(),
-}: RefreshInput & { readonly previous?: FunctionSnapshot }): FunctionSnapshot {
+}: RefreshInput & {
+  readonly previous?: FunctionSnapshot;
+}): FunctionSnapshot {
   const inputs = 'all' in documents ? documents.all() : documents;
   const hydrator = refreshZshHydrator({
     previous: previous.hydrator,
@@ -46,9 +48,11 @@ export function refreshFunctionSnapshot({
     changedPaths,
   });
   const open = documentSnapshots(inputs, hydrator, previous.documents);
+
   if (previous.hydrator === hydrator && open === previous.documents) {
     return previous;
   }
+
   const projection = sameFunctionFiles(previous.hydrator, hydrator)
     ? {
         functions: previous.functions,
@@ -56,6 +60,7 @@ export function refreshFunctionSnapshot({
         fileProjections: previous.fileProjections,
       }
     : projectFunctions(hydrator, previous.fileProjections);
+
   return {
     hydrator,
     functions: projection.functions,
@@ -72,5 +77,6 @@ export function refreshFunctions(input: RefreshInput): readonly Func[] {
 function sameFunctionFiles(left: ZshHydrator, right: ZshHydrator): boolean {
   const before = [...left.files.values()].filter((entry) => entry.functions.length > 0);
   const after = [...right.files.values()].filter((entry) => entry.functions.length > 0);
+
   return before.length === after.length && before.every((entry, index) => after[index] === entry);
 }

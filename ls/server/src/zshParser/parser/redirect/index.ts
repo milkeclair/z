@@ -1,4 +1,4 @@
-import { List } from 'immutable';
+import * as Immutable from 'immutable';
 import { again, done, loop } from '../../../util/loop';
 import type { HereDocumentNode, RedirectNode, WordNode } from '../../ast';
 import type { SourceRange, Token } from '../../lexer';
@@ -27,13 +27,17 @@ export function isRedirectStart(state: ParseState): boolean {
 }
 
 export function readPostCommandRedirects(state: ParseState): RedirectsReadResult {
-  const initial = { current: state, redirects: List<RedirectNode>() };
+  const initial = { current: state, redirects: Immutable.List<RedirectNode>() };
+
   return loop<typeof initial, RedirectsReadResult>(initial, (progress) => {
     const candidate = skipInlineTrivia(progress.current);
+
     if (!isRedirectStart(candidate)) {
       return done({ redirects: progress.redirects.toArray(), state: progress.current });
     }
+
     const result = readRedirectNode(candidate);
+
     return again({ current: result.state, redirects: progress.redirects.push(result.node) });
   });
 }
@@ -155,6 +159,7 @@ function isAsciiDigit(char: string): boolean {
 
 function readHereDocumentDelimiter(state: ParseState): NodeResult<WordNode> {
   const token = currentToken(state);
+
   return {
     node: {
       kind: 'word',

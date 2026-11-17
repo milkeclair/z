@@ -1,4 +1,4 @@
-import { OrderedSet } from 'immutable';
+import * as Immutable from 'immutable';
 import { spawn } from 'node:child_process';
 import { createIOState } from '../util/ioState';
 import { again, done, loop } from '../util/loop';
@@ -38,18 +38,20 @@ const QUERY = [
 ].join('\n');
 
 type SymbolTables = {
-  readonly commands: OrderedSet<string>;
-  readonly builtins: OrderedSet<string>;
-  readonly aliases: OrderedSet<string>;
-  readonly functions: OrderedSet<string>;
-  readonly globalAliases: OrderedSet<string>;
-  readonly suffixAliases: OrderedSet<string>;
+  readonly commands: Immutable.OrderedSet<string>;
+  readonly builtins: Immutable.OrderedSet<string>;
+  readonly aliases: Immutable.OrderedSet<string>;
+  readonly functions: Immutable.OrderedSet<string>;
+  readonly globalAliases: Immutable.OrderedSet<string>;
+  readonly suffixAliases: Immutable.OrderedSet<string>;
 };
+
 type EnvironmentProgress = {
   readonly index: number;
   readonly commandBuiltins: boolean;
   readonly tables: SymbolTables;
 };
+
 const TABLE_NAMES: Readonly<Record<string, keyof SymbolTables | undefined>> = {
   command: 'commands',
   builtin: 'builtins',
@@ -61,6 +63,7 @@ const TABLE_NAMES: Readonly<Record<string, keyof SymbolTables | undefined>> = {
 
 function environmentFrom(progress: EnvironmentProgress): ShellEnvironment {
   const tables = progress.tables;
+
   return {
     kind: 'available',
     commandBuiltins: progress.commandBuiltins,
@@ -76,37 +79,46 @@ function environmentFrom(progress: EnvironmentProgress): ShellEnvironment {
 export function parseShellEnvironment(output: string): ShellEnvironment {
   const marker = '__ZLS_ENV_V1__' + String.fromCharCode(0);
   const start = output.indexOf(marker);
+
   if (start < 0) {
     return { kind: 'unavailable', reason: 'invalid-output' };
   }
+
   const words = output.slice(start + marker.length).split(String.fromCharCode(0));
   const initial: EnvironmentProgress = {
     index: 0,
     commandBuiltins: false,
     tables: {
-      commands: OrderedSet(),
-      builtins: OrderedSet(),
-      aliases: OrderedSet(),
-      functions: OrderedSet(),
-      globalAliases: OrderedSet(),
-      suffixAliases: OrderedSet(),
+      commands: Immutable.OrderedSet(),
+      builtins: Immutable.OrderedSet(),
+      aliases: Immutable.OrderedSet(),
+      functions: Immutable.OrderedSet(),
+      globalAliases: Immutable.OrderedSet(),
+      suffixAliases: Immutable.OrderedSet(),
     },
   };
+
   return loop<EnvironmentProgress, ShellEnvironment>(initial, (progress) => {
     const kind = words[progress.index];
+
     if (kind === '__ZLS_ENV_END__') {
       return done(environmentFrom(progress));
     }
+
     const name = words[progress.index + 1];
+
     if (!name) {
       return done({ kind: 'unavailable', reason: 'invalid-output' });
     }
+
     if (kind === 'option') {
       return name === 'command-builtins'
         ? again({ ...progress, index: progress.index + 2, commandBuiltins: true })
         : done({ kind: 'unavailable', reason: 'invalid-output' });
     }
+
     const table = Object.hasOwn(TABLE_NAMES, kind) ? TABLE_NAMES[kind] : undefined;
+
     return table
       ? again({
           ...progress,
@@ -142,10 +154,12 @@ export function readShellEnvironment({
       detached: process.platform !== 'win32',
     });
     const state = createIOState<ProbeState>({ bytes: 0, settled: false, output: [] });
+
     function stop(): void {
       if (!child.pid) {
         return;
       }
+
       try {
         if (process.platform === 'win32') {
           child.kill('SIGKILL');
@@ -156,19 +170,23 @@ export function readShellEnvironment({
         child.kill('SIGKILL');
       }
     }
+
     function finish(result: ShellEnvironment): void {
       if (state.read().settled) {
         return;
       }
+
       state.update((previous) => ({ ...previous, settled: true }));
       clearTimeout(timer);
       process.removeListener('exit', stop);
       stop();
       resolve(result);
     }
+
     function receive(buffer: Buffer, keep: boolean): void {
       state.update((previous) => ({ ...previous, bytes: previous.bytes + buffer.length }));
       const current = state.read();
+
       if (current.bytes > maxBytes) {
         finish({ kind: 'unavailable', reason: 'output-limit' });
       } else if (keep && !current.settled) {

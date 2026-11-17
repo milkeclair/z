@@ -8,6 +8,7 @@ import type {
   UntilCommandNode,
   WhileCommandNode,
 } from '../../../ast';
+
 export type CompoundContents =
   | Pick<IfCommandNode, 'kind' | 'branches' | 'elseBody'>
   | Pick<WhileCommandNode | UntilCommandNode, 'kind' | 'condition' | 'body'>

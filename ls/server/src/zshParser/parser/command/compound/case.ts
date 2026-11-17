@@ -1,15 +1,16 @@
-import { List } from 'immutable';
+import * as Immutable from 'immutable';
 import { again, done, loop } from '../../../../util/loop';
 import type { CaseArmNode, WordNode } from '../../../ast';
 import type { ParserContext } from '../../context';
 import type { NodeResult, ParseState } from '../../state';
 import { addDiagnostic, advanceState, currentToken, skipTrivia } from '../../state';
 import { readWordNode } from '../../word/composite';
-import { endAt, isWordStart, skipTerms, takeKeyword } from './syntax';
+import { endAt, isWordStart, skipCommandTerm, takeKeyword } from './syntax';
 import type { CompoundContents } from './types';
 
 function readSubject(state: ParseState): NodeResult<WordNode | null> {
   const current = skipTrivia(state);
+
   return isWordStart(current)
     ? readWordNode(current)
     : {
@@ -22,26 +23,35 @@ function readSubject(state: ParseState): NodeResult<WordNode | null> {
         }),
       };
 }
+
 function readPatterns(state: ParseState): {
   readonly patterns: readonly WordNode[];
   readonly state: ParseState;
 } {
-  const initial = { current: state, patterns: List<WordNode>() };
+  const initial = { current: state, patterns: Immutable.List<WordNode>() };
+
   return loop<
     typeof initial,
-    { readonly patterns: readonly WordNode[]; readonly state: ParseState }
+    {
+      readonly patterns: readonly WordNode[];
+      readonly state: ParseState;
+    }
   >(initial, (progress) => {
     const token = currentToken(progress.current);
+
     if (token.kind === 'eof' || token.operatorKind === 'rightParen') {
       return done({ patterns: progress.patterns.toArray(), state: progress.current });
     }
+
     const word = isWordStart(progress.current) ? readWordNode(progress.current) : null;
+
     return again({
       current: skipTrivia(word?.state ?? advanceState(progress.current)),
       patterns: word ? progress.patterns.push(word.node) : progress.patterns,
     });
   });
 }
+
 function readCaseArm(state: ParseState, context: ParserContext): NodeResult<CaseArmNode> {
   const open = currentToken(state);
   const patterns = readPatterns(open.operatorKind === 'leftParen' ? advanceState(state) : state);
@@ -67,6 +77,7 @@ function readCaseArm(state: ParseState, context: ParserContext): NodeResult<Case
   const close = currentToken(body.state);
   const termination =
     close.value === ';;' || close.value === ';&' || close.value === ';|' ? close.value : null;
+
   return {
     node: {
       kind: 'caseArm',
@@ -79,23 +90,27 @@ function readCaseArm(state: ParseState, context: ParserContext): NodeResult<Case
     state: body.state,
   };
 }
+
 export function readCaseBody(
   state: ParseState,
   context: ParserContext,
 ): NodeResult<CompoundContents> {
   const subject = readSubject(state);
-  const afterIn = skipTerms(takeKeyword(skipTerms(subject.state), 'in').state);
-  const initial = { current: afterIn, arms: List<CaseArmNode>() };
+  const afterIn = skipCommandTerm(takeKeyword(skipCommandTerm(subject.state), 'in').state);
+  const initial = { current: afterIn, arms: Immutable.List<CaseArmNode>() };
   const parsed = loop<typeof initial, typeof initial>(initial, (progress) => {
     if (endAt('esac')(currentToken(progress.current))) {
       return done(progress);
     }
+
     const arm = readCaseArm(progress.current, context);
     const arms = progress.arms.push(arm.node);
+
     return arm.node.termination
-      ? again({ current: skipTerms(advanceState(arm.state)), arms })
+      ? again({ current: skipCommandTerm(advanceState(arm.state)), arms })
       : done({ current: arm.state, arms });
   });
+
   return {
     node: { kind: 'caseCommand', subject: subject.node, arms: parsed.arms.toArray() },
     state: parsed.current,

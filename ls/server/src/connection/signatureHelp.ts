@@ -15,6 +15,7 @@ import type { LanguageFeatureRequest } from './type';
 
 function signatureToken(arg: FuncArg): string {
   const token = argumentDisplay(arg);
+
   return arg.optional ? '[' + token + ']' : token;
 }
 
@@ -27,6 +28,7 @@ function parameterInformation(doc: Result, arg: FuncArg): ParameterInformation {
 
 function signatureInformation(target: FunctionTarget, index: number): SignatureInformation {
   const func = target.info;
+
   return {
     label: [func.name, ...func.args.map(signatureToken)].join(' '),
     documentation: { kind: MarkupKind.Markdown, value: func.documentation.description },
@@ -42,15 +44,20 @@ export function zSignatureHelp({
   programs,
 }: LanguageFeatureRequest<SignatureHelpParams>): SignatureHelp | null {
   const document = documents.get(params.textDocument.uri);
+
   if (!document) {
     return null;
   }
+
   const cursor = cursorAt(snapshot, document, document.offsetAt(params.position), programs);
+
   if (!cursor) {
     return null;
   }
+
   const target = calledFunction(snapshot, cursor);
   const active = target && activeArgument(target, cursor);
+
   return target && active
     ? {
         signatures: [signatureInformation(target, active.index)],

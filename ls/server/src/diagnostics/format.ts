@@ -1,13 +1,16 @@
-import { List } from 'immutable';
+import * as Immutable from 'immutable';
 import { again, done, loop } from '../util/loop';
 import { DiagnosticSeverity } from '../vscode_type';
 import type { ZshFileHydration } from '../zshHydrator';
 import type { Diagnostics } from './type';
+
 export function formatDiagnostics(file: ZshFileHydration): readonly Diagnostics[] {
   const text = file.tokens.map((token) => token.value).join('');
+
   if (!text) {
     return [];
   }
+
   const scanned = text.split('\n').reduce(
     (state, physical, lineIndex) => {
       const line = physical.endsWith('\r') ? physical.slice(0, -1) : physical;
@@ -38,17 +41,21 @@ export function formatDiagnostics(file: ZshFileHydration): readonly Diagnostics[
               source: 'z-ls',
             })
           : state.diagnostics;
+
       return { offset: state.offset + physical.length + 1, tokenIndex, diagnostics };
     },
-    { offset: 0, tokenIndex: 0, diagnostics: List<Diagnostics>() },
+    { offset: 0, tokenIndex: 0, diagnostics: Immutable.List<Diagnostics>() },
   );
+
   if (text.endsWith('\n')) {
     return scanned.diagnostics.toArray();
   }
+
   const position = {
     line: file.ast.eof.range.start.line,
     character: file.ast.eof.range.start.character,
   };
+
   return scanned.diagnostics
     .push({
       severity: DiagnosticSeverity.Warning,

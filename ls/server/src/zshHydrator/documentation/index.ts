@@ -1,4 +1,4 @@
-import { List, OrderedSet } from 'immutable';
+import * as Immutable from 'immutable';
 import type { CommentNode, DocBlockNode } from '../../zshParser/ast';
 import type { HydrationOptions } from '../directive';
 import { commentPayload, parseDirective } from '../directive';
@@ -12,43 +12,54 @@ import type {
   HydrationDiagnostic,
   ParameterDoc,
 } from './types';
+
 export type * from './types';
 
 type SectionKind = 'reply' | 'returns' | 'example';
+
 type Section = {
   readonly kind: SectionKind;
   readonly indent: number;
   readonly first: CommentNode;
   readonly last: CommentNode;
-  readonly text: List<string>;
+  readonly text: Immutable.List<string>;
 };
+
 type DocumentationProgress = {
-  readonly description: List<DocDescription>;
-  readonly parameters: List<ParameterDoc>;
-  readonly examples: List<DocExample>;
-  readonly diagnostics: List<HydrationDiagnostic>;
-  readonly exampleComments: OrderedSet<number>;
+  readonly description: Immutable.List<DocDescription>;
+  readonly parameters: Immutable.List<ParameterDoc>;
+  readonly examples: Immutable.List<DocExample>;
+  readonly diagnostics: Immutable.List<HydrationDiagnostic>;
+  readonly exampleComments: Immutable.OrderedSet<number>;
   readonly reply: DocReply | null;
   readonly returns: DocReturn | null;
   readonly section: Section | null;
 };
-type SectionHeader = { readonly kind: SectionKind; readonly length: number };
+
+type SectionHeader = {
+  readonly kind: SectionKind;
+  readonly length: number;
+};
 
 function sectionHeader(payload: string): SectionHeader | null {
   if (payload.startsWith('REPLY:')) {
     return { kind: 'reply', length: 6 };
   }
+
   if (payload.startsWith('return:')) {
     return { kind: 'returns', length: 7 };
   }
+
   return payload.startsWith('example:') ? { kind: 'example', length: 8 } : null;
 }
 
 function finishSection(state: DocumentationProgress, source: string): DocumentationProgress {
   const section = state.section;
+
   if (!section) {
     return state;
   }
+
   const range = { start: section.first.range.start, end: section.last.range.end };
   const raw = source.slice(range.start.offset, range.end.offset);
   const lines = section.text
@@ -59,6 +70,7 @@ function finishSection(state: DocumentationProgress, source: string): Documentat
   const joined = lines.join('\n');
   const text = section.kind === 'example' ? joined : joined.trim();
   const base = { ...state, section: null };
+
   switch (section.kind) {
     case 'reply':
       return { ...base, reply: { kind: 'docReply', range, raw, text } };
@@ -75,11 +87,13 @@ function readComment(
   source: string,
   options: HydrationOptions,
 ): DocumentationProgress {
-  const info = commentPayload(comment),
-    payload = info.text;
+  const info = commentPayload(comment);
+  const payload = info.text;
   const header = sectionHeader(payload);
+
   if (header && !(state.section?.kind === 'example' && info.start > state.section.indent)) {
     const finished = finishSection(state, source);
+
     return {
       ...finished,
       section: {
@@ -87,7 +101,7 @@ function readComment(
         indent: info.start,
         first: comment,
         last: comment,
-        text: List([payload.slice(header.length).trimStart()]),
+        text: Immutable.List([payload.slice(header.length).trimStart()]),
       },
       exampleComments:
         header.kind === 'example'
@@ -95,23 +109,29 @@ function readComment(
           : finished.exampleComments,
     };
   }
+
   const section = state.section;
+
   if (section?.kind === 'example') {
     const content = comment.text.slice(
       comment.text.startsWith('# ') ? 2 : comment.text.startsWith('#') ? 1 : 0,
     );
+
     return {
       ...state,
       section: { ...section, last: comment, text: section.text.push(content) },
       exampleComments: state.exampleComments.add(comment.range.start.offset),
     };
   }
+
   if (parseDirective(comment, options)) {
     return state;
   }
+
   if (payload.startsWith('$')) {
-    const finished = finishSection(state, source),
-      parameter = parseParameter(comment);
+    const finished = finishSection(state, source);
+    const parameter = parseParameter(comment);
+
     return parameter
       ? { ...finished, parameters: finished.parameters.push(parameter) }
       : {
@@ -123,9 +143,11 @@ function readComment(
           }),
         };
   }
+
   if (section) {
     return { ...state, section: { ...section, last: comment, text: section.text.push(payload) } };
   }
+
   return {
     ...state,
     description: state.description.push({
@@ -146,11 +168,11 @@ export function parseFunctionDocumentation(
   readonly exampleComments: ReadonlySet<number>;
 } {
   const initial: DocumentationProgress = {
-    description: List(),
-    parameters: List(),
-    examples: List(),
-    diagnostics: List(),
-    exampleComments: OrderedSet(),
+    description: Immutable.List(),
+    parameters: Immutable.List(),
+    examples: Immutable.List(),
+    diagnostics: Immutable.List(),
+    exampleComments: Immutable.OrderedSet(),
     reply: null,
     returns: null,
     section: null,
@@ -160,6 +182,7 @@ export function parseFunctionDocumentation(
     initial,
   );
   const result = finishSection(parsed, source);
+
   return {
     documentation: {
       kind: 'functionDocumentation',

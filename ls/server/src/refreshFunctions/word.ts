@@ -5,5 +5,6 @@ export function literalWord(word: WordNode, end = word.raw.length): string | nul
   if (word.parts.some((part) => part.kind !== 'stringLiteral')) {
     return null;
   }
+
   return hereDocDelimiter(word.raw.slice(0, end)).delimiter;
 }

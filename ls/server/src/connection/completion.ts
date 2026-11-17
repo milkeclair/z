@@ -17,23 +17,30 @@ export function zCompletion({
   snapshot,
   showPrivateFunctions,
   programs,
-}: LanguageFeatureRequest<CompletionParams> & { readonly showPrivateFunctions: boolean }):
-  | CompletionItem[]
-  | null {
+}: LanguageFeatureRequest<CompletionParams> & {
+  readonly showPrivateFunctions: boolean;
+}): CompletionItem[] | null {
   const document = documents.get(params.textDocument.uri);
+
   if (!document) {
     return null;
   }
+
   const requestOffset = document.offsetAt(params.position);
   const cursor = cursorAt(snapshot, document, requestOffset, programs);
+
   if (!cursor) {
     return [];
   }
+
   const completion = completionAtCursor(cursor, params.position);
+
   if (!completion) {
     return [];
   }
+
   const { prefix, range } = completion;
+
   return [...candidateNames(snapshot, cursor)].flatMap((name): CompletionItem[] => {
     if (
       !name.startsWith(prefix) ||
@@ -41,13 +48,17 @@ export function zCompletion({
     ) {
       return [];
     }
+
     const target = resolveFunction(snapshot, name, cursor);
+
     if (!target) {
       return [];
     }
+
     const edit = cursor.program
       ? codeEdit(cursor.program, range, commandInsertion(name))
       : { range, newText: commandInsertion(name) };
+
     if (
       edit.range.start.line !== edit.range.end.line ||
       edit.range.start.offset > requestOffset ||
@@ -55,6 +66,7 @@ export function zCompletion({
     ) {
       return [];
     }
+
     return [
       {
         label: name,
@@ -107,6 +119,7 @@ function isCommandSeparator(token: Token | null): boolean {
 
 function followsCommandKeyword(cursor: Cursor): boolean {
   const token = cursor.token;
+
   return (
     token?.kind === 'word' &&
     cursor.offset >= token.range.end.offset &&
@@ -119,9 +132,11 @@ function startsSubstitutionBody(cursor: Cursor): boolean {
   const substitution = cursor.path.findLast(
     (node) => node.kind === 'commandSubstitution' || node.kind === 'processSubstitution',
   );
+
   if (!substitution?.body) {
     return false;
   }
+
   return (
     cursor.offset >= substitution.body.range.start.offset &&
     cursor.offset <=
@@ -152,11 +167,14 @@ function canStartCommand(cursor: Cursor): boolean {
   if (startsSubstitutionBody(cursor)) {
     return true;
   }
+
   const keyword = followsCommandKeyword(cursor);
   const token = cursor.token;
+
   if (token && token.kind !== 'eof' && !isCommandSeparator(token) && !keyword) {
     return false;
   }
+
   const insideWord = cursor.path.some(
     (node) =>
       node.kind === 'word' ||
@@ -165,27 +183,37 @@ function canStartCommand(cursor: Cursor): boolean {
       node.kind === 'precommandModifier' ||
       node.kind === 'arithmeticExpansion',
   );
+
   return !insideWord && (keyword || !insideCompoundHeader(cursor));
 }
 
 function completionAtCursor(
   cursor: Cursor,
   requestPosition: Position,
-): { readonly prefix: string; readonly range: SourceRange } | null {
+): {
+  readonly prefix: string;
+  readonly range: SourceRange;
+} | null {
   const call = callAt(cursor);
   const word = call?.commandName?.word;
+
   if (word && inside(word.range, cursor.offset)) {
     if (!functionCommand(call) || word.range.start.line !== word.range.end.line) {
       return null;
     }
+
     const prefix = literalWord(word, cursor.offset - word.range.start.offset);
+
     return prefix === null ? null : { prefix, range: word.range };
   }
+
   if (!canStartCommand(cursor)) {
     return null;
   }
+
   const position = cursor.program
     ? textPosition(cursor.program.lineStarts, cursor.offset)
     : { ...requestPosition, offset: cursor.offset };
+
   return { prefix: '', range: { start: position, end: position } };
 }

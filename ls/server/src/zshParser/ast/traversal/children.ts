@@ -1,27 +1,37 @@
-import { List } from 'immutable';
+import * as Immutable from 'immutable';
 import type { AstNode } from '..';
 import { again, done, loop } from '../../../util/loop';
 
-export type ChildCursor = { readonly node: AstNode; readonly tail: () => ChildCursor | null };
+export type ChildCursor = {
+  readonly node: AstNode;
+  readonly tail: () => ChildCursor | null;
+};
+
 function one(node: AstNode | null | undefined): ChildCursor | null {
   return node ? { node, tail: () => null } : null;
 }
+
 function fromArray(nodes: readonly AstNode[], index = 0): ChildCursor | null {
   const node = nodes[index];
+
   return node ? { node, tail: () => fromArray(nodes, index + 1) } : null;
 }
+
 function concat(first: ChildCursor | null, rest: () => ChildCursor | null): ChildCursor | null {
   return first ? { node: first.node, tail: () => concat(first.tail(), rest) } : rest();
 }
+
 function many(...groups: readonly (ChildCursor | null)[]): ChildCursor | null {
   return groups.reduceRight<ChildCursor | null>((rest, group) => concat(group, () => rest), null);
 }
+
 function pairs<T>(
   items: readonly T[],
   select: (item: T) => readonly [AstNode, AstNode],
   index = 0,
 ): ChildCursor | null {
   const item = items[index];
+
   return item ? concat(fromArray(select(item)), () => pairs(items, select, index + 1)) : null;
 }
 
@@ -126,7 +136,9 @@ export function syntaxChildCursor(node: AstNode): ChildCursor | null {
     case 'arithmeticExpansion':
       return null;
   }
+
   const exhaustive: never = node;
+
   return exhaustive;
 }
 
@@ -142,6 +154,7 @@ function relatedOnly(node: AstNode): ChildCursor | null {
       if (node.semantic.role === 'source') {
         return one(node.semantic.source.target);
       }
+
       if (node.semantic.role === 'declaration') {
         return many(
           fromArray(node.semantic.declaration.options),
@@ -149,40 +162,51 @@ function relatedOnly(node: AstNode): ChildCursor | null {
           fromArray(node.semantic.declaration.names),
         );
       }
+
       return null;
     default:
       return null;
   }
 }
+
 export function relatedChildCursor(node: AstNode): ChildCursor | null {
   return concat(syntaxChildCursor(node), () => relatedOnly(node));
 }
 
 function cursorArray(cursor: ChildCursor | null): readonly AstNode[] {
   return loop<
-    { readonly cursor: ChildCursor | null; readonly nodes: List<AstNode> },
+    {
+      readonly cursor: ChildCursor | null;
+      readonly nodes: Immutable.List<AstNode>;
+    },
     readonly AstNode[]
-  >({ cursor, nodes: List() }, (state) =>
+  >({ cursor, nodes: Immutable.List() }, (state) =>
     state.cursor
       ? again({ cursor: state.cursor.tail(), nodes: state.nodes.push(state.cursor.node) })
       : done(state.nodes.toArray()),
   );
 }
+
 export function* syntaxChildren(node: AstNode): Generator<AstNode> {
   yield* cursorArray(syntaxChildCursor(node));
 }
+
 export function* withRelatedChildren(node: AstNode): Generator<AstNode> {
   yield* cursorArray(relatedChildCursor(node));
 }
+
 export function forEachChild(node: AstNode, visit: (child: AstNode) => void): void {
   loop<ChildCursor | null, void>(syntaxChildCursor(node), (cursor) => {
     if (!cursor) {
       return done(undefined);
     }
+
     visit(cursor.node);
+
     return again(cursor.tail());
   });
 }
+
 export function someChild(
   cursor: ChildCursor | null,
   predicate: (node: AstNode) => boolean,

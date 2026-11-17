@@ -22,6 +22,7 @@ type QuoteReadValue = QuotedValue & {
 function readQuoted(cursor: Cursor, definition: QuoteDefinition): ReadResult<QuoteReadValue> {
   const end = delimitedEnd(cursor.text, cursor.position.offset, definition.quoteKind);
   const result = advance(cursor, (end ?? cursor.text.length) - cursor.position.offset);
+
   return {
     value: { text: result.value, closed: end !== null, quoteKind: definition.quoteKind },
     cursor: result.cursor,

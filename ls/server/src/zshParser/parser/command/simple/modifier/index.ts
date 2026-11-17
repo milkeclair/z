@@ -1,4 +1,4 @@
-import { List, Range } from 'immutable';
+import * as Immutable from 'immutable';
 import { again, done, loop } from '../../../../../util/loop';
 import type { OptionNode, PrecommandModifierNode, PrecommandModifierType } from '../../../../ast';
 import type { Token } from '../../../../lexer';
@@ -62,10 +62,12 @@ function readPrecommandOptions({
   readonly type: PrecommandModifierType;
   readonly options: readonly OptionNode[];
 }): OptionsResult {
-  const initial = { current: state, options: List(options) };
+  const initial = { current: state, options: Immutable.List(options) };
+
   return loop<typeof initial, OptionsResult>(initial, (progress) => {
     const candidate = skipInlineTrivia(progress.current);
     const option = createPrecommandOption(type, currentToken(candidate), candidate);
+
     return option
       ? again({ current: option.state, options: progress.options.push(option.node) })
       : done({ options: progress.options.toArray(), state: progress.current });
@@ -147,9 +149,9 @@ function isExecFlagOption(value: string): boolean {
 }
 
 function containsOnlyCommandOptionChars(value: string, index: number): boolean {
-  return Range(index, value.length).every((cursor) => 'pvV'.includes(value[cursor]));
+  return Immutable.Range(index, value.length).every((cursor) => 'pvV'.includes(value[cursor]));
 }
 
 function containsOnlyExecFlagOptionChars(value: string, index: number): boolean {
-  return Range(index, value.length).every((cursor) => 'cl'.includes(value[cursor]));
+  return Immutable.Range(index, value.length).every((cursor) => 'cl'.includes(value[cursor]));
 }

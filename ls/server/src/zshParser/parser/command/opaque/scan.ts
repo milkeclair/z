@@ -21,16 +21,22 @@ export function findOperatorEndIndex({
     0,
     endOperatorKind === 'conditionEnd' ? 'condition' : 'arithmetic',
   );
+
   if (end === null) {
     return null;
   }
+
   const initial = { index: start, length: 0 };
+
   return loop<typeof initial, number | null>(initial, (state) => {
     const token = tokens[state.index];
+
     if (!token) {
       return done(null);
     }
+
     const length = state.length + token.value.length;
+
     return length >= end ? done(state.index) : again({ index: state.index + 1, length });
   });
 }
@@ -38,6 +44,7 @@ export function findOperatorEndIndex({
 export function findLineBoundaryIndex(tokens: readonly Token[], index: number): number {
   return loop(index, (cursor) => {
     const token = tokens[cursor];
+
     return token && token.kind !== 'eof' && token.kind !== 'newline'
       ? again(cursor + 1)
       : done(cursor);

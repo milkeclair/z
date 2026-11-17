@@ -1,5 +1,5 @@
 import { globSync } from 'glob';
-import { OrderedMap, OrderedSet } from 'immutable';
+import * as Immutable from 'immutable';
 import type { TextDocument, TextDocuments } from '../vscode_type';
 import type { HydrationOptions } from './directive';
 import {
@@ -60,6 +60,7 @@ export function refreshZshHydrator({
   if (projectRoot === '') {
     return { ...EmptyZshHydrator, options };
   }
+
   const compatible =
     previous.projectRoot === projectRoot &&
     JSON.stringify(previous.options) === JSON.stringify(options);
@@ -70,6 +71,7 @@ export function refreshZshHydrator({
       ? updateHydratorFromInputs(prior, inputs, changedPaths)
       : createHydratorFromInputs({ previous: prior, projectRoot, options, documents: inputs });
   const priorPaths = [...previous.files.keys()];
+
   if (
     compatible &&
     next.diskPaths.size === previous.diskPaths.size &&
@@ -81,6 +83,7 @@ export function refreshZshHydrator({
   ) {
     return previous;
   }
+
   return next;
 }
 
@@ -112,6 +115,7 @@ function createHydratorFromInputs({
     const entry = document
       ? hydrateOpenDocument({ previous, input: document })
       : hydrateDiskFile({ previous, projectRoot, relativePath });
+
     return entry ? [entry] : [];
   });
   const documentOnlyEntries = documents
@@ -142,10 +146,14 @@ function updateHydratorFromInputs(
   const added = documents
     .filter((input) => !previous.files.has(input.relativePath))
     .map((input) => input.relativePath);
-  const pending = OrderedSet([...changed, ...closed, ...added]);
-  const initial = { files: OrderedMap(previous.files), diskPaths: OrderedSet(previous.diskPaths) };
+  const pending = Immutable.OrderedSet([...changed, ...closed, ...added]);
+  const initial = {
+    files: Immutable.OrderedMap(previous.files),
+    diskPaths: Immutable.OrderedSet(previous.diskPaths),
+  };
   const disk = pending.reduce((current, filename) => {
     const document = open.get(filename);
+
     if (document) {
       return {
         ...current,
@@ -155,9 +163,11 @@ function updateHydratorFromInputs(
             : current.diskPaths.delete(filename),
       };
     }
+
     const entry = isTrackedDiskPath(filename)
       ? hydrateDiskFile({ previous, projectRoot: previous.projectRoot, relativePath: filename })
       : null;
+
     return entry
       ? { files: current.files.set(filename, entry), diskPaths: current.diskPaths.add(filename) }
       : { files: current.files.delete(filename), diskPaths: current.diskPaths.delete(filename) };
@@ -168,12 +178,15 @@ function updateHydratorFromInputs(
   );
   const diskEntries = [...disk.diskPaths].toSorted().flatMap((filename) => {
     const entry = files.get(filename);
+
     return entry ? [entry] : [];
   });
   const openEntries = documents.flatMap((input) => {
     const entry = files.get(input.relativePath);
+
     return entry && !disk.diskPaths.has(input.relativePath) ? [entry] : [];
   });
+
   return {
     ...previous,
     diskPaths: new Set(disk.diskPaths),

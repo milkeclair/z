@@ -1,4 +1,4 @@
-import { List, OrderedMap, OrderedSet } from 'immutable';
+import * as Immutable from 'immutable';
 import { resolveFunction } from '../connection/ast/context';
 import { functionCommand, protocolRange } from '../connection/ast/cursor';
 import { namedKey } from '../connection/ast/word';
@@ -14,11 +14,13 @@ import type { IgnoreControls } from './controls';
 import { ignored } from './controls';
 import { simpleParameter } from './facts';
 import type { Diagnostics } from './type';
+
 export type { ResolutionContext } from './commandResolution';
 
 export function uncertainWord(word: WordNode, context: ResolutionContext): boolean {
   const environment = context.environment;
   const literal = literalWord(word);
+
   if (literal !== null) {
     if (
       !word.quoted &&
@@ -27,11 +29,14 @@ export function uncertainWord(word: WordNode, context: ResolutionContext): boole
     ) {
       return true;
     }
+
     return !word.quoted && [...word.raw].some((char) => '*?[{~('.includes(char));
   }
+
   if (word.quoteKind !== 'double') {
     return true;
   }
+
   return word.parts.some(
     (part) =>
       part.kind === 'parameterExpansion' &&
@@ -46,9 +51,11 @@ function argumentDiagnostics(
   mapRange: (range: SourceRange) => SourceRange,
 ): readonly Diagnostics[] {
   const parameters = documentationOf(definition)?.parameters ?? [];
+
   if (!parameters.length || command.arguments.some((word) => uncertainWord(word, context))) {
     return [];
   }
+
   const named = new Set(
     parameters
       .filter((parameter) => parameter.kind === 'namedParameterDoc')
@@ -57,11 +64,12 @@ function argumentDiagnostics(
   const supplied = command.arguments.reduce(
     (current, word) => {
       const key = namedKey(word);
+
       return key && named.has(key)
         ? { ...current, present: current.present.add(key) }
         : { ...current, positional: current.positional + 1 };
     },
-    { present: OrderedSet<string>(), positional: 0 },
+    { present: Immutable.OrderedSet<string>(), positional: 0 },
   );
   const { present, positional } = supplied;
   const range = protocolRange(mapRange(command.commandName?.range ?? command.range));
@@ -101,10 +109,14 @@ function argumentDiagnostics(
         ]
       : [],
   );
+
   return [...positionalDiagnostics, ...namedDiagnostics];
 }
 
-export type CallScope = { readonly file: ZshFileHydration; readonly offset: number };
+export type CallScope = {
+  readonly file: ZshFileHydration;
+  readonly offset: number;
+};
 
 export type CallAnalysisOptions = {
   readonly scopes?: readonly CallScope[];
@@ -125,19 +137,22 @@ function localDefinitions(
   if (snapshot.hydrator.files.get(file.file) === file) {
     return new Map();
   }
-  const grouped = OrderedSet(file.functions.map((entry) => entry.definition)).reduce(
+
+  const grouped = Immutable.OrderedSet(file.functions.map((entry) => entry.definition)).reduce(
     (groups, definition) =>
       definition.names.reduce((previous, word) => {
         const name = literalWord(word);
+
         return name
           ? previous.set(
               name,
-              (previous.get(name) ?? List<FunctionDefinitionNode>()).push(definition),
+              (previous.get(name) ?? Immutable.List<FunctionDefinitionNode>()).push(definition),
             )
           : previous;
       }, groups),
-    OrderedMap<string, List<FunctionDefinitionNode>>(),
+    Immutable.OrderedMap<string, Immutable.List<FunctionDefinitionNode>>(),
   );
+
   return new Map(grouped.map((definitions) => definitions.toArray()));
 }
 
@@ -148,6 +163,7 @@ function localDefinition(
   offset: number,
 ) {
   const candidates = definitions.get(name) ?? [];
+
   return (
     candidates.findLast((definition) => definition.range.start.offset <= offset) ?? candidates[0]
   );
@@ -170,12 +186,13 @@ export function analyzeCalls(
   const mapRange = options.mapRange ?? ((range) => range);
   const incomplete = file.lexerDiagnostics.length > 0 || file.parserDiagnostics.length > 0;
   const initial = {
-    diagnostics: List<Diagnostics>(),
-    targets: OrderedMap<SimpleCommandNode, FunctionDefinitionNode>(),
+    diagnostics: Immutable.List<Diagnostics>(),
+    targets: Immutable.OrderedMap<SimpleCommandNode, FunctionDefinitionNode>(),
   };
   const result = commands.reduce((previous, command) => {
-    const word = command.commandName?.word,
-      name = word && literalWord(word);
+    const word = command.commandName?.word;
+    const name = word && literalWord(word);
+
     if (
       !word ||
       !name ||
@@ -184,14 +201,17 @@ export function analyzeCalls(
     ) {
       return previous;
     }
+
     const inspect = command.precommandModifiers.some(
       (modifier) =>
         modifier.type === 'command' &&
         modifier.options.some((option) => option.name.includes('v') || option.name.includes('V')),
     );
+
     if (inspect || isAliasReference(name, word, context)) {
       return previous;
     }
+
     const inherited = scopes
       .map((scope) => localDefinition(scope.definitions, name, scope.offset))
       .find((target) => target !== undefined);
@@ -203,6 +223,7 @@ export function analyzeCalls(
           offset: origin?.offset ?? word.range.start.offset,
         })?.definition)
       : null;
+
     if (target) {
       const diagnostics = incomplete
         ? previous.diagnostics
@@ -213,14 +234,18 @@ export function analyzeCalls(
                 !ignored(options.ignores, word.range.start.line, diagnostic.code),
             ),
           );
+
       return { diagnostics, targets: previous.targets.set(command, target) };
     }
+
     if (context.autoloads.has(name) && functionCommand(command)) {
       return previous;
     }
+
     const unknown =
       isKnownShellCommand(name, command, context) === false &&
       (!options.ignores || !ignored(options.ignores, word.range.start.line, 'undefined-command'));
+
     return unknown
       ? {
           ...previous,
@@ -234,6 +259,7 @@ export function analyzeCalls(
         }
       : previous;
   }, initial);
+
   return { diagnostics: result.diagnostics.toArray(), targets: new Map(result.targets) };
 }
 

@@ -1,4 +1,4 @@
-import { List } from 'immutable';
+import * as Immutable from 'immutable';
 import { again, done, loop } from '../../../../util/loop';
 import type { IfBranchNode } from '../../../ast';
 import type { Token } from '../../../lexer';
@@ -13,7 +13,7 @@ export function readIfBody(
   context: ParserContext,
   open: Token,
 ): NodeResult<CompoundContents> {
-  const initial = { current: state, keyword: open, branches: List<IfBranchNode>() };
+  const initial = { current: state, keyword: open, branches: Immutable.List<IfBranchNode>() };
   const parsed = loop<typeof initial, typeof initial>(initial, (progress) => {
     const condition = context.parseNestedList(progress.current, endAt('then', 'fi'));
     const then = takeKeyword(condition.state, 'then');
@@ -27,6 +27,7 @@ export function readIfBody(
       body: body.node,
     });
     const keyword = currentToken(body.state);
+
     return isWord(keyword, 'elif')
       ? again({ current: advanceState(body.state), keyword, branches })
       : done({ current: body.state, keyword: progress.keyword, branches });
@@ -34,6 +35,7 @@ export function readIfBody(
   const alternative = isWord(currentToken(parsed.current), 'else')
     ? context.parseNestedList(advanceState(parsed.current), endAt('fi'))
     : null;
+
   return {
     node: {
       kind: 'ifCommand',
@@ -43,6 +45,7 @@ export function readIfBody(
     state: alternative?.state ?? parsed.current,
   };
 }
+
 export function readConditionalLoopBody(
   state: ParseState,
   context: ParserContext,
@@ -51,5 +54,6 @@ export function readConditionalLoopBody(
   const condition = context.parseNestedList(state, endAt('do', 'done'));
   const keyword = takeKeyword(condition.state, 'do');
   const body = context.parseNestedList(keyword.state, endAt('done'));
+
   return { node: { kind, condition: condition.node, body: body.node }, state: body.state };
 }

@@ -1,4 +1,4 @@
-import { List } from 'immutable';
+import * as Immutable from 'immutable';
 import { again, done, loop } from '../util/loop';
 import { horizontalWhitespaceEnd, textWhileEnd } from '../util/text';
 import type { CommentNode } from '../zshParser/ast';
@@ -11,6 +11,7 @@ export type DirectiveArgument = {
   readonly raw: string;
   readonly value: string;
 };
+
 export type Directive = {
   readonly kind: 'directive';
   readonly range: SourceRange;
@@ -19,20 +20,25 @@ export type Directive = {
   readonly command: string | null;
   readonly arguments: readonly DirectiveArgument[];
 };
+
 export type ControlComment = {
   readonly kind: 'controlComment';
   readonly directives: readonly Directive[];
 };
+
 export type HydrationOptions = {
   readonly directiveNamespaces?: readonly string[];
 };
+
 export function commentPayload(comment: CommentNode): {
   readonly text: string;
   readonly start: number;
 } {
   const start = horizontalWhitespaceEnd(comment.text, comment.text.startsWith('#') ? 1 : 0);
+
   return { text: comment.text.slice(start), start };
 }
+
 export function parseDirective(
   comment: CommentNode,
   options: HydrationOptions = {},
@@ -41,24 +47,38 @@ export function parseDirective(
   const namespace = (options.directiveNamespaces ?? ['zls']).find((name) =>
     payload.text.startsWith(name + ':'),
   );
+
   if (!namespace) {
     return null;
   }
-  type Word = { readonly value: string; readonly start: number; readonly end: number };
-  const words = loop<{ readonly index: number; readonly words: List<Word> }, List<Word>>(
-    { index: payload.start + namespace.length + 1, words: List() },
-    (progress) => {
-      const start = horizontalWhitespaceEnd(comment.text, progress.index);
-      if (start >= comment.text.length) {
-        return done(progress.words);
-      }
-      const end = textWhileEnd(comment.text, start, (char) => char !== ' ' && char !== '\t');
-      return again({
-        index: end,
-        words: progress.words.push({ value: comment.text.slice(start, end), start, end }),
-      });
+
+  type Word = {
+    readonly value: string;
+    readonly start: number;
+    readonly end: number;
+  };
+
+  const words = loop<
+    {
+      readonly index: number;
+      readonly words: Immutable.List<Word>;
     },
-  );
+    Immutable.List<Word>
+  >({ index: payload.start + namespace.length + 1, words: Immutable.List() }, (progress) => {
+    const start = horizontalWhitespaceEnd(comment.text, progress.index);
+
+    if (start >= comment.text.length) {
+      return done(progress.words);
+    }
+
+    const end = textWhileEnd(comment.text, start, (char) => char !== ' ' && char !== '\t');
+
+    return again({
+      index: end,
+      words: progress.words.push({ value: comment.text.slice(start, end), start, end }),
+    });
+  });
+
   return {
     kind: 'directive',
     range: rangeWithinText(comment.range, comment.text, payload.start, comment.text.length),

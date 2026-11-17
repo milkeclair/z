@@ -10,6 +10,7 @@ export function zCompletionResolve(
   programs: readonly CodeProgram[] = [],
 ): CompletionItem {
   const data: unknown = result.data;
+
   if (
     typeof data !== 'object' ||
     data === null ||
@@ -22,6 +23,7 @@ export function zCompletionResolve(
   ) {
     return result;
   }
+
   const name = data.name;
   const uri = data.uri;
   const offset = data.offset;
@@ -35,9 +37,11 @@ export function zCompletionResolve(
   const target =
     candidates?.find((candidate) => targetRange(candidate).start.offset === offset) ??
     (local ? undefined : candidates?.[0]);
+
   if (!target) {
     return result;
   }
+
   return {
     ...result,
     detail: target.info.file + ':' + target.info.line,

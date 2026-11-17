@@ -13,14 +13,19 @@ export function zHover({
   programs,
 }: LanguageFeatureRequest<HoverParams>): HoverContent | null {
   const document = documents.get(params.textDocument.uri);
+
   if (!document) {
     return null;
   }
+
   const cursor = cursorAt(snapshot, document, document.offsetAt(params.position), programs);
+
   if (!cursor) {
     return null;
   }
+
   const match = targetAtName(snapshot, cursor);
+
   if (match) {
     return {
       contents: {
@@ -33,5 +38,6 @@ export function zHover({
       },
     };
   }
+
   return zArgumentHover(snapshot, cursor);
 }

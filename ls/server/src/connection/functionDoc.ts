@@ -6,6 +6,7 @@ export function argumentName(arg: FuncArg): string {
   if (arg.isNamed) {
     return arg.name;
   }
+
   if (arg.name === '@' || arg.name === '*') {
     return arg.name;
   }
@@ -17,6 +18,7 @@ export function argumentToken(arg: FuncArg): string {
   if (arg.isNamed) {
     return `${arg.name}=`;
   }
+
   if (arg.name === '@' || arg.name === '*') {
     return '$' + arg.name;
   }
@@ -33,12 +35,14 @@ export function argumentType(arg: FuncArg): string {
   const values = (arg.literalValues ?? []).map(
     (value) => "'" + value.replaceAll('\\', '\\\\').replaceAll("'", "\\'") + "'",
   );
+
   return '[' + ['code', ...values].join(' | ') + ']';
 }
 
-/** 呼び出し用の引数表記へ、型の注記を付ける。 */
+/** 呼び出し用の引数表記へ、型アノテーションを付ける。 */
 export function argumentDisplay(arg: FuncArg): string {
   const annotation = argumentType(arg);
+
   return argumentToken(arg) + (annotation ? ' ' + annotation : '');
 }
 

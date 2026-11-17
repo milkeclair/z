@@ -3,9 +3,17 @@ import type { VariableNameNode, WordNode } from '../word';
 import type { AssignNode } from './assign';
 
 export type SimpleCommandSemantic =
-  | { readonly role: 'normal' }
-  | { readonly role: 'source'; readonly source: SourceInfo }
-  | { readonly role: 'declaration'; readonly declaration: DeclarationInfo };
+  | {
+      readonly role: 'normal';
+    }
+  | {
+      readonly role: 'source';
+      readonly source: SourceInfo;
+    }
+  | {
+      readonly role: 'declaration';
+      readonly declaration: DeclarationInfo;
+    };
 
 export type SourceInfo = {
   readonly form: 'source' | 'dot';

@@ -1,4 +1,4 @@
-import { List } from 'immutable';
+import * as Immutable from 'immutable';
 import { again, done, loop } from '../../../../util/loop';
 import type { StringLiteralNode, WordPartNode } from '../../../ast';
 import { rangeWithinText } from '../../range';
@@ -14,20 +14,23 @@ export function createWordParts(segment: WordSegment): readonly WordPartNode[] {
     index: segment.start,
     literalStart: segment.start,
     quote: 'none',
-    parts: List(),
+    parts: Immutable.List(),
   };
 
   const state = loop(initial, (current) =>
     current.index < current.end ? again(readWordPart(current)) : done(current),
   );
+
   return appendLiteralIfNeeded(state).toArray();
 }
 
 function readWordPart(state: WordPartState): WordPartState {
   const literalEnd = state.literalEnds?.get(state.index);
+
   if (literalEnd !== undefined) {
     return { ...state, index: Math.min(literalEnd, state.end) };
   }
+
   const char = state.text[state.index];
 
   if (isEscape(state)) {
@@ -80,7 +83,7 @@ function isEscape(state: WordPartState): boolean {
   }
 }
 
-function appendLiteralIfNeeded(state: WordPartState): List<WordPartNode> {
+function appendLiteralIfNeeded(state: WordPartState): Immutable.List<WordPartNode> {
   if (state.literalStart < state.index || state.parts.size === 0) {
     return state.parts.push(
       createStringLiteralNode({
@@ -94,7 +97,7 @@ function appendLiteralIfNeeded(state: WordPartState): List<WordPartNode> {
   }
 }
 
-function appendLiteralBeforeExpansion(state: WordPartState): List<WordPartNode> {
+function appendLiteralBeforeExpansion(state: WordPartState): Immutable.List<WordPartNode> {
   if (state.literalStart < state.index) {
     return state.parts.push(
       createStringLiteralNode({

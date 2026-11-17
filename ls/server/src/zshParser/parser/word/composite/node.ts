@@ -1,4 +1,4 @@
-import { Map as PersistentMap, Set as PersistentSet } from 'immutable';
+import * as Immutable from 'immutable';
 import type { WordNode } from '../../../ast';
 import type { QuoteKind, Token } from '../../../lexer';
 import { rangeFromTokens } from '../../range';
@@ -13,6 +13,7 @@ export function createCompositeWordNode(
   const offsets = tokens.reduce(
     (previous, token) => {
       const end = previous.offset + token.value.length;
+
       return {
         offset: end,
         literalEnds:
@@ -27,8 +28,8 @@ export function createCompositeWordNode(
     },
     {
       offset: 0,
-      literalEnds: PersistentMap<number, number>(),
-      processStarts: PersistentSet<number>(),
+      literalEnds: Immutable.Map<number, number>(),
+      processStarts: Immutable.Set<number>(),
     },
   );
   const literalEnds = new Map(offsets.literalEnds);

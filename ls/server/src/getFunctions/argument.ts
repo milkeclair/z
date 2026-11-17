@@ -1,10 +1,11 @@
-import { Range } from 'immutable';
+import * as Immutable from 'immutable';
 import { COMMENT_CHAR, NAMED_ARG_POSITION } from './constant';
 import { namedArgRegex, positionalArgRegex, specialArgRegex } from './regex';
 import { FuncArg } from './type';
 
 function parsePositionalArg(line: string): FuncArg | null {
   const match = line.match(positionalArgRegex);
+
   if (!match) {
     return null;
   }
@@ -21,6 +22,7 @@ function parsePositionalArg(line: string): FuncArg | null {
 
 function parseSpecialArg(line: string): FuncArg | null {
   const match = line.match(specialArgRegex);
+
   if (!match) {
     return null;
   }
@@ -37,6 +39,7 @@ function parseSpecialArg(line: string): FuncArg | null {
 
 function parseNamedArg(line: string): FuncArg | null {
   const match = line.match(namedArgRegex);
+
   if (!match) {
     return null;
   }
@@ -54,16 +57,20 @@ function parseNamedArg(line: string): FuncArg | null {
 function sortArgs(args: readonly FuncArg[]): FuncArg[] {
   return args.toSorted((left, right) => {
     if (left.isNamed && right.isNamed) return 0;
+
     if (left.isNamed) return 1;
+
     if (right.isNamed) return -1;
+
     return left.position - right.position;
   });
 }
+
 export function extractFunctionArgs(
   lines: readonly string[],
   functionLineIndex: number,
 ): FuncArg[] {
-  const args = Range(functionLineIndex - 1, -1, -1)
+  const args = Immutable.Range(functionLineIndex - 1, -1, -1)
     .takeWhile((index) => lines[index].trim().startsWith(COMMENT_CHAR))
     .map(
       (index) =>
@@ -73,5 +80,6 @@ export function extractFunctionArgs(
     )
     .filter((argument): argument is FuncArg => argument !== null)
     .toArray();
+
   return sortArgs(args);
 }

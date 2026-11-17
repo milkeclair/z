@@ -1,4 +1,4 @@
-import { List } from 'immutable';
+import * as Immutable from 'immutable';
 import { again, done, loop } from '../../../../util/loop';
 import type { FunctionDefinitionForm, OptionNode, WordNode } from '../../../ast';
 import type { SourceRange, Token } from '../../../lexer';
@@ -53,13 +53,21 @@ function readFunctionOptions({
 }: {
   readonly state: ParseState;
   readonly options: readonly OptionNode[];
-}): { readonly options: readonly OptionNode[]; readonly state: ParseState } {
-  const initial = { current: skipTrivia(state), collected: List(options) };
+}): {
+  readonly options: readonly OptionNode[];
+  readonly state: ParseState;
+} {
+  const initial = { current: skipTrivia(state), collected: Immutable.List(options) };
+
   return loop<
     typeof initial,
-    { readonly options: readonly OptionNode[]; readonly state: ParseState }
+    {
+      readonly options: readonly OptionNode[];
+      readonly state: ParseState;
+    }
   >(initial, (progress) => {
     const token = currentToken(progress.current);
+
     return token.kind === 'word' && token.value === '-T'
       ? again({
           current: skipTrivia(advanceState(progress.current)),
@@ -75,20 +83,28 @@ function readFunctionNames({
 }: {
   readonly state: ParseState;
   readonly names: readonly WordNode[];
-}): { readonly names: readonly WordNode[]; readonly state: ParseState } {
-  const initial = { current: skipTrivia(state), collected: List(names) };
-  return loop<typeof initial, { readonly names: readonly WordNode[]; readonly state: ParseState }>(
-    initial,
-    (progress) => {
-      const token = currentToken(progress.current);
-      return token.kind === 'word' && !isFunctionKeyword(token)
-        ? again({
-            current: skipTrivia(advanceState(progress.current)),
-            collected: progress.collected.push(createWordNode(token)),
-          })
-        : done({ names: progress.collected.toArray(), state: progress.current });
-    },
-  );
+}): {
+  readonly names: readonly WordNode[];
+  readonly state: ParseState;
+} {
+  const initial = { current: skipTrivia(state), collected: Immutable.List(names) };
+
+  return loop<
+    typeof initial,
+    {
+      readonly names: readonly WordNode[];
+      readonly state: ParseState;
+    }
+  >(initial, (progress) => {
+    const token = currentToken(progress.current);
+
+    return token.kind === 'word' && !isFunctionKeyword(token)
+      ? again({
+          current: skipTrivia(advanceState(progress.current)),
+          collected: progress.collected.push(createWordNode(token)),
+        })
+      : done({ names: progress.collected.toArray(), state: progress.current });
+  });
 }
 
 function readOptionalParens(state: ParseState): {

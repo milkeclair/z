@@ -19,17 +19,22 @@ export function endAt(...words: readonly string[]) {
     token.kind === 'eof' || words.some((word) => isWord(token, word));
 }
 
-export { skipCommandTerm as skipTerms } from '../term';
+export { skipCommandTerm } from '../term';
 
 export function takeKeyword(
   state: ParseState,
   value: string,
-): { readonly token: Token | null; readonly state: ParseState } {
+): {
+  readonly token: Token | null;
+  readonly state: ParseState;
+} {
   const current = skipTrivia(state);
   const token = currentToken(current);
+
   if (isWord(token, value)) {
     return { token, state: advanceState(current) };
   }
+
   return {
     token: null,
     state: addDiagnostic({
@@ -43,5 +48,6 @@ export function takeKeyword(
 
 export function emptyList(state: ParseState): ListNode {
   const position = currentToken(state).range.start;
+
   return { kind: 'list', range: { start: position, end: position }, items: [] };
 }

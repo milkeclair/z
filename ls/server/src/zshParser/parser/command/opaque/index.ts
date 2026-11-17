@@ -13,9 +13,11 @@ export function parseOpaqueCommandIfStart({
   readonly readPostBodyRedirects: boolean;
 }): NodeResult<OpaqueCommandNode> | null {
   const open = currentToken(state);
+
   if (open.operatorKind !== 'conditionStart' && open.operatorKind !== 'arithmeticStart') {
     return null;
   }
+
   const condition = open.operatorKind === 'conditionStart';
   const endIndex = findOperatorEndIndex({
     tokens: state.tokens,
@@ -43,6 +45,7 @@ export function parseOpaqueCommandIfStart({
   const tokens = tokenSlice(post.state, state.index, post.state.index);
   const headerRange = rangeFromTokens(tokens, open.range);
   const range = enclosingRange(headerRange, post.redirects);
+
   return {
     node: {
       kind: 'opaqueCommand',

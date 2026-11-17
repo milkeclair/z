@@ -4,8 +4,11 @@ export function lowerBound(length: number, isBefore: (index: number) => boolean)
     if (low >= high) {
       return low;
     }
+
     const middle = Math.floor((low + high) / 2);
+
     return isBefore(middle) ? search(middle + 1, high) : search(low, middle);
   };
+
   return search(0, length);
 }

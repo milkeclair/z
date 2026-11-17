@@ -124,6 +124,7 @@ function readAlwaysClause({
       if (body.node.kind !== 'groupCommand' && body.node.kind !== 'unknown') {
         throw new Error('Expected group or partial unknown for always body');
       }
+
       return {
         node: {
           kind: 'alwaysClause',

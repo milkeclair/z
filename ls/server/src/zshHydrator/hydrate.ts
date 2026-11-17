@@ -1,4 +1,4 @@
-import { Map as PersistentMap, Set as PersistentSet } from 'immutable';
+import * as Immutable from 'immutable';
 import type {
   AstNode,
   CommentNode,
@@ -12,8 +12,13 @@ import { parseDirective } from './directive';
 import type { FunctionDocumentation } from './documentation';
 import { parseFunctionDocumentation } from './documentation';
 
-export type HydratedDocBlock = DocBlockNode & { readonly hydration: FunctionDocumentation };
-export type HydratedComment = CommentNode & { readonly hydration: ControlComment };
+export type HydratedDocBlock = DocBlockNode & {
+  readonly hydration: FunctionDocumentation;
+};
+
+export type HydratedComment = CommentNode & {
+  readonly hydration: ControlComment;
+};
 
 export function isHydratedDocBlock(node: DocBlockNode): node is HydratedDocBlock {
   return (
@@ -24,6 +29,7 @@ export function isHydratedDocBlock(node: DocBlockNode): node is HydratedDocBlock
     node.hydration.kind === 'functionDocumentation'
   );
 }
+
 export function isHydratedComment(node: CommentNode): node is HydratedComment {
   return (
     'hydration' in node &&
@@ -33,15 +39,19 @@ export function isHydratedComment(node: CommentNode): node is HydratedComment {
     node.hydration.kind === 'controlComment'
   );
 }
+
 export function documentationOf(
   node: FunctionDefinitionNode | DocBlockNode,
 ): FunctionDocumentation | null {
   const block = node.kind === 'functionDefinition' ? node.leadingDoc : node;
+
   return block && isHydratedDocBlock(block) ? block.hydration : null;
 }
+
 export function directivesOf(node: CommentNode): ControlComment['directives'] {
   return isHydratedComment(node) ? node.hydration.directives : [];
 }
+
 /** 変更時に新しい値を作り、コメントの参照を共有しながら、情報を付加した単一のASTを返す。 */
 export function hydrateAst(
   ast: FileNode,
@@ -53,7 +63,9 @@ export function hydrateAst(
       if (!definition.leadingDoc) {
         return previous;
       }
+
       const result = parseFunctionDocumentation(definition.leadingDoc, source, options);
+
       return {
         documents: previous.documents.set(
           definition.leadingDoc.range.start.offset,
@@ -63,34 +75,42 @@ export function hydrateAst(
       };
     },
     {
-      documents: PersistentMap<number, FunctionDocumentation>(),
-      exampleComments: PersistentSet<number>(),
+      documents: Immutable.Map<number, FunctionDocumentation>(),
+      exampleComments: Immutable.Set<number>(),
     },
   );
   const { documents, exampleComments } = parsed;
+
   return mapAst(ast, (node: AstNode): AstNode => {
     if (node.kind === 'docBlock') {
       const original = documents.get(node.range.start.offset);
+
       if (original) {
         const hydrated: HydratedDocBlock = { ...node, hydration: original };
+
         return hydrated;
       }
     } else if (node.kind === 'comment') {
       const directive = exampleComments.has(node.range.start.offset)
         ? null
         : parseDirective(node, options);
+
       if (directive) {
         const hydrated: HydratedComment = {
           ...node,
           hydration: { kind: 'controlComment', directives: [directive] },
         };
+
         return hydrated;
       }
+
       if (isHydratedComment(node)) {
         const { hydration, ...syntax } = node;
+
         return syntax;
       }
     }
+
     return node;
   });
 }

@@ -9,7 +9,9 @@ export type ParseOptions = {
   readonly nesting?: NestingState;
 };
 
-export type ParseStateOptions = ParseOptions & { readonly comments?: CommentContext };
+export type ParseStateOptions = ParseOptions & {
+  readonly comments?: CommentContext;
+};
 
 export type ParseState = {
   readonly nesting: NestingState;

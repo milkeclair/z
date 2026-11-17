@@ -19,6 +19,7 @@ export function addDiagnostic({
   if (state.stopped) {
     return state;
   }
+
   return {
     ...state,
     diagnostics: [

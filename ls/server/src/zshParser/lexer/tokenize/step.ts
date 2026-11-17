@@ -15,16 +15,19 @@ import { Reader } from './reader';
 import type { ReadResult } from './reader/result';
 
 type TokenReader = ReturnType<typeof Reader>;
+
 type TokenizeStepValue = {
   readonly tokens: readonly Token[];
   readonly diagnostics: readonly LexerDiagnostic[];
 };
+
 type TokenizeStepInput = {
   readonly state: TokenizeState;
   readonly sourceFile: string;
   readonly reader: TokenReader;
   readonly isWordBoundary: (cursor: Cursor) => boolean;
 };
+
 type TokenReadResult = ReadResult<TokenizeStepValue>;
 
 export function readTokenizeStep(input: TokenizeStepInput): TokenizeState {
@@ -50,6 +53,7 @@ export function readTokenizeStep(input: TokenizeStepInput): TokenizeState {
         range: { start: position(state.cursor), end: position(result.cursor) },
       }))
     : [];
+
   return {
     ...state,
     context,
@@ -83,11 +87,13 @@ function lineToken(
     start: position(cursor),
     end: position(result.cursor),
   });
+
   return { cursor: result.cursor, value: { tokens: [token], diagnostics: [] } };
 }
 
 function startsPatternParenthesis(cursor: Cursor, context: LexicalContext): boolean {
   const previous = context.previous;
+
   return (
     current(cursor) === '(' &&
     previous?.kind === 'word' &&
@@ -107,15 +113,18 @@ function readNext({
 }: TokenizeStepInput): TokenReadResult {
   if (state.context.readHereDocs) {
     const result = readHereDocuments(state.cursor, state.context.pendingHereDocs, sourceFile);
+
     return {
       cursor: result.cursor,
       value: { tokens: result.tokens, diagnostics: result.diagnostics },
     };
   }
+
   const cursor = state.cursor;
   const start = position(cursor);
   const pendingHeader = state.context.awaitingHereDoc;
   const header = pendingHeader ? hereDocHeader(cursor.text, pendingHeader.operatorOffset) : null;
+
   if (
     header &&
     header.end > start.offset &&
@@ -125,25 +134,32 @@ function readNext({
   ) {
     return wordToken(reader.word(cursor, (candidate) => position(candidate).offset >= header.end));
   }
+
   if (isContinuation(cursor)) {
     return lineToken('continuation', cursor, reader.continuation(cursor), sourceFile);
   }
+
   if (isNewline(cursor)) {
     return lineToken('newline', cursor, reader.newline(cursor), sourceFile);
   }
+
   if (isHorizontalWhitespace(current(cursor))) {
     return singleToken(reader.whitespace(cursor));
   }
+
   if (
     current(cursor) === SpecialCharacters.hash &&
     (state.context.kind === 'command' || state.context.kind === 'array')
   ) {
     return singleToken(reader.comment(cursor));
   }
+
   if (startsPatternParenthesis(cursor, state.context)) {
     const end = delimitedEnd(cursor.text, start.offset, 'patternParen');
+
     if (end !== null) {
       const result = advance(cursor, end - start.offset);
+
       return singleToken({
         cursor: result.cursor,
         value: createToken({
@@ -156,15 +172,19 @@ function readNext({
       });
     }
   }
+
   return readWordOrOperator({ cursor, reader, isWordBoundary, context: state.context });
 }
 
 function operatorAt(cursor: Cursor, context: LexicalContext): OperatorDefinition | null {
   const found = findOperator(cursor);
+
   if (found?.kind === 'arithmeticEnd' && context.kind !== 'arithmetic') {
     return { value: ')', kind: 'rightParen' };
   }
+
   const arithmetic = context.kind === 'arithmetic' || context.kind === 'math';
+
   if (
     found?.kind === 'arithmeticStart' &&
     (isProcessOpen(context, position(cursor).offset) ||
@@ -172,6 +192,7 @@ function operatorAt(cursor: Cursor, context: LexicalContext): OperatorDefinition
   ) {
     return { value: '(', kind: 'leftParen' };
   }
+
   return found;
 }
 
@@ -187,6 +208,7 @@ function readWordOrOperator({
   readonly isWordBoundary: (cursor: Cursor) => boolean;
 }): TokenReadResult {
   const operator = operatorAt(cursor, context);
+
   return operator
     ? singleToken(reader.operator(cursor, operator))
     : wordToken(reader.word(cursor, isWordBoundary));

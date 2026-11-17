@@ -24,6 +24,7 @@ function createServerLaunch(serverModule: string): NodeModule {
 
 function createServerOptions(context: ExtensionContext): ServerOptions {
   const serverModule = context.asAbsolutePath(path.join('server', 'dist', 'server.js'));
+
   return {
     run: createServerLaunch(serverModule),
     debug: createServerLaunch(serverModule),
@@ -32,6 +33,7 @@ function createServerOptions(context: ExtensionContext): ServerOptions {
 
 function createClientOptions(): LanguageClientOptions {
   const configuration = workspace.getConfiguration('z-ls');
+
   return {
     documentSelector: [{ scheme: 'file', language: 'shellscript' }],
     synchronize: {

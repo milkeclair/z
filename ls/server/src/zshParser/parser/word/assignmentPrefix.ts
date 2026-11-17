@@ -84,19 +84,24 @@ function readAssignmentTarget({
 
 function findAssignmentOperator(value: string): AssignmentOperator | null {
   const initial = { index: 0, bracketDepth: 0, parenDepth: 0, braceDepth: 0 };
+
   return loop<typeof initial, AssignmentOperator | null>(initial, (state) => {
     if (state.index >= value.length) {
       return done(null);
     }
+
     const char = value[state.index];
     const canReadOperator =
       state.bracketDepth === 0 && state.parenDepth === 0 && state.braceDepth === 0;
+
     if (canReadOperator && value.startsWith(PlusEquals, state.index)) {
       return done({ index: state.index, operator: PlusEquals });
     }
+
     if (canReadOperator && char === Equals) {
       return done({ index: state.index, operator: Equals });
     }
+
     return again({
       index: state.index + 1,
       bracketDepth: nextDepth({

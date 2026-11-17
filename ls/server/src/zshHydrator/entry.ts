@@ -35,6 +35,7 @@ export function isRegularFile(filename: string): boolean {
     ) {
       return false;
     }
+
     throw error;
   }
 }
@@ -51,9 +52,11 @@ export function hydrateDiskFile({
   try {
     const absolutePath = path.join(projectRoot, relativePath);
     const stat = fs.statSync(absolutePath);
+
     if (!stat.isFile()) {
       return null;
     }
+
     const fingerprint: DiskFingerprint = {
       kind: 'disk',
       mtimeMs: stat.mtimeMs,
@@ -83,6 +86,7 @@ export function hydrateDiskFile({
     ) {
       return null;
     }
+
     throw error;
   }
 }

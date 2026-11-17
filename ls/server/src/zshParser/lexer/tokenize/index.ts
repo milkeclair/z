@@ -1,4 +1,4 @@
-import { List } from 'immutable';
+import * as Immutable from 'immutable';
 import { again, done, loop } from '../../../util/loop';
 import { SpecialCharacters } from '../character';
 import type { Cursor } from '../cursor';
@@ -34,18 +34,22 @@ export function tokenize(input: string, options: TokenizeOptions = {}): Tokenize
     diagnostics: [],
     context: createLexicalContext(),
   };
+
   type Progress = {
     readonly state: TokenizeState;
-    readonly tokens: List<Token>;
-    readonly diagnostics: List<LexerDiagnostic>;
+    readonly tokens: Immutable.List<Token>;
+    readonly diagnostics: Immutable.List<LexerDiagnostic>;
   };
+
   const result = loop<Progress, Progress>(
-    { state: initial, tokens: List(), diagnostics: List() },
+    { state: initial, tokens: Immutable.List(), diagnostics: Immutable.List() },
     (progress) => {
       if (eof(progress.state.cursor) && !progress.state.context.readHereDocs) {
         return done(progress);
       }
+
       const next = readTokenizeStep({ state: progress.state, sourceFile, reader, isWordBoundary });
+
       return again({
         state: next,
         tokens: progress.tokens.concat(next.tokens),
@@ -54,16 +58,19 @@ export function tokenize(input: string, options: TokenizeOptions = {}): Tokenize
     },
   );
   const end = position(result.state.cursor);
+
   type FinalContext = {
     readonly context: LexicalContext | null;
-    readonly diagnostics: List<LexerDiagnostic>;
+    readonly diagnostics: Immutable.List<LexerDiagnostic>;
   };
-  const diagnostics = loop<FinalContext, List<LexerDiagnostic>>(
+
+  const diagnostics = loop<FinalContext, Immutable.List<LexerDiagnostic>>(
     { context: result.state.context, diagnostics: result.diagnostics },
     (progress) => {
       if (!progress.context) {
         return done(progress.diagnostics);
       }
+
       const unclosed = progress.context.pendingHereDocs.map(
         (request): LexerDiagnostic => ({
           kind: 'unclosedHereDocument',
@@ -72,12 +79,14 @@ export function tokenize(input: string, options: TokenizeOptions = {}): Tokenize
           range: { start: end, end },
         }),
       );
+
       return again({
         context: progress.context.parent,
         diagnostics: progress.diagnostics.concat(unclosed),
       });
     },
   );
+
   return {
     tokens: result.tokens
       .push(

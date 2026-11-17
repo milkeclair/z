@@ -1,4 +1,4 @@
-import { List } from 'immutable';
+import * as Immutable from 'immutable';
 import { again, done, loop } from '../../../util/loop';
 import type { ListItemNode, ListNode } from '../../ast';
 import type { ParserContext } from '../context';
@@ -58,13 +58,16 @@ function parseListItems({
   readonly context: ParserContext;
   readonly isEnd: ListEnd;
 }): ListItemsResult {
-  const initial = { current: skipTrivia(state), items: List<ListItemNode>() };
+  const initial = { current: skipTrivia(state), items: Immutable.List<ListItemNode>() };
+
   return loop<typeof initial, ListItemsResult>(initial, ({ current, items }) => {
     if (isEnd(currentToken(current))) {
       return done({ items: items.toArray(), state: current });
     }
+
     if (current.stopped) {
       const range = { start: currentToken(current).range.start, end: current.eof.range.end };
+
       return done({
         items: items
           .push({
@@ -77,14 +80,17 @@ function parseListItems({
         state: { ...current, index: current.tokens.length - 1 },
       });
     }
+
     if (listTerminatorType(currentToken(current))) {
       return again({ current: skipTrivia(advanceState(current)), items });
     }
+
     const item = parseListItem({ state: current, context });
     const next =
       item.state.index === current.index && !isEnd(currentToken(item.state))
         ? advanceState(item.state)
         : item.state;
+
     return again({ current: skipTrivia(next), items: items.push(item.node) });
   });
 }

@@ -1,4 +1,4 @@
-import { List, Range } from 'immutable';
+import * as Immutable from 'immutable';
 import { again, done, loop } from '../util/loop';
 import { lowerBound } from '../util/search';
 import type { WordNode } from '../zshParser/ast';
@@ -23,12 +23,14 @@ export function createCodeSourceMap(
     const spans = literal.spans.map((span) => {
       const start = word.range.start.offset + span.start;
       const end = word.range.start.offset + span.end;
+
       return {
         start: parent.spans[start]?.start ?? parent.end,
         end: parent.spans[end - 1]?.end ?? parent.end,
       };
     });
     const end = parent.spans[word.range.start.offset + literal.end]?.start ?? parent.end;
+
     return {
       word: parent.word,
       lineStarts: parent.lineStarts,
@@ -37,7 +39,9 @@ export function createCodeSourceMap(
       end,
     };
   }
+
   const lineStarts = textLineStarts(word.raw);
+
   return {
     word,
     lineStarts,
@@ -50,6 +54,7 @@ export function createCodeSourceMap(
 /** 元の記述内のオフセットを、物理的なUTF-16の位置へ変換する。 */
 export function sourcePosition(source: CodeSourceMap, offset: number): SourcePosition {
   const local = textPosition(source.lineStarts, offset);
+
   return {
     offset: source.word.range.start.offset + offset,
     line: source.word.range.start.line + local.line,
@@ -65,20 +70,25 @@ export function codeRange(source: CodeSourceMap, range: SourceRange): SourceRang
     range.end.offset > range.start.offset
       ? (source.spans[range.end.offset - 1]?.end ?? source.end)
       : start;
+
   return { start: sourcePosition(source, start), end: sourcePosition(source, end) };
 }
 
 /** 元文書のカーソルを内側のUTF-16位置へ戻し、escapeの途中は編集対象から外す。 */
 export function codeOffset(source: CodeSourceMap, offset: number): number | null {
   const relative = offset - source.word.range.start.offset;
+
   if (relative < source.start || relative > source.end) {
     return null;
   }
+
   const low = lowerBound(source.spans.length, (index) => source.spans[index].end <= relative);
   const span = source.spans[low];
+
   if (span && span.start < relative && relative < span.end) {
     return null;
   }
+
   return low;
 }
 
@@ -91,19 +101,24 @@ export function codeRanges(
   if (maxRanges <= 0) {
     return [];
   }
-  const initial = { index: range.start.offset, spans: List<SourceSpan>() };
-  const spans = loop<typeof initial, List<SourceSpan>>(initial, (state) => {
+
+  const initial = { index: range.start.offset, spans: Immutable.List<SourceSpan>() };
+  const spans = loop<typeof initial, Immutable.List<SourceSpan>>(initial, (state) => {
     const span = source.spans[state.index];
+
     if (state.index >= range.end.offset || !span) {
       return done(state.spans);
     }
+
     const last = state.spans.last();
+
     if (last && span.start <= last.end) {
       return again({
         index: state.index + 1,
         spans: state.spans.set(-1, { ...last, end: Math.max(last.end, span.end) }),
       });
     }
+
     return state.spans.size >= maxRanges
       ? done(state.spans)
       : again({
@@ -111,6 +126,7 @@ export function codeRanges(
           spans: state.spans.push({ start: span.start, end: span.end }),
         });
   });
+
   return spans
     .map((span) => ({
       start: sourcePosition(source, span.start),
@@ -123,7 +139,7 @@ export function codeRanges(
 export function textLineStarts(text: string): readonly number[] {
   return [
     0,
-    ...Range(0, text.length)
+    ...Immutable.Range(0, text.length)
       .filter((index) => text[index] === '\n' || (text[index] === '\r' && text[index + 1] !== '\n'))
       .map((index) => index + 1),
   ];
@@ -132,5 +148,6 @@ export function textLineStarts(text: string): readonly number[] {
 /** キャッシュした行頭から、復号済みコードの位置を返す。 */
 export function textPosition(starts: readonly number[], offset: number): SourcePosition {
   const line = Math.max(0, lowerBound(starts.length, (index) => starts[index] <= offset) - 1);
+
   return { offset, line, character: offset - starts[line] };
 }

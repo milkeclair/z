@@ -1,4 +1,4 @@
-import { List } from 'immutable';
+import * as Immutable from 'immutable';
 import type { Cursor } from '../cursor';
 import { advance, position } from '../cursor';
 import { hereDocEnd } from '../delimiter/heredoc';
@@ -21,14 +21,16 @@ export function readHereDocuments(
   const result = requests.reduce(
     (progress, request) => {
       const parsed = readHereDocument(progress.cursor, request, sourceFile);
+
       return {
         cursor: parsed.cursor,
         tokens: progress.tokens.concat(parsed.tokens),
         diagnostics: progress.diagnostics.concat(parsed.diagnostics),
       };
     },
-    { cursor, tokens: List<Token>(), diagnostics: List<LexerDiagnostic>() },
+    { cursor, tokens: Immutable.List<Token>(), diagnostics: Immutable.List<LexerDiagnostic>() },
   );
+
   return {
     cursor: result.cursor,
     tokens: result.tokens.toArray(),
@@ -62,6 +64,7 @@ function readHereDocument(
     }),
     hereDoc: metadata,
   };
+
   if (delimiterStart < 0) {
     return {
       cursor: body.cursor,
@@ -76,6 +79,7 @@ function readHereDocument(
       ],
     };
   }
+
   const ending = advance(body.cursor, delimiterEnd - delimiterStart);
   const endToken = {
     ...createToken({
@@ -87,5 +91,6 @@ function readHereDocument(
     }),
     hereDoc: metadata,
   };
+
   return { cursor: ending.cursor, tokens: [bodyToken, endToken], diagnostics: [] };
 }

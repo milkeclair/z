@@ -7,8 +7,10 @@ import type { Func, FuncContent } from './type';
 
 export function extractZFunctions(content: string): FuncContent[] {
   const lines = content.split('\n');
+
   return lines.flatMap((line, index) => {
     const match = line.match(functionRegex);
+
     return match
       ? [{ name: match[1], line: index + 1, args: extractFunctionArgs(lines, index) }]
       : [];
@@ -18,6 +20,7 @@ export function extractZFunctions(content: string): FuncContent[] {
 export function getAllZFunctions(projectRoot: string): Func[] {
   return globSync('**/*.zsh', { cwd: projectRoot }).flatMap((file) => {
     const content = fs.readFileSync(path.join(projectRoot, file), 'utf-8');
+
     return extractZFunctions(content).map((definition) => ({ ...definition, file }));
   });
 }

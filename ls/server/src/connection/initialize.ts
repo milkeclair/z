@@ -26,6 +26,7 @@ function readObject(value: unknown, key: string): UnknownRecord {
   }
 
   const child = value[key];
+
   return isRecord(child) ? child : {};
 }
 
@@ -35,6 +36,7 @@ function readString(value: unknown, key: string, defaultValue: string): string {
   }
 
   const child = value[key];
+
   return typeof child === 'string' ? child : defaultValue;
 }
 
@@ -44,6 +46,7 @@ function readBoolean(value: unknown, key: string, defaultValue: boolean): boolea
   }
 
   const child = value[key];
+
   return typeof child === 'boolean' ? child : defaultValue;
 }
 

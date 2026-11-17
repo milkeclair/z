@@ -1,4 +1,4 @@
-import { List } from 'immutable';
+import * as Immutable from 'immutable';
 import type { CodeProgram } from '../embeddedCode';
 import { again, done, loop } from '../util/loop';
 import type { TextDocument } from '../vscode_type';
@@ -6,6 +6,7 @@ import { disjoint } from './semanticTokens/disjoint';
 import { encodeSpans } from './semanticTokens/encode';
 import { programSpans } from './semanticTokens/spans';
 import { MAX_HIGHLIGHT_SPANS, type Span } from './semanticTokens/types';
+
 export { codeTokenTypes } from './semanticTokens/types';
 
 /** 解析済みのコード引数だけを色分けし、標準semantic token形式へ変換する。 */
@@ -15,17 +16,22 @@ export function zSemanticTokens({
 }: {
   readonly document: TextDocument;
   readonly programs: readonly CodeProgram[];
-}): { readonly data: readonly number[] } {
-  const initial = { index: 0, spans: List<Span>() };
+}): {
+  readonly data: readonly number[];
+} {
+  const initial = { index: 0, spans: Immutable.List<Span>() };
   const spans = loop<typeof initial, readonly Span[]>(initial, (state) => {
     const program = programs[state.index];
+
     if (!program || state.spans.size >= MAX_HIGHLIGHT_SPANS) {
       return done(state.spans.toArray());
     }
+
     return again({
       index: state.index + 1,
       spans: state.spans.concat(programSpans(program, MAX_HIGHLIGHT_SPANS - state.spans.size)),
     });
   });
+
   return { data: encodeSpans(document, disjoint(spans)) };
 }

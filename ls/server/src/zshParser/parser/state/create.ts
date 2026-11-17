@@ -11,6 +11,7 @@ export function createParseState(
   options: ParseStateOptions = {},
 ): ParseState {
   const nesting = options.nesting ?? { depth: 0, limit: DefaultNestingLimit };
+
   if (
     !Number.isSafeInteger(nesting.depth) ||
     nesting.depth < 0 ||
@@ -21,6 +22,7 @@ export function createParseState(
       'Parser nesting depth and limit must be non-negative/positive safe integers',
     );
   }
+
   const sourceFile = options.sourceFile ?? tokens[0]?.sourceFile ?? Empty;
   const normalized = normalizeTokens(tokens, sourceFile);
   const eof = normalized[normalized.length - 1] ?? createEofToken(sourceFile, ZeroPosition);

@@ -56,10 +56,15 @@ function readNamePreview({
   readonly tokens: readonly Token[];
   readonly index: number;
   readonly count: number;
-}): { readonly count: number; readonly index: number } {
+}): {
+  readonly count: number;
+  readonly index: number;
+} {
   const initial = { index: nextInlineSyntaxIndex(tokens, index), count };
+
   return loop(initial, (current) => {
     const token = tokens[current.index];
+
     return token && isFunctionNameCandidate(token)
       ? again({ index: nextInlineSyntaxIndex(tokens, current.index + 1), count: current.count + 1 })
       : done(current);

@@ -10,6 +10,7 @@ export type DocumentInput = {
 
 export function relativeProjectPath(projectRoot: string, filename: string): string | null {
   const relative = path.relative(projectRoot, path.resolve(projectRoot, filename));
+
   return relative &&
     relative !== '..' &&
     !relative.startsWith('..' + path.sep) &&

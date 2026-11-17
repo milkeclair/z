@@ -1,4 +1,4 @@
-import { List } from 'immutable';
+import * as Immutable from 'immutable';
 import { createWordNode } from '..';
 import type { ListNode, WordNode, WordPartNode } from '../../../ast';
 import type { SourceRange } from '../../../lexer';
@@ -17,6 +17,7 @@ type BodyResult = {
   readonly comments: CommentContext;
   readonly diagnostics: readonly ParserDiagnostic[];
 };
+
 function readSubstitutionBody(
   raw: string,
   range: SourceRange,
@@ -70,6 +71,7 @@ function readSubstitutionBody(
           range,
         },
       ];
+
   return {
     body: parsed.ast.body,
     comments: mergeComments(comments, parsed.ast.comments),
@@ -88,7 +90,9 @@ export function readWordNode(state: ParseState): NodeResult<WordNode> {
       if (part.kind !== 'commandSubstitution' && part.kind !== 'processSubstitution') {
         return { ...previous, parts: previous.parts.push(part) };
       }
+
       const body = readSubstitutionBody(part.raw, part.range, state, previous.comments);
+
       return {
         parts: previous.parts.push({ ...part, body: body.body }),
         comments: body.comments,
@@ -96,12 +100,13 @@ export function readWordNode(state: ParseState): NodeResult<WordNode> {
       };
     },
     {
-      parts: List<WordPartNode>(),
+      parts: Immutable.List<WordPartNode>(),
       comments: state.comments,
-      diagnostics: List<ParserDiagnostic>(),
+      diagnostics: Immutable.List<ParserDiagnostic>(),
     },
   );
   const next = advanceState(state, result.nextIndex - state.index);
+
   return {
     node: { ...syntax, parts: parsed.parts.toArray() },
     state: {

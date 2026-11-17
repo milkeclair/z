@@ -3,7 +3,10 @@ import type { FuncArg } from '../getFunctions/type';
 import { argumentType } from './functionDoc';
 
 function findParameterDescription(
-  parameters: readonly { readonly name: string; readonly description: string }[],
+  parameters: readonly {
+    readonly name: string;
+    readonly description: string;
+  }[],
   argName: string,
 ): string {
   const patterns = [
@@ -16,12 +19,16 @@ function findParameterDescription(
   ];
 
   const commentParam = parameters.find((parameter) => patterns.includes(parameter.name));
+
   return commentParam?.description || '';
 }
 
 function formatArgument(
   arg: FuncArg,
-  parameters: readonly { readonly name: string; readonly description: string }[],
+  parameters: readonly {
+    readonly name: string;
+    readonly description: string;
+  }[],
 ): string {
   const optional = arg.optional ? '?' : '';
   const type = argumentType(arg);
@@ -63,6 +70,7 @@ function commentToMarkDown(
         ]
       : [];
   const example = comment.example ? ['**Example:**', '```zsh', comment.example, '```'] : [];
+
   return [
     '```zsh',
     `${funcName}()`,

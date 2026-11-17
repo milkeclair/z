@@ -1,14 +1,19 @@
-import { OrderedSet } from 'immutable';
+import * as Immutable from 'immutable';
 import { DocumentDiagnosticReportKind } from '../vscode_type';
 import type { DiagnosticSnapshot } from './snapshot';
 import type { WorkspaceDiagnosticsReport } from './type';
+
 type ReportItem = WorkspaceDiagnosticsReport['items'][number];
+
 export function workspaceDiagnostics({
   diagnostics,
   previousResultIds = [],
 }: {
   readonly diagnostics: DiagnosticSnapshot;
-  readonly previousResultIds?: readonly { readonly uri: string; readonly value: string }[];
+  readonly previousResultIds?: readonly {
+    readonly uri: string;
+    readonly value: string;
+  }[];
 }): WorkspaceDiagnosticsReport {
   const current = [...diagnostics.files].flatMap(([uri, file]): readonly ReportItem[] =>
     file.project
@@ -24,9 +29,10 @@ export function workspaceDiagnostics({
       : [],
   );
   const reported = new Set(current.map((item) => item.uri));
-  const removed = OrderedSet(previousResultIds.map((previous) => previous.uri)).filter(
+  const removed = Immutable.OrderedSet(previousResultIds.map((previous) => previous.uri)).filter(
     (uri) => !reported.has(uri),
   );
+
   return {
     items: [
       ...current,

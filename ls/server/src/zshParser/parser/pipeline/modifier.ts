@@ -34,6 +34,7 @@ export function readPipelineModifier(state: ParseState): PipelineModifierResult 
 function skipExtraPipelineModifiers(state: ParseState): ParseState {
   return loop(skipTrivia(state), (current) => {
     const token = currentToken(current);
+
     return pipelineModifierType(token)
       ? again(
           skipTrivia(

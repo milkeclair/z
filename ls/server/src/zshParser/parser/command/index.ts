@@ -19,6 +19,7 @@ export function parseCommand(input: {
 }): NodeResult<CommandNode> {
   const state = skipTrivia(input.state);
   const nesting = enterNesting(state.nesting);
+
   if (state.stopped || nesting.kind === 'limit') {
     const diagnosed = state.stopped
       ? state
@@ -28,6 +29,7 @@ export function parseCommand(input: {
           message: 'Parser nesting limit exceeded',
           tokens: [currentToken(state)],
         });
+
     return {
       node: {
         kind: 'unknown',
@@ -37,7 +39,9 @@ export function parseCommand(input: {
       state: { ...diagnosed, stopped: true, index: state.tokens.length - 1 },
     };
   }
+
   const result = parseCommandInside({ ...input, state: { ...state, nesting: nesting.state } });
+
   return { node: result.node, state: { ...result.state, nesting: state.nesting } };
 }
 

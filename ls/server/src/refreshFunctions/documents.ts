@@ -12,6 +12,7 @@ export type DocumentSnapshot = {
   readonly file: ZshFileHydration;
   readonly targets?: FunctionTargets;
 };
+
 export type DocumentSnapshots = ReadonlyMap<string, DocumentSnapshot>;
 
 function sourcePath(uri: string): string | null {
@@ -21,20 +22,24 @@ function sourcePath(uri: string): string | null {
     return null;
   }
 }
+
 function snapshotForDocument(
   document: TextDocument,
   hydrator: ZshHydrator,
   previous: DocumentSnapshots,
 ): readonly (readonly [string, DocumentSnapshot])[] {
   const sourceFile = sourcePath(document.uri);
+
   if (!sourceFile?.endsWith('.zsh')) {
     return [];
   }
-  const content = document.getText(),
-    cached = previous.get(document.uri);
+
+  const content = document.getText();
+  const cached = previous.get(document.uri);
   const relative = hydrator.projectRoot ? path.relative(hydrator.projectRoot, sourceFile) : '';
-  const projectFile = hydrator.files.get(relative),
-    local = projectFile === undefined;
+  const projectFile = hydrator.files.get(relative);
+  const local = projectFile === undefined;
+
   if (
     cached &&
     cached.version === document.version &&
@@ -44,9 +49,11 @@ function snapshotForDocument(
   ) {
     return [[document.uri, cached]];
   }
+
   const file =
     projectFile ??
     createZshFileHydration({ sourceFile, file: sourceFile, content, options: hydrator.options });
+
   return [
     [
       document.uri,
@@ -59,6 +66,7 @@ function snapshotForDocument(
     ],
   ];
 }
+
 export function documentSnapshots(
   documents: readonly TextDocument[],
   hydrator: ZshHydrator,
@@ -67,6 +75,7 @@ export function documentSnapshots(
   const next: DocumentSnapshots = new Map(
     documents.flatMap((document) => snapshotForDocument(document, hydrator, previous)),
   );
+
   return next.size === previous.size &&
     [...next].every(([uri, value]) => previous.get(uri) === value)
     ? previous
