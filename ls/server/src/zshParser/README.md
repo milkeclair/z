@@ -14,7 +14,7 @@ const lexed = Lexer.tokenize(source, { sourceFile: 'example.zsh' });
 const parsed = Parser.parse(lexed.tokens, { path: 'example.zsh' });
 
 const functions = findAll(parsed.ast, 'functionDefinition');
-const names = functions.flatMap(node => node.names.map(name => name.raw));
+const names = functions.flatMap((node) => node.names.map((name) => name.raw));
 // names: ['helper']
 
 const query = createQueryContext(parsed.ast);

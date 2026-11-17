@@ -13,9 +13,7 @@ describe('tokenize@metadata', () => {
       sourceFile,
       sourceFile,
     ]);
-    expect(result.diagnostics.map((diagnostic) => diagnostic.sourceFile)).toEqual([
-      sourceFile,
-    ]);
+    expect(result.diagnostics.map((diagnostic) => diagnostic.sourceFile)).toEqual([sourceFile]);
   });
 
   test('ソースファイル名が未指定なら空文字列を使う', () => {

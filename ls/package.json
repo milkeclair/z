@@ -62,10 +62,12 @@
   },
   "scripts": {
     "b": "npm run clean && tsc -b",
-    "test": "npm run b && tsc -p server/tsconfig.test.json --noEmit && TMPDIR=/tmp vitest run",
+    "test": "npm run format:check && npm run b && tsc -p server/tsconfig.test.json --noEmit && TMPDIR=/tmp vitest run",
     "clean": "rm -rf client/dist server/dist client/tsconfig.tsbuildinfo server/tsconfig.tsbuildinfo",
     "vscode:prepublish": "npm run b",
-    "package": "npm ci && vsce package"
+    "package": "npm ci && vsce package",
+    "format": "prettier --write client/src server/src server/test",
+    "format:check": "prettier --check client/src server/src server/test"
   },
   "dependencies": {
     "glob": "^14.0.6",
@@ -77,6 +79,7 @@
     "@types/node": "^26.6.6",
     "@types/vscode": "^1.146.0",
     "@vscode/vsce": "^4.1.1",
+    "prettier": "3.6.2",
     "typescript": "^7.0.2",
     "vitest": "^5.1.0"
   }

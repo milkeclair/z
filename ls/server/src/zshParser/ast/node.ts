@@ -4,14 +4,8 @@ import type { DocBlockNode } from './docBlock';
 import type { EofNode } from './eof';
 import type { FileNode } from './file';
 import type { ListNode } from './file/list';
-import type {
-  ListItemNode,
-  ListTerminatorNode,
-} from './file/list/listItem';
-import type {
-  LogicalOperatorNode,
-  SublistNode,
-} from './file/list/listItem/sublist';
+import type { ListItemNode, ListTerminatorNode } from './file/list/listItem';
+import type { LogicalOperatorNode, SublistNode } from './file/list/listItem/sublist';
 import type {
   PipelineModifierNode,
   PipelineNode,

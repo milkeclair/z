@@ -5,7 +5,9 @@ import { COMMENT_CHAR } from './constant';
 
 function parsePositionalArg(line: string): FuncArg | null {
   const match = line.match(positionalArgRegex);
-  if (!match) return null;
+  if (!match) {
+    return null;
+  }
 
   const [, posStr, optionalMarker, name] = match;
 
@@ -19,7 +21,9 @@ function parsePositionalArg(line: string): FuncArg | null {
 
 function parseSpecialArg(line: string): FuncArg | null {
   const match = line.match(specialArgRegex);
-  if (!match) return null;
+  if (!match) {
+    return null;
+  }
 
   const [, argName, optionalMarker, _description] = match;
 
@@ -33,7 +37,9 @@ function parseSpecialArg(line: string): FuncArg | null {
 
 function parseNamedArg(line: string): FuncArg | null {
   const match = line.match(namedArgRegex);
-  if (!match) return null;
+  if (!match) {
+    return null;
+  }
 
   const [, argName, optionalMarker] = match;
 
@@ -53,9 +59,15 @@ function sortArgs(args: FuncArg[]): FuncArg[] {
   //   { position: -1, isNamed: true, name: 'option2' },
   // ]
   return args.sort((a, b) => {
-    if (a.isNamed && b.isNamed) return 0;
-    if (a.isNamed) return 1;
-    if (b.isNamed) return -1;
+    if (a.isNamed && b.isNamed) {
+      return 0;
+    }
+    if (a.isNamed) {
+      return 1;
+    }
+    if (b.isNamed) {
+      return -1;
+    }
     return a.position - b.position;
   });
 }
@@ -70,7 +82,9 @@ export function extractFunctionArgs(lines: string[], functionLineIndex: number):
   for (let i = functionLineIndex - 1; i >= 0; i--) {
     const line = lines[i];
 
-    if (outOfCommentLine(line)) break;
+    if (outOfCommentLine(line)) {
+      break;
+    }
 
     const positionalArg = parsePositionalArg(line);
     if (positionalArg) {

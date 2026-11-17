@@ -39,13 +39,24 @@ export function readTokenizeStep({
   });
 
   const context = state.context.readHereDocs
-    ? { ...state.context, previous: result.value.tokens.at(-1) ?? state.context.previous, pendingHereDocs: [], awaitingHereDoc: null, readHereDocs: false }
+    ? {
+        ...state.context,
+        previous: result.value.tokens.at(-1) ?? state.context.previous,
+        pendingHereDocs: [],
+        awaitingHereDoc: null,
+        readHereDocs: false,
+      }
     : result.value.tokens.reduce(advanceLexicalContext, state.context);
   const unclosed = result.value.tokens.some((token) => token.operatorKind === state.context.close)
-    ? state.context.pendingHereDocs.map((request): LexerDiagnostic => ({
-      kind: 'unclosedHereDocument', message: 'Missing here-document delimiter ' + request.delimiter,
-      sourceFile, range: { start: position(state.cursor), end: position(result.cursor) },
-    })) : [];
+    ? state.context.pendingHereDocs.map(
+        (request): LexerDiagnostic => ({
+          kind: 'unclosedHereDocument',
+          message: 'Missing here-document delimiter ' + request.delimiter,
+          sourceFile,
+          range: { start: position(state.cursor), end: position(result.cursor) },
+        }),
+      )
+    : [];
   return {
     ...state,
     context,
@@ -68,16 +79,28 @@ function readNext({
 }): ReadResult<TokenizeStepValue> {
   if (state.context.readHereDocs) {
     const result = readHereDocuments(state.cursor, state.context.pendingHereDocs, sourceFile);
-    return { cursor: result.cursor, value: { tokens: result.tokens, diagnostics: result.diagnostics } };
+    return {
+      cursor: result.cursor,
+      value: { tokens: result.tokens, diagnostics: result.diagnostics },
+    };
   }
   const cursor = state.cursor;
   const start = position(cursor);
 
   const pendingHeader = state.context.awaitingHereDoc;
   const header = pendingHeader ? hereDocHeader(cursor.text, pendingHeader.operatorOffset) : null;
-  if (header && header.end > start.offset && !isHorizontalWhitespace(current(cursor)) && !isNewline(cursor) && !isContinuation(cursor)) {
+  if (
+    header &&
+    header.end > start.offset &&
+    !isHorizontalWhitespace(current(cursor)) &&
+    !isNewline(cursor) &&
+    !isContinuation(cursor)
+  ) {
     const result = reader.word(cursor, (candidate) => position(candidate).offset >= header.end);
-    return { cursor: result.cursor, value: { tokens: [result.value.token], diagnostics: result.value.diagnostics } };
+    return {
+      cursor: result.cursor,
+      value: { tokens: [result.value.token], diagnostics: result.value.diagnostics },
+    };
   }
 
   if (isContinuation(cursor)) {
@@ -126,7 +149,10 @@ function readNext({
         diagnostics: [],
       },
     };
-  } else if (current(cursor) === SpecialCharacters.hash && (state.context.kind === 'command' || state.context.kind === 'array')) {
+  } else if (
+    current(cursor) === SpecialCharacters.hash &&
+    (state.context.kind === 'command' || state.context.kind === 'array')
+  ) {
     const result = reader.comment(cursor);
 
     return {
@@ -136,15 +162,33 @@ function readNext({
         diagnostics: [],
       },
     };
-  } else if (current(cursor) === '(' && state.context.previous?.kind === 'word' &&
-    state.context.previous.range.end.offset === start.offset && !state.context.previous.value.endsWith('=') &&
-    (state.context.previous.value.includes('*') || state.context.previous.value.includes('?') || cursor.text[start.offset + 1] === '#')) {
+  } else if (
+    current(cursor) === '(' &&
+    state.context.previous?.kind === 'word' &&
+    state.context.previous.range.end.offset === start.offset &&
+    !state.context.previous.value.endsWith('=') &&
+    (state.context.previous.value.includes('*') ||
+      state.context.previous.value.includes('?') ||
+      cursor.text[start.offset + 1] === '#')
+  ) {
     const end = delimitedEnd(cursor.text, start.offset, 'patternParen');
     if (end !== null) {
       const result = advance(cursor, end - start.offset);
-      return { cursor: result.cursor, value: { tokens: [createToken({
-        kind: 'word', value: result.value, sourceFile, start, end: position(result.cursor),
-      })], diagnostics: [] } };
+      return {
+        cursor: result.cursor,
+        value: {
+          tokens: [
+            createToken({
+              kind: 'word',
+              value: result.value,
+              sourceFile,
+              start,
+              end: position(result.cursor),
+            }),
+          ],
+          diagnostics: [],
+        },
+      };
     }
     return readWordOrOperator({ cursor, reader, isWordBoundary, context: state.context });
   } else {
@@ -170,9 +214,14 @@ function readWordOrOperator({
 }): ReadResult<TokenizeStepValue> {
   const found = findOperator(cursor);
   const arithmetic = context.kind === 'arithmetic' || context.kind === 'math';
-  const operator: OperatorDefinition | null = found?.kind === 'arithmeticEnd' && context.kind !== 'arithmetic'
-    ? { value: ')', kind: 'rightParen' }
-    : found?.kind === 'arithmeticStart' && (isProcessOpen(context, position(cursor).offset) || arithmetic && !isDollarOpen(context, position(cursor).offset)) ? { value: '(', kind: 'leftParen' } : found;
+  const operator: OperatorDefinition | null =
+    found?.kind === 'arithmeticEnd' && context.kind !== 'arithmetic'
+      ? { value: ')', kind: 'rightParen' }
+      : found?.kind === 'arithmeticStart' &&
+          (isProcessOpen(context, position(cursor).offset) ||
+            (arithmetic && !isDollarOpen(context, position(cursor).offset)))
+        ? { value: '(', kind: 'leftParen' }
+        : found;
 
   if (operator) {
     const result = reader.operator(cursor, operator);

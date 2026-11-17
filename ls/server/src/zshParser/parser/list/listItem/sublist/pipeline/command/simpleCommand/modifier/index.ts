@@ -5,11 +5,7 @@ import type {
 } from '../../../../../../../../ast';
 import type { Token } from '../../../../../../../../lexer';
 import { createOptionNodeFromToken } from '../../../../../../../option';
-import {
-  advanceState,
-  currentToken,
-  skipInlineTrivia,
-} from '../../../../../../../state';
+import { advanceState, currentToken, skipInlineTrivia } from '../../../../../../../state';
 import type { NodeResult, ParseState } from '../../../../../../../state';
 import { readWordNode } from '../../../../../../../word/composite';
 import { isProcessSubstitutionStart } from '../../../../../../../word/composite/token';
@@ -73,8 +69,11 @@ function readPrecommandOptions({
   while (true) {
     const candidate = skipInlineTrivia(current);
     const option = createPrecommandOption(type, currentToken(candidate), candidate);
-    if (!option) return { options: result, state: current };
-    result.push(option.node); current = option.state;
+    if (!option) {
+      return { options: result, state: current };
+    }
+    result.push(option.node);
+    current = option.state;
   }
 }
 
@@ -106,7 +105,10 @@ function createExecValueOption(token: Token, state: ParseState): NodeResult<Opti
   const valueState = skipInlineTrivia(advanceState(state));
   const valueToken = currentToken(valueState);
 
-  if (valueToken.kind === 'word' || isProcessSubstitutionStart(valueState.tokens, valueState.index)) {
+  if (
+    valueToken.kind === 'word' ||
+    isProcessSubstitutionStart(valueState.tokens, valueState.index)
+  ) {
     const value = readWordNode(valueState);
 
     return {
@@ -150,11 +152,19 @@ function isExecFlagOption(value: string): boolean {
 }
 
 function containsOnlyCommandOptionChars(value: string, index: number): boolean {
-  for (let cursor = index; cursor < value.length; cursor += 1) if (!'pvV'.includes(value[cursor])) return false;
+  for (let cursor = index; cursor < value.length; cursor += 1) {
+    if (!'pvV'.includes(value[cursor])) {
+      return false;
+    }
+  }
   return true;
 }
 
 function containsOnlyExecFlagOptionChars(value: string, index: number): boolean {
-  for (let cursor = index; cursor < value.length; cursor += 1) if (!'cl'.includes(value[cursor])) return false;
+  for (let cursor = index; cursor < value.length; cursor += 1) {
+    if (!'cl'.includes(value[cursor])) {
+      return false;
+    }
+  }
   return true;
 }

@@ -18,7 +18,10 @@ export function parse(tokens: readonly Token[], options: ParseOptions = {}): Par
   return parseWithContext(tokens, options);
 }
 
-export function parseWithContext(tokens: readonly Token[], options: ParseStateOptions): ParseResult {
+export function parseWithContext(
+  tokens: readonly Token[],
+  options: ParseStateOptions,
+): ParseResult {
   const state = createParseState(tokens, options);
   const bodyResult = parseList(state, isFileEnd);
   const eof = createEofNode(bodyResult.state.eof);

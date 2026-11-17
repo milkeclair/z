@@ -7,15 +7,37 @@ import { cursorAt } from './ast/cursor';
 import { targetAtName } from './ast/context';
 import { zArgumentHover } from './argumentHover';
 
-export function zHover({ params, documents, snapshot, programs }: {
-  params: HoverParams; documents: Pick<TextDocuments<TextDocument>, 'get'>; snapshot: FunctionSnapshot; programs?: readonly CodeProgram[];
+export function zHover({
+  params,
+  documents,
+  snapshot,
+  programs,
+}: {
+  params: HoverParams;
+  documents: Pick<TextDocuments<TextDocument>, 'get'>;
+  snapshot: FunctionSnapshot;
+  programs?: readonly CodeProgram[];
 }): HoverContent | null {
   const document = documents.get(params.textDocument.uri);
-  if (!document) return null;
+  if (!document) {
+    return null;
+  }
   const cursor = cursorAt(snapshot, document, document.offsetAt(params.position), programs);
-  if (!cursor) return null;
+  if (!cursor) {
+    return null;
+  }
   const match = targetAtName(snapshot, cursor);
-  if (match) return { contents: { kind: MarkupKind.Markdown,
-    value: commentToMarkDown(match.target.info.documentation, match.target.name, match.target.info.args) } };
+  if (match) {
+    return {
+      contents: {
+        kind: MarkupKind.Markdown,
+        value: commentToMarkDown(
+          match.target.info.documentation,
+          match.target.name,
+          match.target.info.args,
+        ),
+      },
+    };
+  }
   return zArgumentHover(snapshot, cursor);
 }

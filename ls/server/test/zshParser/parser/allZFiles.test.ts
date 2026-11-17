@@ -8,7 +8,9 @@ import { astContractViolations } from './contracts';
 
 const repoRoot = resolve(__dirname, '../../../../..');
 const files = globSync('**/*.zsh', {
-  cwd: repoRoot, nodir: true, ignore: ['.git/**', 'ls/node_modules/**'],
+  cwd: repoRoot,
+  nodir: true,
+  ignore: ['.git/**', 'ls/node_modules/**'],
 }).sort();
 
 describe('parse@allZFiles', () => {

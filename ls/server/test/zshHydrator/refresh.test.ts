@@ -4,7 +4,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { createZshHydrator, refreshZshHydrator, documentationOf, directivesOf } from '../../src/zshHydrator';
+import {
+  createZshHydrator,
+  refreshZshHydrator,
+  documentationOf,
+  directivesOf,
+} from '../../src/zshHydrator';
 
 const roots: string[] = [];
 function fixture(): string {
@@ -14,14 +19,20 @@ function fixture(): string {
 }
 afterEach(() => {
   vi.restoreAllMocks();
-  for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
+  for (const root of roots.splice(0)) {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });
 function document(root: string, name: string, version: number, content: string) {
-  return TextDocument.create(pathToFileURL(path.join(root, name)).href, 'shellscript', version, content);
+  return TextDocument.create(
+    pathToFileURL(path.join(root, name)).href,
+    'shellscript',
+    version,
+    content,
+  );
 }
 
 describe('zshHydrator@refresh', () => {
-
   test('stat後にディレクトリへ置き換わったファイルも除外する', () => {
     const root = fixture();
     const file = path.join(root, 'sample.zsh');
@@ -48,7 +59,9 @@ describe('zshHydrator@refresh', () => {
     const denied = Object.assign(new Error('permission denied'), { code: 'EACCES' });
     const originalStat = fs.statSync;
     vi.spyOn(fs, 'statSync').mockImplementation((...args) => {
-      if (args[0] === file) throw denied;
+      if (args[0] === file) {
+        throw denied;
+      }
       return originalStat(...args);
     });
 
@@ -56,12 +69,15 @@ describe('zshHydrator@refresh', () => {
   });
 
   test.each(['removed', 'parentReplaced', 'directoryReplaced'])(
-    '走査中にファイルや親ディレクトリが置き換わってもrefreshを完了する: %s', (change) => {
+    '走査中にファイルや親ディレクトリが置き換わってもrefreshを完了する: %s',
+    (change) => {
       const root = fixture();
       const replaceParent = change === 'parentReplaced';
       const firstFile = path.join(root, 'a.zsh');
       const parent = replaceParent ? path.join(root, 'directory') : root;
-      if (replaceParent) fs.mkdirSync(parent);
+      if (replaceParent) {
+        fs.mkdirSync(parent);
+      }
       const removedFile = path.join(parent, 'b.zsh');
       fs.writeFileSync(firstFile, 'first() { : }\n');
       fs.writeFileSync(removedFile, 'removed() { : }\n');
@@ -73,7 +89,9 @@ describe('zshHydrator@refresh', () => {
           if (replaceParent) {
             fs.rmdirSync(parent);
             fs.writeFileSync(parent, 'replaced');
-          } else if (change === 'directoryReplaced') fs.mkdirSync(removedFile);
+          } else if (change === 'directoryReplaced') {
+            fs.mkdirSync(removedFile);
+          }
           removed = true;
         }
         return originalStat(...args);
@@ -88,15 +106,24 @@ describe('zshHydrator@refresh', () => {
 
   test('同じversionと長さで開き直した文書も内容が変われば再解析する', () => {
     const root = fixture();
-    const first = refreshZshHydrator({ previous: createZshHydrator(root), projectRoot: root,
-      documents: [document(root, 'sample.zsh', 1, 'first() { : }\n')] });
-    const next = refreshZshHydrator({ previous: first, projectRoot: root,
-      documents: [document(root, 'sample.zsh', 1, 'other() { : }\n')] });
+    const first = refreshZshHydrator({
+      previous: createZshHydrator(root),
+      projectRoot: root,
+      documents: [document(root, 'sample.zsh', 1, 'first() { : }\n')],
+    });
+    const next = refreshZshHydrator({
+      previous: first,
+      projectRoot: root,
+      documents: [document(root, 'sample.zsh', 1, 'other() { : }\n')],
+    });
     expect(next.files.get('sample.zsh')?.functions[0].name).toBe('other');
     expect(next.files.get('sample.zsh')).not.toBe(first.files.get('sample.zsh'));
     expect(first.files.get('sample.zsh')?.functions[0].name).toBe('first');
-    const unchanged = refreshZshHydrator({ previous: next, projectRoot: root,
-      documents: [document(root, 'sample.zsh', 1, 'other() { : }\n')] });
+    const unchanged = refreshZshHydrator({
+      previous: next,
+      projectRoot: root,
+      documents: [document(root, 'sample.zsh', 1, 'other() { : }\n')],
+    });
     expect(unchanged.files.get('sample.zsh')).toBe(next.files.get('sample.zsh'));
   });
 
@@ -117,10 +144,19 @@ describe('zshHydrator@refresh', () => {
     fs.mkdirSync(path.join(root, 'node_modules'));
     fs.writeFileSync(path.join(root, '.hidden.zsh'), 'hidden() { : }\n');
     fs.writeFileSync(path.join(root, '.config', 'sample.zsh'), 'configured() { : }\n');
-    fs.writeFileSync(path.join(root, '.config', '.git', 'ignored.zsh'), 'nested_git_ignored() { : }\n');
+    fs.writeFileSync(
+      path.join(root, '.config', '.git', 'ignored.zsh'),
+      'nested_git_ignored() { : }\n',
+    );
     fs.writeFileSync(path.join(root, '.git', 'ignored.zsh'), 'git_ignored() { : }\n');
-    fs.writeFileSync(path.join(root, 'node_modules', 'ignored.zsh'), 'dependency_ignored() { : }\n');
-    expect([...createZshHydrator(root).files.keys()].sort()).toEqual(['.config/sample.zsh', '.hidden.zsh']);
+    fs.writeFileSync(
+      path.join(root, 'node_modules', 'ignored.zsh'),
+      'dependency_ignored() { : }\n',
+    );
+    expect([...createZshHydrator(root).files.keys()].sort()).toEqual([
+      '.config/sample.zsh',
+      '.hidden.zsh',
+    ]);
   });
 
   test('同じsizeとmtimeに戻したdiskの編集も再解析する', () => {
@@ -155,34 +191,61 @@ describe('zshHydrator@refresh', () => {
     const root = fixture();
     fs.writeFileSync(path.join(root, 'sample.zsh'), '# $1: disk\nhelper() { : }\n');
     const first = createZshHydrator(root);
-    const opened = document(root, 'sample.zsh', 1, '# $name?: unsaved\nhelper() { : } # zls: ignore\n');
+    const opened = document(
+      root,
+      'sample.zsh',
+      1,
+      '# $name?: unsaved\nhelper() { : } # zls: ignore\n',
+    );
     const live = refreshZshHydrator({ previous: first, projectRoot: root, documents: [opened] });
     const entry = live.files.get('sample.zsh');
     expect(entry).toBeDefined();
-    if (!entry) throw new Error('entry required');
-    expect(documentationOf(entry.functions[0].definition)?.parameters).toMatchObject([{ kind: 'namedParameterDoc', name: 'name', optional: true }]);
+    if (!entry) {
+      throw new Error('entry required');
+    }
+    expect(documentationOf(entry.functions[0].definition)?.parameters).toMatchObject([
+      { kind: 'namedParameterDoc', name: 'name', optional: true },
+    ]);
     expect(entry.ast.comments.map(directivesOf).flat()).toHaveLength(1);
-    expect(refreshZshHydrator({ previous: live, projectRoot: root, documents: [opened] }).files.get('sample.zsh')).toBe(entry);
+    expect(
+      refreshZshHydrator({ previous: live, projectRoot: root, documents: [opened] }).files.get(
+        'sample.zsh',
+      ),
+    ).toBe(entry);
     const edited = document(root, 'sample.zsh', 2, 'helper() { : }\n');
-    const refreshed = refreshZshHydrator({ previous: live, projectRoot: root, documents: [edited] });
+    const refreshed = refreshZshHydrator({
+      previous: live,
+      projectRoot: root,
+      documents: [edited],
+    });
     const next = refreshed.files.get('sample.zsh');
-    if (!next) throw new Error('entry required');
+    if (!next) {
+      throw new Error('entry required');
+    }
     expect(next.ast).not.toBe(entry.ast);
     expect(documentationOf(next.functions[0].definition)).toBeNull();
     expect(next.ast.comments).toEqual([]);
     expect(entry.ast.comments.map(directivesOf).flat()).toHaveLength(1);
     const closed = refreshZshHydrator({ previous: refreshed, projectRoot: root, documents: [] });
-    expect(documentationOf(closed.files.get('sample.zsh')?.functions[0].definition ?? entry.functions[0].definition)?.parameters).toMatchObject([{ kind: 'positionalParameterDoc', description: 'disk' }]);
+    expect(
+      documentationOf(
+        closed.files.get('sample.zsh')?.functions[0].definition ?? entry.functions[0].definition,
+      )?.parameters,
+    ).toMatchObject([{ kind: 'positionalParameterDoc', description: 'disk' }]);
   });
 
   test('新規bufferとdot名を扱い、project外の文書を除外する', () => {
     const root = fixture();
     const state = createZshHydrator(root);
-    const result = refreshZshHydrator({ previous: state, projectRoot: root, documents: [
-      document(root, '..helper.zsh', 1, 'helper() { : }\n'),
-      document(root, 'new.zsh', 1, 'new_function() { : }\n'),
-      document(path.dirname(root), 'outside.zsh', 1, 'outside() { : }\n'),
-    ] });
+    const result = refreshZshHydrator({
+      previous: state,
+      projectRoot: root,
+      documents: [
+        document(root, '..helper.zsh', 1, 'helper() { : }\n'),
+        document(root, 'new.zsh', 1, 'new_function() { : }\n'),
+        document(path.dirname(root), 'outside.zsh', 1, 'outside() { : }\n'),
+      ],
+    });
     expect([...result.files.keys()].sort()).toEqual(['..helper.zsh', 'new.zsh']);
   });
 
@@ -191,11 +254,22 @@ describe('zshHydrator@refresh', () => {
     const content = 'helper() { : } # custom: ignore\n';
     fs.writeFileSync(path.join(root, 'disk.zsh'), content);
     const opened = document(root, 'buffer.zsh', 1, content);
-    const first = refreshZshHydrator({ previous: createZshHydrator(root), projectRoot: root, documents: [opened] });
-    const next = refreshZshHydrator({ previous: first, projectRoot: root, documents: [opened], options: { directiveNamespaces: ['custom'] } });
+    const first = refreshZshHydrator({
+      previous: createZshHydrator(root),
+      projectRoot: root,
+      documents: [opened],
+    });
+    const next = refreshZshHydrator({
+      previous: first,
+      projectRoot: root,
+      documents: [opened],
+      options: { directiveNamespaces: ['custom'] },
+    });
     for (const name of ['disk.zsh', 'buffer.zsh']) {
       const entry = next.files.get(name);
-      if (!entry) throw new Error('entry required');
+      if (!entry) {
+        throw new Error('entry required');
+      }
       expect(entry).not.toBe(first.files.get(name));
       expect(entry.ast.comments.map(directivesOf).flat()).toHaveLength(1);
     }

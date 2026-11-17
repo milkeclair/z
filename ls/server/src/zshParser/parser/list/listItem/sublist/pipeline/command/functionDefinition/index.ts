@@ -7,12 +7,7 @@ import type {
 import type { Token } from '../../../../../../../lexer';
 import { readPostCommandRedirects } from '../../../../../../redirect';
 import { rangeFromTokens, enclosingRange } from '../../../../../../range';
-import {
-  addDiagnostic,
-  currentToken,
-  skipTrivia,
-  tokenSlice,
-} from '../../../../../../state';
+import { addDiagnostic, currentToken, skipTrivia, tokenSlice } from '../../../../../../state';
 import type { NodeResult, ParseState } from '../../../../../../state';
 import { skipCommandTerm } from '../term';
 import { createLeadingDocBlock } from './docBlock';
@@ -39,7 +34,10 @@ export function parseFunctionDefinition({
   });
   const postBodyRedirects = readPostCommandRedirects(body.state);
   const tokens = tokenSlice(postBodyRedirects.state, startIndex, postBodyRedirects.state.index);
-  const functionRange = enclosingRange(rangeFromTokens(tokens, body.node.range), [body.node, ...postBodyRedirects.redirects]);
+  const functionRange = enclosingRange(rangeFromTokens(tokens, body.node.range), [
+    body.node,
+    ...postBodyRedirects.redirects,
+  ]);
   const leadingDoc = createLeadingDocBlock({
     context: postBodyRedirects.state.comments,
     tokens: postBodyRedirects.state.tokens,
@@ -81,10 +79,7 @@ function readFunctionBody({
   }
 }
 
-function createMissingFunctionBody(
-  state: ParseState,
-  token: Token,
-): NodeResult<UnknownNode> {
+function createMissingFunctionBody(state: ParseState, token: Token): NodeResult<UnknownNode> {
   const diagnosed = addDiagnostic({
     state,
     kind: 'missingFunctionBody',

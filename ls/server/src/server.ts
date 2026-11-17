@@ -1,14 +1,25 @@
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
 import {
-  createConnection, TextDocuments, TextDocument, ProposedFeatures,
-  DocumentDiagnosticReportKind, DidChangeWatchedFilesNotification,
+  createConnection,
+  TextDocuments,
+  TextDocument,
+  ProposedFeatures,
+  DocumentDiagnosticReportKind,
+  DidChangeWatchedFilesNotification,
 } from './vscode_type';
 import {
-  refreshFunctionSnapshot, createFunctionSnapshot,
-  validateTextDocument, workspaceDiagnostics, zInitialize,
-  zSettingsFromConfigurationNotification, zCompletion, zCompletionResolve,
-  zHover, zDefinition, zSignatureHelp,
+  refreshFunctionSnapshot,
+  createFunctionSnapshot,
+  validateTextDocument,
+  workspaceDiagnostics,
+  zInitialize,
+  zSettingsFromConfigurationNotification,
+  zCompletion,
+  zCompletionResolve,
+  zHover,
+  zDefinition,
+  zSignatureHelp,
 } from './main';
 import { createDiagnosticSnapshot, refreshDiagnosticSnapshot } from './diagnostics/snapshot';
 import { readShellEnvironment, emptyShellEnvironment } from './diagnostics/environment';
@@ -37,7 +48,9 @@ function startServer(): void {
   let diagnosticsTimer: ReturnType<typeof setTimeout> | undefined;
 
   function scheduleDiagnosticsRefresh(): void {
-    if (!supportsRefresh) return;
+    if (!supportsRefresh) {
+      return;
+    }
     clearTimeout(diagnosticsTimer);
     diagnosticsTimer = setTimeout(() => {
       diagnosticsTimer = undefined;
@@ -48,9 +61,17 @@ function startServer(): void {
   }
 
   function refresh(root = projectRoot, changedPaths?: readonly string[]): void {
-    const next = refreshFunctionSnapshot({ projectRoot: root, documents, previous: snapshot,
-      changedPaths: watcherReady ? changedPaths : undefined });
-    const nextDiagnostics = refreshDiagnosticSnapshot({ snapshot: next, environment, previous: diagnosticSnapshot });
+    const next = refreshFunctionSnapshot({
+      projectRoot: root,
+      documents,
+      previous: snapshot,
+      changedPaths: watcherReady ? changedPaths : undefined,
+    });
+    const nextDiagnostics = refreshDiagnosticSnapshot({
+      snapshot: next,
+      environment,
+      previous: diagnosticSnapshot,
+    });
     snapshot = next;
     diagnosticSnapshot = nextDiagnostics;
     projectRoot = root;
@@ -60,20 +81,30 @@ function startServer(): void {
   function flushAnalysis(): void {
     clearTimeout(analysisTimer);
     analysisTimer = undefined;
-    if (!pendingAnalysis) return;
+    if (!pendingAnalysis) {
+      return;
+    }
     refresh(projectRoot, pendingAnalysis.changedPaths);
     pendingAnalysis = null;
   }
 
   function scheduleAnalysis(changedPaths: readonly string[] | undefined): void {
-    if (stopped) return;
+    if (stopped) {
+      return;
+    }
     const now = performance.now();
     pendingAnalysis = queueAnalysis(pendingAnalysis, watcherReady ? changedPaths : undefined, now);
     clearTimeout(analysisTimer);
-    analysisTimer = setTimeout(() => {
-      try { flushAnalysis(); }
-      catch (error: unknown) { conn.console.error('Analysis refresh failed: ' + String(error)); }
-    }, analysisDelay(pendingAnalysis, now));
+    analysisTimer = setTimeout(
+      () => {
+        try {
+          flushAnalysis();
+        } catch (error: unknown) {
+          conn.console.error('Analysis refresh failed: ' + String(error));
+        }
+      },
+      analysisDelay(pendingAnalysis, now),
+    );
   }
 
   function refreshAll(root = projectRoot): void {
@@ -89,31 +120,45 @@ function startServer(): void {
     workspaceRoot = result.workspaceRoot;
     snapshot = result.snapshot;
     environment = await readShellEnvironment();
-    if (environment.kind === 'unavailable') conn.console.warn('Shell environment unavailable: ' + environment.reason);
+    if (environment.kind === 'unavailable') {
+      conn.console.warn('Shell environment unavailable: ' + environment.reason);
+    }
     diagnosticSnapshot = refreshDiagnosticSnapshot({ snapshot, environment });
     showPrivateFunctions = result.settings.completion.showPrivateFunctions;
     supportsRefresh = params.capabilities.workspace?.diagnostics?.refreshSupport === true;
-    supportsWatchRegistration = params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration === true;
+    supportsWatchRegistration =
+      params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration === true;
     return result.serverCapabilities;
   });
 
   conn.onInitialized(() => {
-    if (stopped) return;
+    if (stopped) {
+      return;
+    }
     stopRescan?.();
     stopRescan = startPeriodicRescan(
-      () => { if (projectRoot) refreshAll(); },
-      error => conn.console.error('Periodic rescan failed: ' + String(error)),
+      () => {
+        if (projectRoot) {
+          refreshAll();
+        }
+      },
+      (error) => conn.console.error('Periodic rescan failed: ' + String(error)),
     );
     if (supportsWatchRegistration) {
-      void conn.client.register(DidChangeWatchedFilesNotification.type, {
-        watchers: [{ globPattern: '**/*.zsh' }],
-      }).then(() => {
-        if (stopped) return;
-        refreshAll();
-        watcherReady = workspaceRoot !== '' && projectRoot === workspaceRoot;
-      }).catch((error: unknown) => {
-        conn.console.warn('File watcher registration failed: ' + String(error));
-      });
+      void conn.client
+        .register(DidChangeWatchedFilesNotification.type, {
+          watchers: [{ globPattern: '**/*.zsh' }],
+        })
+        .then(() => {
+          if (stopped) {
+            return;
+          }
+          refreshAll();
+          watcherReady = workspaceRoot !== '' && projectRoot === workspaceRoot;
+        })
+        .catch((error: unknown) => {
+          conn.console.warn('File watcher registration failed: ' + String(error));
+        });
     }
   });
 
@@ -123,48 +168,84 @@ function startServer(): void {
     refreshAll(projectRootFromSettings(workspaceRoot, settings.zPath));
   });
   function filePaths(uris: readonly string[]): readonly string[] {
-    return uris.flatMap(uri => {
-      try { return [fileURLToPath(uri)]; } catch { return []; }
+    return uris.flatMap((uri) => {
+      try {
+        return [fileURLToPath(uri)];
+      } catch {
+        return [];
+      }
     });
   }
 
-  conn.onDidChangeWatchedFiles(params => scheduleAnalysis(filePaths(params.changes.map(change => change.uri))));
+  conn.onDidChangeWatchedFiles((params) =>
+    scheduleAnalysis(filePaths(params.changes.map((change) => change.uri))),
+  );
   documents.onDidChangeContent(() => scheduleAnalysis([]));
-  documents.onDidSave(event => { scheduleAnalysis(filePaths([event.document.uri])); flushAnalysis(); });
-  documents.onDidClose(event => { scheduleAnalysis(filePaths([event.document.uri])); flushAnalysis(); });
+  documents.onDidSave((event) => {
+    scheduleAnalysis(filePaths([event.document.uri]));
+    flushAnalysis();
+  });
+  documents.onDidClose((event) => {
+    scheduleAnalysis(filePaths([event.document.uri]));
+    flushAnalysis();
+  });
 
   conn.onCompletion((params) => {
     flushAnalysis();
-    return zCompletion({ params, documents, snapshot, showPrivateFunctions,
-      programs: diagnosticSnapshot.files.get(params.textDocument.uri)?.codePrograms });
+    return zCompletion({
+      params,
+      documents,
+      snapshot,
+      showPrivateFunctions,
+      programs: diagnosticSnapshot.files.get(params.textDocument.uri)?.codePrograms,
+    });
   });
   conn.onCompletionResolve((result) => {
     flushAnalysis();
     const data: unknown = result.data;
-    const uri = typeof data === 'object' && data !== null && 'uri' in data && typeof data.uri === 'string' ? data.uri : '';
+    const uri =
+      typeof data === 'object' && data !== null && 'uri' in data && typeof data.uri === 'string'
+        ? data.uri
+        : '';
     return zCompletionResolve(result, snapshot, diagnosticSnapshot.files.get(uri)?.codePrograms);
   });
   conn.onHover((params) => {
     flushAnalysis();
-    return zHover({ params, documents, snapshot,
-      programs: diagnosticSnapshot.files.get(params.textDocument.uri)?.codePrograms });
+    return zHover({
+      params,
+      documents,
+      snapshot,
+      programs: diagnosticSnapshot.files.get(params.textDocument.uri)?.codePrograms,
+    });
   });
   conn.onSignatureHelp((params) => {
     flushAnalysis();
-    return zSignatureHelp({ params, documents, snapshot,
-      programs: diagnosticSnapshot.files.get(params.textDocument.uri)?.codePrograms });
+    return zSignatureHelp({
+      params,
+      documents,
+      snapshot,
+      programs: diagnosticSnapshot.files.get(params.textDocument.uri)?.codePrograms,
+    });
   });
   conn.onDefinition((params) => {
     flushAnalysis();
-    return zDefinition({ params, documents, snapshot,
-      programs: diagnosticSnapshot.files.get(params.textDocument.uri)?.codePrograms });
+    return zDefinition({
+      params,
+      documents,
+      snapshot,
+      programs: diagnosticSnapshot.files.get(params.textDocument.uri)?.codePrograms,
+    });
   });
 
   conn.languages.semanticTokens.on((params) => {
     flushAnalysis();
     const document = documents.get(params.textDocument.uri);
-    return document ? zSemanticTokens({ document,
-      programs: diagnosticSnapshot.files.get(document.uri)?.codePrograms ?? [] }) : { data: [] };
+    return document
+      ? zSemanticTokens({
+          document,
+          programs: diagnosticSnapshot.files.get(document.uri)?.codePrograms ?? [],
+        })
+      : { data: [] };
   });
 
   conn.languages.diagnostics.on((params) => {
@@ -173,12 +254,17 @@ function startServer(): void {
     return {
       kind: DocumentDiagnosticReportKind.Full,
       resultId: document ? diagnosticSnapshot.files.get(document.uri)?.resultId : undefined,
-      items: document ? validateTextDocument({ diagnostics: diagnosticSnapshot, textDocument: document }) : [],
+      items: document
+        ? validateTextDocument({ diagnostics: diagnosticSnapshot, textDocument: document })
+        : [],
     };
   });
-  conn.languages.diagnostics.onWorkspace(params => {
+  conn.languages.diagnostics.onWorkspace((params) => {
     flushAnalysis();
-    return workspaceDiagnostics({ diagnostics: diagnosticSnapshot, previousResultIds: params.previousResultIds });
+    return workspaceDiagnostics({
+      diagnostics: diagnosticSnapshot,
+      previousResultIds: params.previousResultIds,
+    });
   });
 
   conn.onShutdown(() => {

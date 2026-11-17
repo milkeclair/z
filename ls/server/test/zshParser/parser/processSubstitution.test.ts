@@ -3,7 +3,6 @@ import { findAll } from '../../../src/zshParser/ast';
 import { parse, simpleCommandFromItem } from './helper';
 
 describe('parse@processSubstitution', () => {
-
   test.each([' ', '\t', '\n'])('配列内のfile置換を保持する: %j', (gap) => {
     const source = 'items=(' + gap + '=(cat <<EOF\n) literal\nEOF\n))\n';
     const result = parse(source);
@@ -40,7 +39,24 @@ describe('parse@processSubstitution', () => {
     const result = parse('cat ' + raw);
     expect(result.diagnostics).toEqual([]);
     const argument = simpleCommandFromItem(result.ast.body.items[0]).arguments[0];
-    expect(argument).toMatchObject({ raw, parts: [{ kind: 'processSubstitution', raw, direction,
-      body: { items: [{ sublist: { first: { first: { kind: 'simpleCommand', commandName: { value: 'print' } } } } }] } }] });
+    expect(argument).toMatchObject({
+      raw,
+      parts: [
+        {
+          kind: 'processSubstitution',
+          raw,
+          direction,
+          body: {
+            items: [
+              {
+                sublist: {
+                  first: { first: { kind: 'simpleCommand', commandName: { value: 'print' } } },
+                },
+              },
+            ],
+          },
+        },
+      ],
+    });
   });
 });

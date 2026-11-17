@@ -21,21 +21,27 @@ function isRecord(value: unknown): value is UnknownRecord {
 }
 
 function readObject(value: unknown, key: string): UnknownRecord {
-  if (!isRecord(value)) return {};
+  if (!isRecord(value)) {
+    return {};
+  }
 
   const child = value[key];
   return isRecord(child) ? child : {};
 }
 
 function readString(value: unknown, key: string, defaultValue: string): string {
-  if (!isRecord(value)) return defaultValue;
+  if (!isRecord(value)) {
+    return defaultValue;
+  }
 
   const child = value[key];
   return typeof child === 'string' ? child : defaultValue;
 }
 
 function readBoolean(value: unknown, key: string, defaultValue: boolean): boolean {
-  if (!isRecord(value)) return defaultValue;
+  if (!isRecord(value)) {
+    return defaultValue;
+  }
 
   const child = value[key];
   return typeof child === 'boolean' ? child : defaultValue;
@@ -50,14 +56,16 @@ export function zSettingsFromInitializationOptions(value: unknown): ZLsSettings 
       showPrivateFunctions: readBoolean(
         completion,
         'showPrivateFunctions',
-        DEFAULT_SHOW_PRIVATE_FUNCTIONS
+        DEFAULT_SHOW_PRIVATE_FUNCTIONS,
       ),
     },
   };
 }
 
 export function zSettingsFromConfigurationNotification(value: unknown): ZLsSettings {
-  if (!isRecord(value)) return zSettingsFromInitializationOptions({});
+  if (!isRecord(value)) {
+    return zSettingsFromInitializationOptions({});
+  }
 
   return zSettingsFromInitializationOptions(value['z-ls']);
 }

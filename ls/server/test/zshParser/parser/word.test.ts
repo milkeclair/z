@@ -85,21 +85,27 @@ describe('parse@word', () => {
 
     const assignment = command.semantic.declaration.assignments[0];
 
-    expect(tokensInRange(result.tokens, assignment.name.range).map((token) => token.value)).toEqual([
-      'somevar=$other',
-    ]);
-    expect(tokensInRange(result.tokens, assignment.value?.range ?? assignment.range).map((token) => token.value)).toEqual([
-      'somevar=$other',
-    ]);
+    expect(tokensInRange(result.tokens, assignment.name.range).map((token) => token.value)).toEqual(
+      ['somevar=$other'],
+    );
+    expect(
+      tokensInRange(result.tokens, assignment.value?.range ?? assignment.range).map(
+        (token) => token.value,
+      ),
+    ).toEqual(['somevar=$other']);
   });
 
   test('複数tokenの展開構文を1つのwordとして読む', () => {
-    const command = simpleCommandFromItem(parse('echo ${foo} $(bar) $((1+2)) a${foo}b\n').ast.body.items[0]);
+    const command = simpleCommandFromItem(
+      parse('echo ${foo} $(bar) $((1+2)) a${foo}b\n').ast.body.items[0],
+    );
 
-    expect(command.arguments.map((argument) => ({
-      raw: argument.raw,
-      parts: argument.parts.map((part) => part.kind),
-    }))).toEqual([
+    expect(
+      command.arguments.map((argument) => ({
+        raw: argument.raw,
+        parts: argument.parts.map((part) => part.kind),
+      })),
+    ).toEqual([
       {
         raw: '${foo}',
         parts: ['parameterExpansion'],
@@ -122,12 +128,14 @@ describe('parse@word', () => {
   test('single quoteとbackslashでquotedされた$は変数参照にしない', () => {
     const command = simpleCommandFromItem(parse('echo \'$foo\' \\$bar "$baz"\n').ast.body.items[0]);
 
-    expect(command.arguments.map((argument) => ({
-      raw: argument.raw,
-      parts: argument.parts.map((part) => part.kind),
-    }))).toEqual([
+    expect(
+      command.arguments.map((argument) => ({
+        raw: argument.raw,
+        parts: argument.parts.map((part) => part.kind),
+      })),
+    ).toEqual([
       {
-        raw: '\'$foo\'',
+        raw: "'$foo'",
         parts: ['stringLiteral'],
       },
       {
@@ -142,12 +150,16 @@ describe('parse@word', () => {
   });
 
   test('位置パラメータと特殊パラメータは展開partとして読む', () => {
-    const command = simpleCommandFromItem(parse('echo function_name=$1 "$@" $? $! $$ $# $#args\n').ast.body.items[0]);
+    const command = simpleCommandFromItem(
+      parse('echo function_name=$1 "$@" $? $! $$ $# $#args\n').ast.body.items[0],
+    );
 
-    expect(command.arguments.map((argument) => ({
-      raw: argument.raw,
-      parts: argument.parts.map((part) => part.kind),
-    }))).toEqual([
+    expect(
+      command.arguments.map((argument) => ({
+        raw: argument.raw,
+        parts: argument.parts.map((part) => part.kind),
+      })),
+    ).toEqual([
       {
         raw: 'function_name=$1',
         parts: ['stringLiteral', 'parameterExpansion'],
@@ -182,10 +194,12 @@ describe('parse@word', () => {
   test('配列内の位置パラメータと特殊パラメータもraw全体を表す', () => {
     const command = simpleCommandFromItem(parse('local args=($@) pids=($!)\n').ast.body.items[0]);
 
-    expect(command.arguments.map((argument) => ({
-      raw: argument.raw,
-      partsRaw: partsRaw(argument.parts),
-    }))).toEqual([
+    expect(
+      command.arguments.map((argument) => ({
+        raw: argument.raw,
+        partsRaw: partsRaw(argument.parts),
+      })),
+    ).toEqual([
       {
         raw: 'args=($@)',
         partsRaw: 'args=($@)',
@@ -277,7 +291,9 @@ describe('parse@word', () => {
   });
 
   test('添字付き代入はprefixAssignmentとして読む', () => {
-    const result = parse('hash[name]="John"\nz_completion_docs[z.example]=$\'docs\' # zls: ignore\n');
+    const result = parse(
+      'hash[name]="John"\nz_completion_docs[z.example]=$\'docs\' # zls: ignore\n',
+    );
     const first = simpleCommandFromItem(result.ast.body.items[0]);
     const second = simpleCommandFromItem(result.ast.body.items[1]);
 
@@ -303,7 +319,7 @@ describe('parse@word', () => {
         operator: '=',
         value: {
           value: {
-            raw: '$\'docs\'',
+            raw: "$'docs'",
           },
         },
       },
@@ -327,15 +343,18 @@ describe('parse@word', () => {
   test('配列代入内のcommentはsource textとしてrawに保持する', () => {
     const result = parse('local order=(\n  var # var are used in fn\n  fn\n)\n');
     const command = simpleCommandFromItem(result.ast.body.items[0]);
-    const assignment = command.semantic.role === 'declaration'
-      ? command.semantic.declaration.assignments[0]
-      : null;
+    const assignment =
+      command.semantic.role === 'declaration' ? command.semantic.declaration.assignments[0] : null;
 
     expect(result.ast.comments.map((comment) => comment.text)).toEqual(['# var are used in fn']);
     expect(command.arguments[0].raw).toBe('order=(\n  var # var are used in fn\n  fn\n)');
-    expect(partsRaw(command.arguments[0].parts)).toBe('order=(\n  var # var are used in fn\n  fn\n)');
+    expect(partsRaw(command.arguments[0].parts)).toBe(
+      'order=(\n  var # var are used in fn\n  fn\n)',
+    );
     expect(assignment?.value?.value.raw).toBe('(\n  var # var are used in fn\n  fn\n)');
-    expect(partsRaw(assignment?.value?.value.parts ?? [])).toBe('(\n  var # var are used in fn\n  fn\n)');
+    expect(partsRaw(assignment?.value?.value.parts ?? [])).toBe(
+      '(\n  var # var are used in fn\n  fn\n)',
+    );
   });
 
   test('ネストしたparameter expansionは1つのwordとして読む', () => {
@@ -463,14 +482,17 @@ describe('parse@word', () => {
 
     expect(result.diagnostics).toEqual([]);
     expect(argument.raw).toBe(word);
-    expect(argument.parts.flatMap((part) =>
-      part.kind === 'variableReference' ? [part.name.value] : [],
-    )).toEqual(names);
+    expect(
+      argument.parts.flatMap((part) =>
+        part.kind === 'variableReference' ? [part.name.value] : [],
+      ),
+    ).toEqual(names);
     expect(partsRaw(argument.parts)).toBe(word);
-    expect(argument.parts.map((part) => word.slice(
-      part.range.start.offset - 5,
-      part.range.end.offset - 5,
-    )).join('')).toBe(word);
+    expect(
+      argument.parts
+        .map((part) => word.slice(part.range.start.offset - 5, part.range.end.offset - 5))
+        .join(''),
+    ).toBe(word);
   });
 });
 
@@ -504,7 +526,9 @@ describe('parse@arrayComments', () => {
     const source = "items=(one # '$fake\n $real)\n";
     const result = parse(source);
     expect(result.diagnostics).toEqual([]);
-    expect(findAll(result.ast, 'variableReference').map((node) => node.name.value)).toEqual(['real']);
+    expect(findAll(result.ast, 'variableReference').map((node) => node.name.value)).toEqual([
+      'real',
+    ]);
     expect(result.ast.comments.map((node) => node.text)).toEqual(["# '$fake"]);
   });
 });

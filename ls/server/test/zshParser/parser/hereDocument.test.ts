@@ -5,20 +5,25 @@ import { locate, createQueryContext, findAll } from '../../../src/zshParser/ast'
 import { parse, simpleCommandFromItem } from './helper';
 
 describe('parse@hereDocument', () => {
-
-  test.each([' # note', '#EOF', '\\\n # note'])('終端語の欠落とコメントを区別する: %s', (header) => {
-    const parsed = parse('cat <<' + header + '\nprint after\n');
-    expect(parsed.diagnostics.some((item) => item.kind === 'unexpectedToken')).toBe(true);
-    expect(parsed.ast.comments).toHaveLength(1);
-    expect(findAll(parsed.ast, 'hereDocument')).toEqual([]);
-    expect(parsed.ast.body.items).toHaveLength(2);
-  });
+  test.each([' # note', '#EOF', '\\\n # note'])(
+    '終端語の欠落とコメントを区別する: %s',
+    (header) => {
+      const parsed = parse('cat <<' + header + '\nprint after\n');
+      expect(parsed.diagnostics.some((item) => item.kind === 'unexpectedToken')).toBe(true);
+      expect(parsed.ast.comments).toHaveLength(1);
+      expect(findAll(parsed.ast, 'hereDocument')).toEqual([]);
+      expect(parsed.ast.body.items).toHaveLength(2);
+    },
+  );
 
   test('終端語の継続行は本文を引用扱いにしない', () => {
     const source = 'cat <<EO\\\nF\n$value\nEOF\n';
     const parsed = parse(source);
     expect(Lexer.tokenize(source).diagnostics).toEqual([]);
-    expect(findAll(parsed.ast, 'hereDocument')[0]).toMatchObject({ delimiter: 'EOF', quoted: false });
+    expect(findAll(parsed.ast, 'hereDocument')[0]).toMatchObject({
+      delimiter: 'EOF',
+      quoted: false,
+    });
   });
 
   test('<<-は継続で連結した行の途中のタブを保持して終端を照合する', () => {
@@ -54,12 +59,23 @@ describe('parse@hereDocument', () => {
       expect(parsed.ast.body.items).toHaveLength(2);
       const commandNode = simpleCommandFromItem(parsed.ast.body.items[0]);
       if (nested) {
-        expect(commandNode.arguments[0].parts.find((part) => part.kind === 'commandSubstitution')).toMatchObject({
-          kind: 'commandSubstitution', body: { items: [{ sublist: {
-            first: { first: { redirects: [{ hereDocument: { raw } }] } },
-          } }] },
+        expect(
+          commandNode.arguments[0].parts.find((part) => part.kind === 'commandSubstitution'),
+        ).toMatchObject({
+          kind: 'commandSubstitution',
+          body: {
+            items: [
+              {
+                sublist: {
+                  first: { first: { redirects: [{ hereDocument: { raw } }] } },
+                },
+              },
+            ],
+          },
         });
-      } else expect(commandNode.redirects[0].hereDocument?.raw).toBe(raw);
+      } else {
+        expect(commandNode.redirects[0].hereDocument?.raw).toBe(raw);
+      }
     }
   });
 
@@ -68,7 +84,10 @@ describe('parse@hereDocument', () => {
     ['$' + '{x:-"E"}', '$' + '{x:-E}'],
     ['$(print x)', '$(print x)'],
     ['$(print "x")', '$(print "x")'],
-    [String.fromCharCode(96) + 'EOF' + String.fromCharCode(96), String.fromCharCode(96) + 'EOF' + String.fromCharCode(96)],
+    [
+      String.fromCharCode(96) + 'EOF' + String.fromCharCode(96),
+      String.fromCharCode(96) + 'EOF' + String.fromCharCode(96),
+    ],
     ["$'\\xc3\\xa9'", 'é'],
     ["$'\\xef\\xbb\\xbfEOF'", '\ufeffEOF'],
     ["$'EOF'", 'EOF'],
@@ -94,7 +113,9 @@ describe('parse@hereDocument', () => {
       expect(parsed.ast.body.items).toHaveLength(2);
       const targets = findAll(parsed.ast, 'redirect').map((node) => node.target);
       expect(targets).toHaveLength(1);
-      expect(targets[0]?.parts).toEqual([{ kind: 'stringLiteral', range: targets[0]?.range, value: header }]);
+      expect(targets[0]?.parts).toEqual([
+        { kind: 'stringLiteral', range: targets[0]?.range, value: header },
+      ]);
     }
   });
 
@@ -104,18 +125,23 @@ describe('parse@hereDocument', () => {
     const parsed = parse(source);
     expect(lexed.diagnostics).toEqual([]);
     expect(parsed.ast.body.items).toHaveLength(2);
-    expect(simpleCommandFromItem(parsed.ast.body.items[0]).redirects[0].hereDocument).toMatchObject({
-      delimiter: 'EOF', raw: '\tbody\n',
-    });
+    expect(simpleCommandFromItem(parsed.ast.body.items[0]).redirects[0].hereDocument).toMatchObject(
+      {
+        delimiter: 'EOF',
+        raw: '\tbody\n',
+      },
+    );
   });
   test.each(['{ : } always { : }', 'helper() cat'])(
-    '末尾の本文を持つ子のrangeまで親にも保持する: %s', (header) => {
+    '末尾の本文を持つ子のrangeまで親にも保持する: %s',
+    (header) => {
       const source = header + ' <<EOF\nbody\nEOF\n';
       const parsed = parse(source);
       expect(parsed.diagnostics).toEqual([]);
       expect(astContractViolations(parsed.ast, parsed.tokens, source)).toEqual([]);
       expect(locate(createQueryContext(parsed.ast), source.indexOf('body'))).toMatchObject({
-        kind: 'syntax', node: { kind: 'hereDocument', raw: 'body\n' },
+        kind: 'syntax',
+        node: { kind: 'hereDocument', raw: 'body\n' },
       });
     },
   );
@@ -127,8 +153,18 @@ describe('parse@hereDocument', () => {
     expect(astContractViolations(parsed.ast, parsed.tokens, source)).toEqual([]);
     const outer = simpleCommandFromItem(parsed.ast.body.items[0]);
     expect(outer.redirects[0].hereDocument?.raw).toBe('outer\n');
-    expect(outer.arguments[0].parts).toMatchObject([{ kind: 'commandSubstitution',
-      body: { items: [{ sublist: { first: { first: { redirects: [{ hereDocument: { raw: 'inner\n' } }] } } } }] } }]);
+    expect(outer.arguments[0].parts).toMatchObject([
+      {
+        kind: 'commandSubstitution',
+        body: {
+          items: [
+            {
+              sublist: { first: { first: { redirects: [{ hereDocument: { raw: 'inner\n' } }] } } },
+            },
+          ],
+        },
+      },
+    ]);
   });
 
   test('外側のheredocは置換内の改行で始めない', () => {
@@ -136,7 +172,9 @@ describe('parse@hereDocument', () => {
     const parsed = parse(source);
     expect(parsed.diagnostics).toEqual([]);
     expect(simpleCommandFromItem(parsed.ast.body.items[0]).arguments[0].raw).toBe('$(printf x\n)');
-    expect(simpleCommandFromItem(parsed.ast.body.items[0]).redirects[0].hereDocument?.raw).toBe('body\n');
+    expect(simpleCommandFromItem(parsed.ast.body.items[0]).redirects[0].hereDocument?.raw).toBe(
+      'body\n',
+    );
     expect(astContractViolations(parsed.ast, parsed.tokens, source)).toEqual([]);
   });
 
@@ -145,18 +183,26 @@ describe('parse@hereDocument', () => {
     const parsed = parse(source);
     expect(parsed.diagnostics).toEqual([]);
     expect(parsed.ast.comments.map((node) => node.text)).toEqual(['# trailing']);
-    expect(simpleCommandFromItem(parsed.ast.body.items[1]).arguments.map((word) => word.raw)).toEqual(['ok']);
+    expect(
+      simpleCommandFromItem(parsed.ast.body.items[1]).arguments.map((word) => word.raw),
+    ).toEqual(['ok']);
   });
 
   test.each([
-    'helper() { : }', '{ : }', '( : )', 'if true; then :; fi', '[[ -n x ]]', 'repeat 2 print x',
+    'helper() { : }',
+    '{ : }',
+    '( : )',
+    'if true; then :; fi',
+    '[[ -n x ]]',
+    'repeat 2 print x',
   ])('複合構文の後の本文まで所有rangeと位置検索が届く: %s', (header) => {
     const source = header + ' <<EOF\nbody\nEOF\n';
     const parsed = parse(source);
     expect(parsed.diagnostics).toEqual([]);
     expect(astContractViolations(parsed.ast, parsed.tokens, source)).toEqual([]);
     expect(locate(createQueryContext(parsed.ast), source.indexOf('body') + 1)).toMatchObject({
-      kind: 'syntax', node: { kind: 'hereDocument', raw: 'body\n' },
+      kind: 'syntax',
+      node: { kind: 'hereDocument', raw: 'body\n' },
     });
   });
 
@@ -166,7 +212,15 @@ describe('parse@hereDocument', () => {
     const argument = simpleCommandFromItem(result.ast.body.items[0]).arguments[0];
     expect(argument.raw).toBe('"$(cat <<EOF\n) literal\nEOF\n)"');
     expect(argument.parts.find((part) => part.kind === 'commandSubstitution')).toMatchObject({
-      body: { items: [{ sublist: { first: { first: { redirects: [{ hereDocument: { raw: ') literal\n' } }] } } } }] },
+      body: {
+        items: [
+          {
+            sublist: {
+              first: { first: { redirects: [{ hereDocument: { raw: ') literal\n' } }] } },
+            },
+          },
+        ],
+      },
     });
   });
 
@@ -186,8 +240,15 @@ describe('parse@hereDocument', () => {
     expect(result.ast.body.items).toHaveLength(2);
     expect(result.ast.comments).toEqual([]);
     expect(simpleCommandFromItem(result.ast.body.items[0]).redirects[0]).toMatchObject({
-      operator: '<<', hereDocument: { kind: 'hereDocument', delimiter: 'EOF', quoted: true,
-        stripTabs: false, raw: 'if ) # literal $value\n', close: { start: { line: 2 } } },
+      operator: '<<',
+      hereDocument: {
+        kind: 'hereDocument',
+        delimiter: 'EOF',
+        quoted: true,
+        stripTabs: false,
+        raw: 'if ) # literal $value\n',
+        close: { start: { line: 2 } },
+      },
     });
   });
   test('同じ行の複数here-documentを出現順に対応させる', () => {
@@ -201,6 +262,8 @@ describe('parse@hereDocument', () => {
     const lexed = Lexer.tokenize('cat <<EOF\nbody\n');
     expect(lexed.diagnostics.map((item) => item.kind)).toEqual(['unclosedHereDocument']);
     const result = parse('cat <<EOF\nbody\n');
-    expect(simpleCommandFromItem(result.ast.body.items[0]).redirects[0].hereDocument).toMatchObject({ raw: 'body\n', close: null });
+    expect(simpleCommandFromItem(result.ast.body.items[0]).redirects[0].hereDocument).toMatchObject(
+      { raw: 'body\n', close: null },
+    );
   });
 });

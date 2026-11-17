@@ -40,7 +40,10 @@ export function parseSublist({
   return {
     node: {
       kind: 'sublist',
-      range: enclosingRange(rangeFromTokens(tokens, first.node.range), [first.node, ...rest.rest.map((item) => item.pipeline)]),
+      range: enclosingRange(rangeFromTokens(tokens, first.node.range), [
+        first.node,
+        ...rest.rest.map((item) => item.pipeline),
+      ]),
       first: first.node,
       rest: rest.rest,
     },
@@ -60,9 +63,15 @@ function readSublistRest({
   const collected = [...rest];
   let current = skipTrivia(state);
   while (true) {
-    const token = currentToken(current); const type = logicalOperatorType(token);
-    if (current.stopped || !type) return { rest: collected, state: current };
-    const pipeline = parsePipeline({ state: skipLineContinuingTrivia(advanceState(current)), context });
+    const token = currentToken(current);
+    const type = logicalOperatorType(token);
+    if (current.stopped || !type) {
+      return { rest: collected, state: current };
+    }
+    const pipeline = parsePipeline({
+      state: skipLineContinuingTrivia(advanceState(current)),
+      context,
+    });
     collected.push({ operator: createLogicalOperatorNode(token, type), pipeline: pipeline.node });
     current = skipTrivia(pipeline.state);
   }

@@ -86,19 +86,34 @@ function positionAfterText({
   return current;
 }
 
-export function enclosingRange(range: SourceRange, children: readonly { readonly range: SourceRange }[]): SourceRange {
+export function enclosingRange(
+  range: SourceRange,
+  children: readonly { readonly range: SourceRange }[],
+): SourceRange {
   let end = range.end;
-  for (const child of children) if (child.range.end.offset > end.offset) end = child.range.end;
+  for (const child of children) {
+    if (child.range.end.offset > end.offset) {
+      end = child.range.end;
+    }
+  }
   return { start: range.start, end };
 }
 
 export function textForRange(tokens: readonly Token[], range: SourceRange): string {
   const parts: string[] = [];
   for (const token of tokens) {
-    if (token.range.end.offset <= range.start.offset) continue;
-    if (token.range.start.offset >= range.end.offset) break;
-    parts.push(token.value.slice(Math.max(0, range.start.offset - token.range.start.offset),
-      Math.min(token.value.length, range.end.offset - token.range.start.offset)));
+    if (token.range.end.offset <= range.start.offset) {
+      continue;
+    }
+    if (token.range.start.offset >= range.end.offset) {
+      break;
+    }
+    parts.push(
+      token.value.slice(
+        Math.max(0, range.start.offset - token.range.start.offset),
+        Math.min(token.value.length, range.end.offset - token.range.start.offset),
+      ),
+    );
   }
   return parts.join('');
 }

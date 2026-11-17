@@ -81,9 +81,9 @@ describe('parse@operator', () => {
         kind: 'unexpectedToken',
       },
     ]);
-    expect(sublist.first.first.kind === 'simpleCommand' ? sublist.first.first.commandName?.value : null).toBe(
-      'foo',
-    );
+    expect(
+      sublist.first.first.kind === 'simpleCommand' ? sublist.first.first.commandName?.value : null,
+    ).toBe('foo');
   });
 
   test('timeはpipeline全体のtimingとして保持する', () => {
@@ -95,9 +95,9 @@ describe('parse@operator', () => {
       kind: 'pipelineTiming',
     });
     expect(sublist.first.modifier?.type).toBe('bang');
-    expect(sublist.first.first.kind === 'simpleCommand' ? sublist.first.first.commandName?.value : null).toBe(
-      'echo',
-    );
+    expect(
+      sublist.first.first.kind === 'simpleCommand' ? sublist.first.first.commandName?.value : null,
+    ).toBe('echo');
     expect(
       sublist.first.rest.map((continuation) =>
         continuation.command.kind === 'simpleCommand'

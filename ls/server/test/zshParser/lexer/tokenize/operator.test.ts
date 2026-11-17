@@ -13,7 +13,9 @@ function operatorSummaries(input: string) {
 describe('tokenize@operator', () => {
   test('定義済みoperatorをすべてトークン化する', () => {
     expect(
-      operatorSummaries('&>> <<< <<- && || |& &| &! ;; ;& ;| [[ ]] (( )) >> << >| <> <& >& &> ( ) { } ; | & < >'),
+      operatorSummaries(
+        '&>> <<< <<- && || |& &| &! ;; ;& ;| [[ ]] (( )) >> << >| <> <& >& &> ( ) { } ; | & < >',
+      ),
     ).toEqual([
       { value: '&>>', operatorKind: 'redirect' },
       { value: '<<<', operatorKind: 'redirect' },

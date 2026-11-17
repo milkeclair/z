@@ -71,6 +71,8 @@ function isFunctionNameCandidate(token: Token): boolean {
 
 function nextInlineSyntaxIndex(tokens: readonly Token[], index: number): number {
   let cursor = index;
-  while (tokens[cursor]?.kind === 'whitespace' || tokens[cursor]?.kind === 'continuation') cursor += 1;
+  while (tokens[cursor]?.kind === 'whitespace' || tokens[cursor]?.kind === 'continuation') {
+    cursor += 1;
+  }
   return cursor;
 }

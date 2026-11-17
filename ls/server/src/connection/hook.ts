@@ -4,7 +4,7 @@ import { argumentType } from './functionDoc';
 
 function findParameterDescription(
   parameters: { name: string; description: string }[],
-  argName: string
+  argName: string,
 ): string {
   const patterns = [
     `$${argName}`,
@@ -23,7 +23,11 @@ function formatArgument(arg: FuncArg, parameters: { name: string; description: s
   const optional = arg.optional ? '?' : '';
   const type = argumentType(arg);
   const annotation = type ? ' ' + type : '';
-  const argName = arg.isNamed ? arg.name : (arg.name === '@' || arg.name === '*') ? arg.name : arg.position.toString();
+  const argName = arg.isNamed
+    ? arg.name
+    : arg.name === '@' || arg.name === '*'
+      ? arg.name
+      : arg.position.toString();
   const description = findParameterDescription(parameters, argName);
 
   return `- \`$${argName}${optional}${annotation}:\` ${description}`;
@@ -44,7 +48,7 @@ function commentToMarkDown(comment: Result, funcName: string, args: FuncArg[] = 
 
   const handleParameters = (
     parameters: { name: string; description: string }[],
-    funcArgs: FuncArg[]
+    funcArgs: FuncArg[],
   ) => {
     if (funcArgs.length > 0) {
       md.push('**Parameters:**');
@@ -61,8 +65,12 @@ function commentToMarkDown(comment: Result, funcName: string, args: FuncArg[] = 
       md.push('**Returns:**');
       md.push('');
 
-      if (reply) md.push(`- \`REPLY\`: ${reply}`);
-      if (returnValue) md.push(`- \`return\`: ${returnValue}`);
+      if (reply) {
+        md.push(`- \`REPLY\`: ${reply}`);
+      }
+      if (returnValue) {
+        md.push(`- \`return\`: ${returnValue}`);
+      }
 
       md.push('');
     }

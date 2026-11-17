@@ -3,7 +3,11 @@ import { createZshFileHydration, documentationOf } from '../../../src/zshHydrato
 
 function hydrate(comment: string) {
   const content = comment + '\nhelper() { : }\n';
-  const file = createZshFileHydration({ sourceFile: 'parameters.zsh', file: 'parameters.zsh', content });
+  const file = createZshFileHydration({
+    sourceFile: 'parameters.zsh',
+    file: 'parameters.zsh',
+    content,
+  });
   return { content, file, documentation: documentationOf(file.functions[0].definition) };
 }
 
@@ -20,20 +24,28 @@ describe('code parameter documentation', () => {
       { kind, optional, valueType: 'code', description: 'commands to execute' },
     ]);
     const parameter = result.documentation?.parameters[0];
-    expect(parameter && result.content.slice(parameter.range.start.offset, parameter.range.end.offset)).toBe(comment);
+    expect(
+      parameter && result.content.slice(parameter.range.start.offset, parameter.range.end.offset),
+    ).toBe(comment);
   });
 
   test('codeと許可する文字列のunionを保持する', () => {
-    const result = hydrate("# $behavior? [code | 'call_original' | \"disabled\"]: commands to execute");
+    const result = hydrate(
+      '# $behavior? [code | \'call_original\' | "disabled"]: commands to execute',
+    );
     expect(result.file.hydrationDiagnostics).toEqual([]);
     expect(result.documentation?.parameters[0]).toMatchObject({
-      valueType: 'code', literalValues: ['call_original', 'disabled'],
+      valueType: 'code',
+      literalValues: ['call_original', 'disabled'],
     });
   });
 
-  test.each(["# $code [code | unquoted]: commands", "# $code [code | 'unfinished]: commands"])(
-    '不完全な許可値を文書診断として返す: %s', comment => {
-      expect(hydrate(comment).file.hydrationDiagnostics).toMatchObject([{ kind: 'invalidParameterDoc' }]);
+  test.each(['# $code [code | unquoted]: commands', "# $code [code | 'unfinished]: commands"])(
+    '不完全な許可値を文書診断として返す: %s',
+    (comment) => {
+      expect(hydrate(comment).file.hydrationDiagnostics).toMatchObject([
+        { kind: 'invalidParameterDoc' },
+      ]);
     },
   );
 
@@ -41,11 +53,14 @@ describe('code parameter documentation', () => {
     const result = hydrate('# $text?: [code] is ordinary description text');
     expect(result.file.hydrationDiagnostics).toEqual([]);
     expect(result.documentation?.parameters[0]).not.toHaveProperty('valueType');
-    expect(result.documentation?.parameters[0].description).toBe('[code] is ordinary description text');
+    expect(result.documentation?.parameters[0].description).toBe(
+      '[code] is ordinary description text',
+    );
   });
 
   test.each(['# $code [unknown]: commands', '# $code [code commands', '# $code [code] commands'])(
-    '不完全な型宣言を文書診断として返す: %s', comment => {
+    '不完全な型宣言を文書診断として返す: %s',
+    (comment) => {
       const result = hydrate(comment);
       expect(result.file.parserDiagnostics).toEqual([]);
       expect(result.file.hydrationDiagnostics).toMatchObject([{ kind: 'invalidParameterDoc' }]);

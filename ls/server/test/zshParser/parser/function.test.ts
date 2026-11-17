@@ -52,7 +52,9 @@ describe('parse@function', () => {
   });
 
   test('function形式はoptionと複数nameを保持する', () => {
-    const command = commandFromItem(parse('function -T foo bar () { echo hi }\n').ast.body.items[0]);
+    const command = commandFromItem(
+      parse('function -T foo bar () { echo hi }\n').ast.body.items[0],
+    );
 
     expect(command).toMatchObject({
       kind: 'functionDefinition',

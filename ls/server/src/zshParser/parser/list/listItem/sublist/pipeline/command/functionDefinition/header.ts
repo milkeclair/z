@@ -1,16 +1,7 @@
-import type {
-  FunctionDefinitionForm,
-  OptionNode,
-  WordNode,
-} from '../../../../../../../ast';
+import type { FunctionDefinitionForm, OptionNode, WordNode } from '../../../../../../../ast';
 import type { SourceRange, Token } from '../../../../../../../lexer';
 import { createOptionNodeFromToken } from '../../../../../../option';
-import {
-  addDiagnostic,
-  advanceState,
-  currentToken,
-  skipTrivia,
-} from '../../../../../../state';
+import { addDiagnostic, advanceState, currentToken, skipTrivia } from '../../../../../../state';
 import type { ParseState } from '../../../../../../state';
 import { createWordNode } from '../../../../../../word';
 import { isFunctionKeyword } from './detect';

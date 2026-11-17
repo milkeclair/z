@@ -9,7 +9,9 @@ import { refreshFunctionSnapshot } from '../../src/refreshFunctions/main';
 const roots: string[] = [];
 afterEach(() => {
   vi.restoreAllMocks();
-  for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
+  for (const root of roots.splice(0)) {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });
 
 describe('refreshFunctionSnapshot incremental inputs', () => {
@@ -21,12 +23,23 @@ describe('refreshFunctionSnapshot incremental inputs', () => {
     const previous = refreshFunctionSnapshot({ projectRoot: root, documents: [] });
     const stat = vi.spyOn(fs, 'statSync');
     const read = vi.spyOn(fs, 'readdirSync');
-    const changed = refreshFunctionSnapshot({ projectRoot: root, previous, changedPaths: [],
-      documents: [TextDocument.create(pathToFileURL(path.join(root, 'a.zsh')).href, 'shellscript', 1, 'edited() { : }\n')] });
+    const changed = refreshFunctionSnapshot({
+      projectRoot: root,
+      previous,
+      changedPaths: [],
+      documents: [
+        TextDocument.create(
+          pathToFileURL(path.join(root, 'a.zsh')).href,
+          'shellscript',
+          1,
+          'edited() { : }\n',
+        ),
+      ],
+    });
     expect(stat).not.toHaveBeenCalled();
     expect(read).not.toHaveBeenCalled();
     expect(changed.hydrator.files.get('b.zsh')).toBe(previous.hydrator.files.get('b.zsh'));
-    expect(changed.functions.map(fn => fn.name)).toEqual(['edited', 'second']);
+    expect(changed.functions.map((fn) => fn.name)).toEqual(['edited', 'second']);
     expect(changed.functions[1]).toBe(previous.functions[1]);
     const unchanged = previous.targets.get('second')?.[0];
     expect(unchanged).toBeDefined();
@@ -36,18 +49,32 @@ describe('refreshFunctionSnapshot incremental inputs', () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-incremental-order-'));
     roots.push(root);
     fs.writeFileSync(path.join(root, 'z.zsh'), '# $1: disk\nhelper() { : }\n');
-    const opened = TextDocument.create(pathToFileURL(path.join(root, 'a.zsh')).href, 'shellscript', 1,
-      '# $2: live\nhelper() { : }\n');
+    const opened = TextDocument.create(
+      pathToFileURL(path.join(root, 'a.zsh')).href,
+      'shellscript',
+      1,
+      '# $2: live\nhelper() { : }\n',
+    );
     const previous = refreshFunctionSnapshot({ projectRoot: root, documents: [opened] });
-    expect(previous.targets.get('helper')?.map(target => target.info.file)).toEqual(['z.zsh', 'a.zsh']);
+    expect(previous.targets.get('helper')?.map((target) => target.info.file)).toEqual([
+      'z.zsh',
+      'a.zsh',
+    ]);
     fs.writeFileSync(path.join(root, 'a.zsh'), opened.getText());
-    const next = refreshFunctionSnapshot({ projectRoot: root, documents: [opened], previous, changedPaths: ['a.zsh'] });
-    expect(next.targets.get('helper')?.map(target => target.info.file)).toEqual(['a.zsh', 'z.zsh']);
+    const next = refreshFunctionSnapshot({
+      projectRoot: root,
+      documents: [opened],
+      previous,
+      changedPaths: ['a.zsh'],
+    });
+    expect(next.targets.get('helper')?.map((target) => target.info.file)).toEqual([
+      'a.zsh',
+      'z.zsh',
+    ]);
     expect(next.hydrator.files.get('a.zsh')).toBe(previous.hydrator.files.get('a.zsh'));
     expect(next.targets.get('helper')?.[0]).toBe(previous.targets.get('helper')?.[1]);
     expect(next.targets.get('helper')?.[1]).toBe(previous.targets.get('helper')?.[0]);
     const fresh = refreshFunctionSnapshot({ projectRoot: root, documents: [opened] });
     expect(next.functions).toEqual(fresh.functions);
   });
-
 });

@@ -1,11 +1,6 @@
 import type { ListItemNode, ListNode } from '../../ast';
 import { rangeFromTokens } from '../range';
-import {
-  advanceState,
-  currentToken,
-  skipTrivia,
-  tokenSlice,
-} from '../state';
+import { advanceState, currentToken, skipTrivia, tokenSlice } from '../state';
 import type { NodeResult, ParseState } from '../state';
 import type { ParserContext } from '../context';
 import { parseListItem } from './listItem';
@@ -42,7 +37,10 @@ function parseListWithContext(
   return {
     node: {
       kind: 'list',
-      range: rangeFromTokens(tokens, { start: currentToken(result.state).range.start, end: currentToken(result.state).range.start }),
+      range: rangeFromTokens(tokens, {
+        start: currentToken(result.state).range.start,
+        end: currentToken(result.state).range.start,
+      }),
       items: result.items,
     },
     state: result.state,
@@ -64,7 +62,12 @@ function parseListItems({
   while (!isEnd(currentToken(current))) {
     if (current.stopped) {
       const range = { start: currentToken(current).range.start, end: current.eof.range.end };
-      items.push({ kind: 'listItem', range, terminator: null, sublist: { kind: 'unknown', range, reason: 'nestingLimitExceeded' } });
+      items.push({
+        kind: 'listItem',
+        range,
+        terminator: null,
+        sublist: { kind: 'unknown', range, reason: 'nestingLimitExceeded' },
+      });
       current = { ...current, index: current.tokens.length - 1 };
       break;
     }
@@ -72,9 +75,10 @@ function parseListItems({
       current = skipTrivia(advanceState(current));
     } else {
       const item = parseListItem({ state: current, context });
-      const nextState = item.state.index === current.index && !isEnd(currentToken(item.state))
-        ? advanceState(item.state)
-        : item.state;
+      const nextState =
+        item.state.index === current.index && !isEnd(currentToken(item.state))
+          ? advanceState(item.state)
+          : item.state;
 
       items.push(item.node);
       current = skipTrivia(nextState);

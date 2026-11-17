@@ -9,7 +9,10 @@ export function collectIgnoreControls(file: ZshFileHydration): IgnoreControls {
   for (const comment of file.ast.comments) {
     for (const directive of directivesOf(comment)) {
       if (directive.namespace === 'zls' && directive.command === 'ignore') {
-        ignores.set(comment.range.start.line, new Set(directive.arguments.map(argument => argument.value)));
+        ignores.set(
+          comment.range.start.line,
+          new Set(directive.arguments.map((argument) => argument.value)),
+        );
       }
     }
   }
@@ -19,5 +22,5 @@ export function collectIgnoreControls(file: ZshFileHydration): IgnoreControls {
 /** 行全体の抑制、または指定された診断コードの抑制に一致するか判定する。 */
 export function ignored(controls: IgnoreControls, line: number, code?: string): boolean {
   const codes = controls.get(line);
-  return codes !== undefined && (codes.size === 0 || code !== undefined && codes.has(code));
+  return codes !== undefined && (codes.size === 0 || (code !== undefined && codes.has(code)));
 }

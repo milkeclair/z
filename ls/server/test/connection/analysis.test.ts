@@ -20,13 +20,19 @@ describe('pending analysis', () => {
     expect(queueAnalysis(null, undefined, 60)).toEqual({ since: 60, changedPaths: undefined });
   });
 
-  test.each([[0, 50], [100, 50], [170, 30], [199, 1], [200, 0], [250, 0]])(
-    '連続編集でも最初の変更から200msを超えて予約を先延ばしにしない: now=%i', (now, delay) => {
-      const first = queueAnalysis(null, [], 0);
-      const next = queueAnalysis(first, ['a.zsh'], now);
-      expect(next.since).toBe(0);
-      expect(analysisDelay(next, now)).toBe(delay);
-    });
+  test.each([
+    [0, 50],
+    [100, 50],
+    [170, 30],
+    [199, 1],
+    [200, 0],
+    [250, 0],
+  ])('連続編集でも最初の変更から200msを超えて予約を先延ばしにしない: now=%i', (now, delay) => {
+    const first = queueAnalysis(null, [], 0);
+    const next = queueAnalysis(first, ['a.zsh'], now);
+    expect(next.since).toBe(0);
+    expect(analysisDelay(next, now)).toBe(delay);
+  });
 
   test('flush後の新しい変更では待機の開始時刻を取り直す', () => {
     const next = queueAnalysis(null, [], 1000);

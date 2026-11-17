@@ -17,8 +17,7 @@ describe('ANSI quoted escape reader', () => {
   ])('実Zshと同じ文字と消費範囲を返す: %s', (raw, value, end) => {
     expect(ansiEscape(raw, 0)).toMatchObject({ value, end });
   });
-  test.each([String.raw`\uD800`, String.raw`\Uffffffff`])('不正なUnicode値を示す: %s', raw => {
+  test.each([String.raw`\uD800`, String.raw`\Uffffffff`])('不正なUnicode値を示す: %s', (raw) => {
     expect(ansiEscape(raw, 0).valid).toBe(false);
   });
-
 });

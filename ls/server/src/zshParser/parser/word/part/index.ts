@@ -24,7 +24,9 @@ export function createWordParts(segment: WordSegment): readonly WordPartNode[] {
 
 function readWordPart(state: WordPartState): WordPartState {
   const literalEnd = state.literalEnds?.get(state.index);
-  if (literalEnd !== undefined) return { ...state, index: Math.min(literalEnd, state.end) };
+  if (literalEnd !== undefined) {
+    return { ...state, index: Math.min(literalEnd, state.end) };
+  }
   const char = state.text[state.index];
 
   if (isEscape(state)) {

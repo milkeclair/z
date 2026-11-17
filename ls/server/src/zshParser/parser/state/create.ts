@@ -6,10 +6,20 @@ import type { ParseStateOptions, ParseState } from './types';
 
 const Empty = '';
 
-export function createParseState(tokens: readonly Token[], options: ParseStateOptions = {}): ParseState {
+export function createParseState(
+  tokens: readonly Token[],
+  options: ParseStateOptions = {},
+): ParseState {
   const nesting = options.nesting ?? { depth: 0, limit: DefaultNestingLimit };
-  if (!Number.isSafeInteger(nesting.depth) || nesting.depth < 0 || !Number.isSafeInteger(nesting.limit) || nesting.limit < 1) {
-    throw new RangeError('Parser nesting depth and limit must be non-negative/positive safe integers');
+  if (
+    !Number.isSafeInteger(nesting.depth) ||
+    nesting.depth < 0 ||
+    !Number.isSafeInteger(nesting.limit) ||
+    nesting.limit < 1
+  ) {
+    throw new RangeError(
+      'Parser nesting depth and limit must be non-negative/positive safe integers',
+    );
   }
   const sourceFile = options.sourceFile ?? tokens[0]?.sourceFile ?? Empty;
   const normalized = normalizeTokens(tokens, sourceFile);

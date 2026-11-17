@@ -1,8 +1,4 @@
-import type {
-  StringLiteralNode,
-  WordNode,
-  WordPartNode,
-} from '../../ast';
+import type { StringLiteralNode, WordNode, WordPartNode } from '../../ast';
 import type { SourceRange } from '../../lexer';
 import { rangeWithinText } from '../range';
 
@@ -55,8 +51,14 @@ function sliceWordParts({
   for (let cursor = index; cursor < parts.length && offset < end; cursor += 1) {
     const part = parts[cursor];
     const length = rawFromWordPart(part).length;
-    const sliced = sliceWordPart({ part, start: Math.max(start, offset) - offset, end: Math.min(end, offset + length) - offset });
-    if (sliced) result.push(sliced);
+    const sliced = sliceWordPart({
+      part,
+      start: Math.max(start, offset) - offset,
+      end: Math.min(end, offset + length) - offset,
+    });
+    if (sliced) {
+      result.push(sliced);
+    }
     offset += length;
   }
   return result;

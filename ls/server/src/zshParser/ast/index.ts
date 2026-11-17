@@ -1,10 +1,6 @@
 export type { BaseNode } from './base';
 export type { FileNode } from './file';
-export type {
-  ListItemNode,
-  ListTerminatorNode,
-  ListTerminatorType,
-} from './file/list/listItem';
+export type { ListItemNode, ListTerminatorNode, ListTerminatorType } from './file/list/listItem';
 export type { ListNode } from './file/list';
 export type {
   LogicalOperatorNode,
@@ -18,9 +14,7 @@ export type {
   PipelineOperatorNode,
   PipelineTimingNode,
 } from './file/list/listItem/sublist/pipeline';
-export type {
-  CommandNode,
-} from './file/list/listItem/sublist/pipeline/command';
+export type { CommandNode } from './file/list/listItem/sublist/pipeline/command';
 export type {
   FunctionBodyNode,
   FunctionDefinitionForm,
@@ -68,11 +62,27 @@ export type {
 } from './word';
 export type { AstNode, AstNodeKind } from './node';
 export type {
-  CompoundCommandNode, IfCommandNode, IfBranchNode, WhileCommandNode, UntilCommandNode,
-  ForCommandNode, SelectCommandNode, ForeachCommandNode, RepeatCommandNode, CaseCommandNode, CaseArmNode,
+  CompoundCommandNode,
+  IfCommandNode,
+  IfBranchNode,
+  WhileCommandNode,
+  UntilCommandNode,
+  ForCommandNode,
+  SelectCommandNode,
+  ForeachCommandNode,
+  RepeatCommandNode,
+  CaseCommandNode,
+  CaseArmNode,
 } from './compound';
 export {
-  syntaxChildren, forEachChild, withRelatedChildren, walk, findAll, createQueryContext, locate, commentAt,
+  syntaxChildren,
+  forEachChild,
+  withRelatedChildren,
+  walk,
+  findAll,
+  createQueryContext,
+  locate,
+  commentAt,
 } from './traversal';
 export type { WalkControl, WalkOptions, QueryContext, AstLocation } from './traversal';
 export { mapAst } from './traversal/map';

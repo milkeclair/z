@@ -44,7 +44,10 @@ export function parsePipeline({
   return {
     node: {
       kind: 'pipeline',
-      range: enclosingRange(rangeFromTokens(tokens, command.node.range), [command.node, ...rest.rest.map((item) => item.command)]),
+      range: enclosingRange(rangeFromTokens(tokens, command.node.range), [
+        command.node,
+        ...rest.rest.map((item) => item.command),
+      ]),
       timing: timing.timing,
       modifier: modifier.modifier,
       first: command.node,
@@ -66,9 +69,15 @@ function readPipelineRest({
   const collected = [...rest];
   let current = skipTrivia(state);
   while (true) {
-    const token = currentToken(current); const type = pipelineOperatorType(token);
-    if (current.stopped || !type) return { rest: collected, state: current };
-    const command = parseCommand({ state: skipLineContinuingTrivia(advanceState(current)), context });
+    const token = currentToken(current);
+    const type = pipelineOperatorType(token);
+    if (current.stopped || !type) {
+      return { rest: collected, state: current };
+    }
+    const command = parseCommand({
+      state: skipLineContinuingTrivia(advanceState(current)),
+      context,
+    });
     collected.push({ operator: createPipelineOperatorNode(token, type), command: command.node });
     current = skipTrivia(command.state);
   }

@@ -50,5 +50,12 @@ export type CaseCommandNode = CompoundNode<'caseCommand'> & {
   readonly subject: WordNode | null;
   readonly arms: readonly CaseArmNode[];
 };
-export type CompoundCommandNode = IfCommandNode | WhileCommandNode | UntilCommandNode |
-  ForCommandNode | SelectCommandNode | ForeachCommandNode | RepeatCommandNode | CaseCommandNode;
+export type CompoundCommandNode =
+  | IfCommandNode
+  | WhileCommandNode
+  | UntilCommandNode
+  | ForCommandNode
+  | SelectCommandNode
+  | ForeachCommandNode
+  | RepeatCommandNode
+  | CaseCommandNode;

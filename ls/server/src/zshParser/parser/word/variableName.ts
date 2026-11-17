@@ -28,7 +28,9 @@ export function readNameEnd({
   readonly max: number;
 }): number {
   let cursor = index;
-  while (cursor < max && isNamePart(value[cursor] ?? Empty)) cursor += 1;
+  while (cursor < max && isNamePart(value[cursor] ?? Empty)) {
+    cursor += 1;
+  }
   return cursor;
 }
 
@@ -41,7 +43,11 @@ export function isVariableName(value: string): boolean {
 }
 
 function isNameTail(value: string, index: number): boolean {
-  for (let cursor = index; cursor < value.length; cursor += 1) if (!isNamePart(value[cursor])) return false;
+  for (let cursor = index; cursor < value.length; cursor += 1) {
+    if (!isNamePart(value[cursor])) {
+      return false;
+    }
+  }
   return true;
 }
 
@@ -50,10 +56,7 @@ function isNamePart(char: string): boolean {
 }
 
 function isAsciiLetter(char: string): boolean {
-  return (
-    (char >= 'a' && char <= 'z') ||
-    (char >= 'A' && char <= 'Z')
-  );
+  return (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z');
 }
 
 function isAsciiDigit(char: string): boolean {

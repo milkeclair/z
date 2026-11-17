@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { startPeriodicRescan } from '../../src/connection/rescan';
 
-afterEach(() => { vi.useRealTimers(); });
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe('periodic full rescan', () => {
   test('最初の走査を60秒後に行い、その後も60秒間隔で繰り返す', () => {
@@ -23,7 +25,9 @@ describe('periodic full rescan', () => {
   test('走査エラーを通知し、次の周期でも再び走査する', () => {
     vi.useFakeTimers();
     const error = new Error('temporary disk failure');
-    const refresh = vi.fn().mockImplementationOnce(() => { throw error; });
+    const refresh = vi.fn().mockImplementationOnce(() => {
+      throw error;
+    });
     const report = vi.fn();
     const stop = startPeriodicRescan(refresh, report);
     vi.advanceTimersByTime(60_000);

@@ -11,10 +11,7 @@ type WhitespaceReadContext = {
   readonly cursor: Cursor;
 };
 
-export function readWhitespace({
-  sourceFile,
-  cursor,
-}: WhitespaceReadContext): ReadResult<Token> {
+export function readWhitespace({ sourceFile, cursor }: WhitespaceReadContext): ReadResult<Token> {
   const start = position(cursor);
   const result = readTextWhile({
     cursor,

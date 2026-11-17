@@ -25,15 +25,29 @@ export type ZshFileHydration = {
   readonly hydrationDiagnostics: readonly HydrationDiagnostic[];
 };
 export function createZshFileHydration({
-  sourceFile, file, content, options = {},
-}: { readonly sourceFile: string; readonly file: string; readonly content: string; readonly options?: HydrationOptions }): ZshFileHydration {
+  sourceFile,
+  file,
+  content,
+  options = {},
+}: {
+  readonly sourceFile: string;
+  readonly file: string;
+  readonly content: string;
+  readonly options?: HydrationOptions;
+}): ZshFileHydration {
   const lexed = Lexer.tokenize(content, { sourceFile });
   const parsed = Parser.parse(lexed.tokens, { sourceFile, path: sourceFile });
   const ast = hydrateAst(parsed.ast, content, options);
   const definitions = findAll(ast, 'functionDefinition');
   return {
-    sourceFile, file, ast, tokens: parsed.tokens, query: createQueryContext(ast),
-    functions: definitions.flatMap((definition) => definition.names.map((word) => ({ name: word.raw, definition }))),
+    sourceFile,
+    file,
+    ast,
+    tokens: parsed.tokens,
+    query: createQueryContext(ast),
+    functions: definitions.flatMap((definition) =>
+      definition.names.map((word) => ({ name: word.raw, definition })),
+    ),
     lexerDiagnostics: lexed.diagnostics,
     parserDiagnostics: parsed.diagnostics,
     hydrationDiagnostics: definitions.flatMap((node) => documentationOf(node)?.diagnostics ?? []),

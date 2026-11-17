@@ -5,6 +5,7 @@ export type NestingStep =
 
 export const DefaultNestingLimit = 64;
 export function enterNesting(state: NestingState): NestingStep {
-  return state.depth >= state.limit ? { kind: 'limit', state }
+  return state.depth >= state.limit
+    ? { kind: 'limit', state }
     : { kind: 'enter', state: { ...state, depth: state.depth + 1 } };
 }

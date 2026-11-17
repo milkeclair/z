@@ -13,15 +13,11 @@ function wordSummaries(input: string) {
 
 describe('tokenize@quote', () => {
   test('一重引用符を区切り文字ごとwordとして読む', () => {
-    expect(wordSummaries("'abc'")).toEqual([
-      { value: "'abc'", quoted: true, quoteKind: 'single' },
-    ]);
+    expect(wordSummaries("'abc'")).toEqual([{ value: "'abc'", quoted: true, quoteKind: 'single' }]);
   });
 
   test('二重引用符内の空白をwordの一部として読む', () => {
-    expect(wordSummaries('"a b"')).toEqual([
-      { value: '"a b"', quoted: true, quoteKind: 'double' },
-    ]);
+    expect(wordSummaries('"a b"')).toEqual([{ value: '"a b"', quoted: true, quoteKind: 'double' }]);
   });
 
   test('ドル付き一重引用符をwordとして読む', () => {
@@ -31,8 +27,8 @@ describe('tokenize@quote', () => {
   });
 
   test('複数種類の引用符を含むwordはmixedとして読む', () => {
-    expect(wordSummaries('a"b"\'c\'$\'d\'')).toEqual([
-      { value: 'a"b"\'c\'$\'d\'', quoted: true, quoteKind: 'mixed' },
+    expect(wordSummaries("a\"b\"'c'$'d'")).toEqual([
+      { value: "a\"b\"'c'$'d'", quoted: true, quoteKind: 'mixed' },
     ]);
   });
 
@@ -50,9 +46,7 @@ describe('tokenize@quote', () => {
   });
 
   test('未終了の二重引用符はwordと診断を返す', () => {
-    expect(wordSummaries('"x')).toEqual([
-      { value: '"x', quoted: true, quoteKind: 'double' },
-    ]);
+    expect(wordSummaries('"x')).toEqual([{ value: '"x', quoted: true, quoteKind: 'double' }]);
     expect(diagnosticSummaries('"x')).toEqual([
       {
         kind: 'unclosedQuote',
@@ -68,9 +62,7 @@ describe('tokenize@quote', () => {
   });
 
   test('未終了の一重引用符はwordと診断を返す', () => {
-    expect(wordSummaries("'x")).toEqual([
-      { value: "'x", quoted: true, quoteKind: 'single' },
-    ]);
+    expect(wordSummaries("'x")).toEqual([{ value: "'x", quoted: true, quoteKind: 'single' }]);
     expect(diagnosticSummaries("'x")).toEqual([
       {
         kind: 'unclosedQuote',

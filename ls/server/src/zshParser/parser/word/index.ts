@@ -5,15 +5,9 @@ import { rangeWithinText } from '../range';
 import type { WordSegment } from './part';
 import { createWordParts, wordSegmentFromToken } from './part';
 
-export {
-  isAssignmentPrefix,
-  readAssignmentSyntax,
-} from './assignmentPrefix';
+export { isAssignmentPrefix, readAssignmentSyntax } from './assignmentPrefix';
 export type { AssignmentSyntax } from './assignmentPrefix';
-export {
-  createVariableNameNode,
-  isVariableName,
-} from './variableName';
+export { createVariableNameNode, isVariableName } from './variableName';
 export { createWordNodeFromWordSlice } from './slice';
 
 export function createWordNode(token: Token, context: WordContext = {}): WordNode {
@@ -35,7 +29,10 @@ function createWordNodeFromTokenSegment({
   readonly start: number;
   readonly end: number;
 }): WordNode {
-  return createWordNodeFromTextSegment({ ...createTokenWordSegment({ token, start, end }), ...context });
+  return createWordNodeFromTextSegment({
+    ...createTokenWordSegment({ token, start, end }),
+    ...context,
+  });
 }
 
 function createWordNodeFromTextSegment(segment: WordSegment): WordNode {

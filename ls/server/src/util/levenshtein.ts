@@ -63,7 +63,7 @@ export function levenshteinDistance(str1: string, str2: string): number {
         memoTable[row][col] = Math.min(
           replaceChar(row, col),
           insertChar(row, col),
-          deleteChar(row, col)
+          deleteChar(row, col),
         );
       }
     });
@@ -76,7 +76,7 @@ export function levenshteinDistance(str1: string, str2: string): number {
 export function findClosestMatch(
   target: string,
   candidates: string[],
-  threshold: number = 3
+  threshold: number = 3,
 ): string | null {
   let minDistance = Infinity;
   let closestMatch: string | null = null;

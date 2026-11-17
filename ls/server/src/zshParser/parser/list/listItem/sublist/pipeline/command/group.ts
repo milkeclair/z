@@ -37,16 +37,21 @@ export function parseGroupCommand({
       context,
       readPostBodyRedirects,
     });
-    const postBodyRedirects = readPostBodyRedirects ? readPostCommandRedirects(always.state) : {
-      redirects: [],
-      state: always.state,
-    };
+    const postBodyRedirects = readPostBodyRedirects
+      ? readPostCommandRedirects(always.state)
+      : {
+          redirects: [],
+          state: always.state,
+        };
     const tokens = tokenSlice(postBodyRedirects.state, startIndex, postBodyRedirects.state.index);
 
     return {
       node: {
         kind: 'groupCommand',
-        range: enclosingRange(rangeFromTokens(tokens, openBrace.range), [...postBodyRedirects.redirects, ...(always.node ? [always.node] : [])]),
+        range: enclosingRange(rangeFromTokens(tokens, openBrace.range), [
+          ...postBodyRedirects.redirects,
+          ...(always.node ? [always.node] : []),
+        ]),
         openBrace: openBrace.range,
         body: body.node,
         closeBrace: closeToken.range,
@@ -116,7 +121,9 @@ function readAlwaysClause({
         readPostBodyRedirects,
       });
 
-      if (body.node.kind !== 'groupCommand' && body.node.kind !== 'unknown') throw new Error('Expected group or partial unknown for always body');
+      if (body.node.kind !== 'groupCommand' && body.node.kind !== 'unknown') {
+        throw new Error('Expected group or partial unknown for always body');
+      }
       return {
         node: {
           kind: 'alwaysClause',

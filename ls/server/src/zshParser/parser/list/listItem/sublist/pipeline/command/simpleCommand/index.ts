@@ -1,5 +1,13 @@
-import { isProcessSubstitutionStart, isParenthesizedWordStart } from '../../../../../../word/composite/token';
-import type { SimpleCommandNode, WordNode, AssignNode, RedirectNode } from '../../../../../../../ast';
+import {
+  isProcessSubstitutionStart,
+  isParenthesizedWordStart,
+} from '../../../../../../word/composite/token';
+import type {
+  SimpleCommandNode,
+  WordNode,
+  AssignNode,
+  RedirectNode,
+} from '../../../../../../../ast';
 import type { Token } from '../../../../../../../lexer';
 import { isCommandBoundary } from '../../../../../../boundary';
 import { rangeFromTokens, enclosingRange } from '../../../../../../range';
@@ -29,16 +37,15 @@ export function parseSimpleCommand(state: ParseState): NodeResult<SimpleCommandN
     arguments: [],
     redirects: [],
   });
-  const tokens = tokenSlice(
-    accumulator.state,
-    accumulator.startIndex,
-    accumulator.syntaxEndIndex,
-  );
+  const tokens = tokenSlice(accumulator.state, accumulator.startIndex, accumulator.syntaxEndIndex);
 
   return {
     node: {
       kind: 'simpleCommand',
-      range: enclosingRange(rangeFromTokens(tokens, currentToken(accumulator.state).range), accumulator.redirects),
+      range: enclosingRange(
+        rangeFromTokens(tokens, currentToken(accumulator.state).range),
+        accumulator.redirects,
+      ),
       precommandModifiers: accumulator.precommandModifiers,
       prefixAssignments: accumulator.prefixAssignments,
       commandName: accumulator.commandName,
@@ -58,14 +65,32 @@ function readSimpleCommandAccumulator(
   const redirects: RedirectNode[] = [...accumulator.redirects];
   let parts = accumulator;
   while (true) {
-    const current = { ...parts, arguments: [], prefixAssignments: [], redirects: [], state: skipInlineTrivia(parts.state) };
+    const current = {
+      ...parts,
+      arguments: [],
+      prefixAssignments: [],
+      redirects: [],
+      state: skipInlineTrivia(parts.state),
+    };
     const token = currentToken(current.state);
-    if (current.state.stopped || isCommandBoundary(token) || token.kind === 'comment') return { ...current, arguments: args, prefixAssignments: assignments, redirects };
-    if (isRedirectStart(current.state)) parts = readRedirect(current);
-    else if (token.kind === 'word' || isProcessSubstitutionStart(current.state.tokens, current.state.index) ||
-      parts.commandName !== null && isParenthesizedWordStart(current.state.tokens, current.state.index)) parts = readSimpleCommandWord(current, token);
-    else parts = readUnexpectedToken(current, token);
-    args.push(...parts.arguments); assignments.push(...parts.prefixAssignments); redirects.push(...parts.redirects);
+    if (current.state.stopped || isCommandBoundary(token) || token.kind === 'comment') {
+      return { ...current, arguments: args, prefixAssignments: assignments, redirects };
+    }
+    if (isRedirectStart(current.state)) {
+      parts = readRedirect(current);
+    } else if (
+      token.kind === 'word' ||
+      isProcessSubstitutionStart(current.state.tokens, current.state.index) ||
+      (parts.commandName !== null &&
+        isParenthesizedWordStart(current.state.tokens, current.state.index))
+    ) {
+      parts = readSimpleCommandWord(current, token);
+    } else {
+      parts = readUnexpectedToken(current, token);
+    }
+    args.push(...parts.arguments);
+    assignments.push(...parts.prefixAssignments);
+    redirects.push(...parts.redirects);
   }
 }
 

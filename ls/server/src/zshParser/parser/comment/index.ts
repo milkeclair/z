@@ -6,16 +6,34 @@ export type CommentContext = {
   readonly byOffset: ReadonlyMap<number, CommentNode>;
 };
 
-export function mergeComments(previous: CommentContext, comments: readonly CommentNode[]): CommentContext {
-  const additions = comments.filter((comment) => !previous.byOffset.has(comment.range.start.offset));
-  if (additions.length === 0) return previous;
+export function mergeComments(
+  previous: CommentContext,
+  comments: readonly CommentNode[],
+): CommentContext {
+  const additions = comments.filter(
+    (comment) => !previous.byOffset.has(comment.range.start.offset),
+  );
+  if (additions.length === 0) {
+    return previous;
+  }
   const byOffset = new Map(previous.byOffset);
-  for (const comment of additions) byOffset.set(comment.range.start.offset, comment);
-  return { comments: [...byOffset.values()].sort((a, b) => a.range.start.offset - b.range.start.offset), byOffset };
+  for (const comment of additions) {
+    byOffset.set(comment.range.start.offset, comment);
+  }
+  return {
+    comments: [...byOffset.values()].sort((a, b) => a.range.start.offset - b.range.start.offset),
+    byOffset,
+  };
 }
-export function createCommentContext(tokens: readonly Token[], previous?: CommentContext): CommentContext {
+export function createCommentContext(
+  tokens: readonly Token[],
+  previous?: CommentContext,
+): CommentContext {
   const base: CommentContext = previous ?? { comments: [], byOffset: new Map() };
-  return mergeComments(base, tokens.filter((token) => token.kind === 'comment').map(createCommentNode));
+  return mergeComments(
+    base,
+    tokens.filter((token) => token.kind === 'comment').map(createCommentNode),
+  );
 }
 export function createCommentNodes(tokens: readonly Token[]): readonly CommentNode[] {
   return createCommentContext(tokens).comments;

@@ -30,7 +30,9 @@ export function tokenize(input: string, options: TokenizeOptions = {}): Tokenize
   const tokens: Token[] = [];
   const diagnostics: LexerDiagnostic[] = [];
   let result: TokenizeState = {
-    cursor, tokens: [], diagnostics: [],
+    cursor,
+    tokens: [],
+    diagnostics: [],
     context: createLexicalContext(),
   };
   while (!eof(result.cursor) || result.context.readHereDocs) {
@@ -40,10 +42,14 @@ export function tokenize(input: string, options: TokenizeOptions = {}): Tokenize
   }
   const end = position(result.cursor);
   for (let context: LexicalContext | null = result.context; context; context = context.parent) {
-    for (const request of context.pendingHereDocs) diagnostics.push({
-    kind: 'unclosedHereDocument', message: 'Missing here-document delimiter ' + request.delimiter,
-    sourceFile, range: { start: end, end },
-    });
+    for (const request of context.pendingHereDocs) {
+      diagnostics.push({
+        kind: 'unclosedHereDocument',
+        message: 'Missing here-document delimiter ' + request.delimiter,
+        sourceFile,
+        range: { start: end, end },
+      });
+    }
   }
 
   return {

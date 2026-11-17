@@ -3,18 +3,25 @@ import { findAll } from '../../../src/zshParser/ast';
 import { commandFromItem, parse } from './helper';
 
 describe('parse@compoundCommand', () => {
-
-  test.each(['((1)+2)', '(((1)+2))'])('連続する算術括弧もヘッダの終端と区別する: %s', (expression) => {
-    const source = 'for ((i=' + expression + '; i<4; i++)); do :; done';
-    const result = parse(source);
-    expect(result.diagnostics).toEqual([]);
-    const command = commandFromItem(result.ast.body.items[0]);
-    if (command.kind !== 'forCommand') throw new Error('for required');
-    expect(command.arithmetic?.raw).toBe('((i=' + expression + '; i<4; i++))');
-  });
+  test.each(['((1)+2)', '(((1)+2))'])(
+    '連続する算術括弧もヘッダの終端と区別する: %s',
+    (expression) => {
+      const source = 'for ((i=' + expression + '; i<4; i++)); do :; done';
+      const result = parse(source);
+      expect(result.diagnostics).toEqual([]);
+      const command = commandFromItem(result.ast.body.items[0]);
+      if (command.kind !== 'forCommand') {
+        throw new Error('for required');
+      }
+      expect(command.arithmetic?.raw).toBe('((i=' + expression + '; i<4; i++))');
+    },
+  );
   test.each([
-    'repeat ; do :; done', 'case ; in *) :;; esac', 'case x in ) :;; esac',
-    'for ((i=1)); do :; done', 'for ((i=1; i<3)); do :; done',
+    'repeat ; do :; done',
+    'case ; in *) :;; esac',
+    'case x in ) :;; esac',
+    'for ((i=1)); do :; done',
+    'for ((i=1; i<3)); do :; done',
   ])('不完全な必須ヘッダを診断する: %s', (source) => {
     expect(parse(source).diagnostics.some((node) => node.kind === 'unexpectedToken')).toBe(true);
   });
@@ -29,43 +36,60 @@ describe('parse@compoundCommand', () => {
     const result = parse(source);
     expect(result.diagnostics).toEqual([]);
     const command = commandFromItem(result.ast.body.items[0]);
-    if (command.kind !== 'forCommand') throw new Error('for required');
+    if (command.kind !== 'forCommand') {
+      throw new Error('for required');
+    }
     expect(command.arithmetic?.raw).toBe('((i=(1+(2)); i<4; i++))');
     expect(findAll(command.body, 'simpleCommand')[0].commandName?.value).toBe('print');
   });
 
   test.each(['for ; do :; done', 'select ; do :; done', 'foreach (one two)\n:\nend'])(
-    '必須の変数がないヘッダを診断する: %s', (source) => {
+    '必須の変数がないヘッダを診断する: %s',
+    (source) => {
       expect(parse(source).diagnostics.some((node) => node.kind === 'unexpectedToken')).toBe(true);
     },
   );
 
-  test.each(['for do in one; do print "$do"; done', 'for in in one; do print "$in"; done', 'for item (one two); do print "$item"; done'])(
-    '変数位置とword listの文脈を保つ: %s', (source) => {
-      const result = parse(source);
-      expect(result.diagnostics).toEqual([]);
-      const command = commandFromItem(result.ast.body.items[0]);
-      if (command.kind !== 'forCommand') throw new Error('for command required');
-      expect(command.variables).toHaveLength(1);
-      expect(command.words?.length).toBeGreaterThan(0);
-    },
-  );
+  test.each([
+    'for do in one; do print "$do"; done',
+    'for in in one; do print "$in"; done',
+    'for item (one two); do print "$item"; done',
+  ])('変数位置とword listの文脈を保つ: %s', (source) => {
+    const result = parse(source);
+    expect(result.diagnostics).toEqual([]);
+    const command = commandFromItem(result.ast.body.items[0]);
+    if (command.kind !== 'forCommand') {
+      throw new Error('for command required');
+    }
+    expect(command.variables).toHaveLength(1);
+    expect(command.words?.length).toBeGreaterThan(0);
+  });
 
   test('repeatのdo形式が未終端なら構文診断を返す', () => {
-    expect(parse('repeat 3 do print x').diagnostics.map((item) => item.kind)).toEqual(['missingCompoundEnd']);
+    expect(parse('repeat 3 do print x').diagnostics.map((item) => item.kind)).toEqual([
+      'missingCompoundEnd',
+    ]);
   });
 
   test('ifの各条件、本体、else、redirectを辿れる', () => {
-    const result = parse('if ready; then first() { : }; elif other; then second() { : }; else third() { : }; fi >out');
+    const result = parse(
+      'if ready; then first() { : }; elif other; then second() { : }; else third() { : }; fi >out',
+    );
     expect(result.diagnostics).toEqual([]);
     const command = commandFromItem(result.ast.body.items[0]);
-    if (command.kind !== 'ifCommand') throw new Error('if command required');
+    if (command.kind !== 'ifCommand') {
+      throw new Error('if command required');
+    }
     expect(command.branches).toHaveLength(2);
     expect(command.branches[0].condition.items).toHaveLength(1);
     expect(command.branches[1].body.items).toHaveLength(1);
     expect(command.elseBody?.items).toHaveLength(1);
     expect(command.postBodyRedirects[0].target?.raw).toBe('out');
-    expect(findAll(result.ast, 'functionDefinition').map((node) => node.names[0].raw)).toEqual(['first', 'second', 'third']);
+    expect(findAll(result.ast, 'functionDefinition').map((node) => node.names[0].raw)).toEqual([
+      'first',
+      'second',
+      'third',
+    ]);
   });
 
   test.each([
@@ -79,17 +103,28 @@ describe('parse@compoundCommand', () => {
   ])('$kindの本体を構造として保持する: $source', ({ source, kind }) => {
     const result = parse(source);
     expect(result.diagnostics).toEqual([]);
-    expect(commandFromItem(result.ast.body.items[0])).toMatchObject({ kind, body: { kind: 'list', items: expect.any(Array) } });
-    expect(findAll(result.ast, 'simpleCommand').some((node) => node.commandName?.value === 'print')).toBe(true);
+    expect(commandFromItem(result.ast.body.items[0])).toMatchObject({
+      kind,
+      body: { kind: 'list', items: expect.any(Array) },
+    });
+    expect(
+      findAll(result.ast, 'simpleCommand').some((node) => node.commandName?.value === 'print'),
+    ).toBe(true);
   });
 
   test('caseの複数patternと各終端を区別する', () => {
     const result = parse('case "$x" in a|b) print one ;& c) print two ;| *) print end ;; esac');
     expect(result.diagnostics).toEqual([]);
     const command = commandFromItem(result.ast.body.items[0]);
-    if (command.kind !== 'caseCommand') throw new Error('case command required');
+    if (command.kind !== 'caseCommand') {
+      throw new Error('case command required');
+    }
     expect(command.subject?.raw).toBe('"$x"');
-    expect(command.arms.map((arm) => arm.patterns.map((word) => word.raw))).toEqual([['a', 'b'], ['c'], ['*']]);
+    expect(command.arms.map((arm) => arm.patterns.map((word) => word.raw))).toEqual([
+      ['a', 'b'],
+      ['c'],
+      ['*'],
+    ]);
     expect(command.arms.map((arm) => arm.termination)).toEqual([';&', ';|', ';;']);
   });
 
@@ -144,7 +179,9 @@ describe('parse@compoundCommand', () => {
   });
 
   test('reserved wordはcommand先頭のときだけ複合コマンドの終端にする', () => {
-    const result = parse('if true; then echo fi; fi\nwhile true; do echo done; done\ncase x in x) echo esac;; esac\n');
+    const result = parse(
+      'if true; then echo fi; fi\nwhile true; do echo done; done\ncase x in x) echo esac;; esac\n',
+    );
 
     expect(result.diagnostics).toEqual([]);
     expect(result.ast.body.items).toHaveLength(3);
@@ -180,9 +217,7 @@ describe('parse@compoundCommand', () => {
   test('未終端のreserved commandは次の行の関数定義を吸い込まない', () => {
     const result = parse('if true; then echo ok\nfoo() { echo hi }\n');
 
-    expect(result.diagnostics.map((diagnostic) => diagnostic.kind)).toEqual([
-      'missingCompoundEnd',
-    ]);
+    expect(result.diagnostics.map((diagnostic) => diagnostic.kind)).toEqual(['missingCompoundEnd']);
     expect(result.ast.body.items).toHaveLength(2);
     expect(commandFromItem(result.ast.body.items[0])).toMatchObject({
       kind: 'ifCommand',
@@ -200,7 +235,11 @@ describe('parse@compoundCommand', () => {
 
   test.each([
     { syntax: 'if', source: 'if if true; then true; fi; then true; fi', end: 'fi' },
-    { syntax: 'if', source: 'if if if true; then true; fi; then true; fi; then true; fi', end: 'fi' },
+    {
+      syntax: 'if',
+      source: 'if if if true; then true; fi; then true; fi; then true; fi',
+      end: 'fi',
+    },
     { syntax: 'while', source: 'while while false; do true; done; do true; done', end: 'done' },
     { syntax: 'until', source: 'until until true; do false; done; do true; done', end: 'done' },
   ])('条件部分が入れ子の$syntaxでも外側の終端まで読む', ({ syntax, source, end }) => {

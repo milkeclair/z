@@ -3,10 +3,7 @@ import type { TokenizeOptions } from '../../../../src/zshParser/lexer';
 
 export const TestSourceFile = 'test.zsh';
 
-export function tokenize(
-  input: string,
-  options: TokenizeOptions = { sourceFile: TestSourceFile },
-) {
+export function tokenize(input: string, options: TokenizeOptions = { sourceFile: TestSourceFile }) {
   return Lexer.tokenize(input, options);
 }
 

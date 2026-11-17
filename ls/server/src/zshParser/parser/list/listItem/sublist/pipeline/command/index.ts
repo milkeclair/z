@@ -13,14 +13,27 @@ import { parseSubshellCommand } from './subshell';
 import { createUnknownCommand } from './unknown';
 
 export function parseCommand(input: {
-  readonly state: ParseState; readonly context: ParserContext; readonly readPostBodyRedirects?: boolean;
+  readonly state: ParseState;
+  readonly context: ParserContext;
+  readonly readPostBodyRedirects?: boolean;
 }): NodeResult<CommandNode> {
   const state = skipTrivia(input.state);
   const nesting = enterNesting(state.nesting);
   if (state.stopped || nesting.kind === 'limit') {
-    const diagnosed = state.stopped ? state : addDiagnostic({ state, kind: 'nestingLimitExceeded', message: 'Parser nesting limit exceeded', tokens: [currentToken(state)] });
+    const diagnosed = state.stopped
+      ? state
+      : addDiagnostic({
+          state,
+          kind: 'nestingLimitExceeded',
+          message: 'Parser nesting limit exceeded',
+          tokens: [currentToken(state)],
+        });
     return {
-      node: { kind: 'unknown', reason: 'nestingLimitExceeded', range: { start: currentToken(state).range.start, end: state.eof.range.end } },
+      node: {
+        kind: 'unknown',
+        reason: 'nestingLimitExceeded',
+        range: { start: currentToken(state).range.start, end: state.eof.range.end },
+      },
       state: { ...diagnosed, stopped: true, index: state.tokens.length - 1 },
     };
   }
@@ -43,12 +56,9 @@ function parseCommandInside({
   if (token.kind === 'eof') {
     return createUnknownCommand(current, token, 'Unexpected EOF in command');
   } else if (token.operatorKind === 'rightBrace' || token.operatorKind === 'rightParen') {
-    return createUnknownCommand(
-      current,
-      token,
-      `Unexpected token in command: ${token.value}`,
-      { consume: false },
-    );
+    return createUnknownCommand(current, token, `Unexpected token in command: ${token.value}`, {
+      consume: false,
+    });
   } else if (isCommandBoundary(token)) {
     return createUnknownCommand(current, token, `Unexpected token in command: ${token.value}`);
   } else if (isFunctionDefinitionStart(current)) {

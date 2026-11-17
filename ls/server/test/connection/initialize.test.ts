@@ -13,7 +13,9 @@ function fixture(): string {
   return root;
 }
 afterEach(() => {
-  for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
+  for (const root of roots.splice(0)) {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });
 function initialize(params: Partial<InitializeParams>) {
   return zInitialize({ processId: null, rootUri: null, capabilities: {}, ...params });
@@ -30,7 +32,7 @@ describe('zInitialize@hydration', () => {
       initializationOptions: { zPath: legacy },
     });
     expect(result.projectRoot).toBe(root);
-    expect(result.functions.map(fn => fn.name)).toEqual(['greet']);
+    expect(result.functions.map((fn) => fn.name)).toEqual(['greet']);
     expect(result.snapshot.hydrator.projectRoot).toBe(root);
     expect(result.serverCapabilities.capabilities.textDocumentSync).toMatchObject({ save: true });
   });

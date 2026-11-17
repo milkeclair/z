@@ -29,16 +29,21 @@ export function parseSubshellCommand({
 
   if (closeToken.operatorKind === 'rightParen') {
     const nextState = advanceState(closeState);
-    const postBodyRedirects = readPostBodyRedirects ? readPostCommandRedirects(nextState) : {
-      redirects: [],
-      state: nextState,
-    };
+    const postBodyRedirects = readPostBodyRedirects
+      ? readPostCommandRedirects(nextState)
+      : {
+          redirects: [],
+          state: nextState,
+        };
     const tokens = tokenSlice(postBodyRedirects.state, startIndex, postBodyRedirects.state.index);
 
     return {
       node: {
         kind: 'subshellCommand',
-        range: enclosingRange(rangeFromTokens(tokens, openParen.range), postBodyRedirects.redirects),
+        range: enclosingRange(
+          rangeFromTokens(tokens, openParen.range),
+          postBodyRedirects.redirects,
+        ),
         openParen: openParen.range,
         body: body.node,
         closeParen: closeToken.range,

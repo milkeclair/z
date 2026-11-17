@@ -25,9 +25,7 @@ describe('tokenize@escape', () => {
   });
 
   test('エスケープされたoperatorはoperatorにしない', () => {
-    expect(wordSummaries('\\;')).toEqual([
-      { value: '\\;', quoted: true, quoteKind: 'backslash' },
-    ]);
+    expect(wordSummaries('\\;')).toEqual([{ value: '\\;', quoted: true, quoteKind: 'backslash' }]);
   });
 
   test('末尾のバックスラッシュもwordとして返す', () => {

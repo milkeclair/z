@@ -6,7 +6,11 @@ describe('parse@opaqueCommand', () => {
     const source = '[[ $( [[ -n x ]] && print x ) == x ]]';
     const result = parse(source + ' && print yes');
     expect(result.diagnostics).toEqual([]);
-    expect(commandFromItem(result.ast.body.items[0])).toMatchObject({ kind: 'opaqueCommand', syntax: 'condition', raw: source });
+    expect(commandFromItem(result.ast.body.items[0])).toMatchObject({
+      kind: 'opaqueCommand',
+      syntax: 'condition',
+      raw: source,
+    });
   });
 
   test('POSIX文字クラスを新しい条件式として扱わない', () => {
@@ -15,7 +19,9 @@ describe('parse@opaqueCommand', () => {
     expect(result.diagnostics).toEqual([]);
     expect(result.ast.body.items).toHaveLength(2);
     expect(commandFromItem(result.ast.body.items[0])).toMatchObject({
-      kind: 'opaqueCommand', syntax: 'condition', raw: source,
+      kind: 'opaqueCommand',
+      syntax: 'condition',
+      raw: source,
     });
   });
 
@@ -102,5 +108,4 @@ describe('parse@opaqueCommand', () => {
       close: null,
     });
   });
-
 });

@@ -12,9 +12,13 @@ type ParameterBase<Kind extends string> = DocNode<Kind> & {
   readonly description: string;
   readonly markerRange: SourceRange;
 };
-export type PositionalParameterDoc = ParameterBase<'positionalParameterDoc'> & { readonly position: number };
+export type PositionalParameterDoc = ParameterBase<'positionalParameterDoc'> & {
+  readonly position: number;
+};
 export type NamedParameterDoc = ParameterBase<'namedParameterDoc'> & { readonly name: string };
-export type RestParameterDoc = ParameterBase<'restParameterDoc'> & { readonly parameter: '@' | '*' };
+export type RestParameterDoc = ParameterBase<'restParameterDoc'> & {
+  readonly parameter: '@' | '*';
+};
 export type ParameterDoc = PositionalParameterDoc | NamedParameterDoc | RestParameterDoc;
 export type DocDescription = DocNode<'docDescription'> & { readonly text: string };
 export type DocReply = DocNode<'docReply'> & { readonly text: string };

@@ -71,7 +71,9 @@ export function Document(commentText: string): Result {
 
   for (const line of lines) {
     const trimmedLine = line.trim();
-    if (trimmedLine === '') continue;
+    if (trimmedLine === '') {
+      continue;
+    }
 
     handleParameters(trimmedLine);
     handleReply(trimmedLine);

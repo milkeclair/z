@@ -141,9 +141,7 @@ describe('parse@structure', () => {
     const result = parse('{ foo && }\n');
     const command = commandFromItem(result.ast.body.items[0]);
 
-    expect(result.diagnostics.map((diagnostic) => diagnostic.kind)).toEqual([
-      'unknownCommand',
-    ]);
+    expect(result.diagnostics.map((diagnostic) => diagnostic.kind)).toEqual(['unknownCommand']);
     expect(command).toMatchObject({
       kind: 'groupCommand',
       closeBrace: {

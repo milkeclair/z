@@ -33,7 +33,9 @@ export function createLeadingDocBlock({
       range: rangeFromTokens(comments),
       comments: comments.map((token) => {
         const comment = context.byOffset.get(token.range.start.offset);
-        if (!comment) throw new Error('Comment context is missing a token');
+        if (!comment) {
+          throw new Error('Comment context is missing a token');
+        }
         return comment;
       }),
       targetRange,
@@ -54,9 +56,13 @@ function collectLeadingCommentTokens({
   let cursor = index;
   while (cursor >= 0) {
     const beforeLine = findPreviousNewline({ tokens, index: cursor });
-    if (!beforeLine) break;
+    if (!beforeLine) {
+      break;
+    }
     const beforeComment = findPreviousComment({ tokens, index: beforeLine.index - 1 });
-    if (!beforeComment) break;
+    if (!beforeComment) {
+      break;
+    }
     collected.push(beforeComment.comment);
     cursor = beforeComment.index - 1;
   }
@@ -96,8 +102,13 @@ function skipBackwardTrivia({
   readonly allowNewline: boolean;
 }): { readonly index: number } {
   let cursor = index;
-  while (tokens[cursor]?.kind === 'whitespace' || tokens[cursor]?.kind === 'continuation' ||
-    allowNewline && tokens[cursor]?.kind === 'newline') cursor -= 1;
+  while (
+    tokens[cursor]?.kind === 'whitespace' ||
+    tokens[cursor]?.kind === 'continuation' ||
+    (allowNewline && tokens[cursor]?.kind === 'newline')
+  ) {
+    cursor -= 1;
+  }
   return { index: cursor };
 }
 
@@ -127,6 +138,8 @@ function findPreviousComment({
 
 function hasOnlyTriviaBeforeCommentOnLine(tokens: readonly Token[], index: number): boolean {
   let cursor = index;
-  while (tokens[cursor]?.kind === 'whitespace' || tokens[cursor]?.kind === 'continuation') cursor -= 1;
+  while (tokens[cursor]?.kind === 'whitespace' || tokens[cursor]?.kind === 'continuation') {
+    cursor -= 1;
+  }
   return !tokens[cursor] || tokens[cursor].kind === 'newline';
 }

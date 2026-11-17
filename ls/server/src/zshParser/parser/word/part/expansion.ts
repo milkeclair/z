@@ -2,11 +2,7 @@ import { delimitedEnd } from '../../../lexer/delimiter';
 import type { VariableReferenceNode } from '../../../ast';
 import { rangeWithinText } from '../../range';
 import { createExpansionNode } from '../expansionNode';
-import {
-  createVariableNameNode,
-  isNameStart,
-  readNameEnd,
-} from '../variableName';
+import { createVariableNameNode, isNameStart, readNameEnd } from '../variableName';
 import type { ExpansionReadResult, WordPartState } from './types';
 
 const Empty = '';
@@ -21,18 +17,37 @@ const SpecialParameterChars = new Set(['@', '*', '?', '!', '$', '-']);
 export function readExpansion(state: WordPartState): ExpansionReadResult | null {
   if (state.text.charCodeAt(state.index) === 96) {
     const end = delimitedEnd(state.text.slice(0, state.end), state.index, 'backtick') ?? state.end;
-    return { node: createExpansionNode({ kind: 'commandSubstitution', raw: state.text.slice(state.index, end),
-      range: rangeWithinText(state.range, state.text, state.index, end), readBody: state.readBody }), nextIndex: end };
-  } else if (state.quote === 'none' && ['<', '>', '='].includes(state.text[state.index]) && state.text[state.index + 1] === LeftParen &&
-    (state.text[state.index] !== '=' || state.index === state.start || state.text[state.index - 1] === '=' || state.processStarts?.has(state.index))) {
+    return {
+      node: createExpansionNode({
+        kind: 'commandSubstitution',
+        raw: state.text.slice(state.index, end),
+        range: rangeWithinText(state.range, state.text, state.index, end),
+        readBody: state.readBody,
+      }),
+      nextIndex: end,
+    };
+  } else if (
+    state.quote === 'none' &&
+    ['<', '>', '='].includes(state.text[state.index]) &&
+    state.text[state.index + 1] === LeftParen &&
+    (state.text[state.index] !== '=' ||
+      state.index === state.start ||
+      state.text[state.index - 1] === '=' ||
+      state.processStarts?.has(state.index))
+  ) {
     const end = delimitedEnd(state.text.slice(0, state.end), state.index + 1, 'paren') ?? state.end;
     const raw = state.text.slice(state.index, end);
     const range = rangeWithinText(state.range, state.text, state.index, end);
-    return { node: {
-      kind: 'processSubstitution', raw, range,
-      direction: raw[0] === '<' ? 'input' : raw[0] === '>' ? 'output' : 'file',
-      body: state.readBody?.(raw, range) ?? null,
-    }, nextIndex: end };
+    return {
+      node: {
+        kind: 'processSubstitution',
+        raw,
+        range,
+        direction: raw[0] === '<' ? 'input' : raw[0] === '>' ? 'output' : 'file',
+        body: state.readBody?.(raw, range) ?? null,
+      },
+      nextIndex: end,
+    };
   } else if (state.text[state.index] !== Dollar) {
     return null;
   } else if (state.text[state.index + 1] === LeftBrace) {
@@ -72,7 +87,8 @@ function readParameterExpansion(state: WordPartState): ExpansionReadResult {
 }
 
 function readArithmeticExpansion(state: WordPartState): ExpansionReadResult {
-  const end = delimitedEnd(state.text.slice(0, state.end), state.index + 1, 'arithmetic') ?? state.end;
+  const end =
+    delimitedEnd(state.text.slice(0, state.end), state.index + 1, 'arithmetic') ?? state.end;
 
   return {
     node: createExpansionNode({
@@ -168,7 +184,7 @@ function readSpecialParameterExpansion(state: WordPartState): ExpansionReadResul
   } else {
     return {
       node: createExpansionNode({
-      readBody: state.readBody,
+        readBody: state.readBody,
         kind: 'parameterExpansion',
         range: rangeWithinText(state.range, state.text, state.index, end),
         raw: state.text.slice(state.index, end),
@@ -249,7 +265,9 @@ function readDigitsEnd({
   readonly max: number;
 }): number {
   let cursor = index;
-  while (cursor < max && isAsciiDigit(text[cursor] ?? Empty)) cursor += 1;
+  while (cursor < max && isAsciiDigit(text[cursor] ?? Empty)) {
+    cursor += 1;
+  }
   return cursor;
 }
 

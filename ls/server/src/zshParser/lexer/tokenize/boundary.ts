@@ -4,8 +4,6 @@ import { findOperator, isHorizontalWhitespace, isNewline } from './predicate';
 
 export function isWordBoundary(cursor: Cursor): boolean {
   return (
-    isHorizontalWhitespace(current(cursor)) ||
-    isNewline(cursor) ||
-    findOperator(cursor) !== null
+    isHorizontalWhitespace(current(cursor)) || isNewline(cursor) || findOperator(cursor) !== null
   );
 }

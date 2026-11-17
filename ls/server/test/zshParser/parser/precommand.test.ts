@@ -56,7 +56,18 @@ describe('parse@precommand', () => {
 test('exec -aの置換もWordと本体ASTで保持する', () => {
   const result = parse('exec -a $(print custom) echo ok');
   expect(result.diagnostics).toEqual([]);
-  expect(simpleCommandFromItem(result.ast.body.items[0]).precommandModifiers).toMatchObject([{
-    type: 'exec', options: [{ name: '-a', value: { raw: '$(print custom)', parts: [{ kind: 'commandSubstitution', body: { items: expect.any(Array) } }] } }],
-  }]);
+  expect(simpleCommandFromItem(result.ast.body.items[0]).precommandModifiers).toMatchObject([
+    {
+      type: 'exec',
+      options: [
+        {
+          name: '-a',
+          value: {
+            raw: '$(print custom)',
+            parts: [{ kind: 'commandSubstitution', body: { items: expect.any(Array) } }],
+          },
+        },
+      ],
+    },
+  ]);
 });
