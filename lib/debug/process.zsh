@@ -38,8 +38,7 @@ z.debug() {
         if [[ $var_name == "REPLY" || $var_name == "reply" ]]; then
           print -- $_saved_reply
         elif [[ -n $(typeset -p $var_name 2>/dev/null) ]]; then
-          z.var.get "$var_name"
-          print -- ${REPLY[@]}
+          print -- ${(P)var_name}
         else
           print -- "❌: '$var_name' not found"
         fi
