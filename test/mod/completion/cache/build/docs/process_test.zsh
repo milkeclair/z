@@ -137,4 +137,29 @@ z.t.describe "z.completion.cache.build.docs._from_file"; {
       z.t.expect "$docs" $'fixture docs\n\nexample:\n  z.fixture.indented_docs'
     }
   }
+
+  z.t.context "型アノテーションを含むコメントを更新する場合"; {
+    z.t.it "実際のコメントから型情報を構築し、型アノテーション削除後は残さない"; {
+      local fixture_dir=$(mktemp -d)
+      local fixture_file=$fixture_dir/code.zsh
+      z.fixture.cached_code() { :; }
+      z.file.write path="$fixture_file" content=$'# $name: name\n# $code? [code | \'call_original\']: commands\nz.fixture.cached_code() {'
+      z.completion.cache.build.docs._from_file "$fixture_file"
+      local specs=$z_completion_argument_specs[z.fixture.cached_code]
+
+      local rows=("${(@f)specs}")
+      z.completion.argument.record._decode "$rows[1]"
+      z.t.expect.reply.is.arr named name plain
+
+      z.completion.argument.record._decode "$rows[2]"
+      z.t.expect.reply.is.arr named code code call_original
+      z.file.write path="$fixture_file" content=$'# $name: name\n# $code?: commands\nz.fixture.cached_code() {'
+      z.completion.cache.build.docs._from_file "$fixture_file"
+      local after=$z_completion_argument_specs[z.fixture.cached_code]
+
+      z.t.expect.is.null "$after"
+      unfunction z.fixture.cached_code
+      z.dir.remove path="$fixture_dir"
+    }
+  }
 }

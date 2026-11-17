@@ -14,6 +14,7 @@ z.wtproxy._docker.image.ids() {
   local output
   output=$(docker image ls --quiet --filter "$label_filter") || return 1
 
-  local -a image_ids=("${(@f)output}")
+  z.str.split.line "$output"
+  local -a image_ids=("${REPLY[@]}")
   z.arr.unique ${image_ids[@]}
 }

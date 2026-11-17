@@ -4,19 +4,25 @@ export type Diagnostics = {
   readonly severity: DiagnosticSeverity;
   readonly code?: string;
   readonly range: {
-    readonly start: { readonly line: number; readonly character: number };
-    readonly end: { readonly line: number; readonly character: number };
+    readonly start: {
+      readonly line: number;
+      readonly character: number;
+    };
+    readonly end: {
+      readonly line: number;
+      readonly character: number;
+    };
   };
   readonly message: string;
   readonly source: string;
 };
 
-export type workspaceDiagnosticsReport = {
-  items: {
+export type WorkspaceDiagnosticsReport = {
+  readonly items: readonly {
     uri: string;
     version: number | null;
     resultId?: string;
     kind: typeof DocumentDiagnosticReportKind.Full;
-    items: Diagnostics[];
+    items: readonly Diagnostics[];
   }[];
 };

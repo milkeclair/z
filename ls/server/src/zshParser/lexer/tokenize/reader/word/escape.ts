@@ -1,5 +1,5 @@
-import { advance, eof } from '../../../cursor';
 import type { Cursor } from '../../../cursor';
+import { advance, eof } from '../../../cursor';
 import type { ReadResult } from '../result';
 
 export function readBackslash(cursor: Cursor): ReadResult<string> {

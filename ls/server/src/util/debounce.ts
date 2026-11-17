@@ -1,9 +1,13 @@
-export function debounce<F extends (...args: any[]) => void>(func: F, waitFor?: number) {
-  let timeout: NodeJS.Timeout;
-  const defaultDelay = 500;
+import { createIOState } from './ioState';
 
-  return (...args: Parameters<F>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), waitFor || defaultDelay);
+export function debounce<Args extends readonly unknown[]>(
+  func: (...args: Args) => void,
+  waitFor?: number,
+) {
+  const timer = createIOState<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  return (...args: Args): void => {
+    clearTimeout(timer.read());
+    timer.replace(setTimeout(() => func(...args), waitFor || 500));
   };
 }

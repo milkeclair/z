@@ -1,15 +1,14 @@
-import { SpecialCharacters } from '../../../character';
-import { advance, current, startsWith } from '../../../cursor';
 import type { Cursor } from '../../../cursor';
+import { advance, current, startsWith } from '../../../cursor';
 import { delimitedEnd } from '../../../delimiter';
 import type { ReadResult } from '../result';
+import type { QuoteDefinition, QuoteReadKind } from './definition';
 import {
   BacktickQuoteDefinition,
   DollarSingleQuoteDefinition,
   DoubleQuoteDefinition,
   SingleQuoteDefinition,
 } from './definition';
-import type { QuoteDefinition, QuoteReadKind } from './definition';
 
 type QuotedValue = {
   readonly text: string;
@@ -23,6 +22,7 @@ type QuoteReadValue = QuotedValue & {
 function readQuoted(cursor: Cursor, definition: QuoteDefinition): ReadResult<QuoteReadValue> {
   const end = delimitedEnd(cursor.text, cursor.position.offset, definition.quoteKind);
   const result = advance(cursor, (end ?? cursor.text.length) - cursor.position.offset);
+
   return {
     value: { text: result.value, closed: end !== null, quoteKind: definition.quoteKind },
     cursor: result.cursor,

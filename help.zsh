@@ -62,7 +62,7 @@ z.help.mod._show_readme() {
 z.help._show_function_docs() {
   local function_name=$1
 
-  if z.int.is.zero $+functions[$function_name]; then
+  if ! z.hash.has.key functions "key=$function_name"; then
     z.io.error "Function not found: $function_name"
     return 1
   fi
@@ -97,8 +97,8 @@ z.help._strip_comment_prefix() {
 
   setopt local_options EXTENDED_GLOB
 
-  # 空行を保つ（@f）
-  for line in "${(@f)docs}"; do
+  z.str.split.line "$docs"
+  for line in "${REPLY[@]}"; do
     z.help._trim_left_whitespace "$line"
     local trimmed_line=$REPLY
 
@@ -119,7 +119,8 @@ z.help._normalize_docs() {
   local docs=$1
   local normalized=()
 
-  for line in "${(@f)docs}"; do
+  z.str.split.line "$docs"
+  for line in "${REPLY[@]}"; do
     z.help._leading_whitespace "$line"
     local indentation=$REPLY
     # 使用例のコメントのインデントを保つ
@@ -140,7 +141,8 @@ z.help._find_docs_in_file() {
   setopt local_options EXTENDED_GLOB
 
   z.file.read path=$file_path
-  local lines=("${(@f)REPLY}")
+  z.str.split.line "$REPLY"
+  local lines=("${REPLY[@]}")
   z.arr.count "${lines[@]}"
   local line_count=$REPLY
   local idx

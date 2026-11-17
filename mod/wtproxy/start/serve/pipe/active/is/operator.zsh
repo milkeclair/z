@@ -23,8 +23,8 @@ z.wtproxy.start._serve.pipe.active.is.current() {
     z.is.not.null "$active_line" || return 1
 
     z.str.remove.prefix "$active_line" "active "
+    z.str.unquote "$REPLY"
     local state_active_path=$REPLY
-    state_active_path=${(Q)state_active_path}
     z.is.eq "$state_active_path" "$active_path"
     return
   fi

@@ -2,7 +2,15 @@ import type { OperatorKind, Token } from '../token';
 import type { HereDocRequest } from './heredoc';
 import { hereDocDelimiter } from './heredoc';
 
-export type LexicalKind = 'command' | 'array' | 'word' | 'parameter' | 'arithmetic' | 'math' | 'condition';
+export type LexicalKind =
+  | 'command'
+  | 'array'
+  | 'word'
+  | 'parameter'
+  | 'arithmetic'
+  | 'math'
+  | 'condition';
+
 export type LexicalContext = {
   readonly kind: LexicalKind;
   readonly close: OperatorKind | null;
@@ -12,51 +20,161 @@ export type LexicalContext = {
   readonly readHereDocs: boolean;
   readonly parent: LexicalContext | null;
 };
+
 export function createLexicalContext(): LexicalContext {
-  return { kind: 'command', close: null, previous: null, pendingHereDocs: [], awaitingHereDoc: null, readHereDocs: false, parent: null };
+  return {
+    kind: 'command',
+    close: null,
+    previous: null,
+    pendingHereDocs: [],
+    awaitingHereDoc: null,
+    readHereDocs: false,
+    parent: null,
+  };
 }
+
 export function isDollarOpen(context: LexicalContext, offset: number): boolean {
   const previous = context.previous;
-  return previous?.kind === 'word' && previous.value.endsWith('$') && previous.range.end.offset === offset;
+
+  return (
+    previous?.kind === 'word' &&
+    previous.value.endsWith('$') &&
+    previous.range.end.offset === offset
+  );
 }
+
 export function isProcessOpen(context: LexicalContext, offset: number): boolean {
   const previous = context.previous;
-  return Boolean(previous && previous.range.end.offset === offset &&
-    (previous.operatorKind === 'redirect' && (previous.value === '<' || previous.value === '>') ||
-      previous.kind === 'word' && (previous.value === '=' || previous.value.endsWith('=='))));
+
+  return Boolean(
+    previous &&
+    previous.range.end.offset === offset &&
+    ((previous.operatorKind === 'redirect' && (previous.value === '<' || previous.value === '>')) ||
+      (previous.kind === 'word' && (previous.value === '=' || previous.value.endsWith('==')))),
+  );
 }
-function enter(context: LexicalContext, token: Token, kind: LexicalKind, close: OperatorKind): LexicalContext {
-  return { ...createLexicalContext(), kind, close, previous: token, parent: { ...context, previous: token } };
+
+function enter(
+  context: LexicalContext,
+  token: Token,
+  kind: LexicalKind,
+  close: OperatorKind,
+): LexicalContext {
+  return {
+    ...createLexicalContext(),
+    kind,
+    close,
+    previous: token,
+    parent: { ...context, previous: token },
+  };
 }
+
+function braceContextKind(
+  context: LexicalContext,
+  dollar: boolean,
+  adjacent: boolean,
+): LexicalKind {
+  if (dollar || context.kind === 'parameter') {
+    return 'parameter';
+  }
+
+  return adjacent || context.kind === 'word' ? 'word' : 'command';
+}
+
+function parenthesisContextKind(
+  context: LexicalContext,
+  token: Token,
+  dollar: boolean,
+  adjacent: boolean,
+): LexicalKind {
+  if (dollar || isProcessOpen(context, token.range.start.offset)) {
+    return 'command';
+  }
+
+  if (context.kind === 'arithmetic' || context.kind === 'math') {
+    return 'math';
+  }
+
+  if (adjacent && context.previous?.value.endsWith('=')) {
+    return 'array';
+  }
+
+  if (
+    adjacent ||
+    context.kind === 'word' ||
+    context.kind === 'array' ||
+    context.kind === 'parameter' ||
+    context.kind === 'condition'
+  ) {
+    return 'word';
+  }
+
+  return 'command';
+}
+
 export function advanceLexicalContext(context: LexicalContext, token: Token): LexicalContext {
-  if (context.close === token.operatorKind && context.parent) return { ...context.parent, previous: token };
+  if (context.close === token.operatorKind && context.parent) {
+    return { ...context.parent, previous: token };
+  }
+
   const dollar = isDollarOpen(context, token.range.start.offset);
-  const adjacent = context.previous?.kind === 'word' && context.previous.range.end.offset === token.range.start.offset;
-  if (token.operatorKind === 'arithmeticStart') return enter(context, token, 'arithmetic', 'arithmeticEnd');
-  if (token.operatorKind === 'conditionStart' && context.kind === 'command') return enter(context, token, 'condition', 'conditionEnd');
+  const adjacent =
+    context.previous?.kind === 'word' &&
+    context.previous.range.end.offset === token.range.start.offset;
+
+  if (token.operatorKind === 'arithmeticStart') {
+    return enter(context, token, 'arithmetic', 'arithmeticEnd');
+  }
+
+  if (token.operatorKind === 'conditionStart' && context.kind === 'command') {
+    return enter(context, token, 'condition', 'conditionEnd');
+  }
+
   if (token.operatorKind === 'leftBrace') {
-    const kind = dollar || context.kind === 'parameter' ? 'parameter' : adjacent || context.kind === 'word' ? 'word' : 'command';
-    return enter(context, token, kind, 'rightBrace');
+    return enter(context, token, braceContextKind(context, dollar, adjacent), 'rightBrace');
   }
+
   if (token.operatorKind === 'leftParen') {
-    const kind = dollar || isProcessOpen(context, token.range.start.offset) ? 'command' : context.kind === 'arithmetic' || context.kind === 'math' ? 'math'
-      : adjacent && context.previous?.value.endsWith('=') ? 'array'
-        : adjacent || context.kind === 'word' || context.kind === 'array' || context.kind === 'parameter' || context.kind === 'condition' ? 'word' : 'command';
-    return enter(context, token, kind, 'rightParen');
+    return enter(
+      context,
+      token,
+      parenthesisContextKind(context, token, dollar, adjacent),
+      'rightParen',
+    );
   }
-  let pendingHereDocs = context.pendingHereDocs;
-  let awaitingHereDoc = context.awaitingHereDoc;
-  let readHereDocs = false;
-  if (context.kind === 'command') {
-    if (token.operatorKind === 'redirect' && (token.value === '<<' || token.value === '<<-')) {
-      awaitingHereDoc = { operatorOffset: token.range.start.offset, stripTabs: token.value === '<<-' };
-    } else if (awaitingHereDoc && token.kind === 'word') {
-      pendingHereDocs = [...pendingHereDocs, { ...awaitingHereDoc, ...hereDocDelimiter(token.value, awaitingHereDoc.stripTabs) }];
-      awaitingHereDoc = null;
-    } else if (token.kind === 'newline') {
-      readHereDocs = pendingHereDocs.length > 0;
-      awaitingHereDoc = null;
-    }
+
+  const base = { ...context, previous: token, readHereDocs: false };
+
+  if (context.kind !== 'command') {
+    return base;
   }
-  return { ...context, previous: token, pendingHereDocs, awaitingHereDoc, readHereDocs };
+
+  if (token.operatorKind === 'redirect' && (token.value === '<<' || token.value === '<<-')) {
+    return {
+      ...base,
+      awaitingHereDoc: {
+        operatorOffset: token.range.start.offset,
+        stripTabs: token.value === '<<-',
+      },
+    };
+  }
+
+  const awaiting = context.awaitingHereDoc;
+
+  if (awaiting && token.kind === 'word') {
+    return {
+      ...base,
+      pendingHereDocs: [
+        ...context.pendingHereDocs,
+        { ...awaiting, ...hereDocDelimiter(token.value, awaiting.stripTabs) },
+      ],
+      awaitingHereDoc: null,
+    };
+  }
+
+  if (token.kind === 'newline') {
+    return { ...base, readHereDocs: context.pendingHereDocs.length > 0, awaitingHereDoc: null };
+  }
+
+  return base;
 }

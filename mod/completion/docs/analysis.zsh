@@ -12,7 +12,7 @@
 z.completion.docs._get() {
   local function_name=$1
 
-  if z.int.is.positive ${+z_completion_docs[$function_name]}; then
+  if z.hash.has.key z_completion_docs "key=$function_name"; then
     REPLY="${z_completion_docs[$function_name]}"
     return
   fi
@@ -45,25 +45,30 @@ z.completion.docs._format() {
   local formatted=()
   local line
 
-  for line in "${(@f)docs}"; do
+  z.str.split.line "$docs"
+  for line in "${REPLY[@]}"; do
     if z.is.true $in_example && z.str.is.match "$line" '^[[:space:]]+[^[:space:]]'; then
       formatted+=("${example_color}${line}${reset}")
       continue
     fi
 
-    if z.str.is.match "$line" '^\$[^:[:space:]]+:|^(REPLY|return|example):'; then
+    if z.str.start_with "$line" '$' && z.completion.argument._parse "$line"; then
+      local column=$REPLY[4]
+      local label=${line[1,$((column - 1))]}
+      local detail=${line[$((column + 1)),-1]}
+      in_example=false
+      formatted+=("${argument_color}${label}:${reset}${detail}")
+    elif z.str.is.match "$line" '^(REPLY|return|example):'; then
       z.str.partition "$line" ":" literal=true
       local label=$REPLY[1] detail=$REPLY[2]
-      local color=$heading_color
-      z.str.start_with "$label" '$' && color=$argument_color
       in_example=false
       z.is.eq "$label" example && in_example=true
-      formatted+=("${color}${label}:${reset}${detail}")
+      formatted+=("${heading_color}${label}:${reset}${detail}")
     else
       z.is.not.null "$line" && in_example=false
       formatted+=("$line")
     fi
   done
 
-  REPLY="${(F)formatted}"
+  z.arr.join.line "${formatted[@]}"
 }

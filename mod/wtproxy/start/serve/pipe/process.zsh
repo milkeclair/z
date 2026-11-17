@@ -26,7 +26,8 @@ z.wtproxy.start._serve.pipe.pair() {
     local -A ready=()
     zselect -A ready $left_fd $right_fd || return
 
-    for fd in ${(k)ready}; do
+    z.hash.keys ready
+    for fd in "${REPLY[@]}"; do
       local out_fd=$right_fd
       z.is.eq $fd $right_fd && out_fd=$left_fd
 

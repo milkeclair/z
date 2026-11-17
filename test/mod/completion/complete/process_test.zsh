@@ -11,10 +11,10 @@ local terminal_fd=$REPLY
 
 z.t.describe "z.completion.complete._command"; {
   z.t.context "コマンド位置でz関数を補完する場合"; {
-    z.t.it "実際の候補を1行1件で表示する"; {
-      local actual=$(z92_terminal "$terminal_fd" input=z.fixture.)
+    z.t.it "候補を1行1件で表示し、下矢印とEnterで選択する"; {
+      local actual=$(z92_terminal "$terminal_fd" input=z.fixture. $'select_keys=\e[B\r')
 
-      z.t.expect "$actual" $'matches:lines=2:2\nbuffer=z.fixture.'
+      z.t.expect "$actual" $'matches:lines=2:2\nbuffer=z.fixture.beta '
     }
   }
 
@@ -70,11 +70,22 @@ z.t.describe "z.completion.complete._command"; {
     }
   }
 
-  z.t.context "main.zshを読み直した場合"; {
-    z.t.it "登録済みの補完を維持して候補を表示できる"; {
-      local actual=$(z92_terminal "$terminal_fd" input=z.fixture. 'setup=source "$Z_ROOT/main.zsh"; z.completion.cache.build._names; z.completion.compdef._register')
+  z.t.context "一般のコマンド名に候補が複数ある場合"; {
+    z.t.it "従来の補完で候補の一覧を表示する"; {
+      local actual=$(z92_terminal "$terminal_fd" input=fixture-c "setup=alias fixture-command=: fixture-copy=:")
 
-      z.t.expect "$actual" $'matches:lines=2:2\nbuffer=z.fixture.'
+      z.t.expect.includes "$actual" "matches:lines=2:"
+      z.t.expect.includes "$actual"$'\n' $'buffer=fixture-co\n'
+    }
+  }
+
+  z.t.context "main.zshを読み直した場合"; {
+    z.t.it "登録済みの候補を矢印で選択できる"; {
+      local actual=$(z92_terminal "$terminal_fd" input=z.fixture. \
+        'setup=source "$Z_ROOT/main.zsh"; z.completion.cache.build._names; z.completion.compdef._register' \
+        $'select_keys=\e[B\r')
+
+      z.t.expect "$actual" $'matches:lines=2:2\nbuffer=z.fixture.beta '
     }
   }
 }
@@ -104,11 +115,19 @@ z.t.describe "z.completion.complete._run"; {
 }
 
 z.t.describe "z.completion.complete._functions"; {
-  z.t.context "current wordがz関数prefixの場合"; {
-    z.t.it "引数位置でも実際の候補を1行1件で表示する"; {
-      local actual=$(z92_terminal "$terminal_fd" "input=z.arg.named z.fixture.")
+  z.t.context "カーソルが単語の途中にある場合"; {
+    z.t.it "カーソルより後ろの文字を保って関数名を補完する"; {
+      local actual=$(z92_terminal "$terminal_fd" $'input=z.fixture.ala\002' setup="setopt complete_in_word")
 
-      z.t.expect "$actual" $'matches:lines=2:2\nbuffer=z.arg.named z.fixture.'
+      z.t.expect "$actual" $'matches:lines=1:1\nbuffer=z.fixture.alpha '
+    }
+  }
+
+  z.t.context "current wordがz関数prefixの場合"; {
+    z.t.it "引数位置でも上下矢印とEnterで選択する"; {
+      local actual=$(z92_terminal "$terminal_fd" "input=z.arg.named z.fixture." $'select_keys=\e[B\e[A\r')
+
+      z.t.expect "$actual" $'matches:lines=2:2\nbuffer=z.arg.named z.fixture.alpha '
     }
   }
 

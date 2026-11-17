@@ -15,6 +15,24 @@ z.t.describe "z.completion.cache.build._names"; {
       z.t.expect.status.is.false
     }
   }
+
+  z.t.context "整列オプションに似た名前の関数がある場合"; {
+    z.t.it "zの公開関数名を昇順のまま保存する"; {
+      function 'by=desc' { :; }
+      z.fixture.sorted_a() { :; }
+      z.fixture.sorted_b() { :; }
+
+      {
+        z.completion.cache.build._names
+        z.arr.join.line "${z_completion_function_names[@]}"
+        local names=$REPLY
+
+        z.t.expect.includes "$names" $'z.fixture.sorted_a\nz.fixture.sorted_b'
+      } always {
+        unfunction 'by=desc' z.fixture.sorted_a z.fixture.sorted_b
+      }
+    }
+  }
 }
 
 z.t.describe "z.completion.cache.build._docs"; {

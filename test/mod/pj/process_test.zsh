@@ -377,7 +377,40 @@ z.t.describe "z.pj.list"; {
       z.file.write path="$XDG_CONFIG_HOME/z/pj/alpha" content='/tmp/alpha space'$'\n'
       local output=$(z.pj.list)
 
-      z.t.expect "$output" $'alpha\t/tmp/alpha space\nzeta\t/tmp/zeta'
+      z.t.expect "$output" $'\e[35malpha\e[0m  \e[37m/tmp/alpha space\e[0m\n\e[35mzeta \e[0m  \e[37m/tmp/zeta\e[0m'
+
+      z.dir.remove path="$fixture_root"
+    }
+  }
+
+  z.t.context "名前の長さが大きく異なる場合"; {
+    z.t.it "名前順を保ちパスの開始列を揃える"; {
+      local fixture_root="/tmp/z_t/pj_process_list_width_$$"
+      z.dir.make path="$fixture_root"
+      local XDG_CONFIG_HOME="$fixture_root/config"
+      z.dir.make path="$XDG_CONFIG_HOME/z/pj"
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/long_project_name" content='/tmp/long path'$'\n'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/a" content=/tmp/a$'\n'
+      local output=$(z.pj.list)
+      z.str.color.strip "$output"
+
+      z.t.expect.reply $'a                  /tmp/a\nlong_project_name  /tmp/long path'
+
+      z.dir.remove path="$fixture_root"
+    }
+  }
+
+  z.t.context "名前やパスが解釈されやすい文字列の場合"; {
+    z.t.it "真偽値風の名前とパスの特殊文字をそのまま表示する"; {
+      local fixture_root="/tmp/z_t/pj_process_list_raw_$$"
+      z.dir.make path="$fixture_root"
+      local XDG_CONFIG_HOME="$fixture_root/config"
+      z.dir.make path="$XDG_CONFIG_HOME/z/pj"
+      local directory='/tmp/project\literal $value; %s'
+      z.file.write path="$XDG_CONFIG_HOME/z/pj/false" content="$directory"$'\n'
+      local output=$(z.pj.list)
+
+      z.t.expect "$output" $'\e[35mfalse\e[0m  \e[37m'"$directory"$'\e[0m'
 
       z.dir.remove path="$fixture_root"
     }

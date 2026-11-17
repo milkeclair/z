@@ -10,62 +10,66 @@ function operatorSummaries(input: string) {
     }));
 }
 
-describe('tokenize@operator', () => {
-  test('定義済みoperatorをすべてトークン化する', () => {
-    expect(
-      operatorSummaries('&>> <<< <<- && || |& &| &! ;; ;& ;| [[ ]] (( )) >> << >| <> <& >& &> ( ) { } ; | & < >'),
-    ).toEqual([
-      { value: '&>>', operatorKind: 'redirect' },
-      { value: '<<<', operatorKind: 'redirect' },
-      { value: '<<-', operatorKind: 'redirect' },
-      { value: '&&', operatorKind: 'andIf' },
-      { value: '||', operatorKind: 'orIf' },
-      { value: '|&', operatorKind: 'pipeErr' },
-      { value: '&|', operatorKind: 'backgroundPipe' },
-      { value: '&!', operatorKind: 'backgroundBang' },
-      { value: ';;', operatorKind: 'doubleSemicolon' },
-      { value: ';&', operatorKind: 'caseFallthrough' },
-      { value: ';|', operatorKind: 'caseContinue' },
-      { value: '[[', operatorKind: 'conditionStart' },
-      { value: ']]', operatorKind: 'conditionEnd' },
-      { value: '((', operatorKind: 'arithmeticStart' },
-      { value: '))', operatorKind: 'arithmeticEnd' },
-      { value: '>>', operatorKind: 'redirect' },
-      { value: '<<', operatorKind: 'redirect' },
-      { value: '>|', operatorKind: 'redirect' },
-      { value: '<>', operatorKind: 'redirect' },
-      { value: '<&', operatorKind: 'redirect' },
-      { value: '>&', operatorKind: 'redirect' },
-      { value: '&>', operatorKind: 'redirect' },
-      { value: '(', operatorKind: 'leftParen' },
-      { value: ')', operatorKind: 'rightParen' },
-      { value: '{', operatorKind: 'leftBrace' },
-      { value: '}', operatorKind: 'rightBrace' },
-      { value: ';', operatorKind: 'semicolon' },
-      { value: '|', operatorKind: 'pipe' },
-      { value: '&', operatorKind: 'background' },
-      { value: '<', operatorKind: 'redirect' },
-      { value: '>', operatorKind: 'redirect' },
-    ]);
-  });
+describe('Lexer.tokenize', () => {
+  describe('演算子を読み取る場合', () => {
+    test('定義済みoperatorをすべてトークン化する', () => {
+      expect(
+        operatorSummaries(
+          '&>> <<< <<- && || |& &| &! ;; ;& ;| [[ ]] (( )) >> << >| <> <& >& &> ( ) { } ; | & < >',
+        ),
+      ).toEqual([
+        { value: '&>>', operatorKind: 'redirect' },
+        { value: '<<<', operatorKind: 'redirect' },
+        { value: '<<-', operatorKind: 'redirect' },
+        { value: '&&', operatorKind: 'andIf' },
+        { value: '||', operatorKind: 'orIf' },
+        { value: '|&', operatorKind: 'pipeErr' },
+        { value: '&|', operatorKind: 'backgroundPipe' },
+        { value: '&!', operatorKind: 'backgroundBang' },
+        { value: ';;', operatorKind: 'doubleSemicolon' },
+        { value: ';&', operatorKind: 'caseFallthrough' },
+        { value: ';|', operatorKind: 'caseContinue' },
+        { value: '[[', operatorKind: 'conditionStart' },
+        { value: ']]', operatorKind: 'conditionEnd' },
+        { value: '((', operatorKind: 'arithmeticStart' },
+        { value: '))', operatorKind: 'arithmeticEnd' },
+        { value: '>>', operatorKind: 'redirect' },
+        { value: '<<', operatorKind: 'redirect' },
+        { value: '>|', operatorKind: 'redirect' },
+        { value: '<>', operatorKind: 'redirect' },
+        { value: '<&', operatorKind: 'redirect' },
+        { value: '>&', operatorKind: 'redirect' },
+        { value: '&>', operatorKind: 'redirect' },
+        { value: '(', operatorKind: 'leftParen' },
+        { value: ')', operatorKind: 'rightParen' },
+        { value: '{', operatorKind: 'leftBrace' },
+        { value: '}', operatorKind: 'rightBrace' },
+        { value: ';', operatorKind: 'semicolon' },
+        { value: '|', operatorKind: 'pipe' },
+        { value: '&', operatorKind: 'background' },
+        { value: '<', operatorKind: 'redirect' },
+        { value: '>', operatorKind: 'redirect' },
+      ]);
+    });
 
-  test('重なり合うoperatorは最長一致で読む', () => {
-    expect(operatorSummaries('&>> &> &| & <<< <<- << ;; ;& ;| && || |& (( (')).toEqual([
-      { value: '&>>', operatorKind: 'redirect' },
-      { value: '&>', operatorKind: 'redirect' },
-      { value: '&|', operatorKind: 'backgroundPipe' },
-      { value: '&', operatorKind: 'background' },
-      { value: '<<<', operatorKind: 'redirect' },
-      { value: '<<-', operatorKind: 'redirect' },
-      { value: '<<', operatorKind: 'redirect' },
-      { value: ';;', operatorKind: 'doubleSemicolon' },
-      { value: ';&', operatorKind: 'caseFallthrough' },
-      { value: ';|', operatorKind: 'caseContinue' },
-      { value: '&&', operatorKind: 'andIf' },
-      { value: '||', operatorKind: 'orIf' },
-      { value: '|&', operatorKind: 'pipeErr' },
-      { value: '((', operatorKind: 'arithmeticStart' },
-      { value: '(', operatorKind: 'leftParen' },
-    ]);
+    test('重なり合うoperatorは最長一致で読む', () => {
+      expect(operatorSummaries('&>> &> &| & <<< <<- << ;; ;& ;| && || |& (( (')).toEqual([
+        { value: '&>>', operatorKind: 'redirect' },
+        { value: '&>', operatorKind: 'redirect' },
+        { value: '&|', operatorKind: 'backgroundPipe' },
+        { value: '&', operatorKind: 'background' },
+        { value: '<<<', operatorKind: 'redirect' },
+        { value: '<<-', operatorKind: 'redirect' },
+        { value: '<<', operatorKind: 'redirect' },
+        { value: ';;', operatorKind: 'doubleSemicolon' },
+        { value: ';&', operatorKind: 'caseFallthrough' },
+        { value: ';|', operatorKind: 'caseContinue' },
+        { value: '&&', operatorKind: 'andIf' },
+        { value: '||', operatorKind: 'orIf' },
+        { value: '|&', operatorKind: 'pipeErr' },
+        { value: '((', operatorKind: 'arithmeticStart' },
+        { value: '(', operatorKind: 'leftParen' },
+      ]);
+    });
   });
 });

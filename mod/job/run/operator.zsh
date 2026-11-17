@@ -18,9 +18,9 @@ z.job.run._validate() {
 
   z.is.null "$name" && return 1
   z.is.null "$command" && return 1
-  z.int.is.zero ${+functions[$command]} && return 1
-  z.is.not.null "$on_success" && z.int.is.zero ${+functions[$on_success]} && return 1
-  z.is.not.null "$on_failure" && z.int.is.zero ${+functions[$on_failure]} && return 1
+  ! z.hash.has.key functions "key=$command" && return 1
+  z.is.not.null "$on_success" && ! z.hash.has.key functions "key=$on_success" && return 1
+  z.is.not.null "$on_failure" && ! z.hash.has.key functions "key=$on_failure" && return 1
 
   return 0
 }

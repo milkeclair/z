@@ -59,4 +59,34 @@ DOCS
       z.t.expect "$lookup_docs" "$expected_docs"
     }
   }
+
+  z.t.context "code引数の仕様を保存する場合"; {
+    z.t.it "引用した許可値を評価せず保存・復元する"; {
+      local fixture_dir=$(mktemp -d)
+      local marker=$fixture_dir/never-created
+      local cache_file=$fixture_dir/cache.zsh
+      local literal="\$(print changed > $marker)"
+      local fields=(named behavior code "$literal" "a:b c" "")
+      local record="${(j: :)${(@q)fields}}"
+      z_completion_argument_specs=()
+      z_completion_argument_specs[z.t.mock]=$record
+
+      z.completion.cache._dump
+      z.file.write path="$cache_file" content="$REPLY"
+      z_completion_argument_specs=()
+      source "$cache_file"
+      local restored=$z_completion_argument_specs[z.t.mock]
+      local example_words=(z.t.mock behavior=print)
+      z.completion.argument._select "specs=$restored" current=2 words=example_words
+      local choices=("${REPLY[@]}")
+
+      z.t.expect "$restored" "$record"
+      z.t.expect "$choices[2]" "$literal"
+      z.t.expect "$choices[3]" "a:b c"
+      z.t.expect.is.null "$choices[4]"
+      z.file.not.exists "$marker"
+      z.t.expect.status.is.true
+      z.dir.remove path="$fixture_dir"
+    }
+  }
 }

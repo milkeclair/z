@@ -12,7 +12,7 @@ z.file.read.lines() {
   z.arg.named path $@ && local file=$REPLY
 
   if z.file.exists $file; then
-    REPLY=(${(f)$(cat $file)})
+    z.str.split.line "$(cat $file)" empty=drop
   else
     REPLY=()
   fi

@@ -8,7 +8,7 @@
 #  z.version
 #  # 出力: v3.1.0
 z.version() {
-  z.io "v3.1.0"
+  z.io "v3.2.0"
 }
 
 # GitHubから取得した最新バージョンを表示する

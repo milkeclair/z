@@ -1,10 +1,10 @@
-import type { WordContext } from './part/types';
 import type {
   ArithmeticExpansionNode,
   CommandSubstitutionNode,
   ParameterExpansionNode,
 } from '../../ast';
 import type { SourceRange } from '../../lexer';
+import type { WordContext } from './part/types';
 
 export type ExpansionNodeKind =
   | 'parameterExpansion'

@@ -21,13 +21,15 @@ z.job.meta._write() {
   z.arg.named on_failure "$@" && local on_failure=$REPLY
   z.arg.named dir "$@" && local dir=$REPLY
 
-  local lines=()
-  lines+=("z_job_id=${(qqq)id}")
-  lines+=("z_job_name=${(qqq)name}")
-  lines+=("z_job_command=${(qqq)command}")
-  lines+=("z_job_on_success=${(qqq)on_success}")
-  lines+=("z_job_on_failure=${(qqq)on_failure}")
-  lines+=("z_job_dir=${(qqq)dir}")
+  z.arr.quote style=double "$id" "$name" "$command" "$on_success" "$on_failure" "$dir"
+  local lines=(
+    "z_job_id=$REPLY[1]"
+    "z_job_name=$REPLY[2]"
+    "z_job_command=$REPLY[3]"
+    "z_job_on_success=$REPLY[4]"
+    "z_job_on_failure=$REPLY[5]"
+    "z_job_dir=$REPLY[6]"
+  )
 
   z.file.write path="$dir/meta" content=""
   for line in "${lines[@]}"; do

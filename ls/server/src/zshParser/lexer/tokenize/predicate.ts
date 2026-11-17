@@ -1,7 +1,7 @@
-import { Operators, SpecialCharacters } from '../character';
 import type { OperatorDefinition } from '../character';
-import { current, startsWith } from '../cursor';
+import { Operators, SpecialCharacters } from '../character';
 import type { Cursor } from '../cursor';
+import { current, startsWith } from '../cursor';
 
 export function isHorizontalWhitespace(char: string): boolean {
   return char === SpecialCharacters.space || char === SpecialCharacters.tab;

@@ -1,6 +1,6 @@
 import { SpecialCharacters } from '../../character';
-import { advance, eof } from '../../cursor';
 import type { Cursor } from '../../cursor';
+import { advance, eof } from '../../cursor';
 import { scan } from '../../scan';
 import type { ReadResult } from './result';
 

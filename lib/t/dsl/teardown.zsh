@@ -13,8 +13,8 @@ z.t.teardown() {
 
   local error_flag_file="/tmp/z_t_error_$$"
   if z.file.exists $error_flag_file; then
-    local error_lines
-    error_lines=(${(f)$(<$error_flag_file)})
+    z.str.split.line "$(<$error_flag_file)" empty=drop
+    local error_lines=("${REPLY[@]}")
     z.arr.count $error_lines
     local error_count=$REPLY
 

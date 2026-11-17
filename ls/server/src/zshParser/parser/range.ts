@@ -1,3 +1,4 @@
+import { numberRange, takeWhile } from '../../util/collections';
 import type { SourcePosition, SourceRange, Token } from '../lexer';
 
 const Empty = '';
@@ -69,36 +70,44 @@ function positionAfterText({
   readonly position: SourcePosition;
   readonly text: string;
 }): SourcePosition {
-  let current = position;
-
-  for (let index = 0; index < text.length; index += 1) {
+  return numberRange(0, text.length).reduce((current, index) => {
     const char = text[index] ?? Empty;
     const nextChar = text[index + 1] ?? Empty;
     const newLine = char === LineFeed || (char === CarriageReturn && nextChar !== LineFeed);
 
-    current = {
+    return {
       offset: current.offset + 1,
       line: newLine ? current.line + 1 : current.line,
       character: newLine ? 0 : current.character + 1,
     };
-  }
-
-  return current;
+  }, position);
 }
 
-export function enclosingRange(range: SourceRange, children: readonly { readonly range: SourceRange }[]): SourceRange {
-  let end = range.end;
-  for (const child of children) if (child.range.end.offset > end.offset) end = child.range.end;
+export function enclosingRange(
+  range: SourceRange,
+  children: readonly {
+    readonly range: SourceRange;
+  }[],
+): SourceRange {
+  const end = children.reduce(
+    (previous, child) => (child.range.end.offset > previous.offset ? child.range.end : previous),
+    range.end,
+  );
+
   return { start: range.start, end };
 }
 
 export function textForRange(tokens: readonly Token[], range: SourceRange): string {
-  const parts: string[] = [];
-  for (const token of tokens) {
-    if (token.range.end.offset <= range.start.offset) continue;
-    if (token.range.start.offset >= range.end.offset) break;
-    parts.push(token.value.slice(Math.max(0, range.start.offset - token.range.start.offset),
-      Math.min(token.value.length, range.end.offset - token.range.start.offset)));
-  }
-  return parts.join('');
+  return takeWhile(
+    Iterator.from(tokens).filter((token) => token.range.end.offset > range.start.offset),
+    (token) => token.range.start.offset < range.end.offset,
+  )
+    .map((token) =>
+      token.value.slice(
+        Math.max(0, range.start.offset - token.range.start.offset),
+        Math.min(token.value.length, range.end.offset - token.range.start.offset),
+      ),
+    )
+    .toArray()
+    .join('');
 }

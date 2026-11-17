@@ -1,87 +1,77 @@
-import { Result } from './type';
-import { useCurrentSection } from './useCurrentSection';
-import { sectionRegexes, sectionExtractRegexes } from './regex';
+import { appendItems, collectArray } from '../util/collections';
+import { sectionExtractRegexes, sectionRegexes } from './regex';
+import type { Result, Section } from './type';
 
-export function Document(commentText: string): Result {
-  const lines = commentText.split('\n');
-  const descriptionLines: string[] = [];
-  const exampleLines: string[] = [];
-  const result: Result = {
-    description: '',
-    parameters: [],
-    reply: '',
-    return: '',
-    example: '',
-  };
+type DocumentationState = {
+  readonly section: Section;
+  readonly description: ReadonlyArray<string>;
+  readonly example: ReadonlyArray<string>;
+  readonly result: Result;
+};
 
-  const [currentSection, setCurrentSection] = useCurrentSection('description');
+function readLine(state: DocumentationState, line: string): DocumentationState {
+  const text = line.trim();
 
-  const handleParameters = (trimmedLine: string) => {
-    const isParam = sectionRegexes.parameters.test(trimmedLine);
-
-    if (isParam) {
-      const match = trimmedLine.match(sectionExtractRegexes.parameters) || ['', ''];
-
-      result.parameters.push({ name: match[1], description: match[2] });
-      setCurrentSection('parameters');
-    }
-  };
-
-  const handleReply = (trimmedLine: string) => {
-    const isReply = sectionRegexes.reply.test(trimmedLine);
-
-    if (isReply) {
-      const match = trimmedLine.match(sectionExtractRegexes.reply) || [''];
-
-      result.reply = match[1];
-      setCurrentSection('reply');
-    }
-  };
-
-  const handleReturn = (trimmedLine: string) => {
-    const isReturn = sectionRegexes.return.test(trimmedLine);
-
-    if (isReturn) {
-      const match = trimmedLine.match(sectionExtractRegexes.return) || [''];
-
-      result.return = match[1];
-      setCurrentSection('return');
-    }
-  };
-
-  const handleExample = (trimmedLine: string) => {
-    const isExample = sectionRegexes.example.test(trimmedLine);
-
-    if (isExample) {
-      setCurrentSection('example');
-    } else if (currentSection() === 'example') {
-      const match = trimmedLine.match(sectionExtractRegexes.example) || [''];
-
-      exampleLines.push(match[1]);
-    }
-  };
-
-  const handleDescription = (trimmedLine: string) => {
-    if (currentSection() === 'description') {
-      const match = trimmedLine.match(sectionExtractRegexes.description) || [''];
-
-      descriptionLines.push(match[1]);
-    }
-  };
-
-  for (const line of lines) {
-    const trimmedLine = line.trim();
-    if (trimmedLine === '') continue;
-
-    handleParameters(trimmedLine);
-    handleReply(trimmedLine);
-    handleReturn(trimmedLine);
-    handleExample(trimmedLine);
-    handleDescription(trimmedLine);
+  if (text === '') {
+    return state;
   }
 
-  result.description = descriptionLines.join('\n');
-  result.example = exampleLines.join('\n');
+  if (sectionRegexes.parameters.test(text)) {
+    const match = text.match(sectionExtractRegexes.parameters) || ['', ''];
 
-  return result;
+    return {
+      ...state,
+      section: 'parameters',
+      result: {
+        ...state.result,
+        parameters: [...state.result.parameters, { name: match[1], description: match[2] }],
+      },
+    };
+  }
+
+  if (sectionRegexes.reply.test(text)) {
+    const match = text.match(sectionExtractRegexes.reply) || [''];
+
+    return { ...state, section: 'reply', result: { ...state.result, reply: match[1] } };
+  }
+
+  if (sectionRegexes.return.test(text)) {
+    const match = text.match(sectionExtractRegexes.return) || [''];
+
+    return { ...state, section: 'return', result: { ...state.result, return: match[1] } };
+  }
+
+  if (sectionRegexes.example.test(text)) {
+    return { ...state, section: 'example' };
+  }
+
+  if (state.section === 'example') {
+    const match = text.match(sectionExtractRegexes.example) || [''];
+
+    return { ...state, example: appendItems(state.example, match[1]) };
+  }
+
+  if (state.section === 'description') {
+    const match = text.match(sectionExtractRegexes.description) || [''];
+
+    return { ...state, description: appendItems(state.description, match[1]) };
+  }
+
+  return state;
+}
+
+export function Document(commentText: string): Result {
+  const initial: DocumentationState = {
+    section: 'description',
+    description: collectArray(),
+    example: collectArray(),
+    result: { description: '', parameters: [], reply: '', return: '', example: '' },
+  };
+  const parsed = commentText.split('\n').reduce(readLine, initial);
+
+  return {
+    ...parsed.result,
+    description: parsed.description.join('\n'),
+    example: parsed.example.join('\n'),
+  };
 }

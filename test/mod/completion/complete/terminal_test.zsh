@@ -46,7 +46,7 @@ z.t.describe "z92_terminal"; {
       local without_alias=$(z92_terminal "$terminal_fd" input=z.fixture.)
 
       z.t.expect.includes "$with_alias" "matches:lines=3:"
-      z.t.expect "$without_alias" $'matches:lines=2:2\nbuffer=z.fixture.'
+      z.t.expect "$without_alias" $'matches:lines=2:2\nbuffer=z.fixture.alpha '
     }
   }
 
@@ -56,7 +56,7 @@ z.t.describe "z92_terminal"; {
       local unfiltered=$(z92_terminal "$terminal_fd" input=z.fixture.)
 
       z.t.expect "$filtered" $'matches:lines=1:1\nbuffer=z.fixture.alpha '
-      z.t.expect "$unfiltered" $'matches:lines=2:2\nbuffer=z.fixture.'
+      z.t.expect "$unfiltered" $'matches:lines=2:2\nbuffer=z.fixture.alpha '
     }
   }
 
@@ -79,7 +79,7 @@ z.t.describe "z92_terminal"; {
       z.dir.remove path="$fixture_dir"
 
       z.t.expect.includes "$with_command" "matches:lines=3:"
-      z.t.expect "$without_command" $'matches:lines=2:2\nbuffer=z.fixture.'
+      z.t.expect "$without_command" $'matches:lines=2:2\nbuffer=z.fixture.alpha '
     }
   }
 }

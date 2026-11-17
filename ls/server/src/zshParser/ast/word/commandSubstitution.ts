@@ -1,5 +1,5 @@
 import type { BaseNode } from '../base';
-import type { ListNode } from '../file/list';
+import type { ListNode } from '../list';
 
 export type CommandSubstitutionNode = BaseNode<'commandSubstitution'> & {
   readonly raw: string;

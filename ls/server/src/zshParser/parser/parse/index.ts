@@ -1,12 +1,12 @@
-import type { ParseStateOptions } from '../state/types';
 import type { FileNode } from '../../ast';
 import type { Token } from '../../lexer';
+import type { ParserDiagnostic } from '../diagnostic';
 import { createEofNode } from '../eof';
 import { parseList } from '../list';
 import { rangeFromTokens } from '../range';
-import { createParseState } from '../state';
 import type { ParseOptions } from '../state';
-import type { ParserDiagnostic } from '../diagnostic';
+import { createParseState } from '../state';
+import type { ParseStateOptions } from '../state/types';
 
 export type ParseResult = {
   readonly ast: FileNode;
@@ -18,7 +18,10 @@ export function parse(tokens: readonly Token[], options: ParseOptions = {}): Par
   return parseWithContext(tokens, options);
 }
 
-export function parseWithContext(tokens: readonly Token[], options: ParseStateOptions): ParseResult {
+export function parseWithContext(
+  tokens: readonly Token[],
+  options: ParseStateOptions,
+): ParseResult {
   const state = createParseState(tokens, options);
   const bodyResult = parseList(state, isFileEnd);
   const eof = createEofNode(bodyResult.state.eof);

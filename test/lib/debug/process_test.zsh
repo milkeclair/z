@@ -9,6 +9,24 @@ z.t.describe "z.debug"; {
     }
   }
 
+  z.t.context "zの他の関数を読み込まずに実行した場合"; {
+    z.t.it "変数を表示してREPLYを保持する"; {
+      local input=$'p sample\nc'
+      local output=$(zsh -fc '
+        source "$1"
+        local sample="standalone value"
+        Z_DEBUG=0
+        REPLY=kept
+        z.debug
+        print -r -- "REPLY:$REPLY"
+      ' -- "$z_root/lib/debug/process.zsh" <<< "$input" 2>&1)
+
+      z.t.expect.includes "$output" "standalone value"
+      z.t.expect.includes "$output" "REPLY:kept"
+      z.t.expect.excludes "$output" "command not found"
+    }
+  }
+
   z.t.context "Z_DEBUGが0の場合"; {
     z.t.it "デバッガーに入る"; {
       local previous_debug=$Z_DEBUG

@@ -65,14 +65,17 @@ z.wtproxy.start._serve() {
     listener_fds+=($listener_fd)
   done
 
-  trap "z.wtproxy.start._serve.cleanup ${(j: :)listener_fds}; exit 0" INT TERM
-  trap "z.wtproxy.start._serve.cleanup ${(j: :)listener_fds}" EXIT
+  z.arr.join "${listener_fds[@]}"
+  local cleanup="z.wtproxy.start._serve.cleanup $REPLY"
+  trap "$cleanup; exit 0" INT TERM
+  trap "$cleanup" EXIT
 
   while true; do
     local -A ready=()
     zselect -A ready $listener_fds || return 1
 
-    for listener_fd in ${(k)ready}; do
+    z.hash.keys ready
+    for listener_fd in "${REPLY[@]}"; do
       z.wtproxy.start._serve.accept "$listener_fd" "$listener_keys[$listener_fd]" "${(@)listener_fds}"
     done
   done

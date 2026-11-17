@@ -1,5 +1,5 @@
-import { current, position } from '../../cursor';
 import type { Cursor } from '../../cursor';
+import { current, position } from '../../cursor';
 import type { Token } from '../../token';
 import { createToken } from '../../token';
 import { isHorizontalWhitespace } from '../predicate';
@@ -11,10 +11,7 @@ type WhitespaceReadContext = {
   readonly cursor: Cursor;
 };
 
-export function readWhitespace({
-  sourceFile,
-  cursor,
-}: WhitespaceReadContext): ReadResult<Token> {
+export function readWhitespace({ sourceFile, cursor }: WhitespaceReadContext): ReadResult<Token> {
   const start = position(cursor);
   const result = readTextWhile({
     cursor,
