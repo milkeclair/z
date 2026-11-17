@@ -7,7 +7,7 @@ import { zInitialize } from '../../src/connection/initialize';
 import type { InitializeParams } from '../../src/vscode_type';
 
 const roots: string[] = [];
-function fixture(): string {
+function createProviderFixture(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-initialize-'));
   roots.push(root);
   return root;
@@ -23,8 +23,8 @@ function initialize(params: Partial<InitializeParams>) {
 
 describe('zInitialize@hydration', () => {
   test('workspaceフォルダをzPathより優先して一般名の関数を取得する', () => {
-    const root = fixture();
-    const legacy = fixture();
+    const root = createProviderFixture();
+    const legacy = createProviderFixture();
     fs.writeFileSync(path.join(root, 'sample.zsh'), 'greet() { : }\n');
     fs.writeFileSync(path.join(legacy, 'legacy.zsh'), 'z.legacy() { : }\n');
     const result = initialize({
@@ -38,14 +38,14 @@ describe('zInitialize@hydration', () => {
   });
 
   test('rootUriと旧rootPathをローカルルートとして扱う', () => {
-    const root = fixture();
+    const root = createProviderFixture();
     expect(initialize({ rootUri: pathToFileURL(root).href }).projectRoot).toBe(root);
     expect(initialize({ rootPath: root }).projectRoot).toBe(root);
     expect(initialize({ rootUri: 'untitled:root', rootPath: root }).projectRoot).toBe(root);
   });
 
   test('workspaceのない既存クライアントは設定したzPathへフォールバックする', () => {
-    const root = fixture();
+    const root = createProviderFixture();
     fs.writeFileSync(path.join(root, 'sample.zsh'), 'z.legacy() { : }\n');
     const result = initialize({ initializationOptions: { zPath: root } });
     expect(result.workspaceRoot).toBe('');

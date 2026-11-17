@@ -6,7 +6,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { parseShellEnvironment, readShellEnvironment } from '../../src/diagnostics/environment';
 
 const roots: string[] = [];
-function fixture() {
+function createDiagnosticFixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-lsp-env-'));
   roots.push(root);
   fs.mkdirSync(path.join(root, 'bin'));
@@ -35,8 +35,8 @@ afterEach(() => {
 });
 describe('shell environment', () => {
   test('実Zshの外部コマンド・builtin・alias・autoloadと関数を取得する', async () => {
-    const f = fixture();
-    const environment = await readShellEnvironment({ env: f.env });
+    const scenario = createDiagnosticFixture();
+    const environment = await readShellEnvironment({ env: scenario.env });
     expect(environment.kind).toBe('available');
     if (environment.kind !== 'available') {
       throw new Error(environment.reason);
@@ -46,28 +46,30 @@ describe('shell environment', () => {
     expect(environment.aliases.has('fixture-alias')).toBe(true);
     expect(environment.functions.has('fixture-function')).toBe(true);
     expect(environment.functions.has('fixture-autoload')).toBe(true);
-    expect(fs.existsSync(path.join(f.root, 'autoload-executed'))).toBe(false);
+    expect(fs.existsSync(path.join(scenario.root, 'autoload-executed'))).toBe(false);
   });
   test('commandのbuiltin解決に関わる実Zshオプションも保持する', async () => {
-    const f = fixture();
-    fs.appendFileSync(path.join(f.root, '.zshrc'), '\nsetopt POSIX_BUILTINS\n');
-    const result = await readShellEnvironment({ env: f.env });
+    const scenario = createDiagnosticFixture();
+    fs.appendFileSync(path.join(scenario.root, '.zshrc'), '\nsetopt POSIX_BUILTINS\n');
+    const result = await readShellEnvironment({ env: scenario.env });
     expect(result.kind === 'available' && result.commandBuiltins).toBe(true);
   });
   test('起動失敗は未解決のまま返す', async () => {
-    const f = fixture();
+    const scenario = createDiagnosticFixture();
     expect(
-      await readShellEnvironment({ env: { ...f.env, PATH: path.join(f.root, 'bin') } }),
+      await readShellEnvironment({
+        env: { ...scenario.env, PATH: path.join(scenario.root, 'bin') },
+      }),
     ).toEqual({ kind: 'unavailable', reason: 'spawn' });
   });
   test('時間制限で起動したprocess groupを終了する', async () => {
-    const f = fixture();
-    const pidFile = path.join(f.root, 'pids');
+    const scenario = createDiagnosticFixture();
+    const pidFile = path.join(scenario.root, 'pids');
     fs.writeFileSync(
-      path.join(f.root, '.zshrc'),
+      path.join(scenario.root, '.zshrc'),
       'sleep 10 &\nprint -r -- "$$ $!" > ' + JSON.stringify(pidFile) + '\nwait\n',
     );
-    expect(await readShellEnvironment({ env: f.env, timeout: 3000 })).toEqual({
+    expect(await readShellEnvironment({ env: scenario.env, timeout: 3000 })).toEqual({
       kind: 'unavailable',
       reason: 'timeout',
     });
@@ -85,10 +87,10 @@ describe('shell environment', () => {
       .toBe(true);
   }, 15000);
   test('呼び出し元Nodeの終了時にも検査用process groupを停止する', async () => {
-    const f = fixture();
-    const pidFile = path.join(f.root, 'pids');
+    const scenario = createDiagnosticFixture();
+    const pidFile = path.join(scenario.root, 'pids');
     fs.writeFileSync(
-      path.join(f.root, '.zshrc'),
+      path.join(scenario.root, '.zshrc'),
       ['sleep 10 &', 'print -r -- "$$ $!" > ' + JSON.stringify(pidFile), 'wait'].join('\n'),
     );
     const modulePath = path.resolve(__dirname, '../../dist/diagnostics/environment.js');
@@ -97,7 +99,7 @@ describe('shell environment', () => {
       JSON.stringify(modulePath) +
       '); void readShellEnvironment({timeout:10000}); process.on("message",()=>process.exit(0));';
     const child = spawn(process.execPath, ['-e', source], {
-      env: f.env,
+      env: scenario.env,
       stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
     });
     let pids: string[] = [];
@@ -132,8 +134,8 @@ describe('shell environment', () => {
     }
   }, 10000);
   test('過大な起動出力を制限する', async () => {
-    const f = fixture();
-    expect(await readShellEnvironment({ env: f.env, maxBytes: 8 })).toEqual({
+    const scenario = createDiagnosticFixture();
+    expect(await readShellEnvironment({ env: scenario.env, maxBytes: 8 })).toEqual({
       kind: 'unavailable',
       reason: 'output-limit',
     });

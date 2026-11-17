@@ -1,6 +1,6 @@
 import { DocumentDiagnosticReportKind } from '../vscode_type';
 import type { DiagnosticSnapshot } from './snapshot';
-import type { workspaceDiagnosticsReport } from './type';
+import type { WorkspaceDiagnosticsReport } from './type';
 
 export function workspaceDiagnostics({
   diagnostics,
@@ -8,8 +8,8 @@ export function workspaceDiagnostics({
 }: {
   readonly diagnostics: DiagnosticSnapshot;
   readonly previousResultIds?: readonly { readonly uri: string; readonly value: string }[];
-}): workspaceDiagnosticsReport {
-  const items: workspaceDiagnosticsReport['items'] = [];
+}): WorkspaceDiagnosticsReport {
+  const items: WorkspaceDiagnosticsReport['items'] = [];
   const reported = new Set<string>();
   for (const [uri, file] of diagnostics.files) {
     if (!file.project) {

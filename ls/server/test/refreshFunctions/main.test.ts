@@ -12,7 +12,7 @@ import {
 import { Lexer } from '../../src/zshParser/lexer';
 
 const roots: string[] = [];
-function fixture(): string {
+function createSnapshotFixture(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-function-snapshot-'));
   roots.push(root);
   return root;
@@ -34,7 +34,7 @@ function document(root: string, file: string, version: number, content: string) 
 
 describe('refreshFunctionSnapshot', () => {
   test('呼び出し側だけの編集では関数情報の投影を再利用する', () => {
-    const root = fixture();
+    const root = createSnapshotFixture();
     fs.writeFileSync(path.join(root, 'functions.zsh'), 'helper() { : }\n');
     const first = refreshFunctionSnapshot({ projectRoot: root, documents: [] });
     const next = refreshFunctionSnapshot({
@@ -50,7 +50,7 @@ describe('refreshFunctionSnapshot', () => {
   });
 
   test('一般名・入れ子・function形式をASTから互換ビューへ変換する', () => {
-    const root = fixture();
+    const root = createSnapshotFixture();
     fs.writeFileSync(
       path.join(root, 'sample.zsh'),
       [
@@ -94,7 +94,7 @@ describe('refreshFunctionSnapshot', () => {
   });
 
   test('例示中の引数タグを互換引数へ混ぜない', () => {
-    const root = fixture();
+    const root = createSnapshotFixture();
     const result = refreshFunctionSnapshot({
       projectRoot: root,
       documents: [
@@ -107,7 +107,7 @@ describe('refreshFunctionSnapshot', () => {
   });
 
   test('編集したbufferだけを再解析し、変更のないsnapshotと互換ビューを再利用する', () => {
-    const root = fixture();
+    const root = createSnapshotFixture();
     fs.writeFileSync(path.join(root, 'a.zsh'), 'first() { : }\n');
     fs.writeFileSync(path.join(root, 'b.zsh'), 'second() { : }\n');
     const first = refreshFunctionSnapshot({ projectRoot: root, documents: [] });
@@ -128,7 +128,7 @@ describe('refreshFunctionSnapshot', () => {
   });
 
   test('保存・close・disk削除と文書の開き直しを反映する', () => {
-    const root = fixture();
+    const root = createSnapshotFixture();
     const file = path.join(root, 'sample.zsh');
     fs.writeFileSync(file, 'disk() { : }\n');
     const first = refreshFunctionSnapshot({
@@ -157,7 +157,7 @@ describe('refreshFunctionSnapshot', () => {
   });
 
   test('workspace外・非file URI・対象外拡張子を追加しない', () => {
-    const root = fixture();
+    const root = createSnapshotFixture();
     const result = refreshFunctionSnapshot({
       projectRoot: root,
       documents: [
@@ -177,7 +177,7 @@ describe('refreshFunctionSnapshot', () => {
     expect(first.hydrator.files.size).toBe(0);
   });
   test('文書ASTと関数索引は同じhydrationを参照し、呼び出し編集では索引を再利用する', () => {
-    const root = fixture();
+    const root = createSnapshotFixture();
     const definition = document(root, 'definitions.zsh', 1, 'helper() { : }\n');
     const caller = document(root, 'caller.zsh', 1, 'helper x\n');
     const first = refreshFunctionSnapshot({ projectRoot: root, documents: [definition, caller] });
@@ -196,7 +196,7 @@ describe('refreshFunctionSnapshot', () => {
   });
 
   test('workspace外の開いた文書は探索用に保持し、候補へ混ぜず、close時に解放する', () => {
-    const root = fixture();
+    const root = createSnapshotFixture();
     const external = document(path.dirname(root), 'external.zsh', 1, 'external() { : }\n');
     const first = refreshFunctionSnapshot({ projectRoot: root, documents: [external] });
     expect(first.targets.size).toBe(0);

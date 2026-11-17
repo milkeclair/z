@@ -11,7 +11,7 @@ export type Diagnostics = {
   readonly source: string;
 };
 
-export type workspaceDiagnosticsReport = {
+export type WorkspaceDiagnosticsReport = {
   items: {
     uri: string;
     version: number | null;

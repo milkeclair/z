@@ -49,7 +49,7 @@ export function argumentDescription(doc: Result | null, arg: FuncArg): string {
 
   const name = argumentName(arg);
   const patterns = [`$${name}`, `$${name}:`, `$${name}?:`, name, `${name}:`, `${name}?:`];
-  const parameter = doc.parameters.find((p) => patterns.includes(p.name));
+  const parameter = doc.parameters.find((parameter) => patterns.includes(parameter.name));
 
   return parameter?.description ?? '';
 }

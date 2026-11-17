@@ -109,7 +109,7 @@ function programSpans(program: CodeProgram, maxSpans: number): readonly Span[] {
   if (remaining <= 0 || result.length >= maxSpans) {
     return result;
   }
-  const sortedWords = words.toSorted((a, b) => a.start.offset - b.start.offset);
+  const sortedWords = words.toSorted((left, right) => left.start.offset - right.start.offset);
   let wordIndex = 0;
   let coveredEnd = -1;
   for (const token of program.file.tokens) {

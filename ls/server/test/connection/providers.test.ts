@@ -23,7 +23,7 @@ const definition = [
   '  function greet { : }',
   '',
 ].join('\n');
-function fixture(source: string, definitions = definition) {
+function createProviderFixture(source: string, definitions = definition) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-provider-'));
   roots.push(root);
   const definitionUri = pathToFileURL(path.join(root, '日本語 name.zsh')).href;
@@ -61,7 +61,7 @@ afterEach(() => {
 
 describe('completion@AST', () => {
   test.each(['gr¦eet', '"gr¦eet"', "'gr¦eet'"])('command word全体を置換する: %s', (source) => {
-    const result = fixture(source).complete();
+    const result = createProviderFixture(source).complete();
     expect(result).toHaveLength(1);
     expect(result?.[0]).toMatchObject({
       label: 'greet',
@@ -88,7 +88,7 @@ describe('completion@AST', () => {
     'print "$(  ¦)"',
   ])('空のcommand位置: %s', (source) => {
     expect(
-      fixture(source)
+      createProviderFixture(source)
         .complete()
         ?.map((item) => item.label),
     ).toContain('greet');
@@ -111,40 +111,42 @@ describe('completion@AST', () => {
     '$gr¦',
     'print "x$(print gr¦)"',
   ])('command以外を候補にしない: %s', (source) => {
-    expect(fixture(source).complete()).toEqual([]);
+    expect(createProviderFixture(source).complete()).toEqual([]);
   });
   test('複数行のcommand wordには不正なcompletion editを返さない', () => {
-    expect(fixture('gr' + String.fromCharCode(92) + '\\ne¦et').complete()).toEqual([]);
+    expect(createProviderFixture('gr' + String.fromCharCode(92) + '\\ne¦et').complete()).toEqual(
+      [],
+    );
   });
   test('substitution内部のcommandを探索する', () => {
-    expect(fixture('print "$(gr¦)"').complete()?.[0].label).toBe('greet');
+    expect(createProviderFixture('print "$(gr¦)"').complete()?.[0].label).toBe('greet');
   });
   test('静的な引用名を索引化し、挿入時に引用する', () => {
-    const f = fixture('¦', "function 'hello world' 'if' { : }\n");
-    expect(f.complete()?.map((item) => [item.label, item.textEdit])).toMatchObject([
+    const scenario = createProviderFixture('¦', "function 'hello world' 'if' { : }\n");
+    expect(scenario.complete()?.map((item) => [item.label, item.textEdit])).toMatchObject([
       ['hello world', { newText: "'hello world'" }],
       ['if', { newText: "'if'" }],
     ]);
   });
   test('glob・引用符・modifier名はリテラルとして挿入する', () => {
     const quoted = "'a'" + String.fromCharCode(92) + "''b'";
-    const f = fixture('¦', "function 'hello?' command " + quoted + ' { : }');
-    expect(f.complete()?.map((item) => [item.label, item.textEdit?.newText])).toEqual([
+    const scenario = createProviderFixture('¦', "function 'hello?' command " + quoted + ' { : }');
+    expect(scenario.complete()?.map((item) => [item.label, item.textEdit?.newText])).toEqual([
       ['hello?', "'hello?'"],
       ['command', "'command'"],
       ["a'b", quoted],
     ]);
   });
   test('resolveは現在のsnapshotの文書情報を使い、入力itemを変更しない', () => {
-    const f = fixture('gr¦');
-    const item = f.complete()?.[0];
+    const scenario = createProviderFixture('gr¦');
+    const item = scenario.complete()?.[0];
     if (!item) {
       throw new Error('completion required');
     }
-    const resolved = zCompletionResolve(item, f.snapshot);
+    const resolved = zCompletionResolve(item, scenario.snapshot);
     expect(item.documentation).toBeUndefined();
     expect(resolved.documentation).toMatchObject({ value: expect.stringContaining('Greeting') });
-    expect(zCompletionResolve({ label: 'greet', data: { uri: 1 } }, f.snapshot)).toEqual({
+    expect(zCompletionResolve({ label: 'greet', data: { uri: 1 } }, scenario.snapshot)).toEqual({
       label: 'greet',
       data: { uri: 1 },
     });
@@ -155,10 +157,12 @@ describe('hover and definition@AST', () => {
   test.each(['gr¦eet x', '"gr¦eet" x', 'gr\\¦eet x', 'print "$(gr¦eet x)"', 'exec gr¦eet x'])(
     '実際の呼び出しだけを解決する: %s',
     (source) => {
-      const f = fixture(source);
-      expect(f.hover()).toMatchObject({ contents: { value: expect.stringContaining('Greeting') } });
-      expect(f.definition()).toEqual({
-        uri: f.definitionUri,
+      const scenario = createProviderFixture(source);
+      expect(scenario.hover()).toMatchObject({
+        contents: { value: expect.stringContaining('Greeting') },
+      });
+      expect(scenario.definition()).toEqual({
+        uri: scenario.definitionUri,
         range: {
           start: { line: 6, character: 11 },
           end: { line: 6, character: 16 },
@@ -179,13 +183,13 @@ describe('hover and definition@AST', () => {
     'builtin gr¦eet',
     'print <<END\ngr¦eet\nEND',
   ])('同名テキストへ定義ジャンプしない: %s', (source) => {
-    const f = fixture(source);
-    expect(f.definition()).toBeNull();
-    expect(f.hover()).toBeNull();
+    const scenario = createProviderFixture(source);
+    expect(scenario.definition()).toBeNull();
+    expect(scenario.hover()).toBeNull();
   });
   test('複数名の定義から選択した名前そのものへ移動する', () => {
-    const f = fixture('# Multi\nfunction first sec¦ond { : }\n', '');
-    expect(f.definition()).toMatchObject({
+    const scenario = createProviderFixture('# Multi\nfunction first sec¦ond { : }\n', '');
+    expect(scenario.definition()).toMatchObject({
       range: {
         start: { line: 1, character: 15 },
         end: { line: 1, character: 21 },
@@ -193,14 +197,16 @@ describe('hover and definition@AST', () => {
     });
   });
   test('同一ファイルの直前の再定義を優先する', () => {
-    const f = fixture('# Local\ngreet() { : }\ngr¦eet\n');
-    expect(f.hover()).toMatchObject({ contents: { value: expect.stringContaining('Local') } });
-    expect(f.definition()?.uri).toBe(f.document.uri);
-    const item = f.complete()?.[0];
+    const scenario = createProviderFixture('# Local\ngreet() { : }\ngr¦eet\n');
+    expect(scenario.hover()).toMatchObject({
+      contents: { value: expect.stringContaining('Local') },
+    });
+    expect(scenario.definition()?.uri).toBe(scenario.document.uri);
+    const item = scenario.complete()?.[0];
     if (!item) {
       throw new Error('local completion required');
     }
-    expect(zCompletionResolve(item, f.snapshot).documentation).toMatchObject({
+    expect(zCompletionResolve(item, scenario.snapshot).documentation).toMatchObject({
       value: expect.stringContaining('Local'),
     });
   });
@@ -228,7 +234,7 @@ describe('signature help@AST', () => {
     ['print x | greet ¦', 0],
     ['greet a; greet ¦', 0],
   ])('%s -> %s', (source, index) => {
-    expect(fixture(source).signature()).toMatchObject({
+    expect(createProviderFixture(source).signature()).toMatchObject({
       activeParameter: index,
       signatures: [{ activeParameter: index, parameters: expect.any(Array) }],
     });
@@ -242,42 +248,42 @@ describe('signature help@AST', () => {
     'greet a > ¦',
     'greet a # ¦',
   ])('呼び出し境界を越えない: %s', (source) => {
-    expect(fixture(source).signature()).toBeNull();
+    expect(createProviderFixture(source).signature()).toBeNull();
   });
 });
 
 describe('provider snapshot reuse', () => {
   test('要求処理は文書を再解析せず、同じsnapshotを参照する', () => {
-    const f = fixture('gr¦eet');
+    const scenario = createProviderFixture('gr¦eet');
     const spy = vi.spyOn(Lexer, 'tokenize');
     for (let request = 0; request < 10; request += 1) {
-      const item = f.complete()?.[0];
-      expect(f.definition()?.uri).toBe(f.definitionUri);
-      expect(f.hover()).not.toBeNull();
-      f.signature();
+      const item = scenario.complete()?.[0];
+      expect(scenario.definition()?.uri).toBe(scenario.definitionUri);
+      expect(scenario.hover()).not.toBeNull();
+      scenario.signature();
       if (item) {
-        zCompletionResolve(item, f.snapshot);
+        zCompletionResolve(item, scenario.snapshot);
       }
     }
     expect(spy).not.toHaveBeenCalled();
   });
   test('未反映のversionには古いASTを返さない', () => {
-    const f = fixture('gr¦eet');
-    TextDocument.update(f.document, [{ text: 'other' }], 2);
-    expect(f.hover()).toBeNull();
-    expect(f.definition()).toBeNull();
-    expect(f.complete()).toEqual([]);
+    const scenario = createProviderFixture('gr¦eet');
+    TextDocument.update(scenario.document, [{ text: 'other' }], 2);
+    expect(scenario.hover()).toBeNull();
+    expect(scenario.definition()).toBeNull();
+    expect(scenario.complete()).toEqual([]);
   });
 });
 
 describe('argument hover@AST', () => {
   test('restのアスタリスクを表示し、引数がなければsignatureを返さない', () => {
-    const f = fixture('helper x ¦', '# $*: all arguments\nhelper() { : }\n');
-    expect(f.signature()).toMatchObject({ signatures: [{ label: 'helper $*' }] });
-    expect(fixture('helper ¦', 'helper() { : }').signature()).toBeNull();
+    const scenario = createProviderFixture('helper x ¦', '# $*: all arguments\nhelper() { : }\n');
+    expect(scenario.signature()).toMatchObject({ signatures: [{ label: 'helper $*' }] });
+    expect(createProviderFixture('helper ¦', 'helper() { : }').signature()).toBeNull();
   });
   test('呼び出し引数の説明を返す', () => {
-    expect(fixture('greet "hello ¦world"').hover()).toMatchObject({
+    expect(createProviderFixture('greet "hello ¦world"').hover()).toMatchObject({
       contents: { value: expect.stringContaining('first') },
     });
   });
@@ -287,7 +293,7 @@ describe('argument hover@AST', () => {
     "greet 'two=val¦ue'",
     'greet "one=value" "two=val¦ue"',
   ])('引用した名前付き引数の説明を返す: %s', (source) => {
-    expect(fixture(source).hover()).toMatchObject({
+    expect(createProviderFixture(source).hover()).toMatchObject({
       contents: { value: expect.stringContaining('option two') },
     });
   });
@@ -297,8 +303,8 @@ describe('argument hover@AST', () => {
     'local value=${1}; print "$val¦ue"',
     'local value=$1; print "${val¦ue}"',
   ])('位置引数・そのalias: %s', (body) => {
-    const f = fixture('# $1: local first\nowner() { ' + body + ' }\n');
-    expect(f.hover()).toMatchObject({
+    const scenario = createProviderFixture('# $1: local first\nowner() { ' + body + ' }\n');
+    expect(scenario.hover()).toMatchObject({
       contents: { value: expect.stringContaining('local first') },
     });
   });
@@ -308,14 +314,18 @@ describe('argument hover@AST', () => {
     'nested() { local value=$1 }; print "$val¦ue"',
     'local value=$1suffix; print "$val¦ue"',
   ])('無関係な代入をaliasにしない: %s', (body) => {
-    expect(fixture('# $1: local first\nowner() { ' + body + ' }\n').hover()).toBeNull();
+    expect(
+      createProviderFixture('# $1: local first\nowner() { ' + body + ' }\n').hover(),
+    ).toBeNull();
   });
   test('named hashとz.arg.namedの直後のREPLY aliasを扱う', () => {
     for (const body of [
       'local value=$args[option]; print "$val¦ue"',
       'z.arg.named option "$@" && local value=$REPLY; print "$val¦ue"',
     ]) {
-      expect(fixture('# $option: option docs\nowner() { ' + body + ' }\n').hover()).toMatchObject({
+      expect(
+        createProviderFixture('# $option: option docs\nowner() { ' + body + ' }\n').hover(),
+      ).toMatchObject({
         contents: { value: expect.stringContaining('option docs') },
       });
     }
@@ -327,25 +337,25 @@ describe('コード引数の型情報@help', () => {
     "# $behavior? [code | 'call_original']: commands to execute\nrun_code() { : }\n";
 
   test('関数hoverと補完説明へ型と許可値を残す', () => {
-    const f = fixture('run_c¦ode', codeDefinition);
-    expect(f.hover()).toMatchObject({
+    const scenario = createProviderFixture('run_c¦ode', codeDefinition);
+    expect(scenario.hover()).toMatchObject({
       contents: { value: expect.stringContaining("$behavior? [code | 'call_original']:") },
     });
-    const item = f.complete()?.[0];
+    const item = scenario.complete()?.[0];
     if (!item) {
       throw new Error('completion required');
     }
-    expect(zCompletionResolve(item, f.snapshot).documentation).toMatchObject({
+    expect(zCompletionResolve(item, scenario.snapshot).documentation).toMatchObject({
       value: expect.stringContaining("$behavior? [code | 'call_original']:"),
     });
   });
 
   test('引数hoverと署名にも同じ型と許可値を表示する', () => {
-    const f = fixture('run_code behavior=call_ori¦ginal', codeDefinition);
-    expect(f.hover()).toMatchObject({
+    const scenario = createProviderFixture('run_code behavior=call_ori¦ginal', codeDefinition);
+    expect(scenario.hover()).toMatchObject({
       contents: { value: expect.stringContaining("[code | 'call_original']") },
     });
-    expect(f.signature()).toMatchObject({
+    expect(scenario.signature()).toMatchObject({
       signatures: [
         {
           label: "run_code [behavior= [code | 'call_original']]",
@@ -356,14 +366,14 @@ describe('コード引数の型情報@help', () => {
   });
 
   test('位置引数と可変長引数のcode型も表示する', () => {
-    const f = fixture(
+    const scenario = createProviderFixture(
       'run_c¦ode',
       "# $1 [code]: command\n# $@ [code | 'noop']: remaining commands\nrun_code() { : }\n",
     );
-    expect(f.hover()).toMatchObject({
+    expect(scenario.hover()).toMatchObject({
       contents: { value: expect.stringContaining('$1 [code]:') },
     });
-    expect(f.hover()).toMatchObject({
+    expect(scenario.hover()).toMatchObject({
       contents: { value: expect.stringContaining("$@ [code | 'noop']:") },
     });
   });

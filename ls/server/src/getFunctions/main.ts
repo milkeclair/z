@@ -35,12 +35,12 @@ export function getAllZFunctions(projectRoot: string): Func[] {
     const content = fs.readFileSync(filePath, 'utf-8');
     const extracted = extractZFunctions(content);
 
-    extracted.forEach((f) => {
+    extracted.forEach((definition) => {
       functions.push({
-        name: f.name,
-        line: f.line,
+        name: definition.name,
+        line: definition.line,
         file,
-        args: f.args,
+        args: definition.args,
       });
     });
   }

@@ -15,7 +15,7 @@ function findParameterDescription(
     `${argName}?:`,
   ];
 
-  const commentParam = parameters.find((p) => patterns.includes(p.name));
+  const commentParam = parameters.find((parameter) => patterns.includes(parameter.name));
   return commentParam?.description || '';
 }
 

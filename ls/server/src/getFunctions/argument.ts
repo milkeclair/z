@@ -1,7 +1,6 @@
-import { NAMED_ARG_POSITION } from './constant';
-import { FuncArg } from './type';
-import { COMMENT_CHAR } from './constant';
+import { COMMENT_CHAR, NAMED_ARG_POSITION } from './constant';
 import { namedArgRegex, positionalArgRegex, specialArgRegex } from './regex';
+import { FuncArg } from './type';
 
 function parsePositionalArg(line: string): FuncArg | null {
   const match = line.match(positionalArgRegex);
@@ -58,17 +57,17 @@ function sortArgs(args: FuncArg[]): FuncArg[] {
   //   { position: -1, isNamed: true, name: 'option1' },
   //   { position: -1, isNamed: true, name: 'option2' },
   // ]
-  return args.sort((a, b) => {
-    if (a.isNamed && b.isNamed) {
+  return args.sort((left, right) => {
+    if (left.isNamed && right.isNamed) {
       return 0;
     }
-    if (a.isNamed) {
+    if (left.isNamed) {
       return 1;
     }
-    if (b.isNamed) {
+    if (right.isNamed) {
       return -1;
     }
-    return a.position - b.position;
+    return left.position - right.position;
   });
 }
 

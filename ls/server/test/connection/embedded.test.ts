@@ -37,7 +37,11 @@ const definitions = [
   '',
 ].join('\n');
 
-function fixture(source: string, outside = false, extraDefinitions: readonly string[] = []) {
+function createProviderFixture(
+  source: string,
+  outside = false,
+  extraDefinitions: readonly string[] = [],
+) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-code-provider-'));
   roots.push(root);
   const definitionUri = pathToFileURL(path.join(root, 'definition.zsh')).href;
@@ -85,16 +89,18 @@ describe('code argument providers', () => {
     'run_code code="run_code code=\'gr¦\'"',
     "print 日本😀; run_code code='print value\ngr¦'",
   ])('コード内のコマンドを元文書へ補完する: %s', (source) => {
-    const f = fixture(source);
-    const item = f.complete()?.find((item) => item.label === 'greet');
+    const scenario = createProviderFixture(source);
+    const item = scenario.complete()?.find((item) => item.label === 'greet');
     expect(item).toMatchObject({ textEdit: { newText: 'greet' } });
     if (!item?.textEdit || !('range' in item.textEdit)) {
       throw new Error('edit expected');
     }
-    const start = f.document.offsetAt(item.textEdit.range.start);
-    const end = f.document.offsetAt(item.textEdit.range.end);
-    expect(f.document.getText().slice(start, end)).toBe('gr');
-    expect(zCompletionResolve(item, f.snapshot, f.programs).documentation).toMatchObject({
+    const start = scenario.document.offsetAt(item.textEdit.range.start);
+    const end = scenario.document.offsetAt(item.textEdit.range.end);
+    expect(scenario.document.getText().slice(start, end)).toBe('gr');
+    expect(
+      zCompletionResolve(item, scenario.snapshot, scenario.programs).documentation,
+    ).toMatchObject({
       value: expect.stringContaining('Greeting'),
     });
   });
@@ -103,7 +109,7 @@ describe('code argument providers', () => {
     '空のコード位置から候補を返す: %s',
     (source) => {
       expect(
-        fixture(source)
+        createProviderFixture(source)
           .complete()
           ?.map((item) => item.label),
       ).toContain('greet');
@@ -111,10 +117,12 @@ describe('code argument providers', () => {
   );
 
   test('コード内のhover・署名・定義を通常の関数へ接続する', () => {
-    const f = fixture("run_code code='gr¦eet value'");
-    expect(f.hover()).toMatchObject({ contents: { value: expect.stringContaining('Greeting') } });
-    expect(f.definition()?.uri).toBe(f.definitionUri);
-    expect(fixture("run_code code='greet ¦'").signature()).toMatchObject({
+    const scenario = createProviderFixture("run_code code='gr¦eet value'");
+    expect(scenario.hover()).toMatchObject({
+      contents: { value: expect.stringContaining('Greeting') },
+    });
+    expect(scenario.definition()?.uri).toBe(scenario.definitionUri);
+    expect(createProviderFixture("run_code code='greet ¦'").signature()).toMatchObject({
       signatures: [{ label: 'greet $1' }],
       activeParameter: 0,
     });
@@ -122,13 +130,15 @@ describe('code argument providers', () => {
 
   test('内側の定義を補完・解決し、元の文字列位置へ定義ジャンプする', () => {
     const source = "run_code code='inner() { : }; in¦ner'";
-    const f = fixture(source);
-    expect(f.complete()?.map((item) => item.label)).toContain('inner');
-    expect(f.definition()).toMatchObject({
-      uri: f.document.uri,
+    const scenario = createProviderFixture(source);
+    expect(scenario.complete()?.map((item) => item.label)).toContain('inner');
+    expect(scenario.definition()).toMatchObject({
+      uri: scenario.document.uri,
       range: { start: { line: 0, character: source.indexOf('inner') } },
     });
-    expect(fixture(source.replace('in¦ner', 'inner') + '\nin¦ner').definition()).toBeNull();
+    expect(
+      createProviderFixture(source.replace('in¦ner', 'inner') + '\nin¦ner').definition(),
+    ).toBeNull();
   });
 
   test('外側の引用符へ安全に文字列を挿入する', () => {
@@ -139,12 +149,12 @@ describe('code argument providers', () => {
       "run_code code='hel'lo¦",
       'run_code code=hello¦',
     ]) {
-      const f = fixture(source);
-      const item = f.complete()?.find((item) => item.label === 'hello world');
+      const scenario = createProviderFixture(source);
+      const item = scenario.complete()?.find((item) => item.label === 'hello world');
       if (!item?.textEdit || !('range' in item.textEdit)) {
         throw new Error('edit expected');
       }
-      const edited = TextDocument.applyEdits(f.document, [item.textEdit]);
+      const edited = TextDocument.applyEdits(scenario.document, [item.textEdit]);
       const outer = createZshFileHydration({ sourceFile: 'x', file: 'x', content: edited });
       expect(outer.lexerDiagnostics).toEqual([]);
       const word = findAll(outer.ast, 'simpleCommand')[0].arguments[0];
@@ -168,33 +178,38 @@ describe('code argument providers', () => {
   test.each(["print 'gr¦'", "run_code code='no¦op'", 'run_code code="$gr¦"'])(
     '通常の文字列・許可値・外側の動的展開をコードにしない: %s',
     (source) => {
-      expect(fixture(source).complete()).toEqual([]);
+      expect(createProviderFixture(source).complete()).toEqual([]);
     },
   );
 
   test('編集中の要求で同じ埋め込みASTを再利用する', () => {
-    const f = fixture("run_code code='gr¦eet value'");
+    const scenario = createProviderFixture("run_code code='gr¦eet value'");
     const spy = vi.spyOn(Lexer, 'tokenize');
     for (let i = 0; i < 5; i++) {
-      f.complete();
-      f.hover();
-      f.definition();
-      f.signature();
+      scenario.complete();
+      scenario.hover();
+      scenario.definition();
+      scenario.signature();
     }
     expect(spy).not.toHaveBeenCalled();
   });
 });
 
 test('workspace外の文書にある定義を、そのコード内だけで解決する', () => {
-  const f = fixture("outside_only() { : }; run_code code='out¦side_only'", true);
-  expect(f.snapshot.targets.has('outside_only')).toBe(false);
-  const item = f.complete()?.find((item) => item.label === 'outside_only');
+  const scenario = createProviderFixture(
+    "outside_only() { : }; run_code code='out¦side_only'",
+    true,
+  );
+  expect(scenario.snapshot.targets.has('outside_only')).toBe(false);
+  const item = scenario.complete()?.find((item) => item.label === 'outside_only');
   expect(item).toBeDefined();
-  expect(f.definition()?.uri).toBe(f.document.uri);
+  expect(scenario.definition()?.uri).toBe(scenario.document.uri);
   if (!item) {
     throw new Error('outside completion required');
   }
-  expect(zCompletionResolve(item, f.snapshot, f.programs).documentation).toBeDefined();
+  expect(
+    zCompletionResolve(item, scenario.snapshot, scenario.programs).documentation,
+  ).toBeDefined();
 });
 
 test('複数段の引用でも特殊文字を実行可能な展開へ変えず挿入する', () => {
@@ -208,12 +223,12 @@ test('複数段の引用でも特殊文字を実行可能な展開へ変えず�
   ];
   for (const name of names) {
     const extra = ['function ' + commandInsertion(name) + ' { : }\n'];
-    const f = fixture('run_code code="run_code code=\'¦\'"', false, extra);
-    const item = f.complete()?.find((item) => item.label === name);
+    const scenario = createProviderFixture('run_code code="run_code code=\'¦\'"', false, extra);
+    const item = scenario.complete()?.find((item) => item.label === name);
     if (!item?.textEdit || !('range' in item.textEdit)) {
       throw new Error('edit expected: ' + name);
     }
-    let text = TextDocument.applyEdits(f.document, [item.textEdit]);
+    let text = TextDocument.applyEdits(scenario.document, [item.textEdit]);
     for (let level = 0; level < 2; level++) {
       const file = createZshFileHydration({ sourceFile: 'x', file: 'x', content: text });
       expect(file.lexerDiagnostics).toEqual([]);
@@ -234,6 +249,8 @@ test('複数段の引用でも特殊文字を実行可能な展開へ変えず�
 });
 
 test('物理的に複数行になる補完編集やカーソルを含まない範囲を返さない', () => {
-  expect(fixture('run_code code="gr' + String.fromCharCode(92) + '\nee¦t"').complete()).toEqual([]);
-  expect(fixture("run_code code='gr''¦'").complete()).toEqual([]);
+  expect(
+    createProviderFixture('run_code code="gr' + String.fromCharCode(92) + '\nee¦t"').complete(),
+  ).toEqual([]);
+  expect(createProviderFixture("run_code code='gr''¦'").complete()).toEqual([]);
 });

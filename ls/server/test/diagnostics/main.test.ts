@@ -37,7 +37,7 @@ afterEach(() => {
   }
 });
 const definition = '# $1: first\n# $2: second\ngreet() { print "$1" "$2" }\n';
-function fixture(content: string, definitions = definition, shell = environment) {
+function createDiagnosticFixture(content: string, definitions = definition, shell = environment) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-diag-'));
   roots.push(root);
   const definitionUri = pathToFileURL(path.join(root, 'definition.zsh')).href;
@@ -68,7 +68,7 @@ const semantic = (items: ReturnType<typeof validateTextDocument>) =>
 
 describe('call diagnostics@AST', () => {
   test('一般名の関数・正確なコマンドrangeと位置番号で不足を判定する', () => {
-    expect(semantic(fixture('  "greet" one\n').items)).toMatchObject([
+    expect(semantic(createDiagnosticFixture('  "greet" one\n').items)).toMatchObject([
       {
         code: 'missing-positional-argument',
         message: 'Missing required argument(s): $2',
@@ -76,7 +76,9 @@ describe('call diagnostics@AST', () => {
       },
     ]);
     expect(
-      semantic(fixture('greet one two\n', '# $3: third\ngreet() { print "$3" }\n').items),
+      semantic(
+        createDiagnosticFixture('greet one two\n', '# $3: third\ngreet() { print "$3" }\n').items,
+      ),
     ).toMatchObject([{ message: 'Missing required argument(s): $3' }]);
   });
   test.each([
@@ -88,7 +90,7 @@ describe('call diagnostics@AST', () => {
     'print "$(greet one two)"\n',
     'greet one ' + String.fromCharCode(92) + '\n two\n',
   ])('AST所有関係と複数行: %s', (source) => {
-    expect(semantic(fixture(source).items)).toEqual([]);
+    expect(semantic(createDiagnosticFixture(source).items)).toEqual([]);
   });
   test.each([
     'greet one | print two\n',
@@ -96,7 +98,7 @@ describe('call diagnostics@AST', () => {
     'greet one; print two\n',
     'greet one && print two\n',
   ])('後続コマンド・redirectを引数へ混ぜない: %s', (source) => {
-    expect(semantic(fixture(source).items)).toMatchObject([
+    expect(semantic(createDiagnosticFixture(source).items)).toMatchObject([
       { code: 'missing-positional-argument' },
     ]);
   });
@@ -107,18 +109,18 @@ describe('call diagnostics@AST', () => {
     'greet FIXTURE_GLOBAL\n',
     'greet "$' + '{array[@]}"\n',
   ])('展開結果の個数が不明な呼び出しを保留する: %s', (source) => {
-    expect(semantic(fixture(source).items)).toEqual([]);
+    expect(semantic(createDiagnosticFixture(source).items)).toEqual([]);
   });
   test('引用したscalar展開は一つの引数として扱う', () => {
-    expect(semantic(fixture('greet "$value"\n').items)).toMatchObject([
+    expect(semantic(createDiagnosticFixture('greet "$value"\n').items)).toMatchObject([
       { message: 'Missing required argument(s): $2' },
     ]);
   });
   test('名前付き引数を静的なkeyから照合する', () => {
     const doc = '# $option: value\ngreet() { print "$option" }\n';
-    expect(semantic(fixture('greet option=""\n', doc).items)).toEqual([]);
-    expect(semantic(fixture('greet option=\n', doc).items)).toEqual([]);
-    expect(semantic(fixture('greet "option=value"\n', doc).items)).toEqual([]);
+    expect(semantic(createDiagnosticFixture('greet option=""\n', doc).items)).toEqual([]);
+    expect(semantic(createDiagnosticFixture('greet option=\n', doc).items)).toEqual([]);
+    expect(semantic(createDiagnosticFixture('greet "option=value"\n', doc).items)).toEqual([]);
   });
   test.each([
     '"option=value with spaces"',
@@ -131,29 +133,33 @@ describe('call diagnostics@AST', () => {
     'op\\tion=value',
   ])('引用を除いた静的な名前付き引数を照合する: %s', (argument) => {
     const doc = '# $option: value\ngreet() { print "$option" }\n';
-    expect(semantic(fixture('greet ' + argument + '\n', doc).items)).toEqual([]);
+    expect(semantic(createDiagnosticFixture('greet ' + argument + '\n', doc).items)).toEqual([]);
   });
   test.each(['"other=value"', '"9option=value"', '"option-extra=value"', '"option"'])(
     '引用しても不足した名前付き引数を検出する: %s',
     (argument) => {
       const doc = '# $option: value\ngreet() { print "$option" }\n';
-      expect(semantic(fixture('greet ' + argument + '\n', doc).items)).toMatchObject([
+      expect(
+        semantic(createDiagnosticFixture('greet ' + argument + '\n', doc).items),
+      ).toMatchObject([
         { code: 'missing-named-argument', message: 'Missing required named argument: option' },
       ]);
     },
   );
   test('引用した名前付き引数を位置引数へ数えない', () => {
     const doc = '# $1: first\n# $option: value\ngreet() { print "$1" "$option" }\n';
-    expect(semantic(fixture('greet "option=value"\n', doc).items)).toMatchObject([
+    expect(semantic(createDiagnosticFixture('greet "option=value"\n', doc).items)).toMatchObject([
       { code: 'missing-positional-argument', message: 'Missing required argument(s): $1' },
     ]);
-    expect(semantic(fixture('greet "option=$value" first\n', doc).items)).toEqual([]);
+    expect(semantic(createDiagnosticFixture('greet "option=$value" first\n', doc).items)).toEqual(
+      [],
+    );
   });
   test('失敗ログの実例を名前付き引数として認識する', () => {
     const doc = '# $message: error message\nz.t._log.failure.handle() { print "$message" }\n';
     const source =
       'z.t._log.failure.handle "message=failed: expected [ $expect_display ] but got [ $actual_display ]"\n';
-    expect(semantic(fixture(source, doc).items)).toEqual([]);
+    expect(semantic(createDiagnosticFixture(source, doc).items)).toEqual([]);
   });
 });
 
@@ -168,11 +174,11 @@ describe('command resolution', () => {
     'builtin print x\n',
     'command -v fixture-missing-command\n',
   ])('実Zsh環境の名前を解決する: %s', (source) => {
-    expect(semantic(fixture(source).items)).toEqual([]);
+    expect(semantic(createDiagnosticFixture(source).items)).toEqual([]);
   });
   test('一般名とz名の未定義コマンドを同じルールで診断する', () => {
     for (const command of ['fixture-missing-command', 'z.fixture.missing']) {
-      expect(semantic(fixture(command + '\n').items)).toMatchObject([
+      expect(semantic(createDiagnosticFixture(command + '\n').items)).toMatchObject([
         { code: 'undefined-command' },
       ]);
     }
@@ -184,7 +190,7 @@ describe('command resolution', () => {
       'alias -s fixture_local=print\nfile.fixture_local\n',
       'autoload -Uz fixture-local-autoload\nfixture-local-autoload\n',
     ]) {
-      expect(semantic(fixture(source).items)).toEqual([]);
+      expect(semantic(createDiagnosticFixture(source).items)).toEqual([]);
     }
   });
   test.each([
@@ -195,17 +201,21 @@ describe('command resolution', () => {
     ['zsh/net/tcp', 'ztcp'],
     ['zsh/datetime', 'strftime'],
   ])('zmodloadで読み込む%sの%sを解決する', (module, command) => {
-    expect(semantic(fixture('zmodload ' + module + '\n' + command + '\n').items)).toEqual([]);
+    expect(
+      semantic(createDiagnosticFixture('zmodload ' + module + '\n' + command + '\n').items),
+    ).toEqual([]);
   });
   test('読み込み宣言のないmodule builtinは未定義として残す', () => {
-    expect(semantic(fixture('zpty\nzselect\nsysread\nzsystem\n').items)).toHaveLength(4);
+    expect(
+      semantic(createDiagnosticFixture('zpty\nzselect\nsysread\nzsystem\n').items),
+    ).toHaveLength(4);
   });
   test.each(['-u', '-e', '-L', '-d', '-Fl', '-FL', '-Fe'])(
     '照会や解除の%sを読み込み宣言にしない',
     (option) => {
-      expect(semantic(fixture('zmodload ' + option + ' zsh/zpty\nzpty\n').items)).toMatchObject([
-        { code: 'undefined-command' },
-      ]);
+      expect(
+        semantic(createDiagnosticFixture('zmodload ' + option + ' zsh/zpty\nzpty\n').items),
+      ).toMatchObject([{ code: 'undefined-command' }]);
     },
   );
   test('静的なmodule名とbuiltinのautoload・feature指定を解決する', () => {
@@ -215,7 +225,7 @@ describe('command resolution', () => {
       'zmodload -Fa fixture/module +b:fixture-module-builtin\nfixture-module-builtin\n',
       'zmodload -F zsh/system b:sysread -b:zsystem\nsysread\n',
     ]) {
-      expect(semantic(fixture(source).items)).toEqual([]);
+      expect(semantic(createDiagnosticFixture(source).items)).toEqual([]);
     }
     for (const source of [
       'zmodload "$module"\nzpty\n',
@@ -226,13 +236,15 @@ describe('command resolution', () => {
       'command -v zmodload zsh/zpty\nzpty\n',
       'print zmodload zsh/zpty\nzpty\n',
     ]) {
-      expect(semantic(fixture(source).items)).toMatchObject([{ code: 'undefined-command' }]);
+      expect(semantic(createDiagnosticFixture(source).items)).toMatchObject([
+        { code: 'undefined-command' },
+      ]);
     }
   });
   test('module builtinでもbuiltinとcommandの解決規則を維持する', () => {
     const declaration = 'zmodload zsh/zpty\n';
-    expect(semantic(fixture(declaration + 'builtin zpty\n').items)).toEqual([]);
-    expect(semantic(fixture(declaration + 'command zpty\n').items)).toMatchObject([
+    expect(semantic(createDiagnosticFixture(declaration + 'builtin zpty\n').items)).toEqual([]);
+    expect(semantic(createDiagnosticFixture(declaration + 'command zpty\n').items)).toMatchObject([
       { code: 'undefined-command' },
     ]);
     if (environment.kind !== 'available') {
@@ -240,44 +252,46 @@ describe('command resolution', () => {
     }
     expect(
       semantic(
-        fixture(declaration + 'command zpty\n', '', { ...environment, commandBuiltins: true })
-          .items,
+        createDiagnosticFixture(declaration + 'command zpty\n', '', {
+          ...environment,
+          commandBuiltins: true,
+        }).items,
       ),
     ).toEqual([]);
   });
   test('引用されたalias名と明示modifierを区別する', () => {
-    expect(semantic(fixture("'fixture-shell-alias'\n").items)).toMatchObject([
+    expect(semantic(createDiagnosticFixture("'fixture-shell-alias'\n").items)).toMatchObject([
       { code: 'undefined-command' },
     ]);
-    expect(semantic(fixture('builtin greet\n').items)).toMatchObject([
+    expect(semantic(createDiagnosticFixture('builtin greet\n').items)).toMatchObject([
       { code: 'undefined-command' },
     ]);
-    expect(semantic(fixture('command greet\n').items)).toMatchObject([
+    expect(semantic(createDiagnosticFixture('command greet\n').items)).toMatchObject([
       { code: 'undefined-command' },
     ]);
   });
   test('絶対パス・workspaceからの相対パスは実行権限も確認する', () => {
-    const f = fixture('./tool\n');
-    fs.writeFileSync(path.join(f.root, 'tool'), '#!/bin/sh\nexit 0\n', { mode: 0o755 });
-    const next = refreshDiagnosticSnapshot({ snapshot: f.snapshot, environment });
-    expect(semantic(validateTextDocument({ diagnostics: next, textDocument: f.document }))).toEqual(
-      [],
-    );
-    fs.chmodSync(path.join(f.root, 'tool'), 0o644);
-    const unavailable = refreshDiagnosticSnapshot({ snapshot: f.snapshot, environment });
+    const scenario = createDiagnosticFixture('./tool\n');
+    fs.writeFileSync(path.join(scenario.root, 'tool'), '#!/bin/sh\nexit 0\n', { mode: 0o755 });
+    const next = refreshDiagnosticSnapshot({ snapshot: scenario.snapshot, environment });
     expect(
-      semantic(validateTextDocument({ diagnostics: unavailable, textDocument: f.document })),
+      semantic(validateTextDocument({ diagnostics: next, textDocument: scenario.document })),
+    ).toEqual([]);
+    fs.chmodSync(path.join(scenario.root, 'tool'), 0o644);
+    const unavailable = refreshDiagnosticSnapshot({ snapshot: scenario.snapshot, environment });
+    expect(
+      semantic(validateTextDocument({ diagnostics: unavailable, textDocument: scenario.document })),
     ).toEqual([]);
     const absolute = TextDocument.create(
-      f.document.uri,
+      scenario.document.uri,
       'shellscript',
       2,
-      path.join(f.root, 'tool') + '\n',
+      path.join(scenario.root, 'tool') + '\n',
     );
     const snapshot = refreshFunctionSnapshot({
-      projectRoot: f.root,
+      projectRoot: scenario.root,
       documents: [absolute],
-      previous: f.snapshot,
+      previous: scenario.snapshot,
     });
     const checked = refreshDiagnosticSnapshot({ snapshot, environment });
     expect(
@@ -291,12 +305,15 @@ describe('command resolution', () => {
       '=fixture-command\n',
       'fixture-*\n',
     ]) {
-      expect(semantic(fixture(source).items)).toEqual([]);
+      expect(semantic(createDiagnosticFixture(source).items)).toEqual([]);
     }
   });
   test('環境取得失敗時も既知関数の診断を続け、未解決名をエラーと断定しない', () => {
     expect(
-      semantic(fixture('greet one\nfixture-unknown\n', definition, emptyShellEnvironment()).items),
+      semantic(
+        createDiagnosticFixture('greet one\nfixture-unknown\n', definition, emptyShellEnvironment())
+          .items,
+      ),
     ).toMatchObject([{ code: 'missing-positional-argument' }]);
   });
 });
@@ -305,10 +322,10 @@ describe('unused argument documentation@AST', () => {
   test.each(['print "$1"', 'print "$' + '{1}"', 'local value="$1"; print "$value"'])(
     '同じ行の本体・parameterを使用として扱う: %s',
     (body) => {
-      const f = fixture('', '# $1: value\ngreet() { ' + body + ' }\n');
+      const scenario = createDiagnosticFixture('', '# $1: value\ngreet() { ' + body + ' }\n');
       expect(
-        f.diagnostics.files
-          .get(f.definitionUri)
+        scenario.diagnostics.files
+          .get(scenario.definitionUri)
           ?.items.filter((item) => item.code === 'unused-argument'),
       ).toEqual([]);
     },
@@ -316,10 +333,10 @@ describe('unused argument documentation@AST', () => {
   test.each(["print '$1'", '# $1\n:', 'nested() { print "$1" }'])(
     '文字列・コメント・入れ子の引数使用を除外する: %s',
     (body) => {
-      const f = fixture('', '# $1: value\ngreet() { ' + body + ' }\n');
+      const scenario = createDiagnosticFixture('', '# $1: value\ngreet() { ' + body + ' }\n');
       expect(
-        f.diagnostics.files
-          .get(f.definitionUri)
+        scenario.diagnostics.files
+          .get(scenario.definitionUri)
           ?.items.filter((item) => item.code === 'unused-argument'),
       ).toMatchObject([
         {
@@ -335,10 +352,13 @@ describe('unused argument documentation@AST', () => {
     'print "$' + '{1:-default}"',
     'print <<END\n$1\nEND\n',
   ])('転送・raw式・展開するheredocの使用は保留する: %s', (body) => {
-    const f = fixture('', '# $1: value\n# $2: other\ngreet() { ' + body + ' }\n');
+    const scenario = createDiagnosticFixture(
+      '',
+      '# $1: value\n# $2: other\ngreet() { ' + body + ' }\n',
+    );
     expect(
-      f.diagnostics.files
-        .get(f.definitionUri)
+      scenario.diagnostics.files
+        .get(scenario.definitionUri)
         ?.items.filter((item) => item.code === 'unused-argument'),
     ).toEqual([]);
   });
@@ -349,17 +369,17 @@ describe('unused argument documentation@AST', () => {
       'print "$args[option]"',
       'print "$' + '{args[option]}"',
     ]) {
-      const f = fixture('', '# $option: value\ngreet() { ' + body + ' }\n');
+      const scenario = createDiagnosticFixture('', '# $option: value\ngreet() { ' + body + ' }\n');
       expect(
-        f.diagnostics.files
-          .get(f.definitionUri)
+        scenario.diagnostics.files
+          .get(scenario.definitionUri)
           ?.items.filter((item) => item.code === 'unused-argument'),
       ).toEqual([]);
     }
-    const f = fixture('', '# $option: value\ngreet() { print option }\n');
+    const scenario = createDiagnosticFixture('', '# $option: value\ngreet() { print option }\n');
     expect(
-      f.diagnostics.files
-        .get(f.definitionUri)
+      scenario.diagnostics.files
+        .get(scenario.definitionUri)
         ?.items.filter((item) => item.code === 'unused-argument'),
     ).toHaveLength(1);
   });
@@ -367,79 +387,104 @@ describe('unused argument documentation@AST', () => {
 
 describe('hydrated controls and diagnostics cache', () => {
   test('制御コメントをhydrationから取得し、文字列やexampleのignoreを適用しない', () => {
-    expect(semantic(fixture('greet # zls: ignore\n').items)).toEqual([]);
-    expect(semantic(fixture('greet # zls: ignore missing-positional-argument\n').items)).toEqual(
-      [],
-    );
-    expect(semantic(fixture('greet "# zls: ignore"\n').items)).toHaveLength(1);
-    expect(semantic(fixture('greet # zls: ignored\n').items)).toHaveLength(1);
-    const f = fixture('# example:\n#   zls: ignore\ngreet() { : }\n', '');
-    expect(f.diagnostics.files.get(f.document.uri)?.items).toEqual([]);
+    expect(semantic(createDiagnosticFixture('greet # zls: ignore\n').items)).toEqual([]);
+    expect(
+      semantic(createDiagnosticFixture('greet # zls: ignore missing-positional-argument\n').items),
+    ).toEqual([]);
+    expect(semantic(createDiagnosticFixture('greet "# zls: ignore"\n').items)).toHaveLength(1);
+    expect(semantic(createDiagnosticFixture('greet # zls: ignored\n').items)).toHaveLength(1);
+    const scenario = createDiagnosticFixture('# example:\n#   zls: ignore\ngreet() { : }\n', '');
+    expect(scenario.diagnostics.files.get(scenario.document.uri)?.items).toEqual([]);
   });
   test('変更のない解析結果を再利用し、呼び出し編集では他ファイルを再走査しない', () => {
-    const f = fixture('greet one two\n');
+    const scenario = createDiagnosticFixture('greet one two\n');
     const spy = vi.spyOn(facts, 'collectFileFacts');
     expect(
-      refreshDiagnosticSnapshot({ snapshot: f.snapshot, environment, previous: f.diagnostics }),
-    ).toBe(f.diagnostics);
-    const changed = TextDocument.create(f.document.uri, 'shellscript', 2, 'greet one\n');
+      refreshDiagnosticSnapshot({
+        snapshot: scenario.snapshot,
+        environment,
+        previous: scenario.diagnostics,
+      }),
+    ).toBe(scenario.diagnostics);
+    const changed = TextDocument.create(scenario.document.uri, 'shellscript', 2, 'greet one\n');
     const snapshot = refreshFunctionSnapshot({
-      projectRoot: f.root,
+      projectRoot: scenario.root,
       documents: [changed],
-      previous: f.snapshot,
+      previous: scenario.snapshot,
     });
-    const next = refreshDiagnosticSnapshot({ snapshot, environment, previous: f.diagnostics });
+    const next = refreshDiagnosticSnapshot({
+      snapshot,
+      environment,
+      previous: scenario.diagnostics,
+    });
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(next.files.get(f.definitionUri)).toBe(f.diagnostics.files.get(f.definitionUri));
+    expect(next.files.get(scenario.definitionUri)).toBe(
+      scenario.diagnostics.files.get(scenario.definitionUri),
+    );
     expect(
       semantic(validateTextDocument({ diagnostics: next, textDocument: changed })),
     ).toHaveLength(1);
-    expect(validateTextDocument({ diagnostics: next, textDocument: f.document })).toEqual([]);
+    expect(validateTextDocument({ diagnostics: next, textDocument: scenario.document })).toEqual(
+      [],
+    );
   });
   test('workspace外のaliasはその文書へ適用し、projectへ混ぜない', () => {
-    const f = fixture('fixture-outside-alias\n');
+    const scenario = createDiagnosticFixture('fixture-outside-alias\n');
     const outside = TextDocument.create(
-      pathToFileURL(path.join(path.dirname(f.root), 'outside.zsh')).href,
+      pathToFileURL(path.join(path.dirname(scenario.root), 'outside.zsh')).href,
       'shellscript',
       1,
       "alias fixture-outside-alias='print x'\nfixture-outside-alias\n",
     );
     const snapshot = refreshFunctionSnapshot({
-      projectRoot: f.root,
-      documents: [f.document, outside],
-      previous: f.snapshot,
+      projectRoot: scenario.root,
+      documents: [scenario.document, outside],
+      previous: scenario.snapshot,
     });
-    const next = refreshDiagnosticSnapshot({ snapshot, environment, previous: f.diagnostics });
+    const next = refreshDiagnosticSnapshot({
+      snapshot,
+      environment,
+      previous: scenario.diagnostics,
+    });
     expect(semantic(validateTextDocument({ diagnostics: next, textDocument: outside }))).toEqual(
       [],
     );
     expect(
-      semantic(validateTextDocument({ diagnostics: next, textDocument: f.document })),
+      semantic(validateTextDocument({ diagnostics: next, textDocument: scenario.document })),
     ).toHaveLength(1);
     expect(
       workspaceDiagnostics({ diagnostics: next }).items.some((item) => item.uri === outside.uri),
     ).toBe(false);
   });
   test('module読み込みの追加・削除で未編集の呼び出しも再評価する', () => {
-    const f = fixture('zpty\n', 'zmodload zsh/zpty\n');
-    expect(semantic(f.items)).toEqual([]);
-    const changed = TextDocument.create(f.definitionUri, 'shellscript', 1, '');
+    const scenario = createDiagnosticFixture('zpty\n', 'zmodload zsh/zpty\n');
+    expect(semantic(scenario.items)).toEqual([]);
+    const changed = TextDocument.create(scenario.definitionUri, 'shellscript', 1, '');
     const snapshot = refreshFunctionSnapshot({
-      projectRoot: f.root,
-      documents: [f.document, changed],
-      previous: f.snapshot,
+      projectRoot: scenario.root,
+      documents: [scenario.document, changed],
+      previous: scenario.snapshot,
     });
-    const next = refreshDiagnosticSnapshot({ snapshot, environment, previous: f.diagnostics });
-    expect(next.files.get(f.document.uri)?.facts).toBe(
-      f.diagnostics.files.get(f.document.uri)?.facts,
+    const next = refreshDiagnosticSnapshot({
+      snapshot,
+      environment,
+      previous: scenario.diagnostics,
+    });
+    expect(next.files.get(scenario.document.uri)?.facts).toBe(
+      scenario.diagnostics.files.get(scenario.document.uri)?.facts,
     );
     expect(
-      semantic(validateTextDocument({ diagnostics: next, textDocument: f.document })),
+      semantic(validateTextDocument({ diagnostics: next, textDocument: scenario.document })),
     ).toMatchObject([{ code: 'undefined-command' }]);
-    const restored = TextDocument.create(f.definitionUri, 'shellscript', 2, 'zmodload zsh/zpty\n');
+    const restored = TextDocument.create(
+      scenario.definitionUri,
+      'shellscript',
+      2,
+      'zmodload zsh/zpty\n',
+    );
     const restoredSnapshot = refreshFunctionSnapshot({
-      projectRoot: f.root,
-      documents: [f.document, restored],
+      projectRoot: scenario.root,
+      documents: [scenario.document, restored],
       previous: snapshot,
     });
     const checked = refreshDiagnosticSnapshot({
@@ -448,104 +493,116 @@ describe('hydrated controls and diagnostics cache', () => {
       previous: next,
     });
     expect(
-      semantic(validateTextDocument({ diagnostics: checked, textDocument: f.document })),
+      semantic(validateTextDocument({ diagnostics: checked, textDocument: scenario.document })),
     ).toEqual([]);
   });
   test('workspace外のmodule読み込みはその文書だけへ適用する', () => {
-    const f = fixture('zpty\n', '');
+    const scenario = createDiagnosticFixture('zpty\n', '');
     const outside = TextDocument.create(
-      pathToFileURL(path.join(path.dirname(f.root), 'module-outside.zsh')).href,
+      pathToFileURL(path.join(path.dirname(scenario.root), 'module-outside.zsh')).href,
       'shellscript',
       1,
       'zmodload zsh/zpty\nzpty\n',
     );
     const snapshot = refreshFunctionSnapshot({
-      projectRoot: f.root,
-      documents: [f.document, outside],
-      previous: f.snapshot,
+      projectRoot: scenario.root,
+      documents: [scenario.document, outside],
+      previous: scenario.snapshot,
     });
     const next = refreshDiagnosticSnapshot({ snapshot, environment });
     expect(semantic(validateTextDocument({ diagnostics: next, textDocument: outside }))).toEqual(
       [],
     );
     expect(
-      semantic(validateTextDocument({ diagnostics: next, textDocument: f.document })),
+      semantic(validateTextDocument({ diagnostics: next, textDocument: scenario.document })),
     ).toMatchObject([{ code: 'undefined-command' }]);
   });
   test('workspace外の関数はその文書の診断に使い、projectへ混ぜない', () => {
-    const f = fixture('fixture-outside-function\n');
+    const scenario = createDiagnosticFixture('fixture-outside-function\n');
     const outside = TextDocument.create(
-      pathToFileURL(path.join(path.dirname(f.root), 'outside.zsh')).href,
+      pathToFileURL(path.join(path.dirname(scenario.root), 'outside.zsh')).href,
       'shellscript',
       1,
       '# $1: value\nfixture-outside-function() { print "$1" }\nfixture-outside-function\n',
     );
     const snapshot = refreshFunctionSnapshot({
-      projectRoot: f.root,
-      documents: [f.document, outside],
-      previous: f.snapshot,
+      projectRoot: scenario.root,
+      documents: [scenario.document, outside],
+      previous: scenario.snapshot,
     });
     const next = refreshDiagnosticSnapshot({ snapshot, environment });
     expect(
       semantic(validateTextDocument({ diagnostics: next, textDocument: outside })),
     ).toMatchObject([{ code: 'missing-positional-argument' }]);
     expect(
-      semantic(validateTextDocument({ diagnostics: next, textDocument: f.document })),
+      semantic(validateTextDocument({ diagnostics: next, textDocument: scenario.document })),
     ).toMatchObject([{ code: 'undefined-command' }]);
   });
   test('calleeのドキュメント変更で未編集の呼び出しを再評価する', () => {
-    const f = fixture('greet one two\n');
+    const scenario = createDiagnosticFixture('greet one two\n');
     const changed = TextDocument.create(
-      f.definitionUri,
+      scenario.definitionUri,
       'shellscript',
       1,
       '# $3: third\ngreet() { print "$3" }\n',
     );
     const snapshot = refreshFunctionSnapshot({
-      projectRoot: f.root,
-      documents: [f.document, changed],
-      previous: f.snapshot,
+      projectRoot: scenario.root,
+      documents: [scenario.document, changed],
+      previous: scenario.snapshot,
     });
-    const next = refreshDiagnosticSnapshot({ snapshot, environment, previous: f.diagnostics });
-    expect(next.files.get(f.document.uri)?.facts).toBe(
-      f.diagnostics.files.get(f.document.uri)?.facts,
+    const next = refreshDiagnosticSnapshot({
+      snapshot,
+      environment,
+      previous: scenario.diagnostics,
+    });
+    expect(next.files.get(scenario.document.uri)?.facts).toBe(
+      scenario.diagnostics.files.get(scenario.document.uri)?.facts,
     );
     expect(
-      semantic(validateTextDocument({ diagnostics: next, textDocument: f.document })),
+      semantic(validateTextDocument({ diagnostics: next, textDocument: scenario.document })),
     ).toHaveLength(1);
   });
   test('workspaceレポートはopen versionと未保存ファイルを含み、削除済みの結果を空にする', () => {
-    const f = fixture('greet one\n');
+    const scenario = createDiagnosticFixture('greet one\n');
     const report = workspaceDiagnostics({
-      diagnostics: f.diagnostics,
+      diagnostics: scenario.diagnostics,
       previousResultIds: [{ uri: 'file:///removed.zsh', value: 'old' }],
     });
-    expect(report.items.find((item) => item.uri === f.document.uri)).toMatchObject({
+    expect(report.items.find((item) => item.uri === scenario.document.uri)).toMatchObject({
       version: 1,
       resultId: expect.any(String),
       items: expect.any(Array),
     });
-    expect(report.items.find((item) => item.uri === f.definitionUri)?.version).toBeNull();
+    expect(report.items.find((item) => item.uri === scenario.definitionUri)?.version).toBeNull();
     expect(report.items.find((item) => item.uri === 'file:///removed.zsh')?.items).toEqual([]);
   });
   test('CRLFの書式診断は改行を含まないLSP範囲を返す', () => {
-    const f = fixture(' \r\nprint x\r\n');
-    expect(f.items.find((item) => item.code === 'empty-line')?.range.end).toEqual({
+    const scenario = createDiagnosticFixture(' \r\nprint x\r\n');
+    expect(scenario.items.find((item) => item.code === 'empty-line')?.range.end).toEqual({
       line: 0,
       character: 1,
     });
   });
   test('構文・文書診断を分けて返し、書式診断をliteral内部へ適用しない', () => {
-    expect(fixture('print "unfinished\n').items.some((item) => item.source === 'z-ls/lexer')).toBe(
-      true,
-    );
-    expect(fixture('if true; then\n').items.some((item) => item.source === 'z-ls/parser')).toBe(
-      true,
-    );
     expect(
-      fixture('print "a\n  \nb"\n').items.filter((item) => item.code === 'empty-line'),
+      createDiagnosticFixture('print "unfinished\n').items.some(
+        (item) => item.source === 'z-ls/lexer',
+      ),
+    ).toBe(true);
+    expect(
+      createDiagnosticFixture('if true; then\n').items.some(
+        (item) => item.source === 'z-ls/parser',
+      ),
+    ).toBe(true);
+    expect(
+      createDiagnosticFixture('print "a\n  \nb"\n').items.filter(
+        (item) => item.code === 'empty-line',
+      ),
     ).toEqual([]);
-    const last = fixture('print x\nprint y').items.find((item) => item.code === 'final-newline');
+    const last = createDiagnosticFixture('print x\nprint y').items.find(
+      (item) => item.code === 'final-newline',
+    );
     expect(last?.range.start).toEqual({ line: 1, character: 7 });
   });
 });

@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import { resolveFunction } from '../connection/ast/context';
 import { functionCommand, protocolRange } from '../connection/ast/cursor';
 import { namedKey } from '../connection/ast/word';
@@ -10,93 +8,12 @@ import type { ZshFileHydration } from '../zshHydrator';
 import { documentationOf } from '../zshHydrator';
 import type { FunctionDefinitionNode, SimpleCommandNode, WordNode } from '../zshParser/ast';
 import type { SourceRange } from '../zshParser/lexer';
+import { isAliasReference, isKnownShellCommand, type ResolutionContext } from './commandResolution';
 import type { IgnoreControls } from './controls';
 import { ignored } from './controls';
-import type { ShellEnvironment } from './environment';
-import type { Declarations } from './facts';
 import { simpleParameter } from './facts';
 import type { Diagnostics } from './type';
-
-export type ResolutionContext = Declarations & {
-  readonly environment: ShellEnvironment;
-  readonly projectRoot: string;
-};
-
-function alias(name: string, word: WordNode, context: ResolutionContext): boolean {
-  if (word.quoted || word.raw !== name) {
-    return false;
-  }
-  const environment = context.environment;
-  const suffix = name.slice(name.lastIndexOf('.') + 1);
-  return (
-    context.aliases.has(name) ||
-    context.globalAliases.has(name) ||
-    (name.includes('.') && context.suffixAliases.has(suffix)) ||
-    (environment.kind === 'available' &&
-      (environment.aliases.has(name) ||
-        environment.globalAliases.has(name) ||
-        (name.includes('.') && environment.suffixAliases.has(suffix))))
-  );
-}
-
-function executable(name: string, context: ResolutionContext): boolean | null {
-  if (!name.includes('/')) {
-    return null;
-  }
-  const filename = path.isAbsolute(name)
-    ? name
-    : context.projectRoot
-      ? path.resolve(context.projectRoot, name)
-      : null;
-  if (!filename) {
-    return null;
-  }
-  try {
-    if (!fs.statSync(filename).isFile()) {
-      return path.isAbsolute(name) ? false : null;
-    }
-    fs.accessSync(filename, fs.constants.X_OK);
-    return true;
-  } catch {
-    return path.isAbsolute(name) ? false : null;
-  }
-}
-
-function shellKnown(
-  name: string,
-  command: SimpleCommandNode,
-  context: ResolutionContext,
-): boolean | null {
-  const environment = context.environment;
-  if (environment.kind !== 'available') {
-    return null;
-  }
-  const builtin = command.precommandModifiers.some((modifier) => modifier.type === 'builtin');
-  const knownBuiltin = environment.builtins.has(name) || context.builtins.has(name);
-  if (builtin) {
-    return knownBuiltin;
-  }
-  const commandOnly = command.precommandModifiers.some((modifier) => modifier.type === 'command');
-  if (
-    command.precommandModifiers.some(
-      (modifier) =>
-        modifier.type === 'command' && modifier.options.some((option) => option.name.includes('p')),
-    )
-  ) {
-    return null;
-  }
-  if (!commandOnly && environment.functions.has(name)) {
-    return true;
-  }
-  if (name.includes('/')) {
-    return executable(name, context);
-  }
-  return (
-    environment.commands.has(name) ||
-    ((!commandOnly || environment.commandBuiltins) && knownBuiltin) ||
-    (!commandOnly && (environment.functions.has(name) || context.autoloads.has(name)))
-  );
-}
+export type { ResolutionContext } from './commandResolution';
 
 export function uncertainWord(word: WordNode, context: ResolutionContext): boolean {
   const environment = context.environment;
@@ -188,11 +105,13 @@ function argumentDiagnostics(
 }
 
 export type CallScope = { readonly file: ZshFileHydration; readonly offset: number };
+
 export type CallAnalysisOptions = {
   readonly scopes?: readonly CallScope[];
   readonly mapRange?: (range: SourceRange) => SourceRange;
   readonly ignores?: IgnoreControls;
 };
+
 export type CallAnalysis = {
   readonly diagnostics: readonly Diagnostics[];
   readonly targets: ReadonlyMap<SimpleCommandNode, FunctionDefinitionNode>;
@@ -265,7 +184,7 @@ export function analyzeCalls(
         modifier.type === 'command' &&
         modifier.options.some((option) => option.name.includes('v') || option.name.includes('V')),
     );
-    if (inspect || alias(name, word, context)) {
+    if (inspect || isAliasReference(name, word, context)) {
       continue;
     }
     const inherited = scopes
@@ -294,7 +213,7 @@ export function analyzeCalls(
     } else if (context.autoloads.has(name) && functionCommand(command)) {
       continue;
     } else if (
-      shellKnown(name, command, context) === false &&
+      isKnownShellCommand(name, command, context) === false &&
       (!options.ignores || !ignored(options.ignores, word.range.start.line, 'undefined-command'))
     ) {
       diagnostics.push({
