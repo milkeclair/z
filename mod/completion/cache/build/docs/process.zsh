@@ -32,7 +32,14 @@ z.completion.cache.build.docs._from_file() {
         z.int.is.positive ${#docs_lines[@]}; then
         z.arr.join.line "${docs_lines[@]}"
         z.help._strip_comment_prefix "$REPLY"
-        z.help._normalize_docs "$REPLY"
+        local docs=$REPLY
+        z.completion.argument._docs "$docs"
+        if z.is.not.null "$REPLY"; then
+          z_completion_argument_specs[$function_name]=$REPLY
+        else
+          unset "z_completion_argument_specs[$function_name]"
+        fi
+        z.help._normalize_docs "$docs"
         z_completion_docs[$function_name]=$REPLY
       fi
     fi

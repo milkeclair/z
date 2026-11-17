@@ -8,12 +8,9 @@ if z.is.eq "$1" initialize; then
   autoload -Uz compinit
   compinit -D
 
-  # 補完候補として使われる最初の実関数
-  z.fixture.alpha() { :; }
-
-  # 補完候補として使われる2つ目の実関数
-  z.fixture.beta() { :; }
-
+  source "$Z_ROOT/test/mod/completion/complete/fixture.zsh"
+  z.completion.cache.build.docs._from_file "$Z_ROOT/test/mod/completion/complete/fixture.zsh"
+  z.completion.cache.build.docs._from_file "$Z_ROOT/lib/t/mock.zsh"
   z.completion.cache.build._names
   z.completion.compdef._register || return 1
   z.completion.compdef._register || return 1
@@ -89,6 +86,8 @@ z92_terminal_read() {
 # $input: 補完するコマンド行
 # $setup?: このケースを準備するシェルコマンド
 # $command_path?: 外部コマンドのテスト用ディレクトリ
+# $display?: 補完画面の出力を結果へ含めるか
+# $wait_for?: バッファを読む前に待つ表示文字列
 # REPLY: null
 # return: 0|1
 z92_terminal() {
@@ -97,10 +96,16 @@ z92_terminal() {
   z.arg.named input "$@" && local input=$REPLY
   z.arg.named setup "$@" && local setup=$REPLY
   z.arg.named command_path "$@" && local command_path=$REPLY
+  z.arg.named display "$@" default=false && local display=$REPLY
+  z.arg.named wait_for "$@" && local wait_for=$REPLY
+  local completion_display=""
   local result=""
   local buffer=""
   local prepare="PATH=${(q)command_path}; hash -r; "
+  prepare+="unsetopt complete_in_word; "
+  prepare+="unset z_completion_code_depth z_completion_command_depth; "
   prepare+="unalias z.fixture.alias fixture-command 2>/dev/null; "
+  prepare+="zstyle -d ':completion:*' ignored-patterns; "
   prepare+="zstyle -d ':completion:*:z-functions' ignored-patterns"
   prepare+=$'\n'"$setup"$'\n'"z.io Z92_READY"
 
@@ -126,6 +131,11 @@ z92_terminal() {
 
     case $phase in
       completion)
+        if z.is.not.null "$wait_for" && z.str.excludes "$output" "$wait_for"; then
+          z92_terminal_read "$terminal_fd" "$wait_for" || return 1
+          output+=$REPLY
+        fi
+        completion_display=$output
         z.str.partition "$output" Z92_RESULT:
         z.str.partition "$REPLY[2]" :Z92_END
         result=$REPLY[1]
@@ -140,4 +150,7 @@ z92_terminal() {
 
   z.io "matches:lines=$result"
   print -r -- "buffer=$buffer"
+  if z.is.true "$display"; then
+    print -r -- "display=$completion_display"
+  fi
 }
