@@ -49,8 +49,7 @@ z.t._log.records.collect() {
   z.arr.count $all_records
   z.int.is.zero $REPLY && { REPLY=(""); return 0; }
 
-  local sorted_records=(${(o)all_records})
-  REPLY=("${sorted_records[@]}")
+  z.arr.sort "${all_records[@]}"
 }
 
 # 整列済みの記録を表示する

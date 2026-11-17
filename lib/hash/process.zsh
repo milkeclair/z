@@ -9,11 +9,13 @@
 #  z.hash.to_arr hash
 #  # REPLY: ("name:John")
 z.hash.to_arr() {
-  local hash_name=$1
+  z.hash.entries "$1"
+  local -A values=("${REPLY[@]}")
   local arr=()
 
-  for key in ${(Pk)hash_name}; do
-    arr+=("$key:${${(P)hash_name}[$key]}")
+  z.hash.keys values
+  for key in "${REPLY[@]}"; do
+    arr+=("$key:$values[$key]")
   done
 
   REPLY=("${arr[@]}")
@@ -37,17 +39,10 @@ z.hash.merge() {
   z.arg.named base $@ && local base=$REPLY
   z.arg.named other $@ && local other=$REPLY
 
-  local -A merged_hash
-
-  for key in ${(Pk)base}; do
-    local ref="${base}[$key]"
-    merged_hash[$key]=${(P)ref}
-  done
-
-  for key in ${(Pk)other}; do
-    local ref="${other}[$key]"
-    merged_hash[$key]=${(P)ref}
-  done
+  z.hash.entries "$base"
+  local -A merged_hash=("${REPLY[@]}")
+  z.hash.entries "$other"
+  merged_hash+=("${REPLY[@]}")
 
   z.hash.entries merged_hash
 }

@@ -124,7 +124,7 @@ z.install.mod.all._reload() {
   export Z_ROOT="$dir"
   source "$dir/main.zsh" || return 1
 
-  if (( ${+functions[z.completion.enable]} )); then
+  if z.hash.has.key functions key=z.completion.enable; then
     z.completion.enable
   fi
 
