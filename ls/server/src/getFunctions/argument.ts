@@ -1,5 +1,5 @@
-import { NAMED_ARG_POSITION } from '../getFunctions/constant';
-import { FuncArg } from '../getFunctions/type';
+import { NAMED_ARG_POSITION } from './constant';
+import { FuncArg } from './type';
 import { COMMENT_CHAR } from './constant';
 import { namedArgRegex, positionalArgRegex, specialArgRegex } from './regex';
 

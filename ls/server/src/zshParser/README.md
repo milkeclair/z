@@ -40,3 +40,14 @@ LexerとParserの診断は別々に返します。未完成の入力に対して
 - mapAstは変更された経路を新しい値で再構築し、共有参照を保ちます。返されたASTには新しい検索コンテキストを作成してください。
 
 walkのvisitorは、部分木を省略する'skip'、探索を終了する'stop'を返せます。深いASTの探索・変換・位置検索は明示的なフレームを使います。Parserの入れ子には上限があり、部分ASTとprocessing-limit診断を返します。コマンド・引数・パイプラインの横方向の列は反復処理します。
+
+## 実装の配置
+
+- `lexer`: カーソル、区切りの探索、トークンの読み取り。
+- `parser/list`・`listItem`・`sublist`・`pipeline`: コマンド列の各段階。
+- `parser/command`: 単純コマンド、関数定義、複合コマンド、詳細を保持しない式。
+- `parser/word`: 単語の断片、引用、展開。
+- `ast/command`・`ast/word`: それぞれのノードの型。
+- `ast`直下の`file.ts`・`list.ts`・`listItem.ts`・`sublist.ts`・`pipeline.ts`: コマンド列の型。
+
+AST上の親子関係と実装ディレクトリの深さを分け、コマンドの処理からParserの共通状態やASTの型を短いパスで参照できる構成にしています。利用側は`lexer`・`parser`・`ast`の公開エントリから使います。

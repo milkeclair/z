@@ -7,7 +7,7 @@ import { parseWithContext } from '../../parse';
 import { rangeWithinText } from '../../range';
 import type { NodeResult, ParseState } from '../../state';
 import { advanceState } from '../../state';
-import { createWordNode } from '../index';
+import { createWordNode } from '..';
 import { createCompositeWordNode } from './node';
 import { readWordTokens } from './token';
 

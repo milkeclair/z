@@ -12,39 +12,29 @@ export type {
   SelectCommandNode,
   UntilCommandNode,
   WhileCommandNode,
-} from './compound';
+} from './command/compound';
 export type { ParserDiagnosticKind } from './diagnostic';
 export type { DocBlockNode } from './docBlock';
 export type { EofNode } from './eof';
 export type { FileNode } from './file';
-export type { ListNode } from './file/list';
-export type { ListItemNode, ListTerminatorNode, ListTerminatorType } from './file/list/listItem';
-export type {
-  LogicalOperatorNode,
-  SublistContinuation,
-  SublistNode,
-} from './file/list/listItem/sublist';
+export type { ListNode } from './list';
+export type { ListItemNode, ListTerminatorNode, ListTerminatorType } from './listItem';
+export type { LogicalOperatorNode, SublistContinuation, SublistNode } from './sublist';
 export type {
   PipelineContinuation,
   PipelineModifierNode,
   PipelineNode,
   PipelineOperatorNode,
   PipelineTimingNode,
-} from './file/list/listItem/sublist/pipeline';
-export type { CommandNode } from './file/list/listItem/sublist/pipeline/command';
+} from './pipeline';
+export type { CommandNode } from './command';
 export type {
   FunctionBodyNode,
   FunctionDefinitionForm,
   FunctionDefinitionNode,
-} from './file/list/listItem/sublist/pipeline/command/functionDefinition';
-export type {
-  AlwaysClauseNode,
-  GroupCommandNode,
-} from './file/list/listItem/sublist/pipeline/command/group';
-export type {
-  OpaqueCommandNode,
-  OpaqueCommandSyntax,
-} from './file/list/listItem/sublist/pipeline/command/opaque';
+} from './command/function';
+export type { AlwaysClauseNode, GroupCommandNode } from './command/group';
+export type { OpaqueCommandNode, OpaqueCommandSyntax } from './command/opaque';
 export type {
   AssignNode,
   CommandNameNode,
@@ -56,8 +46,8 @@ export type {
   SimpleCommandNode,
   SimpleCommandSemantic,
   SourceInfo,
-} from './file/list/listItem/sublist/pipeline/command/simpleCommand';
-export type { SubshellCommandNode } from './file/list/listItem/sublist/pipeline/command/subshell';
+} from './command/simple';
+export type { SubshellCommandNode } from './command/subshell';
 export type { AstNode, AstNodeKind } from './node';
 export type { OptionNode } from './option';
 export type { HereDocumentNode, RedirectNode } from './redirect';
