@@ -1,6 +1,6 @@
-import type { ListNode } from '../list';
 import type { SourceRange } from '../../lexer';
 import type { BaseNode } from '../base';
+import type { ListNode } from '../list';
 import type { RedirectNode } from '../redirect';
 import type { UnknownNode } from '../unknown';
 

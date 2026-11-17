@@ -1,4 +1,5 @@
 import type { PipelineNode } from '../../ast';
+import { parseCommand } from '../command';
 import type { ParserContext } from '../context';
 import { enclosingRange, rangeFromTokens } from '../range';
 import type { NodeResult, ParseState } from '../state';
@@ -9,7 +10,6 @@ import {
   skipTrivia,
   tokenSlice,
 } from '../state';
-import { parseCommand } from '../command';
 import { readPipelineModifier } from './modifier';
 import { createPipelineOperatorNode, pipelineOperatorType } from './operator';
 import { readPipelineTiming } from './timing';

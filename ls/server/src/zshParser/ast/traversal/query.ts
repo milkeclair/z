@@ -1,0 +1,260 @@
+import type { AstNode, CommentNode, DocBlockNode, FileNode, FunctionDefinitionNode } from '..';
+import { syntaxChildren } from './children';
+import { findAll, type TraversalFrame } from './walk';
+
+type DocContext = {
+  readonly docBlock: DocBlockNode;
+  readonly target: FunctionDefinitionNode;
+};
+
+export type QueryContext = {
+  readonly file: FileNode;
+  readonly documentationByOffset: ReadonlyMap<number, DocContext>;
+};
+
+export function createQueryContext(file: FileNode): QueryContext {
+  const entries =
+    file.comments.length === 0
+      ? []
+      : findAll(file, 'functionDefinition').flatMap((target) => {
+          const docBlock = target.leadingDoc;
+          if (!docBlock) {
+            return [];
+          }
+          const context: DocContext = { docBlock, target };
+          return docBlock.comments.map((comment): readonly [number, DocContext] => [
+            comment.range.start.offset,
+            context,
+          ]);
+        });
+  return { file, documentationByOffset: new Map(entries) };
+}
+
+export function commentAt(file: FileNode, offset: number): CommentNode | null {
+  if (!Number.isSafeInteger(offset)) {
+    return null;
+  }
+  let low = 0,
+    high = file.comments.length - 1;
+  while (low <= high) {
+    const middle = Math.floor((low + high) / 2);
+    const comment = file.comments[middle];
+    if (offset < comment.range.start.offset) {
+      high = middle - 1;
+    } else if (offset >= comment.range.end.offset) {
+      low = middle + 1;
+    } else {
+      return comment;
+    }
+  }
+  return null;
+}
+
+export type AstLocation =
+  | { readonly kind: 'syntax'; readonly node: AstNode; readonly path: readonly AstNode[] }
+  | {
+      readonly kind: 'comment';
+      readonly node: CommentNode;
+      readonly docBlock: DocBlockNode | null;
+      readonly target: FunctionDefinitionNode | null;
+    };
+
+type PositionScore = { readonly owned: boolean; readonly start: number; readonly end: number };
+
+type PositionFrame = TraversalFrame & {
+  readonly parent: PositionFrame | null;
+  readonly score: PositionScore;
+};
+
+function contains(node: AstNode, offset: number): boolean {
+  return node.range.start.offset <= offset && offset < node.range.end.offset;
+}
+
+function ownedSpan(start: number, end: number, offset: number): PositionScore | null {
+  return start <= offset && offset < end ? { owned: true, start, end } : null;
+}
+
+function mark(range: AstNode['range'] | null, offset: number): PositionScore | null {
+  return range ? ownedSpan(range.start.offset, range.end.offset, offset) : null;
+}
+
+function positionScore(node: AstNode, offset: number): PositionScore {
+  const fallback: PositionScore = {
+    owned: false,
+    start: node.range.start.offset,
+    end: node.range.end.offset,
+  };
+  switch (node.kind) {
+    case 'file':
+    case 'list':
+    case 'listItem':
+    case 'sublist':
+    case 'pipeline':
+    case 'simpleCommand':
+    case 'word':
+    case 'commandName':
+    case 'precommandModifier':
+    case 'option':
+    case 'assign':
+    case 'variableValue':
+      return fallback;
+    case 'functionDefinition':
+      return mark(node.openParen, offset) ?? mark(node.closeParen, offset) ?? fallback;
+    case 'groupCommand':
+      return mark(node.openBrace, offset) ?? mark(node.closeBrace, offset) ?? fallback;
+    case 'subshellCommand':
+      return mark(node.openParen, offset) ?? mark(node.closeParen, offset) ?? fallback;
+    case 'alwaysClause':
+      return mark(node.keyword, offset) ?? fallback;
+    case 'ifBranch':
+      return mark(node.keyword, offset) ?? mark(node.thenKeyword, offset) ?? fallback;
+    case 'ifCommand':
+    case 'whileCommand':
+    case 'untilCommand':
+    case 'forCommand':
+    case 'selectCommand':
+    case 'foreachCommand':
+    case 'repeatCommand':
+    case 'caseCommand':
+      return mark(node.keyword, offset) ?? mark(node.close, offset) ?? fallback;
+    case 'caseArm':
+      return mark(node.terminator, offset) ?? fallback;
+    case 'opaqueCommand':
+      return (
+        ownedSpan(
+          node.open.start.offset,
+          node.close?.end.offset ?? node.range.end.offset,
+          offset,
+        ) ?? fallback
+      );
+    case 'redirect': {
+      const headerEnd =
+        node.target?.range.end.offset ?? node.range.start.offset + node.operator.length;
+      return (
+        ownedSpan(node.range.start.offset, headerEnd, offset) ??
+        (node.hereDocument
+          ? ownedSpan(
+              node.hereDocument.range.start.offset,
+              node.hereDocument.close?.end.offset ?? node.hereDocument.range.end.offset,
+              offset,
+            )
+          : null) ??
+        fallback
+      );
+    }
+    case 'commandSubstitution':
+    case 'processSubstitution': {
+      const backtick = node.raw.charCodeAt(0) === 96;
+      const opening = ownedSpan(
+        node.range.start.offset,
+        node.range.start.offset + (backtick ? 1 : 2),
+        offset,
+      );
+      const closed = node.raw.endsWith(backtick ? String.fromCharCode(96) : ')');
+      return (
+        opening ??
+        (closed ? ownedSpan(node.range.end.offset - 1, node.range.end.offset, offset) : null) ??
+        fallback
+      );
+    }
+    case 'hereDocument':
+    case 'comment':
+    case 'docBlock':
+    case 'eof':
+    case 'unknown':
+    case 'logicalOperator':
+    case 'pipelineOperator':
+    case 'pipelineModifier':
+    case 'pipelineTiming':
+    case 'terminator':
+    case 'variableName':
+    case 'stringLiteral':
+    case 'variableReference':
+    case 'parameterExpansion':
+    case 'arithmeticExpansion':
+      return { ...fallback, owned: true };
+  }
+  const exhaustive: never = node;
+  return exhaustive;
+}
+
+function betterPosition(candidate: PositionFrame, best: PositionFrame): boolean {
+  if (candidate.score.owned !== best.score.owned) {
+    return candidate.score.owned;
+  }
+  if (!candidate.score.owned && candidate.score.start !== best.score.start) {
+    return candidate.score.start > best.score.start;
+  }
+  const width = candidate.score.end - candidate.score.start;
+  const previousWidth = best.score.end - best.score.start;
+  return width < previousWidth || (width === previousWidth && candidate.depth > best.depth);
+}
+
+export function locate(query: QueryContext, offset: number): AstLocation | null {
+  const file = query.file;
+  if (!Number.isSafeInteger(offset)) {
+    return null;
+  }
+  if (offset < file.range.start.offset || offset > file.range.end.offset) {
+    return null;
+  }
+  if (offset === file.eof.range.start.offset) {
+    return { kind: 'syntax', node: file.eof, path: [file, file.eof] };
+  }
+  const comment = commentAt(file, offset);
+  if (comment) {
+    const context = query.documentationByOffset.get(comment.range.start.offset);
+    return {
+      kind: 'comment',
+      node: comment,
+      docBlock: context?.docBlock ?? null,
+      target: context?.target ?? null,
+    };
+  }
+  if (!contains(file, offset)) {
+    return null;
+  }
+  const first: PositionFrame = {
+    node: file,
+    next: syntaxChildren(file),
+    depth: 0,
+    parent: null,
+    score: positionScore(file, offset),
+  };
+  const stack: PositionFrame[] = [first];
+  let best = first;
+  while (stack.length > 0) {
+    const parent = stack[stack.length - 1];
+    const candidate = parent.next.next();
+    if (candidate.done) {
+      stack.pop();
+      continue;
+    }
+    if (!contains(candidate.value, offset)) {
+      continue;
+    }
+    const score = positionScore(candidate.value, offset);
+    const inherited =
+      !score.owned &&
+      parent.score.owned &&
+      score.start === parent.score.start &&
+      score.end === parent.score.end;
+    const child: PositionFrame = {
+      node: candidate.value,
+      next: syntaxChildren(candidate.value),
+      depth: parent.depth + 1,
+      parent,
+      score: inherited ? { ...score, owned: true } : score,
+    };
+    stack.push(child);
+    if (betterPosition(child, best)) {
+      best = child;
+    }
+  }
+  const path: AstNode[] = [];
+  for (let frame: PositionFrame | null = best; frame; frame = frame.parent) {
+    path.push(frame.node);
+  }
+  path.reverse();
+  return { kind: 'syntax', node: best.node, path };
+}

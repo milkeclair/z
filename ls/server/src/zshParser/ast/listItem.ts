@@ -1,6 +1,6 @@
 import type { BaseNode } from './base';
-import type { UnknownNode } from './unknown';
 import type { SublistNode } from './sublist';
+import type { UnknownNode } from './unknown';
 
 export type ListItemNode = BaseNode<'listItem'> & {
   readonly sublist: SublistNode | UnknownNode;

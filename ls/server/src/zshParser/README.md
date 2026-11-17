@@ -51,3 +51,5 @@ walkのvisitorは、部分木を省略する'skip'、探索を終了する'stop'
 - `ast`直下の`file.ts`・`list.ts`・`listItem.ts`・`sublist.ts`・`pipeline.ts`: コマンド列の型。
 
 AST上の親子関係と実装ディレクトリの深さを分け、コマンドの処理からParserの共通状態やASTの型を短いパスで参照できる構成にしています。利用側は`lexer`・`parser`・`ast`の公開エントリから使います。
+
+`ast/traversal`では、`children.ts`が構文/関連辺、`walk.ts`が探索、`query.ts`が位置検索、`map.ts`が変換を担当します。`parser/command/compound`は条件分岐・case・反復の読取りを分け、共通の終端と回復はエントリ側で扱います。

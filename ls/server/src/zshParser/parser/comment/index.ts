@@ -21,7 +21,9 @@ export function mergeComments(
     byOffset.set(comment.range.start.offset, comment);
   }
   return {
-    comments: [...byOffset.values()].sort((a, b) => a.range.start.offset - b.range.start.offset),
+    comments: [...byOffset.values()].sort(
+      (left, right) => left.range.start.offset - right.range.start.offset,
+    ),
     byOffset,
   };
 }

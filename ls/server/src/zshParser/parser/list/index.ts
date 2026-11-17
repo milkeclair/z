@@ -1,9 +1,9 @@
 import type { ListItemNode, ListNode } from '../../ast';
 import type { ParserContext } from '../context';
+import { parseListItem } from '../listItem';
 import { rangeFromTokens } from '../range';
 import type { NodeResult, ParseState } from '../state';
 import { advanceState, currentToken, skipTrivia, tokenSlice } from '../state';
-import { parseListItem } from '../listItem';
 import { listTerminatorType } from './terminator';
 import type { ListEnd } from './types';
 

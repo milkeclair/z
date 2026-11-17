@@ -1,10 +1,10 @@
-import type { CommandNode } from './index';
 import type { SourceRange } from '../../lexer';
 import type { BaseNode } from '../base';
 import type { DocBlockNode } from '../docBlock';
 import type { OptionNode } from '../option';
 import type { RedirectNode } from '../redirect';
 import type { WordNode } from '../word';
+import type { CommandNode } from './index';
 
 export type FunctionDefinitionForm = 'functionKeyword' | 'shCompatible';
 

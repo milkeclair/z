@@ -1,5 +1,5 @@
 export type { BaseNode } from './base';
-export type { CommentNode } from './comment';
+export type { CommandNode } from './command';
 export type {
   CaseArmNode,
   CaseCommandNode,
@@ -13,21 +13,6 @@ export type {
   UntilCommandNode,
   WhileCommandNode,
 } from './command/compound';
-export type { ParserDiagnosticKind } from './diagnostic';
-export type { DocBlockNode } from './docBlock';
-export type { EofNode } from './eof';
-export type { FileNode } from './file';
-export type { ListNode } from './list';
-export type { ListItemNode, ListTerminatorNode, ListTerminatorType } from './listItem';
-export type { LogicalOperatorNode, SublistContinuation, SublistNode } from './sublist';
-export type {
-  PipelineContinuation,
-  PipelineModifierNode,
-  PipelineNode,
-  PipelineOperatorNode,
-  PipelineTimingNode,
-} from './pipeline';
-export type { CommandNode } from './command';
 export type {
   FunctionBodyNode,
   FunctionDefinitionForm,
@@ -48,9 +33,24 @@ export type {
   SourceInfo,
 } from './command/simple';
 export type { SubshellCommandNode } from './command/subshell';
+export type { CommentNode } from './comment';
+export type { ParserDiagnosticKind } from './diagnostic';
+export type { DocBlockNode } from './docBlock';
+export type { EofNode } from './eof';
+export type { FileNode } from './file';
+export type { ListNode } from './list';
+export type { ListItemNode, ListTerminatorNode, ListTerminatorType } from './listItem';
 export type { AstNode, AstNodeKind } from './node';
 export type { OptionNode } from './option';
+export type {
+  PipelineContinuation,
+  PipelineModifierNode,
+  PipelineNode,
+  PipelineOperatorNode,
+  PipelineTimingNode,
+} from './pipeline';
 export type { HereDocumentNode, RedirectNode } from './redirect';
+export type { LogicalOperatorNode, SublistContinuation, SublistNode } from './sublist';
 export {
   commentAt,
   createQueryContext,

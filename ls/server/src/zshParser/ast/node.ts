@@ -1,17 +1,4 @@
-import type { CommentNode } from './comment';
 import type { CaseArmNode, CompoundCommandNode, IfBranchNode } from './command/compound';
-import type { DocBlockNode } from './docBlock';
-import type { EofNode } from './eof';
-import type { FileNode } from './file';
-import type { ListNode } from './list';
-import type { ListItemNode, ListTerminatorNode } from './listItem';
-import type { LogicalOperatorNode, SublistNode } from './sublist';
-import type {
-  PipelineModifierNode,
-  PipelineNode,
-  PipelineOperatorNode,
-  PipelineTimingNode,
-} from './pipeline';
 import type { FunctionDefinitionNode } from './command/function';
 import type { AlwaysClauseNode, GroupCommandNode } from './command/group';
 import type { OpaqueCommandNode } from './command/opaque';
@@ -22,8 +9,21 @@ import type {
   SimpleCommandNode,
 } from './command/simple';
 import type { SubshellCommandNode } from './command/subshell';
+import type { CommentNode } from './comment';
+import type { DocBlockNode } from './docBlock';
+import type { EofNode } from './eof';
+import type { FileNode } from './file';
+import type { ListNode } from './list';
+import type { ListItemNode, ListTerminatorNode } from './listItem';
 import type { OptionNode } from './option';
+import type {
+  PipelineModifierNode,
+  PipelineNode,
+  PipelineOperatorNode,
+  PipelineTimingNode,
+} from './pipeline';
 import type { HereDocumentNode, RedirectNode } from './redirect';
+import type { LogicalOperatorNode, SublistNode } from './sublist';
 import type { UnknownNode } from './unknown';
 import type {
   ArithmeticExpansionNode,

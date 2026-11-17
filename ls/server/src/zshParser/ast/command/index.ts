@@ -1,5 +1,5 @@
-import type { CompoundCommandNode } from './compound';
 import type { UnknownNode } from '../unknown';
+import type { CompoundCommandNode } from './compound';
 import type { FunctionDefinitionNode } from './function';
 import type { GroupCommandNode } from './group';
 import type { OpaqueCommandNode } from './opaque';

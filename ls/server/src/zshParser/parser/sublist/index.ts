@@ -1,5 +1,6 @@
 import type { SublistContinuation, SublistNode } from '../../ast';
 import type { ParserContext } from '../context';
+import { parsePipeline } from '../pipeline';
 import { enclosingRange, rangeFromTokens } from '../range';
 import type { NodeResult, ParseState } from '../state';
 import {
@@ -10,7 +11,6 @@ import {
   tokenSlice,
 } from '../state';
 import { createLogicalOperatorNode, logicalOperatorType } from './operator';
-import { parsePipeline } from '../pipeline';
 
 type SublistRestResult = {
   readonly rest: readonly SublistContinuation[];

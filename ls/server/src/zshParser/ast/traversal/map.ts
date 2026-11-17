@@ -1,5 +1,5 @@
 import type { AstNode, FileNode } from '..';
-import { withRelatedChildren } from './index';
+import { withRelatedChildren } from './children';
 
 function ofKind<K extends AstNode['kind']>(
   node: AstNode,
@@ -65,10 +65,10 @@ export function mapAst(file: FileNode, transform: (node: AstNode) => AstNode): F
           ...node,
           body: get(node.body, 'list'),
           eof: get(node.eof, 'eof'),
-          comments: node.comments.map((n) => get(n, 'comment')),
+          comments: node.comments.map((comment) => get(comment, 'comment')),
         };
       case 'list':
-        return { ...node, items: node.items.map((n) => get(n, 'listItem')) };
+        return { ...node, items: node.items.map((item) => get(item, 'listItem')) };
       case 'listItem':
         return {
           ...node,
@@ -79,9 +79,9 @@ export function mapAst(file: FileNode, transform: (node: AstNode) => AstNode): F
         return {
           ...node,
           first: get(node.first, 'pipeline'),
-          rest: node.rest.map((n) => ({
-            operator: get(n.operator, 'logicalOperator'),
-            pipeline: get(n.pipeline, 'pipeline'),
+          rest: node.rest.map((continuation) => ({
+            operator: get(continuation.operator, 'logicalOperator'),
+            pipeline: get(continuation.pipeline, 'pipeline'),
           })),
         };
       case 'pipeline':
@@ -90,9 +90,9 @@ export function mapAst(file: FileNode, transform: (node: AstNode) => AstNode): F
           timing: node.timing ? get(node.timing, 'pipelineTiming') : null,
           modifier: node.modifier ? get(node.modifier, 'pipelineModifier') : null,
           first: get(node.first, node.first.kind),
-          rest: node.rest.map((n) => ({
-            operator: get(n.operator, 'pipelineOperator'),
-            command: get(n.command, n.command.kind),
+          rest: node.rest.map((continuation) => ({
+            operator: get(continuation.operator, 'pipelineOperator'),
+            command: get(continuation.command, continuation.command.kind),
           })),
         };
       case 'simpleCommand': {
@@ -111,52 +111,58 @@ export function mapAst(file: FileNode, transform: (node: AstNode) => AstNode): F
                   ...semantic,
                   declaration: {
                     ...semantic.declaration,
-                    options: semantic.declaration.options.map((n) => get(n, 'option')),
-                    assignments: semantic.declaration.assignments.map((n) => get(n, 'assign')),
-                    names: semantic.declaration.names.map((n) => get(n, 'variableName')),
+                    options: semantic.declaration.options.map((option) => get(option, 'option')),
+                    assignments: semantic.declaration.assignments.map((assignment) =>
+                      get(assignment, 'assign'),
+                    ),
+                    names: semantic.declaration.names.map((variable) =>
+                      get(variable, 'variableName'),
+                    ),
                   },
                 }
               : semantic;
         return {
           ...node,
           semantic: nextSemantic,
-          precommandModifiers: node.precommandModifiers.map((n) => get(n, 'precommandModifier')),
-          prefixAssignments: node.prefixAssignments.map((n) => get(n, 'assign')),
+          precommandModifiers: node.precommandModifiers.map((modifier) =>
+            get(modifier, 'precommandModifier'),
+          ),
+          prefixAssignments: node.prefixAssignments.map((assignment) => get(assignment, 'assign')),
           commandName: node.commandName ? get(node.commandName, 'commandName') : null,
-          arguments: node.arguments.map((n) => get(n, 'word')),
-          redirects: node.redirects.map((n) => get(n, 'redirect')),
+          arguments: node.arguments.map((word) => get(word, 'word')),
+          redirects: node.redirects.map((redirect) => get(redirect, 'redirect')),
         };
       }
       case 'functionDefinition':
         return {
           ...node,
-          options: node.options.map((n) => get(n, 'option')),
-          names: node.names.map((n) => get(n, 'word')),
+          options: node.options.map((option) => get(option, 'option')),
+          names: node.names.map((word) => get(word, 'word')),
           body: get(node.body, node.body.kind),
           leadingDoc: node.leadingDoc ? get(node.leadingDoc, 'docBlock') : null,
-          postBodyRedirects: node.postBodyRedirects.map((n) => get(n, 'redirect')),
+          postBodyRedirects: node.postBodyRedirects.map((redirect) => get(redirect, 'redirect')),
         };
       case 'groupCommand':
         return {
           ...node,
           body: get(node.body, 'list'),
           always: node.always ? get(node.always, 'alwaysClause') : null,
-          postBodyRedirects: node.postBodyRedirects.map((n) => get(n, 'redirect')),
+          postBodyRedirects: node.postBodyRedirects.map((redirect) => get(redirect, 'redirect')),
         };
       case 'subshellCommand':
         return {
           ...node,
           body: get(node.body, 'list'),
-          postBodyRedirects: node.postBodyRedirects.map((n) => get(n, 'redirect')),
+          postBodyRedirects: node.postBodyRedirects.map((redirect) => get(redirect, 'redirect')),
         };
       case 'alwaysClause':
         return { ...node, body: get(node.body, node.body.kind) };
       case 'ifCommand':
         return {
           ...node,
-          branches: node.branches.map((n) => get(n, 'ifBranch')),
+          branches: node.branches.map((branch) => get(branch, 'ifBranch')),
           elseBody: node.elseBody ? get(node.elseBody, 'list') : null,
-          postBodyRedirects: node.postBodyRedirects.map((n) => get(n, 'redirect')),
+          postBodyRedirects: node.postBodyRedirects.map((redirect) => get(redirect, 'redirect')),
         };
       case 'ifBranch':
         return { ...node, condition: get(node.condition, 'list'), body: get(node.body, 'list') };
@@ -166,46 +172,46 @@ export function mapAst(file: FileNode, transform: (node: AstNode) => AstNode): F
           ...node,
           condition: get(node.condition, 'list'),
           body: get(node.body, 'list'),
-          postBodyRedirects: node.postBodyRedirects.map((n) => get(n, 'redirect')),
+          postBodyRedirects: node.postBodyRedirects.map((redirect) => get(redirect, 'redirect')),
         };
       case 'forCommand':
       case 'selectCommand':
       case 'foreachCommand':
         return {
           ...node,
-          variables: node.variables.map((n) => get(n, 'word')),
-          words: node.words?.map((n) => get(n, 'word')) ?? null,
+          variables: node.variables.map((word) => get(word, 'word')),
+          words: node.words?.map((word) => get(word, 'word')) ?? null,
           arithmetic: node.arithmetic ? get(node.arithmetic, 'arithmeticExpansion') : null,
           body: get(node.body, 'list'),
-          postBodyRedirects: node.postBodyRedirects.map((n) => get(n, 'redirect')),
+          postBodyRedirects: node.postBodyRedirects.map((redirect) => get(redirect, 'redirect')),
         };
       case 'repeatCommand':
         return {
           ...node,
           count: node.count ? get(node.count, 'word') : null,
           body: get(node.body, 'list'),
-          postBodyRedirects: node.postBodyRedirects.map((n) => get(n, 'redirect')),
+          postBodyRedirects: node.postBodyRedirects.map((redirect) => get(redirect, 'redirect')),
         };
       case 'caseCommand':
         return {
           ...node,
           subject: node.subject ? get(node.subject, 'word') : null,
-          arms: node.arms.map((n) => get(n, 'caseArm')),
-          postBodyRedirects: node.postBodyRedirects.map((n) => get(n, 'redirect')),
+          arms: node.arms.map((arm) => get(arm, 'caseArm')),
+          postBodyRedirects: node.postBodyRedirects.map((redirect) => get(redirect, 'redirect')),
         };
       case 'caseArm':
         return {
           ...node,
-          patterns: node.patterns.map((n) => get(n, 'word')),
+          patterns: node.patterns.map((word) => get(word, 'word')),
           body: get(node.body, 'list'),
         };
       case 'opaqueCommand':
         return {
           ...node,
-          postBodyRedirects: node.postBodyRedirects.map((n) => get(n, 'redirect')),
+          postBodyRedirects: node.postBodyRedirects.map((redirect) => get(redirect, 'redirect')),
         };
       case 'precommandModifier':
-        return { ...node, options: node.options.map((n) => get(n, 'option')) };
+        return { ...node, options: node.options.map((option) => get(option, 'option')) };
       case 'commandName':
         return { ...node, word: get(node.word, 'word') };
       case 'option':
@@ -220,7 +226,7 @@ export function mapAst(file: FileNode, transform: (node: AstNode) => AstNode): F
       case 'variableValue':
         return { ...node, value: get(node.value, 'word') };
       case 'word':
-        return { ...node, parts: node.parts.map((n) => get(n, n.kind)) };
+        return { ...node, parts: node.parts.map((part) => get(part, part.kind)) };
       case 'variableReference':
         return { ...node, name: get(node.name, 'variableName') };
       case 'commandSubstitution':
@@ -233,7 +239,7 @@ export function mapAst(file: FileNode, transform: (node: AstNode) => AstNode): F
           hereDocument: node.hereDocument ? get(node.hereDocument, 'hereDocument') : null,
         };
       case 'docBlock':
-        return { ...node, comments: node.comments.map((n) => get(n, 'comment')) };
+        return { ...node, comments: node.comments.map((comment) => get(comment, 'comment')) };
       case 'hereDocument':
       case 'comment':
       case 'eof':
