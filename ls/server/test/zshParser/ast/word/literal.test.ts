@@ -17,22 +17,45 @@ function word(source: string) {
 }
 
 describe('literalWord', () => {
-  test.each([
-    ['print plain', 'plain'],
-    ["print 'two words'", 'two words'],
-    ['print "two words"', 'two words'],
-    ["print pre'fix'", 'prefix'],
-    ['print one\\ two', 'one two'],
-    ["print $'one\\ntwo'", 'one\ntwo'],
-    ["print ''", ''],
-  ])('静的な値の引用をASTから復元する: %s', (source, value) => {
-    expect(literalWord(word(source))).toBe(value);
+  test('引用のない静的な値をASTから復元する', () => {
+    expect(literalWord(word('print plain'))).toBe('plain');
   });
 
-  test.each(['print "$value"', 'print "$(print one)"', 'print $(( 1 + 2 ))'])(
-    '展開を含むWordを静的な値と扱わない: %s', source => {
-      expect(literalWord(word(source))).toBeNull();
-    });
+  test('単一引用符で囲んだ値をASTから復元する', () => {
+    expect(literalWord(word("print 'two words'"))).toBe('two words');
+  });
+
+  test('二重引用符で囲んだ値をASTから復元する', () => {
+    expect(literalWord(word('print "two words"'))).toBe('two words');
+  });
+
+  test('引用部分を含む単語をASTから復元する', () => {
+    expect(literalWord(word("print pre'fix'"))).toBe('prefix');
+  });
+
+  test('エスケープした空白をASTから復元する', () => {
+    expect(literalWord(word('print one\\ two'))).toBe('one two');
+  });
+
+  test('ドル単一引用符の改行をASTから復元する', () => {
+    expect(literalWord(word("print $'one\\ntwo'"))).toBe('one\ntwo');
+  });
+
+  test('引用した空文字列をASTから復元する', () => {
+    expect(literalWord(word("print ''"))).toBe('');
+  });
+
+  test('パラメーター展開を含むWordを静的な値と扱わない', () => {
+    expect(literalWord(word('print "$value"'))).toBeNull();
+  });
+
+  test('コマンド置換を含むWordを静的な値と扱わない', () => {
+    expect(literalWord(word('print "$(print one)"'))).toBeNull();
+  });
+
+  test('算術展開を含むWordを静的な値と扱わない', () => {
+    expect(literalWord(word('print $(( 1 + 2 ))'))).toBeNull();
+  });
 
   test('指定された終端まで復元し、既存のimportとの互換性を保持する', () => {
     const argument = word("print 'option'=value");

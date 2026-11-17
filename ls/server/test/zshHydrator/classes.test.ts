@@ -30,14 +30,27 @@ function fixture(content = source) {
 
 describe('class hydration', () => {
   test('重複した本体収集形式のメソッドはクラスを破棄する', () => {
-    const file = fixture("z.cls.draw Duplicate\nz.cls.fn run ':'\nz.cls.fn run\nz.cls.fn.done\nz.cls.drew\n");
+    const file = fixture([
+      'z.cls.draw Duplicate',
+      "  z.cls.fn run ':'",
+      '  z.cls.fn run',
+      '  z.cls.fn.done',
+      '  z.cls.drew',
+      '',
+    ].join('\n'));
 
     expect(file.classes.definitions[0].state).toBe('aborted');
     expect(file.classes.definitions[0].methods).toHaveLength(1);
   });
 
   test('重複した引数形式のメソッドは元の本体を保持する', () => {
-    const file = fixture("z.cls.draw Duplicate\nz.cls.fn run 'print first'\nz.cls.fn run 'print second'\nz.cls.drew\n");
+    const file = fixture([
+      'z.cls.draw Duplicate',
+      "  z.cls.fn run 'print first'",
+      "  z.cls.fn run 'print second'",
+      '  z.cls.drew',
+      '',
+    ].join('\n'));
     const definition = file.classes.definitions[0];
     const method = definition.methods[0];
 
@@ -50,7 +63,13 @@ describe('class hydration', () => {
   });
 
   test('重複した属性は元の初期値を保持する', () => {
-    const file = fixture('z.cls.draw Duplicate\nz.cls.attr value first\nz.cls.attr value second\nz.cls.drew\n');
+    const file = fixture([
+      'z.cls.draw Duplicate',
+      '  z.cls.attr value first',
+      '  z.cls.attr value second',
+      '  z.cls.drew',
+      '',
+    ].join('\n'));
     const definition = file.classes.definitions[0];
 
     expect(definition.state).toBe('published');
@@ -71,7 +90,12 @@ describe('class hydration', () => {
   });
 
   test('実行時と同じ予約接頭辞だけを除外する', () => {
-    const file = fixture('z.cls.draw __z_cls_Box\nz.cls.attr __z_cls_value 0\nz.cls.drew\n');
+    const file = fixture([
+      'z.cls.draw __z_cls_Box',
+      '  z.cls.attr __z_cls_value 0',
+      '  z.cls.drew',
+      '',
+    ].join('\n'));
 
     expect(file.classes.definitions[0].name).toBe('__z_cls_Box');
     expect(file.classes.definitions[0].attributes[0].name).toBe('__z_cls_value');
@@ -95,9 +119,36 @@ describe('class hydration', () => {
     expect(classMethodAt(file.classes, null, text.indexOf('print deeper'))).toBe(method);
   });
 
-  test.each(['z.cls.new $class object', 'z.cls.new z_cls_reserved object', 'z.cls.new Counter bad-name',
-    'z.cls.new Counter', 'z.cls.draw bad-name'])('動的・不完全・予約済みの名前を決め打ちしない: %s', text => {
-    const file = fixture(text + '\n');
+  test('変数で指定したクラス名を決め打ちしない', () => {
+    const file = fixture('z.cls.new $class object\n');
+
+    expect(file.classes.definitions).toEqual([]);
+    expect(file.classes.instances).toEqual([]);
+  });
+
+  test('予約済みのクラス名を登録しない', () => {
+    const file = fixture('z.cls.new z_cls_reserved object\n');
+
+    expect(file.classes.definitions).toEqual([]);
+    expect(file.classes.instances).toEqual([]);
+  });
+
+  test('不正な実体名を登録しない', () => {
+    const file = fixture('z.cls.new Counter bad-name\n');
+
+    expect(file.classes.definitions).toEqual([]);
+    expect(file.classes.instances).toEqual([]);
+  });
+
+  test('実体名のない宣言を登録しない', () => {
+    const file = fixture('z.cls.new Counter\n');
+
+    expect(file.classes.definitions).toEqual([]);
+    expect(file.classes.instances).toEqual([]);
+  });
+
+  test('不正なクラス名で定義を開始しない', () => {
+    const file = fixture('z.cls.draw bad-name\n');
 
     expect(file.classes.definitions).toEqual([]);
     expect(file.classes.instances).toEqual([]);
@@ -116,7 +167,12 @@ describe('class hydration', () => {
   });
 
   test('子のコマンドに情報を付加しても初期値のWord参照が古くならない', () => {
-    const file = fixture('z.cls.draw Holder\nz.cls.attr value "$(z.cls.new Other inside)"\nz.cls.drew\n');
+    const file = fixture([
+      'z.cls.draw Holder',
+      '  z.cls.attr value "$(z.cls.new Other inside)"',
+      '  z.cls.drew',
+      '',
+    ].join('\n'));
     const attribute = file.classes.definitions[0].attributes[0];
 
     expect(attribute.defaultValue).toBe(attribute.declaration.arguments[1]);
@@ -195,11 +251,21 @@ describe('class hydration', () => {
   });
 
   test('未完了と破棄済みのクラスを公開済みのクラスと区別する', () => {
-    const incomplete = fixture('z.cls.draw Open\nz.cls.fn run\nprint "$1"\n');
+    const incomplete = fixture([
+      'z.cls.draw Open',
+      '  z.cls.fn run',
+      '    print "$1"',
+      '',
+    ].join('\n'));
 
     expect(incomplete.classes.definitions[0]).toMatchObject({ name: 'Open', state: 'incomplete' });
     expect(incomplete.classes.definitions[0].methods[0].body).toMatchObject({ kind: 'block', end: null });
-    const aborted = fixture('z.cls.draw Discarded\nz.cls.attr count 0\nz.cls.abort\n');
+    const aborted = fixture([
+      'z.cls.draw Discarded',
+      '  z.cls.attr count 0',
+      '  z.cls.abort',
+      '',
+    ].join('\n'));
 
     expect(aborted.classes.definitions[0]).toMatchObject({ name: 'Discarded', state: 'aborted' });
   });
@@ -212,7 +278,20 @@ describe('class hydration', () => {
   });
 
   test('通常の関数ごとのクラスを独立して解釈し、本体内の引数スコープを保持する', () => {
-    const text = 'load() {\n' + source.slice(0, source.indexOf('z.cls.new')) + '}\n';
+    const text = [
+      'load() {',
+      '  z.cls.draw Counter; {',
+      '    z.cls.attr count 0',
+      '    z.cls.fn increment',
+      '      (( ++count ))',
+      '      print "$1"',
+      '    z.cls.fn.done',
+      "    z.cls.fn value 'REPLY=$count'",
+      '    z.cls.drew',
+      '  }',
+      '}',
+      '',
+    ].join('\n');
     const file = fixture(text);
     const owner = file.functions.find(fn => fn.name === 'load')?.definition;
 
@@ -238,7 +317,15 @@ describe('class hydration', () => {
   });
 
   test('関数内のクラスと外側のクラスを同じ定義中の状態にしない', () => {
-    const text = 'z.cls.draw Outer\nhelper() { z.cls.draw Inner; z.cls.drew }\nz.cls.drew\n';
+    const text = [
+      'z.cls.draw Outer',
+      '  helper() {',
+      '    z.cls.draw Inner',
+      '      z.cls.drew',
+      '  }',
+      '  z.cls.drew',
+      '',
+    ].join('\n');
     const file = fixture(text);
 
     expect(file.classes.definitions.map(definition => definition.name)).toEqual(['Outer', 'Inner']);

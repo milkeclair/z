@@ -135,9 +135,26 @@ describe('class DSL command diagnostics', () => {
 
 describe('scoped class references', () => {
   test('スコープによって異なるクラスを指す同名変数の呼出を認識する', () => {
-    const arrayClass = ['z.cls.draw ArrayBox; {', 'z.cls.fn fill', ':', 'z.cls.fn.done', 'z.cls.drew', '}', ''].join('\n');
-    const source = ['z.cls.new Counter counter', 'counter.increment', 'inner() {', 'local counter=""',
-      'z.cls.new ArrayBox counter', 'counter.fill', '}', 'counter.count.get', ''].join('\n');
+    const arrayClass = [
+      'z.cls.draw ArrayBox; {',
+      '  z.cls.fn fill',
+      '    :',
+      '  z.cls.fn.done',
+      '  z.cls.drew',
+      '}',
+      '',
+    ].join('\n');
+    const source = [
+      'z.cls.new Counter counter',
+      'counter.increment',
+      'inner() {',
+      '  local counter=""',
+      '  z.cls.new ArrayBox counter',
+      '  counter.fill',
+      '}',
+      'counter.count.get',
+      '',
+    ].join('\n');
 
     expect(semantic(fixture(source, classApi + counterClass + arrayClass).items)).toEqual([]);
   });
@@ -146,8 +163,16 @@ describe('scoped class references', () => {
     const scenario = fixture('z.cls.new Local leaked\nleaked.value\n', classApi + counterClass);
     const outside = TextDocument.create(
       pathToFileURL(path.join(path.dirname(scenario.root), 'outside.zsh')).href, 'shellscript', 1,
-      'z.cls.draw Local\nz.cls.fn value "REPLY=1"\nz.cls.drew\n' +
-      'z.cls.new Counter counter\ncounter.increment\nz.cls.new Local local_object\nlocal_object.value\n',
+      [
+        'z.cls.draw Local',
+        '  z.cls.fn value "REPLY=1"',
+        '  z.cls.drew',
+        'z.cls.new Counter counter',
+        'counter.increment',
+        'z.cls.new Local local_object',
+        'local_object.value',
+        '',
+      ].join('\n'),
     );
     const snapshot = refreshFunctionSnapshot({
       projectRoot: scenario.root,
@@ -164,16 +189,38 @@ describe('scoped class references', () => {
   });
 
   test('外側の関数の引数使用へメソッド内の引数を混ぜない', () => {
-    const source = '# $1: loader argument\nload() {\n' +
-      counterClass.replace('(( ++count ))', 'print "$1"') + '}\n';
+    const source = [
+      '# $1: loader argument',
+      'load() {',
+      '  z.cls.draw Counter; {',
+      '    z.cls.attr count 0',
+      '    z.cls.fn increment',
+      '      print "$1"',
+      '    z.cls.fn.done',
+      '    z.cls.drew',
+      '  }',
+      '}',
+      '',
+    ].join('\n');
     const scenario = fixture('', classApi + source);
 
     expect(scenario.diagnostics.files.get(scenario.definitionUri)?.items.filter(item => item.code === 'unused-argument')).toHaveLength(1);
   });
 
   test('メソッドの名前付き引数取得を外側の引数使用へ混ぜない', () => {
-    const source = '# $option: loader option\nload() {\n' +
-      counterClass.replace('(( ++count ))', 'z.arg.named option "$@"') + '}\n';
+    const source = [
+      '# $option: loader option',
+      'load() {',
+      '  z.cls.draw Counter; {',
+      '    z.cls.attr count 0',
+      '    z.cls.fn increment',
+      '      z.arg.named option "$@"',
+      '    z.cls.fn.done',
+      '    z.cls.drew',
+      '  }',
+      '}',
+      '',
+    ].join('\n');
     const scenario = fixture('', classApi + 'z.arg.named() { : }\n' + source);
 
     expect(scenario.diagnostics.files.get(scenario.definitionUri)?.items.filter(item => item.code === 'unused-argument')).toHaveLength(1);
@@ -195,9 +242,9 @@ describe('hydrated class command targets', () => {
   });
 
   test('未公開と破棄済みのクラスからは解決先を生成しない', () => {
-    for (const ending of ['', 'z.cls.abort\n']) {
+    for (const ending of ['', '  z.cls.abort\n']) {
       const file = createZshFileHydration({ sourceFile: 'x', file: 'x',
-        content: 'z.cls.draw Open\nz.cls.attr count 0\n' + ending + 'z.cls.new Open object\n' });
+        content: 'z.cls.draw Open\n  z.cls.attr count 0\n' + ending + 'z.cls.new Open object\n' });
 
       expect(classCommands([file.classes]).size).toBe(0);
     }
@@ -236,8 +283,16 @@ describe('hydrated class command targets', () => {
 
   test('コード引数内のクラスはそのコード内で解決し、プロジェクトへ漏れない', () => {
     const api = '# $1 [code]: body\nrun() { eval "$1" }\n';
-    const text = "run 'z.cls.draw Local; z.cls.fn value \"REPLY=1\"; z.cls.drew; z.cls.new Local local_object; local_object.value'\n" +
-      'z.cls.new Local outside\noutside.value\n';
+    const text = [
+      "run 'z.cls.draw Local",
+      '  z.cls.fn value "REPLY=1"',
+      '  z.cls.drew',
+      'z.cls.new Local local_object',
+      "local_object.value'",
+      'z.cls.new Local outside',
+      'outside.value',
+      '',
+    ].join('\n');
     const scenario = fixture(text, classApi + api);
 
     expect(semantic(scenario.items)).toHaveLength(1);
