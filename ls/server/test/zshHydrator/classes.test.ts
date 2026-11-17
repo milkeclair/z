@@ -29,14 +29,14 @@ function fixture(content = source) {
 }
 
 describe('class hydration', () => {
-  test('重複したblockメソッドはclassを破棄する', () => {
+  test('重複した本体収集形式のメソッドはクラスを破棄する', () => {
     const file = fixture("z.cls.draw Duplicate\nz.cls.fn run ':'\nz.cls.fn run\nz.cls.fn.done\nz.cls.drew\n");
 
     expect(file.classes.definitions[0].state).toBe('aborted');
     expect(file.classes.definitions[0].methods).toHaveLength(1);
   });
 
-  test('重複したinlineメソッドは元の本体を保持する', () => {
+  test('重複した引数形式のメソッドは元の本体を保持する', () => {
     const file = fixture("z.cls.draw Duplicate\nz.cls.fn run 'print first'\nz.cls.fn run 'print second'\nz.cls.drew\n");
     const definition = file.classes.definitions[0];
     const method = definition.methods[0];
@@ -49,7 +49,7 @@ describe('class hydration', () => {
     expect(method.body.value.raw).toBe("'print first'");
   });
 
-  test('重複した属性は元のdefaultを保持する', () => {
+  test('重複した属性は元の初期値を保持する', () => {
     const file = fixture('z.cls.draw Duplicate\nz.cls.attr value first\nz.cls.attr value second\nz.cls.drew\n');
     const definition = file.classes.definitions[0];
 
@@ -70,14 +70,14 @@ describe('class hydration', () => {
     expect(rebuilt.instances[0].declaration).toBe(original.instances[0].declaration);
   });
 
-  test('runtimeと同じ予約prefixだけを除外する', () => {
+  test('実行時と同じ予約接頭辞だけを除外する', () => {
     const file = fixture('z.cls.draw __z_cls_Box\nz.cls.attr __z_cls_value 0\nz.cls.drew\n');
 
     expect(file.classes.definitions[0].name).toBe('__z_cls_Box');
     expect(file.classes.definitions[0].attributes[0].name).toBe('__z_cls_value');
   });
 
-  test('classのないASTは追加コピーせず返す', () => {
+  test('クラスのないASTは追加コピーせず返す', () => {
     const file = fixture('print hello\n');
 
     expect(hydrateClasses(file.ast)).toBe(file.ast);
@@ -103,19 +103,19 @@ describe('class hydration', () => {
     expect(file.classes.instances).toEqual([]);
   });
 
-  test('同名instanceのnative function scopeを返却ASTに結び付ける', () => {
+  test('同名の実体の関数スコープを返却ASTに結び付ける', () => {
     const file = fixture('z.cls.new Counter object\nload() { local object=""; z.cls.new Other object; }\n');
 
     expect(file.classes.instances[0].scope.kind).toBe('file');
-    const local = file.classes.instances[1];
+    const binding = file.classes.instances[1];
 
-    expect(local.scope.kind).toBe('function');
-    if (local.scope.kind !== 'function') throw new Error('Expected function ownership');
+    expect(binding.scope.kind).toBe('function');
+    if (binding.scope.kind !== 'function') throw new Error('Expected function ownership');
 
-    expect(local.scope.declaration).toBe(file.functions[0].definition);
+    expect(binding.scope.declaration).toBe(file.functions[0].definition);
   });
 
-  test('子のcommandを付加情報で更新してもdefaultのWord参照が古くならない', () => {
+  test('子のコマンドに情報を付加しても初期値のWord参照が古くならない', () => {
     const file = fixture('z.cls.draw Holder\nz.cls.attr value "$(z.cls.new Other inside)"\nz.cls.drew\n');
     const attribute = file.classes.definitions[0].attributes[0];
 
@@ -127,7 +127,7 @@ describe('class hydration', () => {
     expect(file.classes.definitions[0].file).toBe(file.ast);
   });
 
-  test('既存のclass付加情報が入力に残っていても現在の構文から更新する', () => {
+  test('既存のクラス付加情報が入力に残っていても現在の構文から更新する', () => {
     const information = classInformationOf(fixture().classes.definitions[0].declaration);
     if (!information) throw new Error('Expected class information');
     const ordinary = fixture('print hello\n');
@@ -139,7 +139,7 @@ describe('class hydration', () => {
     expect(findAll(stale, 'simpleCommand').map(classInformationOf)).toEqual([information]);
   });
 
-  test('class・属性・メソッド・instanceに意味情報を付与し、通常の構文ノードを保持する', () => {
+  test('クラス・属性・メソッド・実体に意味情報を付与し、通常の構文ノードを保持する', () => {
     const file = fixture();
     const definition = file.classes.definitions[0];
 
@@ -168,7 +168,7 @@ describe('class hydration', () => {
     expect(classesFromAst(file.ast)).toEqual(file.classes);
   });
 
-  test('blockとinlineの本体を元の範囲またはWordとして保持する', () => {
+  test('本体を元の範囲または引数のWordとして保持する', () => {
     const file = fixture();
     const [block, inline] = file.classes.definitions[0].methods;
 
@@ -185,7 +185,7 @@ describe('class hydration', () => {
     expect(classMethodAt(file.classes, null, source.indexOf('z.cls.fn.done'))).toBeNull();
   });
 
-  test('入力ASTを変更せず再hydrationしても意味情報を重複させない', () => {
+  test('入力ASTへ情報を付加し直しても意味情報を重複させない', () => {
     const parsed = Parser.parse(Lexer.tokenize(source, { sourceFile: 'x' }).tokens, { sourceFile: 'x', path: 'x' });
     const ast = hydrateAst(parsed.ast, source);
 
@@ -194,7 +194,7 @@ describe('class hydration', () => {
     expect(classesFromAst(ast).definitions).toHaveLength(1);
   });
 
-  test('未完了とabortを公開済みclassと区別する', () => {
+  test('未完了と破棄済みのクラスを公開済みのクラスと区別する', () => {
     const incomplete = fixture('z.cls.draw Open\nz.cls.fn run\nprint "$1"\n');
 
     expect(incomplete.classes.definitions[0]).toMatchObject({ name: 'Open', state: 'incomplete' });
@@ -204,14 +204,14 @@ describe('class hydration', () => {
     expect(aborted.classes.definitions[0]).toMatchObject({ name: 'Discarded', state: 'aborted' });
   });
 
-  test('文字列・コメント・非function呼出をclassと誤認しない', () => {
+  test('文字列・コメント・関数以外の呼出しをクラスと誤認しない', () => {
     const file = fixture('# z.cls.draw Comment\nprint "z.cls.draw String"\ncommand z.cls.draw External\nbuiltin z.cls.new Counter object\n');
 
     expect(file.classes.definitions).toEqual([]);
     expect(file.classes.instances).toEqual([]);
   });
 
-  test('native関数ごとのclassを独立して解釈し、本体内の引数スコープを保持する', () => {
+  test('通常の関数ごとのクラスを独立して解釈し、本体内の引数スコープを保持する', () => {
     const text = 'load() {\n' + source.slice(0, source.indexOf('z.cls.new')) + '}\n';
     const file = fixture(text);
     const owner = file.functions.find(fn => fn.name === 'load')?.definition;
@@ -221,13 +221,13 @@ describe('class hydration', () => {
     expect(classMethodAt(file.classes, null, text.indexOf('print "$1"'))).toBeNull();
   });
 
-  test('入れ子のnative関数にある終端名で外側のメソッドを閉じない', () => {
+  test('入れ子の関数にある終端名で外側のメソッドを閉じない', () => {
     const file = fixture(source.replace('(( ++count ))', 'helper() { z.cls.fn.done }\n    print "z.cls.fn.done"'));
 
     expect(file.classes.definitions[0].methods.map(method => method.name)).toEqual(['increment', 'value']);
   });
 
-  test('メソッド内のinstance宣言をclass method scopeに結び付ける', () => {
+  test('メソッド内の実体宣言をクラスメソッドのスコープに結び付ける', () => {
     const file = fixture(source.replace('(( ++count ))', 'z.cls.new Other nested'));
     const binding = file.classes.instances.find(instance => instance.name === 'nested');
 
@@ -237,7 +237,7 @@ describe('class hydration', () => {
     expect(binding.scope.declaration).toBe(file.classes.definitions[0].methods[0].declaration);
   });
 
-  test('native関数内のclassと外側のclassを同じpending状態にしない', () => {
+  test('関数内のクラスと外側のクラスを同じ定義中の状態にしない', () => {
     const text = 'z.cls.draw Outer\nhelper() { z.cls.draw Inner; z.cls.drew }\nz.cls.drew\n';
     const file = fixture(text);
 

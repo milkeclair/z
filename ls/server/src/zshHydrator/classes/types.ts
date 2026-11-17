@@ -6,10 +6,17 @@ import type {
 } from '../../zshParser/ast';
 import type { SourceRange } from '../../zshParser/lexer';
 
-export type ClassScopeLocation =
+export type ClassDefinitionScopeLocation =
   | { readonly kind: 'file' }
   | {
-      readonly kind: 'function' | 'classMethod';
+      readonly kind: 'function';
+      readonly offset: number;
+    };
+
+export type ClassScopeLocation =
+  | ClassDefinitionScopeLocation
+  | {
+      readonly kind: 'classMethod';
       readonly offset: number;
     };
 
@@ -28,7 +35,7 @@ export type ClassInformation =
   | {
       readonly kind: 'classDefinition';
       readonly name: string;
-      readonly scope: ClassScopeLocation;
+      readonly scope: ClassDefinitionScopeLocation;
       readonly state: 'published' | 'aborted' | 'incomplete';
       readonly range: SourceRange;
     }

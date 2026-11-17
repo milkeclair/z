@@ -2,11 +2,11 @@ import type { FileNode, FunctionDefinitionNode, SimpleCommandNode } from '../../
 import { walk } from '../../zshParser/ast';
 import { literalWord } from '../../zshParser/ast/word/literal';
 import type { SourceRange } from '../../zshParser/lexer';
-import type { ClassDefinition, ClassInformation, ClassScopeLocation } from './types';
+import type { ClassDefinition, ClassDefinitionScopeLocation, ClassInformation, ClassScopeLocation } from './types';
 
 type Member = {
   readonly node: SimpleCommandNode;
-  readonly information: ClassInformation;
+  readonly information: Extract<ClassInformation, { kind: 'classAttribute' | 'classMethod' }>;
 };
 type Definition = {
   readonly node: SimpleCommandNode;
@@ -51,7 +51,7 @@ function identifier(value: string | null | undefined): value is string {
 }
 
 /** 以前のASTを付加情報に保持しないよう、所有関係を位置で記録する。 */
-function scopeLocation(scope: FunctionDefinitionNode | undefined): ClassScopeLocation {
+function scopeLocation(scope: FunctionDefinitionNode | undefined): ClassDefinitionScopeLocation {
   return scope ? { kind: 'function', offset: scope.range.start.offset } : { kind: 'file' };
 }
 
@@ -195,7 +195,7 @@ function attributeDeclaration(directive: ClassDirective, definition: Definition,
 }
 
 /** 本体の収集を開始するか、引数で指定した本体の元の単語範囲を保持する。 */
-function methodDeclaration(directive: ClassDirective, capture: Capture, state: State): State {
+function methodDeclaration(directive: ClassDirective, capture: Extract<Capture, { kind: 'definition' }>, state: State): State {
   const [name] = directive.args;
   if (directive.args.length < 1 || directive.args.length > 2 || !identifier(name)) return state;
 
@@ -229,7 +229,7 @@ function methodDeclaration(directive: ClassDirective, capture: Capture, state: S
 }
 
 /** 定義中のクラスに、メンバー登録または公開の状態遷移を適用する。 */
-function definitionDeclaration(directive: ClassDirective, capture: Capture, state: State): State {
+function definitionDeclaration(directive: ClassDirective, capture: Extract<Capture, { kind: 'definition' }>, state: State): State {
   switch (directive.name) {
     case 'z.cls.attr':
       return attributeDeclaration(directive, capture.definition, state);

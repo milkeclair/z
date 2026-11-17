@@ -25,16 +25,16 @@ describe('literalWord', () => {
     ['print one\\ two', 'one two'],
     ["print $'one\\ntwo'", 'one\ntwo'],
     ["print ''", ''],
-  ])('literalの引用をASTから復元する: %s', (source, value) => {
+  ])('静的な値の引用をASTから復元する: %s', (source, value) => {
     expect(literalWord(word(source))).toBe(value);
   });
 
   test.each(['print "$value"', 'print "$(print one)"', 'print $(( 1 + 2 ))'])(
-    '展開を含むWordをliteralと扱わない: %s', source => {
+    '展開を含むWordを静的な値と扱わない: %s', source => {
       expect(literalWord(word(source))).toBeNull();
     });
 
-  test('指定された終端まで復元し、既存importの互換性を保持する', () => {
+  test('指定された終端まで復元し、既存のimportとの互換性を保持する', () => {
     const argument = word("print 'option'=value");
 
     expect(literalWord(argument, argument.raw.indexOf('='))).toBe('option');

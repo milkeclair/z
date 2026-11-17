@@ -74,7 +74,7 @@ const counterClass = [
 ].join('\n');
 
 describe('class DSL command diagnostics', () => {
-  test('inlineメソッド本体はmainのcode引数診断で元位置に報告する', () => {
+  test('引数形式のメソッド本体は共通のコード引数解析で元位置に診断する', () => {
     const source = counterClass.replace('z.cls.fn increment\n    (( ++count ))\n  z.cls.fn.done',
       "z.cls.fn increment 'missing_inline_method'");
     const scenario = fixture('', classApi + source);
@@ -160,7 +160,7 @@ describe('scoped class references', () => {
 });
 
 describe('hydrated class command targets', () => {
-  test('別ファイルのclassとinstanceを実際のメンバーノードへ結び付ける', () => {
+  test('別ファイルのクラスと実体を実際のメンバーノードへ結び付ける', () => {
     const definitions = createZshFileHydration({ sourceFile: '/defs.zsh', file: 'defs.zsh', content: counterClass });
     const bindings = createZshFileHydration({ sourceFile: '/caller.zsh', file: 'caller.zsh', content: 'z.cls.new Counter object\n' });
     const targets = classCommands([definitions.classes, bindings.classes]);
@@ -173,7 +173,7 @@ describe('hydrated class command targets', () => {
     expect(targets.get('object.count.set')?.[0].member).toBe(definitions.classes.definitions[0].attributes[0]);
   });
 
-  test('未公開とabortのclassからはターゲットを生成しない', () => {
+  test('未公開と破棄済みのクラスからは解決先を生成しない', () => {
     for (const ending of ['', 'z.cls.abort\n']) {
       const file = createZshFileHydration({ sourceFile: 'x', file: 'x',
         content: 'z.cls.draw Open\nz.cls.attr count 0\n' + ending + 'z.cls.new Open object\n' });
@@ -182,7 +182,7 @@ describe('hydrated class command targets', () => {
     }
   });
 
-  test('同じASTを再利用し、変更したclassの参照は古いcontextへ残さない', () => {
+  test('同じASTを再利用し、変更したクラスの参照を古いコンテキストへ残さない', () => {
     const file = createZshFileHydration({ sourceFile: 'x', file: 'x', content: counterClass });
     const next = createZshFileHydration({ sourceFile: 'x', file: 'x', content: counterClass.replace('increment', 'reset') });
 
@@ -193,7 +193,7 @@ describe('hydrated class command targets', () => {
     expect(sameClassFiles([empty.classes], [])).toBe(true);
   });
 
-  test('呼出解析がclassメンバーの解決先を名前の除外だけでなく返す', () => {
+  test('呼出し解析がクラスのメンバー宣言を解決先として返す', () => {
     const scenario = fixture('z.cls.new Counter object\nobject.increment\n', classApi + counterClass);
     const report = scenario.diagnostics.files.get(scenario.document.uri);
     if (!report) throw new Error('Expected caller diagnostics');
@@ -205,7 +205,7 @@ describe('hydrated class command targets', () => {
     expect(targets[0].member.declaration.commandName?.word.raw).toBe('z.cls.fn');
   });
 
-  test('code引数内のinstanceは外側のclassを使い、外側へ漏れない', () => {
+  test('コード引数内の実体は外側のクラスを使い、外側へ漏れない', () => {
     const api = '# $1 [code]: body\nrun() { eval "$1" }\n';
     const scenario = fixture("run 'z.cls.new Counter inside; inside.increment'\ninside.increment\n", classApi + counterClass + api);
 
@@ -213,7 +213,7 @@ describe('hydrated class command targets', () => {
     expect(semantic(scenario.items)[0].range.start.line).toBe(1);
   });
 
-  test('code引数内のclassはそのcode内で解決し、projectへ漏れない', () => {
+  test('コード引数内のクラスはそのコード内で解決し、プロジェクトへ漏れない', () => {
     const api = '# $1 [code]: body\nrun() { eval "$1" }\n';
     const text = "run 'z.cls.draw Local; z.cls.fn value \"REPLY=1\"; z.cls.drew; z.cls.new Local local_object; local_object.value'\n" +
       'z.cls.new Local outside\noutside.value\n';
