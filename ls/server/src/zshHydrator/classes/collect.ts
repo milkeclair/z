@@ -26,7 +26,7 @@ type Capture =
       readonly depth: number;
     };
 type State = {
-  readonly scopes: ReadonlyMap<FunctionDefinitionNode | undefined, Capture>;
+  readonly captures: ReadonlyMap<FunctionDefinitionNode | undefined, Capture>;
   readonly information: ReadonlyMap<number, ClassInformation | null>;
 };
 
@@ -57,15 +57,15 @@ function scopeLocation(scope: FunctionDefinitionNode | undefined): ClassDefiniti
 
 /** 以前の状態を変更せず、1つの構文スコープの収集状態を置き換える。 */
 function withCapture(state: State, scope: FunctionDefinitionNode | undefined, capture: Capture | null): State {
-  const scopes = new Map(state.scopes);
+  const captures = new Map(state.captures);
 
   if (capture) {
-    scopes.set(scope, capture);
+    captures.set(scope, capture);
   } else {
-    scopes.delete(scope);
+    captures.delete(scope);
   }
 
-  return { ...state, scopes };
+  return { ...state, captures };
 }
 
 /** 宣言形式にかかわらず、元の状態を変えない共通の遷移でメンバーを追加する。 */
@@ -81,7 +81,7 @@ function withMember(state: State, scope: FunctionDefinitionNode | undefined,
 }
 
 /** 編集中に終了マーカーが欠けた場合も、本体のソース位置を保持する。 */
-function blockMethod(capture: Extract<Capture, { kind: 'method' }>, end: SourceRange, closed: boolean): Member {
+function blockMethodFromCapture(capture: Extract<Capture, { kind: 'method' }>, end: SourceRange, closed: boolean): Member {
   return {
     node: capture.node,
     information: {
@@ -98,11 +98,11 @@ function blockMethod(capture: Extract<Capture, { kind: 'method' }>, end: SourceR
 }
 
 /** クラス定義とメンバーの意味情報をまとめて確定する。 */
-function finish(state: State, scope: FunctionDefinitionNode | undefined, capture: Capture,
+function finishDefinition(state: State, scope: FunctionDefinitionNode | undefined, capture: Capture,
   end: SourceRange, status: ClassDefinition['state']): State {
   const definition = capture.definition;
   const members = capture.kind === 'method'
-    ? [...definition.members, blockMethod(capture, end, false)]
+    ? [...definition.members, blockMethodFromCapture(capture, end, false)]
     : definition.members;
   const information = new Map(state.information);
 
@@ -122,7 +122,7 @@ function finish(state: State, scope: FunctionDefinitionNode | undefined, capture
 }
 
 /** 引数を実行せず、通常の構文から静的な宣言を1つ読む。 */
-function classDirective(command: SimpleCommandNode, depth: number,
+function readClassDirective(command: SimpleCommandNode, depth: number,
   scope: FunctionDefinitionNode | undefined): ClassDirective | null {
   const external = command.precommandModifiers.some(
     modifier => modifier.type === 'builtin' || modifier.type === 'command',
@@ -140,7 +140,7 @@ function classDirective(command: SimpleCommandNode, depth: number,
 }
 
 /** 通常の関数または収集中のメソッドのスコープに、実体の束縛を記録する。 */
-function instanceDeclaration(directive: ClassDirective, capture: Capture | undefined, state: State): State {
+function declareInstance(directive: ClassDirective, capture: Capture | undefined, state: State): State {
   const [className, name] = directive.args;
   if (directive.args.length !== 2 || !identifier(className) || !identifier(name)) return state;
 
@@ -160,22 +160,22 @@ function instanceDeclaration(directive: ClassDirective, capture: Capture | undef
 }
 
 /** メソッド開始時と同じ構文の深さにある終了マーカーだけを処理する。 */
-function methodEnd(directive: ClassDirective, capture: Extract<Capture, { kind: 'method' }>, state: State): State {
+function applyMethodDirective(directive: ClassDirective, capture: Extract<Capture, { kind: 'method' }>, state: State): State {
   if (directive.depth !== capture.depth) return state;
 
   if (directive.name === 'z.cls.fn.done' && directive.args.length === 0) {
-    return withMember(state, directive.scope, capture.definition, blockMethod(capture, directive.command.range, true));
+    return withMember(state, directive.scope, capture.definition, blockMethodFromCapture(capture, directive.command.range, true));
   }
 
   if (directive.name === 'z.cls.abort' || directive.name === 'z.cls.drew') {
-    return finish(state, directive.scope, capture, directive.command.range, 'aborted');
+    return finishDefinition(state, directive.scope, capture, directive.command.range, 'aborted');
   }
 
   return state;
 }
 
 /** クラス内で最初に現れた有効な属性宣言を保持する。 */
-function attributeDeclaration(directive: ClassDirective, definition: Definition, state: State): State {
+function declareAttribute(directive: ClassDirective, definition: Definition, state: State): State {
   const name = directive.args[0];
   if (directive.args.length !== 2 || !identifier(name)) return state;
 
@@ -195,7 +195,7 @@ function attributeDeclaration(directive: ClassDirective, definition: Definition,
 }
 
 /** 本体の収集を開始するか、引数で指定した本体の元の単語範囲を保持する。 */
-function methodDeclaration(directive: ClassDirective, capture: Extract<Capture, { kind: 'definition' }>, state: State): State {
+function declareMethod(directive: ClassDirective, capture: Extract<Capture, { kind: 'definition' }>, state: State): State {
   const [name] = directive.args;
   if (directive.args.length < 1 || directive.args.length > 2 || !identifier(name)) return state;
 
@@ -204,7 +204,9 @@ function methodDeclaration(directive: ClassDirective, capture: Extract<Capture, 
     member => member.information.kind === 'classMethod' && member.information.name === name,
   );
   if (duplicate) {
-    return directive.args.length === 1 ? finish(state, directive.scope, capture, directive.command.range, 'aborted') : state;
+    return directive.args.length === 1
+      ? finishDefinition(state, directive.scope, capture, directive.command.range, 'aborted')
+      : state;
   }
 
   if (directive.args.length === 1) {
@@ -229,32 +231,32 @@ function methodDeclaration(directive: ClassDirective, capture: Extract<Capture, 
 }
 
 /** 定義中のクラスに、メンバー登録または公開の状態遷移を適用する。 */
-function definitionDeclaration(directive: ClassDirective, capture: Extract<Capture, { kind: 'definition' }>, state: State): State {
+function applyDefinitionDirective(directive: ClassDirective, capture: Extract<Capture, { kind: 'definition' }>, state: State): State {
   switch (directive.name) {
     case 'z.cls.attr':
-      return attributeDeclaration(directive, capture.definition, state);
+      return declareAttribute(directive, capture.definition, state);
     case 'z.cls.fn':
-      return methodDeclaration(directive, capture, state);
+      return declareMethod(directive, capture, state);
     case 'z.cls.drew':
       return directive.args.length === 0
-        ? finish(state, directive.scope, capture, directive.command.range, 'published')
+        ? finishDefinition(state, directive.scope, capture, directive.command.range, 'published')
         : state;
     case 'z.cls.abort':
-      return finish(state, directive.scope, capture, directive.command.range, 'aborted');
+      return finishDefinition(state, directive.scope, capture, directive.command.range, 'aborted');
     default:
       return state;
   }
 }
 
 /** 現在の構文スコープの収集状態に応じて宣言を処理する。 */
-function declaration(command: SimpleCommandNode, depth: number,
+function collectCommand(command: SimpleCommandNode, depth: number,
   scope: FunctionDefinitionNode | undefined, state: State): State {
-  const directive = classDirective(command, depth, scope);
+  const directive = readClassDirective(command, depth, scope);
   if (!directive) return state;
 
-  const capture = state.scopes.get(scope);
-  if (directive.name === 'z.cls.new') return instanceDeclaration(directive, capture, state);
-  if (capture?.kind === 'method') return methodEnd(directive, capture, state);
+  const capture = state.captures.get(scope);
+  if (directive.name === 'z.cls.new') return declareInstance(directive, capture, state);
+  if (capture?.kind === 'method') return applyMethodDirective(directive, capture, state);
 
   if (directive.name === 'z.cls.draw' && directive.args.length === 1 && identifier(directive.args[0]) && !capture) {
     return withCapture(state, scope, {
@@ -263,21 +265,21 @@ function declaration(command: SimpleCommandNode, depth: number,
     });
   }
 
-  return capture ? definitionDeclaration(directive, capture, state) : state;
+  return capture ? applyDefinitionDirective(directive, capture, state) : state;
 }
 
 /** 通常の関数スコープごとに独立して、構文上のコマンドからクラス宣言を解釈する。 */
 export function collectClassInformation(ast: FileNode): ReadonlyMap<number, ClassInformation | null> {
-  let state: State = { scopes: new Map(), information: new Map() };
-  const scopes: { readonly node: FunctionDefinitionNode; readonly depth: number }[] = [];
+  let state: State = { captures: new Map(), information: new Map() };
+  const functionScopes: { readonly node: FunctionDefinitionNode; readonly depth: number }[] = [];
 
   walk(ast, (node, depth) => {
-    while (scopes.length && scopes[scopes.length - 1].depth >= depth) {
-      scopes.pop();
+    while (functionScopes.length && functionScopes[functionScopes.length - 1].depth >= depth) {
+      functionScopes.pop();
     }
 
     if (node.kind === 'functionDefinition') {
-      scopes.push({ node, depth });
+      functionScopes.push({ node, depth });
     }
 
     if (node.kind !== 'simpleCommand') return;
@@ -288,12 +290,12 @@ export function collectClassInformation(ast: FileNode): ReadonlyMap<number, Clas
       state = { ...state, information };
     }
 
-    state = declaration(node, depth, scopes.at(-1)?.node, state);
+    state = collectCommand(node, depth, functionScopes.at(-1)?.node, state);
   });
 
-  for (const [scope, capture] of state.scopes) {
+  for (const [scope, capture] of state.captures) {
     const end = scope?.range.end ?? ast.range.end;
-    state = finish(state, scope, capture, { start: end, end }, 'incomplete');
+    state = finishDefinition(state, scope, capture, { start: end, end }, 'incomplete');
   }
 
   return state.information;

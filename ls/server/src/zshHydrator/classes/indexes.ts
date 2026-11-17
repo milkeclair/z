@@ -20,20 +20,31 @@ function memberFromCommand(command: HydratedClassCommand): LocatedMember | null 
   if (!nameNode) return null;
 
   const base = { name: information.name, declaration: command, nameNode };
-  if (information.kind === 'classAttribute' && value) {
-    return {
-      classOffset: information.classOffset,
-      member: { ...base, kind: 'classAttribute', defaultValue: value },
-    };
+  switch (information.kind) {
+    case 'classAttribute':
+      if (!value) return null;
+
+      return {
+        classOffset: information.classOffset,
+        member: { ...base, kind: 'classAttribute', defaultValue: value },
+      };
+    case 'classMethod':
+      if (information.body.kind === 'inline') {
+        if (!value) return null;
+
+        return {
+          classOffset: information.classOffset,
+          member: { ...base, kind: 'classMethod', body: { kind: 'inline', value } },
+        };
+      }
+
+      return {
+        classOffset: information.classOffset,
+        member: { ...base, kind: 'classMethod', body: information.body },
+      };
+    default:
+      return null;
   }
-
-  if (information.kind !== 'classMethod' || information.body.kind === 'inline' && !value) return null;
-
-  const body: ClassMethod['body'] = information.body.kind === 'inline'
-    ? { kind: 'inline', value }
-    : information.body;
-
-  return { classOffset: information.classOffset, member: { ...base, kind: 'classMethod', body } };
 }
 
 /** 入力コマンドと既存の索引を変えず、新しいメンバーの組を構築する。 */
