@@ -63,8 +63,12 @@ function getMappedNode<K extends AstNode['kind']>(
   return result;
 }
 
-/** 関連辺を含む共有ノードを1回だけ変換し、以前のASTを変更せずに参照関係を保つ。 */
-export function mapAst(file: FileNode, transform: (node: AstNode) => AstNode): FileNode {
+/** 関連辺を含む共有ノードを1回だけ変換する。shouldVisitがfalseの部分木は元の参照を保つ。 */
+export function mapAst(
+  file: FileNode,
+  transform: (node: AstNode) => AstNode,
+  shouldVisit?: (node: AstNode) => boolean,
+): FileNode {
   const initial: Progress = {
     mapped: Immutable.Map(),
     active: Immutable.Set([file]),
@@ -82,11 +86,15 @@ export function mapAst(file: FileNode, transform: (node: AstNode) => AstNode): F
     const child = frame.children;
 
     if (child) {
+      const frames = pushStack({ ...frame, children: child.tail() }, stack.next);
+
+      if (shouldVisit && !shouldVisit(child.node)) {
+        return again({ ...state, frames });
+      }
+
       if (state.active.has(child.node)) {
         throw new Error('Cyclic AST ownership');
       }
-
-      const frames = pushStack({ ...frame, children: child.tail() }, stack.next);
 
       return state.mapped.has(child.node)
         ? again({ ...state, frames })

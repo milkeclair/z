@@ -1,4 +1,5 @@
 import * as Immutable from 'immutable';
+import { lowerBound } from '../util/search';
 import type {
   AstNode,
   CommentNode,
@@ -58,19 +59,15 @@ export function hydrateAst(
   source: string,
   options: HydrationOptions = {},
 ): FileNode {
-  const parsed = findAll(ast, 'functionDefinition').reduce(
-    (previous, definition) => {
-      if (!definition.leadingDoc) {
-        return previous;
-      }
-
-      const result = parseFunctionDocumentation(definition.leadingDoc, source, options);
+  const documentedFunctions = findAll(ast, 'functionDefinition').flatMap((definition) =>
+    definition.leadingDoc ? [{ definition, leadingDoc: definition.leadingDoc }] : [],
+  );
+  const parsed = documentedFunctions.reduce(
+    (previous, { leadingDoc }) => {
+      const result = parseFunctionDocumentation(leadingDoc, source, options);
 
       return {
-        documents: previous.documents.set(
-          definition.leadingDoc.range.start.offset,
-          result.documentation,
-        ),
+        documents: previous.documents.set(leadingDoc.range.start.offset, result.documentation),
         exampleComments: previous.exampleComments.union(result.exampleComments),
       };
     },
@@ -88,36 +85,54 @@ export function hydrateAst(
     return ast;
   }
 
-  return mapAst(ast, (node: AstNode): AstNode => {
-    if (node.kind === 'docBlock') {
-      const original = documents.get(node.range.start.offset);
+  // 先行コメントの位置ではなく、構文の範囲に含まれる関数定義の位置で絞り込む。
+  const offsets = documentedFunctions
+    .map(({ definition }) => definition.range.start.offset)
+    .toSorted((left, right) => left - right);
 
-      if (original) {
-        const hydrated: HydratedDocBlock = { ...node, hydration: original };
+  return mapAst(
+    ast,
+    (node: AstNode): AstNode => {
+      if (node.kind === 'docBlock') {
+        const original = documents.get(node.range.start.offset);
 
-        return hydrated;
+        if (original) {
+          const hydrated: HydratedDocBlock = { ...node, hydration: original };
+
+          return hydrated;
+        }
+      } else if (node.kind === 'comment') {
+        const directive = exampleComments.has(node.range.start.offset)
+          ? null
+          : parseDirective(node, options);
+
+        if (directive) {
+          const hydrated: HydratedComment = {
+            ...node,
+            hydration: { kind: 'controlComment', directives: [directive] },
+          };
+
+          return hydrated;
+        }
+
+        if (isHydratedComment(node)) {
+          const { hydration, ...syntax } = node;
+
+          return syntax;
+        }
       }
-    } else if (node.kind === 'comment') {
-      const directive = exampleComments.has(node.range.start.offset)
-        ? null
-        : parseDirective(node, options);
 
-      if (directive) {
-        const hydrated: HydratedComment = {
-          ...node,
-          hydration: { kind: 'controlComment', directives: [directive] },
-        };
-
-        return hydrated;
+      return node;
+    },
+    (node) => {
+      if (node.kind !== 'listItem') {
+        return true;
       }
 
-      if (isHydratedComment(node)) {
-        const { hydration, ...syntax } = node;
+      const { start, end } = node.range;
+      const first = lowerBound(offsets.length, (index) => offsets[index] < start.offset);
 
-        return syntax;
-      }
-    }
-
-    return node;
-  });
+      return first < offsets.length && offsets[first] < end.offset;
+    },
+  );
 }

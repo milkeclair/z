@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { directivesOf, hydrateAst } from '../../src/zshHydrator/hydrate';
+import { directivesOf, documentationOf, hydrateAst } from '../../src/zshHydrator/hydrate';
 import * as Ast from '../../src/zshParser/ast';
 import { Lexer } from '../../src/zshParser/lexer';
 import { Parser } from '../../src/zshParser/parser';
@@ -44,6 +44,56 @@ describe('hydrateAst', () => {
 
       expect(directivesOf(updated.comments[0])).toEqual([]);
       expect(directivesOf(hydrated.comments[0])).toHaveLength(1);
+    });
+  });
+
+  describe('関数ドキュメントと他の構文が混在する場合', () => {
+    test('置換の中の関数へ文書を付加し、制御コメントの参照を共有する', () => {
+      const source = [
+        'print before',
+        'source $(',
+        '  # inner function',
+        '  # zls: ignore rule',
+        '  inner() { : }',
+        ')',
+        'print after # zls: ignore after',
+        '',
+      ].join('\n');
+      const { ast } = Parser.parse(Lexer.tokenize(source).tokens);
+
+      const hydrated = hydrateAst(ast, source);
+      const definition = Ast.findAll(hydrated, 'functionDefinition')[0];
+      const sourceCommand = Ast.findAll(hydrated, 'simpleCommand').find(
+        (command) => command.semantic.role === 'source',
+      );
+
+      expect(documentationOf(definition)?.description).toMatchObject([{ text: 'inner function' }]);
+      expect(definition.leadingDoc?.comments[1]).toBe(hydrated.comments[1]);
+      expect(directivesOf(hydrated.comments[1])).toMatchObject([
+        { command: 'ignore', arguments: [{ value: 'rule' }] },
+      ]);
+      expect(directivesOf(hydrated.comments[2])).toMatchObject([
+        { command: 'ignore', arguments: [{ value: 'after' }] },
+      ]);
+      if (sourceCommand?.semantic.role !== 'source') {
+        throw new Error('sourceコマンドが必要です');
+      }
+
+      expect(sourceCommand.semantic.source.target).toBe(sourceCommand.arguments[0]);
+      expect(hydrated.body.items[0]).toBe(ast.body.items[0]);
+      expect(hydrated.body.items[2]).toBe(ast.body.items[2]);
+    });
+
+    test('閉じ括弧のない関数本体でも文書を付加する', () => {
+      const source = 'if true; then\n  # inner function\n  inner() {\n';
+      const { ast, diagnostics } = Parser.parse(Lexer.tokenize(source).tokens);
+
+      const hydrated = hydrateAst(ast, source);
+      const definition = Ast.findAll(hydrated, 'functionDefinition')[0];
+
+      expect(diagnostics.length).toBeGreaterThan(0);
+      expect(documentationOf(definition)?.description).toMatchObject([{ text: 'inner function' }]);
+      expect(definition.leadingDoc?.comments[0]).toBe(hydrated.comments[0]);
     });
   });
 });
