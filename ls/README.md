@@ -47,7 +47,7 @@ npm ci
 npm test -- --maxWorkers=2
 ```
 
-テストコマンドはビルド成果物を削除し、clientとserverをコンパイルしてテストの型を確認し、Vitestの全テストを実行します。結合テストではビルドしたNodeサーバーと実際のZshプロセスを起動し、並行実行は2ワーカーに制限します。
+テストコマンドはPrettierで書式を確認し、ビルド成果物を削除して、clientとserverをコンパイルしてテストの型を確認し、Vitestの全テストを実行します。結合テストではビルドしたNodeサーバーと実際のZshプロセスを起動し、並行実行は2ワーカーに制限します。
 
 リポジトリのCIでも、Zshライブラリのテストと同じソースビルド版のZshを使って検証します。Nodeのセットアップでは`package-lock.json`をキーにnpmのダウンロードをキャッシュし、毎回`npm ci`で固定済みの依存関係を導入します。
 
@@ -58,3 +58,15 @@ npm test -- --maxWorkers=2
 ## 拡張機能のパッケージ化
 
 このディレクトリで`npm run package`を実行します。`npm ci`で固定済みの依存関係を導入し、prepublishのビルド後にVSIXを作成します。
+
+## 実装の構成
+
+Lexer、Parser、AST、文書索引、診断は、入力から次の値を返す関数で構成します。レコードと配列はreadonlyで受け渡し、蓄積やキャッシュにはImmutable.jsのList・Map・Setを使います。更新後も元の値を参照でき、既存の値を変更しません。公開するASTやLSPの結果は、境界で通常の配列やMapへ変換します。
+
+走査は配列のmap・reduce、Immutable.jsのRange、またはutil/loop.tsのloop・again・doneで記述します。loopはfp-tsのtailRecを使い、深い入力でも呼び出しスタックを増やさず次の状態へ進みます。let、class、anyによる実装は使いません。
+
+プロセス、接続、タイマーなどのI/Oはclientとserver、および環境取得・ファイル読込の境界に集めます。イベント間で保持する値はutil/ioState.tsで参照し直し、値の変換は独立した関数に渡します。解析用の状態をこの参照へ持ち込まず、更新前後の値を引数と戻り値で表します。
+
+server/src/server/providers.tsはLSPの要求を各機能へ渡します。ASTの走査はzshParser/ast/traversal、構文の読み取りはzshParser/parser/command、コメントの解析と索引作成はzshHydrator、色分けの範囲収集・重複解消・出力変換はconnection/semanticTokensに分けています。
+
+テストは構文や機能ごとに配置します。server/test/serverは実サーバーの起動、診断、編集反映、再走査、埋め込みコードのシナリオを分け、client.tsにプロセスと通信の操作をまとめています。一時ディレクトリはsupport/tempDirectories.tsで登録し、各テストの終了時に削除します。
