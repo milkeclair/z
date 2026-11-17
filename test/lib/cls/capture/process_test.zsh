@@ -4,9 +4,11 @@ z.t.describe "z.cls.capture._start"; {
   z.t.context "DEBUG捕捉を開始する場合"; {
     z.t.it "メソッド名と呼出元を保持する"; {
       z.cls.store._ensure
-      z.t.mock name=z.cls.capture._debug
+      z.t.mock name=z.cls.capture._debug behavior='local REPLY=""'
+      REPLY=(before "two words" "")
 
       z.cls.capture._start captured_method test_stack test_file 0
+      local -a preserved_reply=("${REPLY[@]}")
       local installed_debug=${+functions[TRAPDEBUG]}
       local captured_name=$z_cls_capture_method
       local captured_stack=$z_cls_capture_stack
@@ -15,6 +17,10 @@ z.t.describe "z.cls.capture._start"; {
       z.t.expect "$installed_debug" 1
       z.t.expect "$captured_name" captured_method
       z.t.expect "$captured_stack" test_stack
+      z.t.expect "${#preserved_reply}" 3
+      z.t.expect "$preserved_reply[1]" before
+      z.t.expect "$preserved_reply[2]" "two words"
+      z.t.expect.is.null "$preserved_reply[3]"
     }
   }
 }
