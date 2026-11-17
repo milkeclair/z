@@ -1,4 +1,4 @@
-# 現在の候補に対するzの補完定義を登録する
+# 専用の補完関数があればそれを使い、他のz関数には共通の補完を登録する
 #
 # REPLY: null
 # return: 0|1
@@ -23,7 +23,9 @@ z.completion.compdef._register() {
   fi
 
   for function_name in "${z_completion_function_names[@]}"; do
-    compdef _z_completion $function_name
+    local completer="$function_name.completion._run"
+    z.int.is.zero ${+functions[$completer]} && completer=_z_completion
+    compdef $completer $function_name
   done
 }
 
