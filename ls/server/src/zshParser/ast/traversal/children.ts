@@ -1,163 +1,115 @@
+import { List } from 'immutable';
 import type { AstNode } from '..';
+import { loop, again, done } from '../../../util/loop';
 
-export function* syntaxChildren(node: AstNode): Generator<AstNode> {
+export type ChildCursor = { readonly node: AstNode; readonly tail: () => ChildCursor | null };
+function one(node: AstNode | null | undefined): ChildCursor | null {
+  return node ? { node, tail: () => null } : null;
+}
+function fromArray(nodes: readonly AstNode[], index = 0): ChildCursor | null {
+  const node = nodes[index];
+  return node ? { node, tail: () => fromArray(nodes, index + 1) } : null;
+}
+function concat(first: ChildCursor | null, rest: () => ChildCursor | null): ChildCursor | null {
+  return first ? { node: first.node, tail: () => concat(first.tail(), rest) } : rest();
+}
+function many(...groups: readonly (ChildCursor | null)[]): ChildCursor | null {
+  return groups.reduceRight<ChildCursor | null>((rest, group) => concat(group, () => rest), null);
+}
+function pairs<T>(
+  items: readonly T[],
+  select: (item: T) => readonly [AstNode, AstNode],
+  index = 0,
+): ChildCursor | null {
+  const item = items[index];
+  return item ? concat(fromArray(select(item)), () => pairs(items, select, index + 1)) : null;
+}
+
+export function syntaxChildCursor(node: AstNode): ChildCursor | null {
   switch (node.kind) {
     case 'file':
-      yield node.body;
-      yield node.eof;
-      return;
+      return many(one(node.body), one(node.eof));
     case 'list':
-      yield* node.items;
-      return;
+      return fromArray(node.items);
     case 'listItem':
-      yield node.sublist;
-      if (node.terminator) {
-        yield node.terminator;
-      }
-      return;
+      return many(one(node.sublist), one(node.terminator));
     case 'sublist':
-      yield node.first;
-      for (const rest of node.rest) {
-        yield rest.operator;
-        yield rest.pipeline;
-      }
-      return;
+      return many(
+        one(node.first),
+        pairs(node.rest, (item) => [item.operator, item.pipeline]),
+      );
     case 'pipeline':
-      if (node.timing) {
-        yield node.timing;
-      }
-      if (node.modifier) {
-        yield node.modifier;
-      }
-      yield node.first;
-      for (const rest of node.rest) {
-        yield rest.operator;
-        yield rest.command;
-      }
-      return;
+      return many(
+        one(node.timing),
+        one(node.modifier),
+        one(node.first),
+        pairs(node.rest, (item) => [item.operator, item.command]),
+      );
     case 'simpleCommand':
-      yield* node.precommandModifiers;
-      yield* node.prefixAssignments;
-      if (node.commandName) {
-        yield node.commandName;
-      }
-      yield* node.arguments;
-      yield* node.redirects;
-      return;
+      return many(
+        fromArray(node.precommandModifiers),
+        fromArray(node.prefixAssignments),
+        one(node.commandName),
+        fromArray(node.arguments),
+        fromArray(node.redirects),
+      );
     case 'functionDefinition':
-      yield* node.options;
-      yield* node.names;
-      yield node.body;
-      yield* node.postBodyRedirects;
-      return;
+      return many(
+        fromArray(node.options),
+        fromArray(node.names),
+        one(node.body),
+        fromArray(node.postBodyRedirects),
+      );
     case 'groupCommand':
-      yield node.body;
-      if (node.always) {
-        yield node.always;
-      }
-      yield* node.postBodyRedirects;
-      return;
+      return many(one(node.body), one(node.always), fromArray(node.postBodyRedirects));
     case 'alwaysClause':
-      yield node.body;
-      return;
+      return one(node.body);
     case 'subshellCommand':
-      yield node.body;
-      yield* node.postBodyRedirects;
-      return;
+      return many(one(node.body), fromArray(node.postBodyRedirects));
     case 'ifCommand':
-      yield* node.branches;
-      if (node.elseBody) {
-        yield node.elseBody;
-      }
-      yield* node.postBodyRedirects;
-      return;
+      return many(fromArray(node.branches), one(node.elseBody), fromArray(node.postBodyRedirects));
     case 'ifBranch':
-      yield node.condition;
-      yield node.body;
-      return;
+      return many(one(node.condition), one(node.body));
     case 'whileCommand':
     case 'untilCommand':
-      yield node.condition;
-      yield node.body;
-      yield* node.postBodyRedirects;
-      return;
+      return many(one(node.condition), one(node.body), fromArray(node.postBodyRedirects));
     case 'forCommand':
     case 'selectCommand':
     case 'foreachCommand':
-      yield* node.variables;
-      if (node.words) {
-        yield* node.words;
-      }
-      if (node.arithmetic) {
-        yield node.arithmetic;
-      }
-      yield node.body;
-      yield* node.postBodyRedirects;
-      return;
+      return many(
+        fromArray(node.variables),
+        fromArray(node.words ?? []),
+        one(node.arithmetic),
+        one(node.body),
+        fromArray(node.postBodyRedirects),
+      );
     case 'repeatCommand':
-      if (node.count) {
-        yield node.count;
-      }
-      yield node.body;
-      yield* node.postBodyRedirects;
-      return;
+      return many(one(node.count), one(node.body), fromArray(node.postBodyRedirects));
     case 'caseCommand':
-      if (node.subject) {
-        yield node.subject;
-      }
-      yield* node.arms;
-      yield* node.postBodyRedirects;
-      return;
+      return many(one(node.subject), fromArray(node.arms), fromArray(node.postBodyRedirects));
     case 'caseArm':
-      yield* node.patterns;
-      yield node.body;
-      return;
+      return many(fromArray(node.patterns), one(node.body));
     case 'opaqueCommand':
-      yield* node.postBodyRedirects;
-      return;
+      return fromArray(node.postBodyRedirects);
     case 'precommandModifier':
-      yield* node.options;
-      return;
+      return fromArray(node.options);
     case 'commandName':
-      yield node.word;
-      return;
+      return one(node.word);
     case 'option':
-      if (node.value) {
-        yield node.value;
-      }
-      return;
+      return one(node.value);
     case 'assign':
-      yield node.name;
-      if (node.subscript) {
-        yield node.subscript;
-      }
-      if (node.value) {
-        yield node.value;
-      }
-      return;
+      return many(one(node.name), one(node.subscript), one(node.value));
     case 'variableValue':
-      yield node.value;
-      return;
+      return one(node.value);
     case 'word':
-      yield* node.parts;
-      return;
+      return fromArray(node.parts);
     case 'variableReference':
-      yield node.name;
-      return;
-    case 'processSubstitution':
+      return one(node.name);
     case 'commandSubstitution':
-      if (node.body) {
-        yield node.body;
-      }
-      return;
+    case 'processSubstitution':
+      return one(node.body);
     case 'redirect':
-      if (node.target) {
-        yield node.target;
-      }
-      if (node.hereDocument) {
-        yield node.hereDocument;
-      }
-      return;
+      return many(one(node.target), one(node.hereDocument));
     case 'hereDocument':
     case 'docBlock':
     case 'comment':
@@ -172,40 +124,70 @@ export function* syntaxChildren(node: AstNode): Generator<AstNode> {
     case 'stringLiteral':
     case 'parameterExpansion':
     case 'arithmeticExpansion':
-      return;
+      return null;
   }
   const exhaustive: never = node;
   return exhaustive;
 }
 
-export function forEachChild(node: AstNode, visit: (child: AstNode) => void): void {
-  for (const child of syntaxChildren(node)) {
-    visit(child);
-  }
-}
-
-export function* withRelatedChildren(node: AstNode): Generator<AstNode> {
-  yield* syntaxChildren(node);
+function relatedOnly(node: AstNode): ChildCursor | null {
   switch (node.kind) {
     case 'file':
-      yield* node.comments;
-      break;
+      return fromArray(node.comments);
     case 'functionDefinition':
-      if (node.leadingDoc) {
-        yield node.leadingDoc;
-      }
-      break;
+      return one(node.leadingDoc);
     case 'docBlock':
-      yield* node.comments;
-      break;
+      return fromArray(node.comments);
     case 'simpleCommand':
-      if (node.semantic.role === 'source' && node.semantic.source.target) {
-        yield node.semantic.source.target;
-      } else if (node.semantic.role === 'declaration') {
-        yield* node.semantic.declaration.options;
-        yield* node.semantic.declaration.assignments;
-        yield* node.semantic.declaration.names;
+      if (node.semantic.role === 'source') {
+        return one(node.semantic.source.target);
       }
-      break;
+      if (node.semantic.role === 'declaration') {
+        return many(
+          fromArray(node.semantic.declaration.options),
+          fromArray(node.semantic.declaration.assignments),
+          fromArray(node.semantic.declaration.names),
+        );
+      }
+      return null;
+    default:
+      return null;
   }
+}
+export function relatedChildCursor(node: AstNode): ChildCursor | null {
+  return concat(syntaxChildCursor(node), () => relatedOnly(node));
+}
+
+function cursorArray(cursor: ChildCursor | null): readonly AstNode[] {
+  return loop<
+    { readonly cursor: ChildCursor | null; readonly nodes: List<AstNode> },
+    readonly AstNode[]
+  >({ cursor, nodes: List() }, (state) =>
+    state.cursor
+      ? again({ cursor: state.cursor.tail(), nodes: state.nodes.push(state.cursor.node) })
+      : done(state.nodes.toArray()),
+  );
+}
+export function* syntaxChildren(node: AstNode): Generator<AstNode> {
+  yield* cursorArray(syntaxChildCursor(node));
+}
+export function* withRelatedChildren(node: AstNode): Generator<AstNode> {
+  yield* cursorArray(relatedChildCursor(node));
+}
+export function forEachChild(node: AstNode, visit: (child: AstNode) => void): void {
+  loop<ChildCursor | null, void>(syntaxChildCursor(node), (cursor) => {
+    if (!cursor) {
+      return done(undefined);
+    }
+    visit(cursor.node);
+    return again(cursor.tail());
+  });
+}
+export function someChild(
+  cursor: ChildCursor | null,
+  predicate: (node: AstNode) => boolean,
+): boolean {
+  return loop<ChildCursor | null, boolean>(cursor, (current) =>
+    !current ? done(false) : predicate(current.node) ? done(true) : again(current.tail()),
+  );
 }

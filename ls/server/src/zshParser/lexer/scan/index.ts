@@ -1,15 +1,9 @@
+import { again, done as finish, loop } from '../../../util/loop';
 type ScanContext<State> = {
   readonly state: State;
   readonly done: (state: State) => boolean;
   readonly step: (state: State) => State;
 };
-
 export function scan<State>({ state, done, step }: ScanContext<State>): State {
-  let current = state;
-
-  while (!done(current)) {
-    current = step(current);
-  }
-
-  return current;
+  return loop(state, (current) => (done(current) ? finish(current) : again(step(current))));
 }

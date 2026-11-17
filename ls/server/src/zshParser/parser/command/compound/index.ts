@@ -1,3 +1,4 @@
+import { findLineBoundaryIndex } from '../opaque/scan';
 import { parseCommand } from '..';
 import type { CommandNode, CompoundCommandNode, ListNode } from '../../../ast';
 import type { Token } from '../../../lexer';
@@ -41,14 +42,7 @@ export function parseCompoundCommand({
   if (result.node.close !== null || result.state.stopped) {
     return result;
   }
-  let boundary = state.index;
-  while (
-    state.tokens[boundary] &&
-    state.tokens[boundary].kind !== 'newline' &&
-    state.tokens[boundary].kind !== 'eof'
-  ) {
-    boundary += 1;
-  }
+  const boundary = findLineBoundaryIndex(state.tokens, state.index);
   if (state.tokens[boundary]?.kind === 'eof') {
     return result;
   }

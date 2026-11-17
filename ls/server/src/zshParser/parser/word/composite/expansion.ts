@@ -1,3 +1,4 @@
+import { loop, again, done } from '../../../../util/loop';
 import type { Token } from '../../../lexer';
 import type { DelimiterKind } from '../../../lexer/delimiter';
 import { delimitedEnd } from '../../../lexer/delimiter';
@@ -79,12 +80,13 @@ function findDelimitedTokenEnd(
   if (end === null) {
     return null;
   }
-  let length = 0;
-  for (let cursor = index; cursor < tokens.length; cursor += 1) {
-    length += tokens[cursor].value.length;
-    if (length >= end) {
-      return cursor;
+  const initial = { index, length: 0 };
+  return loop<typeof initial, number | null>(initial, (current) => {
+    const token = tokens[current.index];
+    if (!token) {
+      return done(null);
     }
-  }
-  return null;
+    const length = current.length + token.value.length;
+    return length >= end ? done(current.index) : again({ index: current.index + 1, length });
+  });
 }

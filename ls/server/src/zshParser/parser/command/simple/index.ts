@@ -1,3 +1,5 @@
+import { List } from 'immutable';
+import { loop, again, done } from '../../../../util/loop';
 import type { AssignNode, RedirectNode, SimpleCommandNode, WordNode } from '../../../ast';
 import type { Token } from '../../../lexer';
 import { isCommandBoundary } from '../../boundary';
@@ -52,38 +54,55 @@ export function parseSimpleCommand(state: ParseState): NodeResult<SimpleCommandN
 function readSimpleCommandAccumulator(
   accumulator: SimpleCommandAccumulator,
 ): SimpleCommandAccumulator {
-  const args: WordNode[] = [...accumulator.arguments];
-  const assignments: AssignNode[] = [...accumulator.prefixAssignments];
-  const redirects: RedirectNode[] = [...accumulator.redirects];
-  let parts = accumulator;
-  while (true) {
+  const initial = {
+    parts: accumulator,
+    args: List(accumulator.arguments),
+    assignments: List(accumulator.prefixAssignments),
+    redirects: List(accumulator.redirects),
+  };
+  return loop<typeof initial, SimpleCommandAccumulator>(initial, (progress) => {
     const current = {
-      ...parts,
+      ...progress.parts,
       arguments: [],
       prefixAssignments: [],
       redirects: [],
-      state: skipInlineTrivia(parts.state),
+      state: skipInlineTrivia(progress.parts.state),
     };
     const token = currentToken(current.state);
     if (current.state.stopped || isCommandBoundary(token) || token.kind === 'comment') {
-      return { ...current, arguments: args, prefixAssignments: assignments, redirects };
+      return done({
+        ...current,
+        arguments: progress.args.toArray(),
+        prefixAssignments: progress.assignments.toArray(),
+        redirects: progress.redirects.toArray(),
+      });
     }
-    if (isRedirectStart(current.state)) {
-      parts = readRedirect(current);
-    } else if (
-      token.kind === 'word' ||
-      isProcessSubstitutionStart(current.state.tokens, current.state.index) ||
-      (parts.commandName !== null &&
-        isParenthesizedWordStart(current.state.tokens, current.state.index))
-    ) {
-      parts = readSimpleCommandWord(current, token);
-    } else {
-      parts = readUnexpectedToken(current, token);
-    }
-    args.push(...parts.arguments);
-    assignments.push(...parts.prefixAssignments);
-    redirects.push(...parts.redirects);
+    const parts = readNextCommandPart(current, token);
+    return again({
+      parts,
+      args: progress.args.concat(parts.arguments),
+      assignments: progress.assignments.concat(parts.prefixAssignments),
+      redirects: progress.redirects.concat(parts.redirects),
+    });
+  });
+}
+
+function readNextCommandPart(
+  current: SimpleCommandAccumulator,
+  token: Token,
+): SimpleCommandAccumulator {
+  if (isRedirectStart(current.state)) {
+    return readRedirect(current);
   }
+  if (
+    token.kind === 'word' ||
+    isProcessSubstitutionStart(current.state.tokens, current.state.index) ||
+    (current.commandName !== null &&
+      isParenthesizedWordStart(current.state.tokens, current.state.index))
+  ) {
+    return readSimpleCommandWord(current, token);
+  }
+  return readUnexpectedToken(current, token);
 }
 
 function readRedirect(parts: SimpleCommandAccumulator): SimpleCommandAccumulator {

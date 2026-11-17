@@ -1,3 +1,4 @@
+import { loop, again, done } from '../../../../util/loop';
 import type { Token } from '../../../lexer';
 import type { ParseState } from '../../state';
 import { currentToken } from '../../state';
@@ -56,13 +57,13 @@ function readNamePreview({
   readonly index: number;
   readonly count: number;
 }): { readonly count: number; readonly index: number } {
-  let cursor = nextInlineSyntaxIndex(tokens, index);
-  let total = count;
-  while (tokens[cursor] && isFunctionNameCandidate(tokens[cursor])) {
-    total += 1;
-    cursor = nextInlineSyntaxIndex(tokens, cursor + 1);
-  }
-  return { count: total, index: cursor };
+  const initial = { index: nextInlineSyntaxIndex(tokens, index), count };
+  return loop(initial, (current) => {
+    const token = tokens[current.index];
+    return token && isFunctionNameCandidate(token)
+      ? again({ index: nextInlineSyntaxIndex(tokens, current.index + 1), count: current.count + 1 })
+      : done(current);
+  });
 }
 
 function isFunctionNameCandidate(token: Token): boolean {
@@ -70,9 +71,9 @@ function isFunctionNameCandidate(token: Token): boolean {
 }
 
 function nextInlineSyntaxIndex(tokens: readonly Token[], index: number): number {
-  let cursor = index;
-  while (tokens[cursor]?.kind === 'whitespace' || tokens[cursor]?.kind === 'continuation') {
-    cursor += 1;
-  }
-  return cursor;
+  return loop(index, (cursor) =>
+    tokens[cursor]?.kind === 'whitespace' || tokens[cursor]?.kind === 'continuation'
+      ? again(cursor + 1)
+      : done(cursor),
+  );
 }

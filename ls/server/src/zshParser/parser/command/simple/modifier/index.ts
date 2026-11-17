@@ -1,3 +1,5 @@
+import { List, Range } from 'immutable';
+import { loop, again, done } from '../../../../../util/loop';
 import type { OptionNode, PrecommandModifierNode, PrecommandModifierType } from '../../../../ast';
 import type { Token } from '../../../../lexer';
 import { createOptionNodeFromToken } from '../../../option';
@@ -60,17 +62,14 @@ function readPrecommandOptions({
   readonly type: PrecommandModifierType;
   readonly options: readonly OptionNode[];
 }): OptionsResult {
-  const result = [...options];
-  let current = state;
-  while (true) {
-    const candidate = skipInlineTrivia(current);
+  const initial = { current: state, options: List(options) };
+  return loop<typeof initial, OptionsResult>(initial, (progress) => {
+    const candidate = skipInlineTrivia(progress.current);
     const option = createPrecommandOption(type, currentToken(candidate), candidate);
-    if (!option) {
-      return { options: result, state: current };
-    }
-    result.push(option.node);
-    current = option.state;
-  }
+    return option
+      ? again({ current: option.state, options: progress.options.push(option.node) })
+      : done({ options: progress.options.toArray(), state: progress.current });
+  });
 }
 
 function createPrecommandOption(
@@ -148,19 +147,9 @@ function isExecFlagOption(value: string): boolean {
 }
 
 function containsOnlyCommandOptionChars(value: string, index: number): boolean {
-  for (let cursor = index; cursor < value.length; cursor += 1) {
-    if (!'pvV'.includes(value[cursor])) {
-      return false;
-    }
-  }
-  return true;
+  return Range(index, value.length).every((cursor) => 'pvV'.includes(value[cursor]));
 }
 
 function containsOnlyExecFlagOptionChars(value: string, index: number): boolean {
-  for (let cursor = index; cursor < value.length; cursor += 1) {
-    if (!'cl'.includes(value[cursor])) {
-      return false;
-    }
-  }
-  return true;
+  return Range(index, value.length).every((cursor) => 'cl'.includes(value[cursor]));
 }

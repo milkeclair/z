@@ -70,7 +70,9 @@
     "format:check": "prettier --check client/src server/src server/test"
   },
   "dependencies": {
+    "fp-ts": "2.16.11",
     "glob": "^14.0.6",
+    "immutable": "5.1.4",
     "vscode-languageclient": "^11.0.0",
     "vscode-languageserver": "^11.0.0",
     "vscode-languageserver-textdocument": "^1.0.16"

@@ -1,3 +1,5 @@
+import { List } from 'immutable';
+import { loop, again, done } from '../../../../util/loop';
 import type { StringLiteralNode, WordPartNode } from '../../../ast';
 import { rangeWithinText } from '../../range';
 import { readExpansion } from './expansion';
@@ -7,19 +9,18 @@ export { wordSegmentFromToken } from './types';
 export type { WordSegment } from './types';
 
 export function createWordParts(segment: WordSegment): readonly WordPartNode[] {
-  let state: WordPartState = {
+  const initial: WordPartState = {
     ...segment,
     index: segment.start,
     literalStart: segment.start,
     quote: 'none',
-    parts: [],
+    parts: List(),
   };
 
-  while (state.index < state.end) {
-    state = readWordPart(state);
-  }
-
-  return appendLiteralIfNeeded(state);
+  const state = loop(initial, (current) =>
+    current.index < current.end ? again(readWordPart(current)) : done(current),
+  );
+  return appendLiteralIfNeeded(state).toArray();
 }
 
 function readWordPart(state: WordPartState): WordPartState {
@@ -60,7 +61,7 @@ function readExpansionPart(state: WordPartState): WordPartState {
       ...state,
       index: expansion.nextIndex,
       literalStart: expansion.nextIndex,
-      parts: [...appendLiteralBeforeExpansion(state), expansion.node],
+      parts: appendLiteralBeforeExpansion(state).push(expansion.node),
     };
   } else {
     return { ...state, index: state.index + 1 };
@@ -79,31 +80,29 @@ function isEscape(state: WordPartState): boolean {
   }
 }
 
-function appendLiteralIfNeeded(state: WordPartState): readonly WordPartNode[] {
-  if (state.literalStart < state.index || state.parts.length === 0) {
-    return [
-      ...state.parts,
+function appendLiteralIfNeeded(state: WordPartState): List<WordPartNode> {
+  if (state.literalStart < state.index || state.parts.size === 0) {
+    return state.parts.push(
       createStringLiteralNode({
         ...state,
         start: state.literalStart,
         end: state.index,
       }),
-    ];
+    );
   } else {
     return state.parts;
   }
 }
 
-function appendLiteralBeforeExpansion(state: WordPartState): readonly WordPartNode[] {
+function appendLiteralBeforeExpansion(state: WordPartState): List<WordPartNode> {
   if (state.literalStart < state.index) {
-    return [
-      ...state.parts,
+    return state.parts.push(
       createStringLiteralNode({
         ...state,
         start: state.literalStart,
         end: state.index,
       }),
-    ];
+    );
   } else {
     return state.parts;
   }

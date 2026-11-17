@@ -1,3 +1,5 @@
+import { List } from 'immutable';
+import { loop, again, done } from '../../../util/loop';
 import type { StringLiteralNode, WordNode, WordPartNode } from '../../ast';
 import type { SourceRange } from '../../lexer';
 import { rangeWithinText } from '../range';
@@ -46,22 +48,24 @@ function sliceWordParts({
   readonly end: number;
   readonly collected: readonly WordPartNode[];
 }): readonly WordPartNode[] {
-  const result = [...collected];
-  let offset = rawOffset;
-  for (let cursor = index; cursor < parts.length && offset < end; cursor += 1) {
-    const part = parts[cursor];
+  const initial = { index, offset: rawOffset, parts: List(collected) };
+  return loop<typeof initial, readonly WordPartNode[]>(initial, (current) => {
+    const part = parts[current.index];
+    if (!part || current.offset >= end) {
+      return done(current.parts.toArray());
+    }
     const length = rawFromWordPart(part).length;
     const sliced = sliceWordPart({
       part,
-      start: Math.max(start, offset) - offset,
-      end: Math.min(end, offset + length) - offset,
+      start: Math.max(start, current.offset) - current.offset,
+      end: Math.min(end, current.offset + length) - current.offset,
     });
-    if (sliced) {
-      result.push(sliced);
-    }
-    offset += length;
-  }
-  return result;
+    return again({
+      index: current.index + 1,
+      offset: current.offset + length,
+      parts: sliced ? current.parts.push(sliced) : current.parts,
+    });
+  });
 }
 
 function sliceWordPart({

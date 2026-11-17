@@ -19,16 +19,7 @@ export function endAt(...words: readonly string[]) {
     token.kind === 'eof' || words.some((word) => isWord(token, word));
 }
 
-export function skipTerms(state: ParseState): ParseState {
-  let current = skipTrivia(state);
-  while (
-    currentToken(current).kind === 'newline' ||
-    currentToken(current).operatorKind === 'semicolon'
-  ) {
-    current = skipTrivia(advanceState(current));
-  }
-  return current;
-}
+export { skipCommandTerm as skipTerms } from '../term';
 
 export function takeKeyword(
   state: ParseState,

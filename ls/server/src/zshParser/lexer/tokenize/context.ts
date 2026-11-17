@@ -102,25 +102,32 @@ export function advanceLexicalContext(context: LexicalContext, token: Token): Le
               : 'command';
     return enter(context, token, kind, 'rightParen');
   }
-  let pendingHereDocs = context.pendingHereDocs;
-  let awaitingHereDoc = context.awaitingHereDoc;
-  let readHereDocs = false;
-  if (context.kind === 'command') {
-    if (token.operatorKind === 'redirect' && (token.value === '<<' || token.value === '<<-')) {
-      awaitingHereDoc = {
+  const base = { ...context, previous: token, readHereDocs: false };
+  if (context.kind !== 'command') {
+    return base;
+  }
+  if (token.operatorKind === 'redirect' && (token.value === '<<' || token.value === '<<-')) {
+    return {
+      ...base,
+      awaitingHereDoc: {
         operatorOffset: token.range.start.offset,
         stripTabs: token.value === '<<-',
-      };
-    } else if (awaitingHereDoc && token.kind === 'word') {
-      pendingHereDocs = [
-        ...pendingHereDocs,
-        { ...awaitingHereDoc, ...hereDocDelimiter(token.value, awaitingHereDoc.stripTabs) },
-      ];
-      awaitingHereDoc = null;
-    } else if (token.kind === 'newline') {
-      readHereDocs = pendingHereDocs.length > 0;
-      awaitingHereDoc = null;
-    }
+      },
+    };
   }
-  return { ...context, previous: token, pendingHereDocs, awaitingHereDoc, readHereDocs };
+  const awaiting = context.awaitingHereDoc;
+  if (awaiting && token.kind === 'word') {
+    return {
+      ...base,
+      pendingHereDocs: [
+        ...context.pendingHereDocs,
+        { ...awaiting, ...hereDocDelimiter(token.value, awaiting.stripTabs) },
+      ],
+      awaitingHereDoc: null,
+    };
+  }
+  if (token.kind === 'newline') {
+    return { ...base, readHereDocs: context.pendingHereDocs.length > 0, awaitingHereDoc: null };
+  }
+  return base;
 }

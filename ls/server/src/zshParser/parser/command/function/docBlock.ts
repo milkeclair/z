@@ -1,3 +1,5 @@
+import { List } from 'immutable';
+import { loop, again, done } from '../../../../util/loop';
 import type { DocBlockNode } from '../../../ast';
 import type { SourceRange, Token } from '../../../lexer';
 import type { CommentContext } from '../../comment';
@@ -52,21 +54,21 @@ function collectLeadingCommentTokens({
   readonly index: number;
   readonly comments: readonly Token[];
 }): readonly Token[] {
-  const collected = [...comments];
-  let cursor = index;
-  while (cursor >= 0) {
-    const beforeLine = findPreviousNewline({ tokens, index: cursor });
-    if (!beforeLine) {
-      break;
+  const initial = { index, comments: List(comments) };
+  return loop<typeof initial, readonly Token[]>(initial, (current) => {
+    if (current.index < 0) {
+      return done(current.comments.reverse().toArray());
     }
-    const beforeComment = findPreviousComment({ tokens, index: beforeLine.index - 1 });
-    if (!beforeComment) {
-      break;
-    }
-    collected.push(beforeComment.comment);
-    cursor = beforeComment.index - 1;
-  }
-  return collected.reverse();
+    const beforeLine = findPreviousNewline({ tokens, index: current.index });
+    const beforeComment =
+      beforeLine && findPreviousComment({ tokens, index: beforeLine.index - 1 });
+    return beforeComment
+      ? again({
+          index: beforeComment.index - 1,
+          comments: current.comments.push(beforeComment.comment),
+        })
+      : done(current.comments.reverse().toArray());
+  });
 }
 
 function findPreviousNewline({
@@ -101,14 +103,13 @@ function skipBackwardTrivia({
   readonly index: number;
   readonly allowNewline: boolean;
 }): { readonly index: number } {
-  let cursor = index;
-  while (
-    tokens[cursor]?.kind === 'whitespace' ||
-    tokens[cursor]?.kind === 'continuation' ||
-    (allowNewline && tokens[cursor]?.kind === 'newline')
-  ) {
-    cursor -= 1;
-  }
+  const cursor = loop(index, (current) =>
+    tokens[current]?.kind === 'whitespace' ||
+    tokens[current]?.kind === 'continuation' ||
+    (allowNewline && tokens[current]?.kind === 'newline')
+      ? again(current - 1)
+      : done(current),
+  );
   return { index: cursor };
 }
 
@@ -137,9 +138,6 @@ function findPreviousComment({
 }
 
 function hasOnlyTriviaBeforeCommentOnLine(tokens: readonly Token[], index: number): boolean {
-  let cursor = index;
-  while (tokens[cursor]?.kind === 'whitespace' || tokens[cursor]?.kind === 'continuation') {
-    cursor -= 1;
-  }
+  const cursor = skipBackwardTrivia({ tokens, index, allowNewline: false }).index;
   return !tokens[cursor] || tokens[cursor].kind === 'newline';
 }

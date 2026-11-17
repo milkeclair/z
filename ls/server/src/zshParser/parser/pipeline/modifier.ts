@@ -1,3 +1,4 @@
+import { loop, again, done } from '../../../util/loop';
 import type { PipelineModifierNode } from '../../ast';
 import type { Token } from '../../lexer';
 import type { ParseState } from '../state';
@@ -31,21 +32,23 @@ export function readPipelineModifier(state: ParseState): PipelineModifierResult 
 }
 
 function skipExtraPipelineModifiers(state: ParseState): ParseState {
-  let current = skipTrivia(state);
-  while (pipelineModifierType(currentToken(current))) {
+  return loop(skipTrivia(state), (current) => {
     const token = currentToken(current);
-    current = skipTrivia(
-      advanceState(
-        addDiagnostic({
-          state: current,
-          kind: 'unexpectedToken',
-          message: 'Multiple pipeline modifiers are not allowed: ' + token.value,
-          tokens: [token],
-        }),
-      ),
-    );
-  }
-  return current;
+    return pipelineModifierType(token)
+      ? again(
+          skipTrivia(
+            advanceState(
+              addDiagnostic({
+                state: current,
+                kind: 'unexpectedToken',
+                message: 'Multiple pipeline modifiers are not allowed: ' + token.value,
+                tokens: [token],
+              }),
+            ),
+          ),
+        )
+      : done(current);
+  });
 }
 
 function pipelineModifierType(token: Token): PipelineModifierNode['type'] | null {

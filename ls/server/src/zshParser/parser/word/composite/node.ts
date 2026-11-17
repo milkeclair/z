@@ -1,3 +1,4 @@
+import { Map as PersistentMap, Set as PersistentSet } from 'immutable';
 import type { WordNode } from '../../../ast';
 import type { QuoteKind, Token } from '../../../lexer';
 import { rangeFromTokens } from '../../range';
@@ -9,18 +10,29 @@ export function createCompositeWordNode(
   context: WordContext = {},
 ): WordNode {
   const raw = tokens.map((token) => token.value).join('');
-  const literalEnds = new Map<number, number>();
-  const processStarts = new Set<number>();
-  let offset = 0;
-  for (const token of tokens) {
-    if (token.kind === 'word' && token.value === '=') {
-      processStarts.add(offset);
-    }
-    if (token.kind === 'comment' || token.kind === 'hereDocBody' || token.kind === 'hereDocEnd') {
-      literalEnds.set(offset, offset + token.value.length);
-    }
-    offset += token.value.length;
-  }
+  const offsets = tokens.reduce(
+    (previous, token) => {
+      const end = previous.offset + token.value.length;
+      return {
+        offset: end,
+        literalEnds:
+          token.kind === 'comment' || token.kind === 'hereDocBody' || token.kind === 'hereDocEnd'
+            ? previous.literalEnds.set(previous.offset, end)
+            : previous.literalEnds,
+        processStarts:
+          token.kind === 'word' && token.value === '='
+            ? previous.processStarts.add(previous.offset)
+            : previous.processStarts,
+      };
+    },
+    {
+      offset: 0,
+      literalEnds: PersistentMap<number, number>(),
+      processStarts: PersistentSet<number>(),
+    },
+  );
+  const literalEnds = new Map(offsets.literalEnds);
+  const processStarts = new Set(offsets.processStarts);
 
   return {
     kind: 'word',

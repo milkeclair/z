@@ -1,5 +1,8 @@
+import { List } from 'immutable';
+import { loop, again, done } from '../../../util/loop';
+import { lowerBound } from '../../../util/search';
 import type { AstNode, CommentNode, DocBlockNode, FileNode, FunctionDefinitionNode } from '..';
-import { syntaxChildren } from './children';
+import { syntaxChildCursor } from './children';
 import { findAll, type TraversalFrame } from './walk';
 
 type DocContext = {
@@ -34,20 +37,12 @@ export function commentAt(file: FileNode, offset: number): CommentNode | null {
   if (!Number.isSafeInteger(offset)) {
     return null;
   }
-  let low = 0,
-    high = file.comments.length - 1;
-  while (low <= high) {
-    const middle = Math.floor((low + high) / 2);
-    const comment = file.comments[middle];
-    if (offset < comment.range.start.offset) {
-      high = middle - 1;
-    } else if (offset >= comment.range.end.offset) {
-      low = middle + 1;
-    } else {
-      return comment;
-    }
-  }
-  return null;
+  const index = lowerBound(
+    file.comments.length,
+    (index) => file.comments[index].range.end.offset <= offset,
+  );
+  const comment = file.comments[index];
+  return comment && comment.range.start.offset <= offset ? comment : null;
 }
 
 export type AstLocation =
@@ -216,45 +211,51 @@ export function locate(query: QueryContext, offset: number): AstLocation | null 
   }
   const first: PositionFrame = {
     node: file,
-    next: syntaxChildren(file),
+    children: syntaxChildCursor(file),
     depth: 0,
     parent: null,
     score: positionScore(file, offset),
   };
-  const stack: PositionFrame[] = [first];
-  let best = first;
-  while (stack.length > 0) {
-    const parent = stack[stack.length - 1];
-    const candidate = parent.next.next();
-    if (candidate.done) {
-      stack.pop();
-      continue;
+  const initial = { stack: List([first]), best: first };
+  const best = loop<typeof initial, PositionFrame>(initial, (progress) => {
+    const parent = progress.stack.last();
+    if (!parent) {
+      return done(progress.best);
     }
-    if (!contains(candidate.value, offset)) {
-      continue;
+    const candidate = parent.children;
+    if (!candidate) {
+      return again({ ...progress, stack: progress.stack.pop() });
     }
-    const score = positionScore(candidate.value, offset);
+    const advanced = { ...parent, children: candidate.tail() };
+    const remaining = progress.stack.set(-1, advanced);
+    if (!contains(candidate.node, offset)) {
+      return again({ ...progress, stack: remaining });
+    }
+    const score = positionScore(candidate.node, offset);
     const inherited =
       !score.owned &&
       parent.score.owned &&
       score.start === parent.score.start &&
       score.end === parent.score.end;
     const child: PositionFrame = {
-      node: candidate.value,
-      next: syntaxChildren(candidate.value),
+      node: candidate.node,
+      children: syntaxChildCursor(candidate.node),
       depth: parent.depth + 1,
       parent,
       score: inherited ? { ...score, owned: true } : score,
     };
-    stack.push(child);
-    if (betterPosition(child, best)) {
-      best = child;
-    }
-  }
-  const path: AstNode[] = [];
-  for (let frame: PositionFrame | null = best; frame; frame = frame.parent) {
-    path.push(frame.node);
-  }
-  path.reverse();
+    return again({
+      stack: remaining.push(child),
+      best: betterPosition(child, progress.best) ? child : progress.best,
+    });
+  });
+  const path = loop<
+    { readonly frame: PositionFrame | null; readonly nodes: List<AstNode> },
+    readonly AstNode[]
+  >({ frame: best, nodes: List() }, (progress) =>
+    progress.frame
+      ? again({ frame: progress.frame.parent, nodes: progress.nodes.push(progress.frame.node) })
+      : done(progress.nodes.reverse().toArray()),
+  );
   return { kind: 'syntax', node: best.node, path };
 }

@@ -1,3 +1,4 @@
+import { loop, again, done } from '../../../util/loop';
 import type { AssignNode } from '../../ast';
 import { isVariableName } from './variableName';
 
@@ -82,26 +83,32 @@ function readAssignmentTarget({
 }
 
 function findAssignmentOperator(value: string): AssignmentOperator | null {
-  let bracketDepth = 0;
-  let parenDepth = 0;
-  let braceDepth = 0;
-
-  for (let index = 0; index < value.length; index += 1) {
-    const char = value[index];
-    const canReadOperator = bracketDepth === 0 && parenDepth === 0 && braceDepth === 0;
-
-    if (canReadOperator && value.startsWith(PlusEquals, index)) {
-      return { index, operator: PlusEquals };
-    } else if (canReadOperator && char === Equals) {
-      return { index, operator: Equals };
+  const initial = { index: 0, bracketDepth: 0, parenDepth: 0, braceDepth: 0 };
+  return loop<typeof initial, AssignmentOperator | null>(initial, (state) => {
+    if (state.index >= value.length) {
+      return done(null);
     }
-
-    bracketDepth = nextDepth({ depth: bracketDepth, char, open: LeftBracket, close: RightBracket });
-    parenDepth = nextDepth({ depth: parenDepth, char, open: LeftParen, close: RightParen });
-    braceDepth = nextDepth({ depth: braceDepth, char, open: LeftBrace, close: RightBrace });
-  }
-
-  return null;
+    const char = value[state.index];
+    const canReadOperator =
+      state.bracketDepth === 0 && state.parenDepth === 0 && state.braceDepth === 0;
+    if (canReadOperator && value.startsWith(PlusEquals, state.index)) {
+      return done({ index: state.index, operator: PlusEquals });
+    }
+    if (canReadOperator && char === Equals) {
+      return done({ index: state.index, operator: Equals });
+    }
+    return again({
+      index: state.index + 1,
+      bracketDepth: nextDepth({
+        depth: state.bracketDepth,
+        char,
+        open: LeftBracket,
+        close: RightBracket,
+      }),
+      parenDepth: nextDepth({ depth: state.parenDepth, char, open: LeftParen, close: RightParen }),
+      braceDepth: nextDepth({ depth: state.braceDepth, char, open: LeftBrace, close: RightBrace }),
+    });
+  });
 }
 
 function nextDepth({

@@ -1,3 +1,5 @@
+import { List } from 'immutable';
+import { loop, again, done } from '../../../../util/loop';
 import type { CaseArmNode, WordNode } from '../../../ast';
 import type { ParserContext } from '../../context';
 import type { NodeResult, ParseState } from '../../state';
@@ -5,91 +7,97 @@ import { addDiagnostic, advanceState, currentToken, skipTrivia } from '../../sta
 import { readWordNode } from '../../word/composite';
 import { endAt, isWordStart, skipTerms, takeKeyword } from './syntax';
 import type { CompoundContents } from './types';
+
+function readSubject(state: ParseState): NodeResult<WordNode | null> {
+  const current = skipTrivia(state);
+  return isWordStart(current)
+    ? readWordNode(current)
+    : {
+        node: null,
+        state: addDiagnostic({
+          state: current,
+          kind: 'unexpectedToken',
+          message: 'Expected case subject',
+          tokens: [currentToken(current)],
+        }),
+      };
+}
+function readPatterns(state: ParseState): {
+  readonly patterns: readonly WordNode[];
+  readonly state: ParseState;
+} {
+  const initial = { current: state, patterns: List<WordNode>() };
+  return loop<
+    typeof initial,
+    { readonly patterns: readonly WordNode[]; readonly state: ParseState }
+  >(initial, (progress) => {
+    const token = currentToken(progress.current);
+    if (token.kind === 'eof' || token.operatorKind === 'rightParen') {
+      return done({ patterns: progress.patterns.toArray(), state: progress.current });
+    }
+    const word = isWordStart(progress.current) ? readWordNode(progress.current) : null;
+    return again({
+      current: skipTrivia(word?.state ?? advanceState(progress.current)),
+      patterns: word ? progress.patterns.push(word.node) : progress.patterns,
+    });
+  });
+}
+function readCaseArm(state: ParseState, context: ParserContext): NodeResult<CaseArmNode> {
+  const open = currentToken(state);
+  const patterns = readPatterns(open.operatorKind === 'leftParen' ? advanceState(state) : state);
+  const diagnosed =
+    patterns.patterns.length === 0
+      ? addDiagnostic({
+          state: patterns.state,
+          kind: 'unexpectedToken',
+          message: 'Expected case pattern',
+          tokens: [currentToken(patterns.state)],
+        })
+      : patterns.state;
+  const current =
+    currentToken(diagnosed).operatorKind === 'rightParen' ? advanceState(diagnosed) : diagnosed;
+  const body = context.parseNestedList(
+    current,
+    (token) =>
+      endAt('esac')(token) ||
+      token.operatorKind === 'doubleSemicolon' ||
+      token.operatorKind === 'caseFallthrough' ||
+      token.operatorKind === 'caseContinue',
+  );
+  const close = currentToken(body.state);
+  const termination =
+    close.value === ';;' || close.value === ';&' || close.value === ';|' ? close.value : null;
+  return {
+    node: {
+      kind: 'caseArm',
+      range: { start: open.range.start, end: termination ? close.range.end : body.node.range.end },
+      patterns: patterns.patterns,
+      body: body.node,
+      terminator: termination ? close.range : null,
+      termination,
+    },
+    state: body.state,
+  };
+}
 export function readCaseBody(
   state: ParseState,
   context: ParserContext,
 ): NodeResult<CompoundContents> {
-  let current = state;
-  let subject: WordNode | null = null;
-
-  current = skipTrivia(current);
-
-  if (isWordStart(current)) {
-    const word = readWordNode(current);
-    subject = word.node;
-    current = word.state;
-  } else {
-    current = addDiagnostic({
-      state: current,
-      kind: 'unexpectedToken',
-      message: 'Expected case subject',
-      tokens: [currentToken(current)],
-    });
-  }
-
-  current = skipTerms(takeKeyword(skipTerms(current), 'in').state);
-
-  const collected: CaseArmNode[] = [];
-
-  while (!endAt('esac')(currentToken(current))) {
-    const armStart = currentToken(current);
-    if (armStart.operatorKind === 'leftParen') {
-      current = advanceState(current);
+  const subject = readSubject(state);
+  const afterIn = skipTerms(takeKeyword(skipTerms(subject.state), 'in').state);
+  const initial = { current: afterIn, arms: List<CaseArmNode>() };
+  const parsed = loop<typeof initial, typeof initial>(initial, (progress) => {
+    if (endAt('esac')(currentToken(progress.current))) {
+      return done(progress);
     }
-    const patterns: WordNode[] = [];
-    while (
-      currentToken(current).kind !== 'eof' &&
-      currentToken(current).operatorKind !== 'rightParen'
-    ) {
-      const token = currentToken(current);
-      if (isWordStart(current)) {
-        const word = readWordNode(current);
-        patterns.push(word.node);
-        current = word.state;
-      } else {
-        current = advanceState(current);
-      }
-      current = skipTrivia(current);
-    }
-    if (patterns.length === 0) {
-      current = addDiagnostic({
-        state: current,
-        kind: 'unexpectedToken',
-        message: 'Expected case pattern',
-        tokens: [currentToken(current)],
-      });
-    }
-    if (currentToken(current).operatorKind === 'rightParen') {
-      current = advanceState(current);
-    }
-    const result = context.parseNestedList(
-      current,
-      (token) =>
-        endAt('esac')(token) ||
-        token.operatorKind === 'doubleSemicolon' ||
-        token.operatorKind === 'caseFallthrough' ||
-        token.operatorKind === 'caseContinue',
-    );
-    current = result.state;
-    const token = currentToken(current);
-    const termination =
-      token.value === ';;' || token.value === ';&' || token.value === ';|' ? token.value : null;
-    collected.push({
-      kind: 'caseArm',
-      range: {
-        start: armStart.range.start,
-        end: termination ? token.range.end : result.node.range.end,
-      },
-      patterns,
-      body: result.node,
-      terminator: termination ? token.range : null,
-      termination,
-    });
-    if (!termination) {
-      break;
-    }
-    current = skipTerms(advanceState(current));
-  }
-
-  return { node: { kind: 'caseCommand', subject, arms: collected }, state: current };
+    const arm = readCaseArm(progress.current, context);
+    const arms = progress.arms.push(arm.node);
+    return arm.node.termination
+      ? again({ current: skipTerms(advanceState(arm.state)), arms })
+      : done({ current: arm.state, arms });
+  });
+  return {
+    node: { kind: 'caseCommand', subject: subject.node, arms: parsed.arms.toArray() },
+    state: parsed.current,
+  };
 }

@@ -1,24 +1,19 @@
+import { again, done, loop } from '../../../util/loop';
 import { advanceState, currentToken } from './cursor';
 import type { ParseState } from './types';
-
 function skip(state: ParseState, comments: boolean, lines: boolean): ParseState {
-  let current = state;
-  while (true) {
+  return loop(state, (current) => {
     const token = currentToken(current);
-    if (
+    const trivia =
       token.kind === 'whitespace' ||
       token.kind === 'continuation' ||
       (comments &&
         (token.kind === 'comment' ||
           token.kind === 'hereDocBody' ||
           token.kind === 'hereDocEnd')) ||
-      (lines && token.kind === 'newline')
-    ) {
-      current = advanceState(current);
-    } else {
-      return current;
-    }
-  }
+      (lines && token.kind === 'newline');
+    return trivia ? again(advanceState(current)) : done(current);
+  });
 }
 export function skipTrivia(state: ParseState): ParseState {
   return skip(state, true, false);

@@ -6,4 +6,4 @@ export {
   type AstLocation,
   type QueryContext,
 } from './query';
-export { findAll, walk, type WalkControl, type WalkOptions } from './walk';
+export { findAll, foldAst, walk, type WalkControl, type WalkOptions } from './walk';

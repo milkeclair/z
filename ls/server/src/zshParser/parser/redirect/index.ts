@@ -1,3 +1,5 @@
+import { List } from 'immutable';
+import { loop, again, done } from '../../../util/loop';
 import type { HereDocumentNode, RedirectNode, WordNode } from '../../ast';
 import type { SourceRange, Token } from '../../lexer';
 import { areAdjacentTokens } from '../range';
@@ -25,17 +27,15 @@ export function isRedirectStart(state: ParseState): boolean {
 }
 
 export function readPostCommandRedirects(state: ParseState): RedirectsReadResult {
-  const redirects: RedirectNode[] = [];
-  let current = state;
-  while (true) {
-    const candidate = skipInlineTrivia(current);
+  const initial = { current: state, redirects: List<RedirectNode>() };
+  return loop<typeof initial, RedirectsReadResult>(initial, (progress) => {
+    const candidate = skipInlineTrivia(progress.current);
     if (!isRedirectStart(candidate)) {
-      return { redirects, state: current };
+      return done({ redirects: progress.redirects.toArray(), state: progress.current });
     }
     const result = readRedirectNode(candidate);
-    redirects.push(result.node);
-    current = result.state;
-  }
+    return again({ current: result.state, redirects: progress.redirects.push(result.node) });
+  });
 }
 
 export function readRedirectNode(state: ParseState): RedirectReadResult {
@@ -81,7 +81,6 @@ export function readRedirectNode(state: ParseState): RedirectReadResult {
           close: closingToken?.range ?? null,
         }
       : null;
-    const tokens = tokenSlice(nextState, state.index, nextState.index);
 
     return {
       node: {

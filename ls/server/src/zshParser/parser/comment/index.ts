@@ -16,12 +16,13 @@ export function mergeComments(
   if (additions.length === 0) {
     return previous;
   }
-  const byOffset = new Map(previous.byOffset);
-  for (const comment of additions) {
-    byOffset.set(comment.range.start.offset, comment);
-  }
+  const entries = additions.map((comment): readonly [number, CommentNode] => [
+    comment.range.start.offset,
+    comment,
+  ]);
+  const byOffset = new Map([...previous.byOffset, ...entries]);
   return {
-    comments: [...byOffset.values()].sort(
+    comments: [...byOffset.values()].toSorted(
       (left, right) => left.range.start.offset - right.range.start.offset,
     ),
     byOffset,

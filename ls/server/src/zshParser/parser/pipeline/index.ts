@@ -1,3 +1,5 @@
+import { List } from 'immutable';
+import { loop, again, done } from '../../../util/loop';
 import type { PipelineNode } from '../../ast';
 import { parseCommand } from '../command';
 import type { ParserContext } from '../context';
@@ -66,19 +68,26 @@ function readPipelineRest({
   readonly context: ParserContext;
   readonly rest: PipelineNode['rest'];
 }): PipelineRestResult {
-  const collected = [...rest];
-  let current = skipTrivia(state);
-  while (true) {
+  const initial = {
+    current: skipTrivia(state),
+    collected: List<PipelineNode['rest'][number]>(rest),
+  };
+  return loop<typeof initial, PipelineRestResult>(initial, ({ current, collected }) => {
     const token = currentToken(current);
     const type = pipelineOperatorType(token);
     if (current.stopped || !type) {
-      return { rest: collected, state: current };
+      return done({ rest: collected.toArray(), state: current });
     }
-    const command = parseCommand({
+    const parsed = parseCommand({
       state: skipLineContinuingTrivia(advanceState(current)),
       context,
     });
-    collected.push({ operator: createPipelineOperatorNode(token, type), command: command.node });
-    current = skipTrivia(command.state);
-  }
+    return again({
+      current: skipTrivia(parsed.state),
+      collected: collected.push({
+        operator: createPipelineOperatorNode(token, type),
+        command: parsed.node,
+      }),
+    });
+  });
 }

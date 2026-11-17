@@ -1,3 +1,4 @@
+import { loop, again, done } from '../../../../util/loop';
 import type { OperatorKind, Token } from '../../../lexer';
 import { delimitedEnd } from '../../../lexer/delimiter';
 
@@ -23,20 +24,22 @@ export function findOperatorEndIndex({
   if (end === null) {
     return null;
   }
-  let length = 0;
-  for (let cursor = start; cursor < tokens.length; cursor += 1) {
-    length += tokens[cursor].value.length;
-    if (length >= end) {
-      return cursor;
+  const initial = { index: start, length: 0 };
+  return loop<typeof initial, number | null>(initial, (state) => {
+    const token = tokens[state.index];
+    if (!token) {
+      return done(null);
     }
-  }
-  return null;
+    const length = state.length + token.value.length;
+    return length >= end ? done(state.index) : again({ index: state.index + 1, length });
+  });
 }
 
 export function findLineBoundaryIndex(tokens: readonly Token[], index: number): number {
-  let cursor = index;
-  while (tokens[cursor] && tokens[cursor].kind !== 'eof' && tokens[cursor].kind !== 'newline') {
-    cursor += 1;
-  }
-  return cursor;
+  return loop(index, (cursor) => {
+    const token = tokens[cursor];
+    return token && token.kind !== 'eof' && token.kind !== 'newline'
+      ? again(cursor + 1)
+      : done(cursor);
+  });
 }

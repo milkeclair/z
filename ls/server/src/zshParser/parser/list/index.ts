@@ -1,3 +1,5 @@
+import { List } from 'immutable';
+import { loop, again, done } from '../../../util/loop';
 import type { ListItemNode, ListNode } from '../../ast';
 import type { ParserContext } from '../context';
 import { parseListItem } from '../listItem';
@@ -56,34 +58,33 @@ function parseListItems({
   readonly context: ParserContext;
   readonly isEnd: ListEnd;
 }): ListItemsResult {
-  const items: ListItemNode[] = [];
-  let current = skipTrivia(state);
-
-  while (!isEnd(currentToken(current))) {
+  const initial = { current: skipTrivia(state), items: List<ListItemNode>() };
+  return loop<typeof initial, ListItemsResult>(initial, ({ current, items }) => {
+    if (isEnd(currentToken(current))) {
+      return done({ items: items.toArray(), state: current });
+    }
     if (current.stopped) {
       const range = { start: currentToken(current).range.start, end: current.eof.range.end };
-      items.push({
-        kind: 'listItem',
-        range,
-        terminator: null,
-        sublist: { kind: 'unknown', range, reason: 'nestingLimitExceeded' },
+      return done({
+        items: items
+          .push({
+            kind: 'listItem',
+            range,
+            terminator: null,
+            sublist: { kind: 'unknown', range, reason: 'nestingLimitExceeded' },
+          })
+          .toArray(),
+        state: { ...current, index: current.tokens.length - 1 },
       });
-      current = { ...current, index: current.tokens.length - 1 };
-      break;
     }
     if (listTerminatorType(currentToken(current))) {
-      current = skipTrivia(advanceState(current));
-    } else {
-      const item = parseListItem({ state: current, context });
-      const nextState =
-        item.state.index === current.index && !isEnd(currentToken(item.state))
-          ? advanceState(item.state)
-          : item.state;
-
-      items.push(item.node);
-      current = skipTrivia(nextState);
+      return again({ current: skipTrivia(advanceState(current)), items });
     }
-  }
-
-  return { items, state: current };
+    const item = parseListItem({ state: current, context });
+    const next =
+      item.state.index === current.index && !isEnd(currentToken(item.state))
+        ? advanceState(item.state)
+        : item.state;
+    return again({ current: skipTrivia(next), items: items.push(item.node) });
+  });
 }

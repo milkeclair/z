@@ -1,3 +1,4 @@
+import { loop, again, done } from '../../../../util/loop';
 import type { VariableReferenceNode } from '../../../ast';
 import { delimitedEnd } from '../../../lexer/delimiter';
 import { rangeWithinText } from '../../range';
@@ -264,11 +265,9 @@ function readDigitsEnd({
   readonly index: number;
   readonly max: number;
 }): number {
-  let cursor = index;
-  while (cursor < max && isAsciiDigit(text[cursor] ?? Empty)) {
-    cursor += 1;
-  }
-  return cursor;
+  return loop(index, (cursor) =>
+    cursor < max && isAsciiDigit(text[cursor] ?? Empty) ? again(cursor + 1) : done(cursor),
+  );
 }
 
 function isAsciiDigit(char: string): boolean {
