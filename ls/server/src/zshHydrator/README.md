@@ -79,6 +79,7 @@ const directives = directivesOf(result.ast.comments[0]);
 LSP接続はこのAPIを通して、ドキュメントと制御コメントの情報を付加したASTを共有します。
 
 ## 実装の役割
+
 - `hydrator.ts`: 全走査と差分更新の選択、ファイル順とsnapshot再利用。
 - `inputs.ts`: 開いた文書の選択とプロジェクト内のパス判定。
 - `entry.ts`: ディスク・バッファの読込とfingerprint照合。
