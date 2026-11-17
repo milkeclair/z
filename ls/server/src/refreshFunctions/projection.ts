@@ -1,3 +1,4 @@
+import { List, OrderedMap, OrderedSet } from 'immutable';
 import { pathToFileURL } from 'url';
 import type { Result } from '../document/type';
 import { NAMED_ARG_POSITION } from '../getFunctions/constant';
@@ -13,7 +14,7 @@ import type { FunctionTarget, FunctionTargets } from './target';
 import { literalWord } from './word';
 
 type FunctionProjection = {
-  readonly functions: Func[];
+  readonly functions: readonly Func[];
   readonly targets: FunctionTargets;
 };
 export type FileFunctionProjections = ReadonlyMap<ZshFileHydration, FunctionProjection>;
@@ -23,79 +24,86 @@ export function projectFunctions(
   hydrator: ZshHydrator,
   previous: FileFunctionProjections = new Map(),
 ): FunctionProjection & { readonly fileProjections: FileFunctionProjections } {
-  const functions: Func[] = [];
-  const targets = new Map<string, FunctionTarget[]>();
-  const fileProjections = new Map<ZshFileHydration, FunctionProjection>();
-  for (const entry of hydrator.files.values()) {
+  const initial = {
+    functions: List<Func>(),
+    targets: OrderedMap<string, List<FunctionTarget>>(),
+    files: OrderedMap<ZshFileHydration, FunctionProjection>(),
+  };
+  const projected = [...hydrator.files.values()].reduce((previousProjection, entry) => {
     if (entry.functions.length === 0) {
-      continue;
+      return previousProjection;
     }
     const projection = previous.get(entry) ?? projectFileFunctions(entry);
-    fileProjections.set(entry, projection);
-    for (const info of projection.functions) {
-      functions.push(info);
-    }
-    for (const [name, candidates] of projection.targets) {
-      const group = targets.get(name) ?? [];
-      for (const target of candidates) {
-        group.push(target);
-      }
-      targets.set(name, group);
-    }
-  }
-  return { functions, targets, fileProjections };
+    const targets = [...projection.targets].reduce(
+      (groups, [name, candidates]) =>
+        groups.set(name, (groups.get(name) ?? List<FunctionTarget>()).concat(candidates)),
+      previousProjection.targets,
+    );
+    return {
+      functions: previousProjection.functions.concat(projection.functions),
+      targets,
+      files: previousProjection.files.set(entry, projection),
+    };
+  }, initial);
+  return {
+    functions: projected.functions.toArray(),
+    targets: new Map(projected.targets.map((group) => group.toArray())),
+    fileProjections: new Map(projected.files),
+  };
 }
 
 /** 情報を付加した1ファイルから、互換用の情報と定義の参照先を取り出す。 */
 export function projectFileFunctions(entry: ZshFileHydration): FunctionProjection {
-  const functions: Func[] = [];
-  const targets = new Map<string, FunctionTarget[]>();
-  const definitions = new Set(entry.functions.map((fn) => fn.definition));
-  for (const definition of definitions) {
-    const documentation = documentationOf(definition);
-    const parameters = documentation?.parameters ?? [];
-    const args = parameters
-      .toReversed()
-      .map(legacyArgument)
-      .sort((left, right) => {
-        if (left.isNamed && right.isNamed) {
-          return 0;
+  const initial = { functions: List<Func>(), targets: OrderedMap<string, List<FunctionTarget>>() };
+  const projected = OrderedSet(entry.functions.map((fn) => fn.definition)).reduce(
+    (previous, definition) => {
+      const documentation = documentationOf(definition);
+      const args = (documentation?.parameters ?? [])
+        .toReversed()
+        .map(legacyArgument)
+        .toSorted((left, right) => {
+          if (left.isNamed && right.isNamed) {
+            return 0;
+          }
+          if (left.isNamed) {
+            return 1;
+          }
+          if (right.isNamed) {
+            return -1;
+          }
+          return left.position - right.position;
+        });
+      const view = legacyDocumentation(documentation);
+      return definition.names.reduce((current, word) => {
+        const info: Func = {
+          name: word.raw,
+          file: entry.file,
+          line: word.range.start.line + 1,
+          args,
+          documentation: view,
+        };
+        const functions = current.functions.push(info);
+        const name = literalWord(word);
+        if (!name) {
+          return { ...current, functions };
         }
-        if (left.isNamed) {
-          return 1;
-        }
-        if (right.isNamed) {
-          return -1;
-        }
-        return left.position - right.position;
-      });
-    const view = legacyDocumentation(documentation);
-    for (const word of definition.names) {
-      const info = {
-        name: word.raw,
-        file: entry.file,
-        line: word.range.start.line + 1,
-        args,
-        documentation: view,
-      };
-      functions.push(info);
-      const name = literalWord(word);
-      if (!name) {
-        continue;
-      }
-      const target: FunctionTarget = {
-        name,
-        uri: pathToFileURL(entry.sourceFile).href,
-        definition,
-        nameNode: word,
-        info: { ...info, name },
-      };
-      const group = targets.get(name) ?? [];
-      group.push(target);
-      targets.set(name, group);
-    }
-  }
-  return { functions, targets };
+        const target: FunctionTarget = {
+          name,
+          uri: pathToFileURL(entry.sourceFile).href,
+          definition,
+          nameNode: word,
+          info: { ...info, name, documentation: view },
+        };
+        const group = current.targets.get(name) ?? List<FunctionTarget>();
+        return { functions, targets: current.targets.set(name, group.push(target)) };
+      }, previous);
+    },
+    initial,
+  );
+  return {
+    functions: projected.functions.toArray(),
+    targets: new Map(projected.targets.map((group) => group.toArray())),
+  };
 }
 
 function legacyArgument(parameter: ParameterDoc): FuncArg {

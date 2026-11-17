@@ -1,6 +1,6 @@
 import { List } from 'immutable';
 import type { AstNode } from '..';
-import { loop, again, done } from '../../../util/loop';
+import { again, done, loop } from '../../../util/loop';
 
 export type ChildCursor = { readonly node: AstNode; readonly tail: () => ChildCursor | null };
 function one(node: AstNode | null | undefined): ChildCursor | null {

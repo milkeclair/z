@@ -1,5 +1,5 @@
 import { Range } from 'immutable';
-import { loop, again, done } from '../../../util/loop';
+import { again, done, loop } from '../../../util/loop';
 import type { VariableNameNode } from '../../ast';
 import type { SourceRange } from '../../lexer';
 

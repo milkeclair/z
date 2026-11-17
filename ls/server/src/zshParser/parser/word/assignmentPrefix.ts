@@ -1,4 +1,4 @@
-import { loop, again, done } from '../../../util/loop';
+import { again, done, loop } from '../../../util/loop';
 import type { AssignNode } from '../../ast';
 import { isVariableName } from './variableName';
 

@@ -1,5 +1,5 @@
 import { List, Range } from 'immutable';
-import { loop, again, done } from '../../../util/loop';
+import { again, done, loop } from '../../../util/loop';
 
 export type Escape = {
   readonly value: string;

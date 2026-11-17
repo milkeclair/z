@@ -96,16 +96,24 @@ export function refreshDiagnosticSnapshot({
   readonly environment: ShellEnvironment;
   readonly previous?: DiagnosticSnapshot;
 }): DiagnosticSnapshot {
-  const inputs = new Map<
-    string,
-    { file: ZshFileHydration; version: number | null; project: boolean }
-  >();
-  for (const file of snapshot.hydrator.files.values()) {
-    inputs.set(pathToFileURL(file.sourceFile).href, { file, version: null, project: true });
-  }
-  for (const [uri, document] of snapshot.documents) {
-    inputs.set(uri, { file: document.file, version: document.version, project: inputs.has(uri) });
-  }
+  type Input = {
+    readonly file: ZshFileHydration;
+    readonly version: number | null;
+    readonly project: boolean;
+  };
+  const projectInputs: ReadonlyMap<string, Input> = new Map(
+    [...snapshot.hydrator.files.values()].map((file): readonly [string, Input] => [
+      pathToFileURL(file.sourceFile).href,
+      { file, version: null, project: true },
+    ]),
+  );
+  const inputs: ReadonlyMap<string, Input> = new Map([
+    ...projectInputs,
+    ...[...snapshot.documents].map(([uri, document]): readonly [string, Input] => [
+      uri,
+      { file: document.file, version: document.version, project: projectInputs.has(uri) },
+    ]),
+  ]);
   const facts = new Map(
     [...inputs].map(([uri, input]) => [
       uri,
@@ -125,50 +133,57 @@ export function refreshDiagnosticSnapshot({
   );
   const reusableContracts = sameCallContracts(previous.targets, snapshot.targets);
   const revision = previous.revision + 1;
-  const files = new Map<string, FileDiagnostics>();
-  for (const [uri, input] of inputs) {
-    const cached = previous.files.get(uri);
-    const current = facts.get(uri);
-    if (!current) {
-      continue;
-    }
-    if (
-      cached &&
-      cached.file === input.file &&
-      cached.version === input.version &&
-      cached.project === input.project &&
-      reusableContracts &&
-      previous.context === context
-    ) {
-      files.set(uri, cached);
-    } else {
-      const local = input.project
-        ? context
-        : resolutionContext([current], environment, context.projectRoot, context);
-      const effective = input.project
-        ? context
-        : {
-            ...context,
-            aliases: new Set([...context.aliases, ...local.aliases]),
-            globalAliases: new Set([...context.globalAliases, ...local.globalAliases]),
-            suffixAliases: new Set([...context.suffixAliases, ...local.suffixAliases]),
-            autoloads: new Set([...context.autoloads, ...local.autoloads]),
-            builtins: new Set([...context.builtins, ...local.builtins]),
-          };
-      const embedded = analyzeEmbeddedCode(snapshot, input.file, current.calls, effective);
-      files.set(uri, {
-        ...input,
-        facts: current,
-        resultId: String(revision),
-        codePrograms: embedded.programs,
-        items: suppressed(input.file, [...current.base, ...embedded.diagnostics]).toSorted(
-          (left, right) =>
-            left.range.start.line - right.range.start.line ||
-            left.range.start.character - right.range.start.character,
-        ),
-      });
-    }
-  }
+  const entries = [...inputs].flatMap(
+    ([uri, input]): readonly (readonly [string, FileDiagnostics])[] => {
+      const cached = previous.files.get(uri);
+      const current = facts.get(uri);
+      if (!current) {
+        return [];
+      }
+      if (
+        cached &&
+        cached.file === input.file &&
+        cached.version === input.version &&
+        cached.project === input.project &&
+        reusableContracts &&
+        previous.context === context
+      ) {
+        return [[uri, cached]];
+      } else {
+        const local = input.project
+          ? context
+          : resolutionContext([current], environment, context.projectRoot, context);
+        const effective = input.project
+          ? context
+          : {
+              ...context,
+              aliases: new Set([...context.aliases, ...local.aliases]),
+              globalAliases: new Set([...context.globalAliases, ...local.globalAliases]),
+              suffixAliases: new Set([...context.suffixAliases, ...local.suffixAliases]),
+              autoloads: new Set([...context.autoloads, ...local.autoloads]),
+              builtins: new Set([...context.builtins, ...local.builtins]),
+            };
+        const embedded = analyzeEmbeddedCode(snapshot, input.file, current.calls, effective);
+        return [
+          [
+            uri,
+            {
+              ...input,
+              facts: current,
+              resultId: String(revision),
+              codePrograms: embedded.programs,
+              items: suppressed(input.file, [...current.base, ...embedded.diagnostics]).toSorted(
+                (left, right) =>
+                  left.range.start.line - right.range.start.line ||
+                  left.range.start.character - right.range.start.character,
+              ),
+            },
+          ],
+        ];
+      }
+    },
+  );
+  const files: ReadonlyMap<string, FileDiagnostics> = new Map(entries);
   if (
     previous.context === context &&
     previous.targets === snapshot.targets &&

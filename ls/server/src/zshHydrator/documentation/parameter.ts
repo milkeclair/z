@@ -1,3 +1,4 @@
+import { horizontalWhitespaceEnd, textWhileEnd } from '../../util/text';
 import type { CommentNode } from '../../zshParser/ast';
 import { rangeWithinText } from '../../zshParser/parser/range';
 import { commentPayload } from '../directive';
@@ -16,38 +17,22 @@ export function parseParameter(comment: CommentNode): ParameterDoc | null {
   if (!text.startsWith('$')) {
     return null;
   }
-  let cursor = 1;
-  const first = text[cursor] ?? '';
-  if (isDigit(first)) {
-    while (isDigit(text[cursor] ?? '')) {
-      cursor += 1;
-    }
-  } else if (first === '@' || first === '*') {
-    cursor += 1;
-  } else if (isNameStart(first)) {
-    cursor += 1;
-    while (isNameStart(text[cursor] ?? '') || isDigit(text[cursor] ?? '')) {
-      cursor += 1;
-    }
-  } else {
+  const first = text[1] ?? '';
+  const markerEnd = isDigit(first)
+    ? textWhileEnd(text, 1, isDigit)
+    : first === '@' || first === '*'
+      ? 2
+      : isNameStart(first)
+        ? textWhileEnd(text, 2, (char) => isNameStart(char) || isDigit(char))
+        : null;
+  if (markerEnd === null) {
     return null;
   }
-  const name = text.slice(1, cursor);
-  const markerEnd = cursor;
-  const optional = text[cursor] === '?';
-  if (optional) {
-    cursor += 1;
-  }
-  while (text[cursor] === ' ' || text[cursor] === '\t') {
-    cursor += 1;
-  }
-  const annotation = text[cursor] === '[' ? parseCodeParameterType(text, cursor) : null;
-  if (annotation) {
-    cursor = annotation.end;
-    while (text[cursor] === ' ' || text[cursor] === '\t') {
-      cursor += 1;
-    }
-  }
+  const name = text.slice(1, markerEnd);
+  const optional = text[markerEnd] === '?';
+  const beforeType = horizontalWhitespaceEnd(text, markerEnd + (optional ? 1 : 0));
+  const annotation = text[beforeType] === '[' ? parseCodeParameterType(text, beforeType) : null;
+  const cursor = annotation ? horizontalWhitespaceEnd(text, annotation.end) : beforeType;
   if (text[cursor] !== ':') {
     return null;
   }

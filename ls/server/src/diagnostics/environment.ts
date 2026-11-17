@@ -1,4 +1,7 @@
+import { OrderedSet } from 'immutable';
 import { spawn } from 'node:child_process';
+import { createIOState } from '../util/ioState';
+import { again, done, loop } from '../util/loop';
 
 export type ShellEnvironment =
   | {
@@ -34,6 +37,42 @@ const QUERY = [
   "builtin printf '__ZLS_ENV_END__\\0'",
 ].join('\n');
 
+type SymbolTables = {
+  readonly commands: OrderedSet<string>;
+  readonly builtins: OrderedSet<string>;
+  readonly aliases: OrderedSet<string>;
+  readonly functions: OrderedSet<string>;
+  readonly globalAliases: OrderedSet<string>;
+  readonly suffixAliases: OrderedSet<string>;
+};
+type EnvironmentProgress = {
+  readonly index: number;
+  readonly commandBuiltins: boolean;
+  readonly tables: SymbolTables;
+};
+const TABLE_NAMES: Readonly<Record<string, keyof SymbolTables | undefined>> = {
+  command: 'commands',
+  builtin: 'builtins',
+  alias: 'aliases',
+  function: 'functions',
+  'global-alias': 'globalAliases',
+  'suffix-alias': 'suffixAliases',
+};
+
+function environmentFrom(progress: EnvironmentProgress): ShellEnvironment {
+  const tables = progress.tables;
+  return {
+    kind: 'available',
+    commandBuiltins: progress.commandBuiltins,
+    commands: new Set(tables.commands),
+    builtins: new Set(tables.builtins),
+    aliases: new Set(tables.aliases),
+    functions: new Set(tables.functions),
+    globalAliases: new Set(tables.globalAliases),
+    suffixAliases: new Set(tables.suffixAliases),
+  };
+}
+
 export function parseShellEnvironment(output: string): ShellEnvironment {
   const marker = '__ZLS_ENV_V1__' + String.fromCharCode(0);
   const start = output.indexOf(marker);
@@ -41,62 +80,51 @@ export function parseShellEnvironment(output: string): ShellEnvironment {
     return { kind: 'unavailable', reason: 'invalid-output' };
   }
   const words = output.slice(start + marker.length).split(String.fromCharCode(0));
-  let commandBuiltins = false;
-  const commands = new Set<string>();
-  const builtins = new Set<string>();
-  const aliases = new Set<string>();
-  const functions = new Set<string>();
-  const globalAliases = new Set<string>();
-  const suffixAliases = new Set<string>();
-  for (let index = 0; index < words.length; index += 2) {
-    const kind = words[index];
+  const initial: EnvironmentProgress = {
+    index: 0,
+    commandBuiltins: false,
+    tables: {
+      commands: OrderedSet(),
+      builtins: OrderedSet(),
+      aliases: OrderedSet(),
+      functions: OrderedSet(),
+      globalAliases: OrderedSet(),
+      suffixAliases: OrderedSet(),
+    },
+  };
+  return loop<EnvironmentProgress, ShellEnvironment>(initial, (progress) => {
+    const kind = words[progress.index];
     if (kind === '__ZLS_ENV_END__') {
-      return {
-        kind: 'available',
-        commands,
-        builtins,
-        aliases,
-        globalAliases,
-        suffixAliases,
-        functions,
-        commandBuiltins,
-      };
+      return done(environmentFrom(progress));
     }
-    const name = words[index + 1];
+    const name = words[progress.index + 1];
     if (!name) {
-      return { kind: 'unavailable', reason: 'invalid-output' };
+      return done({ kind: 'unavailable', reason: 'invalid-output' });
     }
-    switch (kind) {
-      case 'option':
-        if (name !== 'command-builtins') {
-          return { kind: 'unavailable', reason: 'invalid-output' };
-        }
-        commandBuiltins = true;
-        break;
-      case 'command':
-        commands.add(name);
-        break;
-      case 'builtin':
-        builtins.add(name);
-        break;
-      case 'alias':
-        aliases.add(name);
-        break;
-      case 'global-alias':
-        globalAliases.add(name);
-        break;
-      case 'suffix-alias':
-        suffixAliases.add(name);
-        break;
-      case 'function':
-        functions.add(name);
-        break;
-      default:
-        return { kind: 'unavailable', reason: 'invalid-output' };
+    if (kind === 'option') {
+      return name === 'command-builtins'
+        ? again({ ...progress, index: progress.index + 2, commandBuiltins: true })
+        : done({ kind: 'unavailable', reason: 'invalid-output' });
     }
-  }
-  return { kind: 'unavailable', reason: 'invalid-output' };
+    const table = Object.hasOwn(TABLE_NAMES, kind) ? TABLE_NAMES[kind] : undefined;
+    return table
+      ? again({
+          ...progress,
+          index: progress.index + 2,
+          tables: {
+            ...progress.tables,
+            [table]: progress.tables[table].add(name),
+          },
+        })
+      : done({ kind: 'unavailable', reason: 'invalid-output' });
+  });
 }
+
+type ProbeState = {
+  readonly bytes: number;
+  readonly settled: boolean;
+  readonly output: readonly Buffer[];
+};
 
 export function readShellEnvironment({
   env = process.env,
@@ -113,9 +141,7 @@ export function readShellEnvironment({
       stdio: ['ignore', 'pipe', 'pipe'],
       detached: process.platform !== 'win32',
     });
-    const output: Buffer[] = [];
-    let bytes = 0;
-    let settled = false;
+    const state = createIOState<ProbeState>({ bytes: 0, settled: false, output: [] });
     function stop(): void {
       if (!child.pid) {
         return;
@@ -131,21 +157,22 @@ export function readShellEnvironment({
       }
     }
     function finish(result: ShellEnvironment): void {
-      if (settled) {
+      if (state.read().settled) {
         return;
       }
-      settled = true;
+      state.update((previous) => ({ ...previous, settled: true }));
       clearTimeout(timer);
       process.removeListener('exit', stop);
       stop();
       resolve(result);
     }
     function receive(buffer: Buffer, keep: boolean): void {
-      bytes += buffer.length;
-      if (bytes > maxBytes) {
+      state.update((previous) => ({ ...previous, bytes: previous.bytes + buffer.length }));
+      const current = state.read();
+      if (current.bytes > maxBytes) {
         finish({ kind: 'unavailable', reason: 'output-limit' });
-      } else if (keep && !settled) {
-        output.push(buffer);
+      } else if (keep && !current.settled) {
+        state.update((previous) => ({ ...previous, output: [...previous.output, buffer] }));
       }
     }
     process.once('exit', stop);
@@ -156,7 +183,7 @@ export function readShellEnvironment({
     child.on('close', (code) =>
       finish(
         code === 0
-          ? parseShellEnvironment(Buffer.concat(output).toString('utf8'))
+          ? parseShellEnvironment(Buffer.concat(state.read().output).toString('utf8'))
           : { kind: 'unavailable', reason: 'invalid-output' },
       ),
     );

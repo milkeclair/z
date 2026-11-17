@@ -1,5 +1,5 @@
 import { List } from 'immutable';
-import { loop, again, done } from '../../../util/loop';
+import { again, done, loop } from '../../../util/loop';
 import type { StringLiteralNode, WordNode, WordPartNode } from '../../ast';
 import type { SourceRange } from '../../lexer';
 import { rangeWithinText } from '../range';

@@ -13,18 +13,18 @@ import {
 import type { FunctionSnapshot } from '../refreshFunctions/main';
 import { DocumentDiagnosticReportKind, TextDocument, TextDocuments } from '../vscode_type';
 type RequestState = {
-  snapshot: FunctionSnapshot;
-  diagnosticSnapshot: DiagnosticSnapshot;
-  showPrivateFunctions: boolean;
+  readonly snapshot: FunctionSnapshot;
+  readonly diagnosticSnapshot: DiagnosticSnapshot;
+  readonly showPrivateFunctions: boolean;
 };
 export function registerLanguageFeatures({
   connection,
   documents,
   currentState,
 }: {
-  connection: Connection;
-  documents: TextDocuments<TextDocument>;
-  currentState: () => RequestState;
+  readonly connection: Connection;
+  readonly documents: TextDocuments<TextDocument>;
+  readonly currentState: () => RequestState;
 }): void {
   connection.onCompletion((params) => {
     const { snapshot, diagnosticSnapshot, showPrivateFunctions } = currentState();
@@ -80,12 +80,13 @@ export function registerLanguageFeatures({
   connection.languages.semanticTokens.on((params) => {
     const { diagnosticSnapshot } = currentState();
     const document = documents.get(params.textDocument.uri);
-    return document
+    const result = document
       ? zSemanticTokens({
           document,
           programs: diagnosticSnapshot.files.get(document.uri)?.codePrograms ?? [],
         })
       : { data: [] };
+    return { data: [...result.data] };
   });
 
   connection.languages.diagnostics.on((params) => {
@@ -102,9 +103,10 @@ export function registerLanguageFeatures({
 
   connection.languages.diagnostics.onWorkspace((params) => {
     const { diagnosticSnapshot } = currentState();
-    return workspaceDiagnostics({
+    const report = workspaceDiagnostics({
       diagnostics: diagnosticSnapshot,
       previousResultIds: params.previousResultIds,
     });
+    return { items: report.items.map((item) => ({ ...item, items: [...item.items] })) };
   });
 }

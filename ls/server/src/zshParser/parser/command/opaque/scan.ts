@@ -1,4 +1,4 @@
-import { loop, again, done } from '../../../../util/loop';
+import { again, done, loop } from '../../../../util/loop';
 import type { OperatorKind, Token } from '../../../lexer';
 import { delimitedEnd } from '../../../lexer/delimiter';
 

@@ -1,3 +1,4 @@
+import { again, done, loop } from '../util/loop';
 import type { SourceRange } from '../zshParser/lexer';
 import type { CodeProgram } from './index';
 import { codeRange } from './sourceMap';
@@ -6,21 +7,25 @@ type Quote = '' | "'" | '"' | 'ansi';
 
 /** 編集位置までの引用状態を読み、外側の文字列へ挿入するときのescape方法を決める。 */
 function quoteAt(raw: string, end: number): Quote {
-  let quote: Quote = '';
-  for (let index = 0; index < end; index++) {
-    const char = raw[index];
-    if (!quote && char === '$' && raw[index + 1] === "'") {
-      quote = 'ansi';
-      index++;
-    } else if (char === '\\' && quote !== "'") {
-      index++;
-    } else if (quote && char === (quote === 'ansi' ? "'" : quote)) {
-      quote = '';
-    } else if (!quote && (char === "'" || char === '"')) {
-      quote = char;
-    }
-  }
-  return quote;
+  return loop<{ readonly index: number; readonly quote: Quote }, Quote>(
+    { index: 0, quote: '' },
+    (state) => {
+      const { index, quote } = state;
+      if (index >= end) {
+        return done(quote);
+      }
+      const char = raw[index];
+      if (!quote && char === '$' && raw[index + 1] === "'") {
+        return again({ index: index + 2, quote: 'ansi' });
+      }
+      if (char === '\\' && quote !== "'") {
+        return again({ index: index + 2, quote });
+      }
+      const closed = quote && char === (quote === 'ansi' ? "'" : quote);
+      const opened = !quote && (char === "'" || char === '"');
+      return again({ index: index + 1, quote: closed ? '' : opened ? char : quote });
+    },
+  );
 }
 
 function singleQuoted(text: string): string {
@@ -33,11 +38,9 @@ function escaped(text: string, quote: Quote): string {
     return text.replaceAll("'", "'\\''");
   }
   if (quote === '"') {
-    let result = '';
-    for (const char of text) {
-      result += '\\$"'.includes(char) || char.charCodeAt(0) === 96 ? '\\' + char : char;
-    }
-    return result;
+    return [...text]
+      .map((char) => ('\\$"'.includes(char) || char.charCodeAt(0) === 96 ? '\\' + char : char))
+      .join('');
   }
   if (quote === 'ansi') {
     return text
@@ -59,29 +62,36 @@ export function codeEdit(
   readonly range: SourceRange;
   readonly newText: string;
 } {
-  let current: CodeProgram | undefined = program;
-  let edit = { range, newText };
-  while (current) {
+  type Edit = { readonly range: SourceRange; readonly newText: string };
+  type Progress = { readonly current: CodeProgram | undefined; readonly edit: Edit };
+  return loop<Progress, Edit>({ current: program, edit: { range, newText } }, (state) => {
+    const { current, edit } = state;
+    if (!current) {
+      return done(edit);
+    }
     const mapped = codeRange(current.localSource, edit.range);
     const start = mapped.start.offset - current.word.range.start.offset;
     const end = mapped.end.offset - current.word.range.start.offset;
-    const before = quoteAt(current.word.raw, start);
-    const after = quoteAt(current.word.raw, end);
+    const before = quoteAt(current.word.raw, start),
+      after = quoteAt(current.word.raw, end);
     if (before === after) {
-      edit = { range: mapped, newText: escaped(edit.newText, before) };
-    } else {
-      const content =
-        current.prefix +
-        current.content.slice(0, edit.range.start.offset) +
-        edit.newText +
-        current.content.slice(edit.range.end.offset);
-      const replacement = singleQuoted(content);
-      edit = {
+      return again({
+        current: current.parent,
+        edit: { range: mapped, newText: escaped(edit.newText, before) },
+      });
+    }
+    const content =
+      current.prefix +
+      current.content.slice(0, edit.range.start.offset) +
+      edit.newText +
+      current.content.slice(edit.range.end.offset);
+    const replacement = singleQuoted(content);
+    return again({
+      current: current.parent,
+      edit: {
         range: current.word.range,
         newText: current.literal.unterminated ? replacement.slice(0, -1) : replacement,
-      };
-    }
-    current = current.parent;
-  }
-  return edit;
+      },
+    });
+  });
 }

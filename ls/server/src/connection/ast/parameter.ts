@@ -1,8 +1,9 @@
+import { List } from 'immutable';
 import type { FuncArg } from '../../getFunctions/type';
 import type { FunctionTarget } from '../../refreshFunctions/target';
 import { literalWord } from '../../refreshFunctions/word';
 import type { AstNode, SimpleCommandNode, WordNode } from '../../zshParser/ast';
-import { walk } from '../../zshParser/ast';
+import { foldAst } from '../../zshParser/ast';
 import type { Cursor } from './cursor';
 import { inside } from './cursor';
 
@@ -91,8 +92,8 @@ function initializer(word: WordNode): string | null {
 }
 
 function namedReply(command: SimpleCommandNode, cursor: Cursor): string | null {
-  const sublist = [...cursor.path]
-    .reverse()
+  const sublist = cursor.path
+    .toReversed()
     .find(
       (node) => node.kind === 'sublist' && node.range.start.offset <= command.range.start.offset,
     );
@@ -115,56 +116,58 @@ function namedReply(command: SimpleCommandNode, cursor: Cursor): string | null {
 }
 
 function aliasArgument(target: FunctionTarget, cursor: Cursor, name: string): FuncArg | null {
-  let result: FuncArg | null = null;
   const allowed = new Set(cursor.path);
-  const ancestors: AstNode[] = [];
-  walk(target.definition.body, (node, depth) => {
-    ancestors.length = depth;
-    ancestors.push(node);
-    if (node.range.start.offset >= cursor.offset) {
-      return 'skip';
-    }
-    if (node.kind === 'functionDefinition') {
-      return 'skip';
-    }
-    if (
-      (node.kind === 'list' ||
+  type AliasState = { readonly result: FuncArg | null; readonly ancestors: List<AstNode> };
+  return foldAst<AliasState>(
+    target.definition.body,
+    { result: null, ancestors: List() },
+    (previous, node, depth) => {
+      const ancestors = previous.ancestors.take(depth).push(node),
+        state = { ...previous, ancestors };
+      if (node.range.start.offset >= cursor.offset || node.kind === 'functionDefinition') {
+        return { state, control: 'skip' };
+      }
+      const scoped =
+        node.kind === 'list' ||
         node.kind === 'subshellCommand' ||
         node.kind === 'commandSubstitution' ||
-        node.kind === 'processSubstitution') &&
-      !allowed.has(node)
-    ) {
-      return 'skip';
-    }
-    if (node.kind !== 'simpleCommand') {
-      return;
-    }
-    const declaration = node.semantic.role === 'declaration' ? node.semantic.declaration : null;
-    const assignments =
-      declaration?.assignments ?? (node.commandName ? [] : node.prefixAssignments);
-    for (const assignment of assignments) {
-      if (assignment.name.value !== name || assignment.range.start.offset >= cursor.offset) {
-        continue;
+        node.kind === 'processSubstitution';
+      if (scoped && !allowed.has(node)) {
+        return { state, control: 'skip' };
       }
-      const raw = assignment.value ? initializer(assignment.value.value) : null;
-      const key =
-        raw === '$REPLY'
-          ? namedReply(node, { ...cursor, path: ancestors })
-          : raw
-            ? parameterName(raw)
-            : null;
-      result =
-        assignment.operator === '=' && !assignment.subscript ? argumentByName(target, key) : null;
-    }
-    if (declaration?.names.some((variable) => variable.value === name)) {
-      result = null;
-    }
-  });
-  return result;
+      if (node.kind !== 'simpleCommand') {
+        return { state };
+      }
+      const declaration = node.semantic.role === 'declaration' ? node.semantic.declaration : null;
+      const assignments =
+        declaration?.assignments ?? (node.commandName ? [] : node.prefixAssignments);
+      const result = assignments.reduce((current, assignment) => {
+        if (assignment.name.value !== name || assignment.range.start.offset >= cursor.offset) {
+          return current;
+        }
+        const raw = assignment.value ? initializer(assignment.value.value) : null;
+        const key =
+          raw === '$REPLY'
+            ? namedReply(node, { ...cursor, path: ancestors.toArray() })
+            : raw
+              ? parameterName(raw)
+              : null;
+        return assignment.operator === '=' && !assignment.subscript
+          ? argumentByName(target, key)
+          : null;
+      }, state.result);
+      return {
+        state: {
+          ancestors,
+          result: declaration?.names.some((variable) => variable.value === name) ? null : result,
+        },
+      };
+    },
+  ).result;
 }
 
 export function parameterArgument(target: FunctionTarget, cursor: Cursor): FuncArg | null {
-  for (const node of [...cursor.path].reverse()) {
+  for (const node of cursor.path.toReversed()) {
     if (!inside(node.range, cursor.offset)) {
       continue;
     }

@@ -1,5 +1,5 @@
 import { List } from 'immutable';
-import { loop, again, done } from '../../../util/loop';
+import { again, done, loop } from '../../../util/loop';
 import type { ListItemNode, ListNode } from '../../ast';
 import type { ParserContext } from '../context';
 import { parseListItem } from '../listItem';

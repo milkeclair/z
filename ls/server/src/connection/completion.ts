@@ -34,17 +34,16 @@ export function zCompletion({
     return [];
   }
   const { prefix, range } = completion;
-  const items: CompletionItem[] = [];
-  for (const name of candidateNames(snapshot, cursor)) {
+  return [...candidateNames(snapshot, cursor)].flatMap((name): CompletionItem[] => {
     if (
       !name.startsWith(prefix) ||
       (!showPrivateFunctions && name.split('.').some((segment) => segment.startsWith('_')))
     ) {
-      continue;
+      return [];
     }
     const target = resolveFunction(snapshot, name, cursor);
     if (!target) {
-      continue;
+      return [];
     }
     const edit = cursor.program
       ? codeEdit(cursor.program, range, commandInsertion(name))
@@ -54,24 +53,25 @@ export function zCompletion({
       edit.range.start.offset > requestOffset ||
       edit.range.end.offset < requestOffset
     ) {
-      continue;
+      return [];
     }
-    items.push({
-      label: name,
-      kind: CompletionItemKind.Function,
-      data: {
-        file: target.info.file,
-        line: target.info.line,
-        args: target.info.args,
-        uri: target.uri,
-        name,
-        offset: targetRange(target).start.offset,
-        ...(target.source || cursor.targets?.get(name)?.includes(target) ? { local: true } : {}),
+    return [
+      {
+        label: name,
+        kind: CompletionItemKind.Function,
+        data: {
+          file: target.info.file,
+          line: target.info.line,
+          args: target.info.args,
+          uri: target.uri,
+          name,
+          offset: targetRange(target).start.offset,
+          ...(target.source || cursor.targets?.get(name)?.includes(target) ? { local: true } : {}),
+        },
+        textEdit: { range: protocolRange(edit.range), newText: edit.newText },
       },
-      textEdit: { range: protocolRange(edit.range), newText: edit.newText },
-    });
-  }
-  return items;
+    ];
+  });
 }
 
 const COMMAND_SEPARATORS = new Set([
@@ -171,7 +171,7 @@ function canStartCommand(cursor: Cursor): boolean {
 function completionAtCursor(
   cursor: Cursor,
   requestPosition: Position,
-): { prefix: string; range: SourceRange } | null {
+): { readonly prefix: string; readonly range: SourceRange } | null {
   const call = callAt(cursor);
   const word = call?.commandName?.word;
   if (word && inside(word.range, cursor.offset)) {

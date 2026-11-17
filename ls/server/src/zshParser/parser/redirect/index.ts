@@ -1,10 +1,10 @@
 import { List } from 'immutable';
-import { loop, again, done } from '../../../util/loop';
+import { again, done, loop } from '../../../util/loop';
 import type { HereDocumentNode, RedirectNode, WordNode } from '../../ast';
 import type { SourceRange, Token } from '../../lexer';
 import { areAdjacentTokens } from '../range';
 import type { NodeResult, ParseState } from '../state';
-import { addDiagnostic, advanceState, currentToken, skipInlineTrivia, tokenSlice } from '../state';
+import { addDiagnostic, advanceState, currentToken, skipInlineTrivia } from '../state';
 import { readWordNode } from '../word/composite';
 import { isProcessSubstitutionStart } from '../word/composite/token';
 

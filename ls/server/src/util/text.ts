@@ -1,4 +1,4 @@
-import { loop, again, done } from './loop';
+import { again, done, loop } from './loop';
 export function textWhileEnd(
   text: string,
   start: number,

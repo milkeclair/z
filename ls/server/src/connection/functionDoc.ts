@@ -65,7 +65,10 @@ export function argumentMarkdown(func: Func, arg: FuncArg, doc: Result): string 
   return `${header}\n\n${description}`;
 }
 
-export function markdownDocumentation(value: string): { kind: 'markdown'; value: string } {
+export function markdownDocumentation(value: string): {
+  readonly kind: 'markdown';
+  readonly value: string;
+} {
   return {
     kind: MarkupKind.Markdown,
     value,

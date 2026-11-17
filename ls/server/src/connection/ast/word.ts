@@ -55,18 +55,5 @@ export function namedKey(word: WordNode): string | null {
     return null;
   }
   const text = hereDocDelimiter(prefix.value).delimiter;
-  let index = 0;
-  while (index < text.length) {
-    const char = text[index];
-    const valid =
-      char === '_' ||
-      (char >= 'a' && char <= 'z') ||
-      (char >= 'A' && char <= 'Z') ||
-      (index > 0 && char >= '0' && char <= '9');
-    if (!valid) {
-      break;
-    }
-    index += 1;
-  }
-  return index > 0 && text[index] === '=' ? text.slice(0, index) : null;
+  return /^([_a-zA-Z][_a-zA-Z0-9]*)=/.exec(text)?.[1] ?? null;
 }

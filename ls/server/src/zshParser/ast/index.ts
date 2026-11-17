@@ -54,8 +54,8 @@ export type { LogicalOperatorNode, SublistContinuation, SublistNode } from './su
 export {
   commentAt,
   createQueryContext,
-  foldAst,
   findAll,
+  foldAst,
   forEachChild,
   locate,
   syntaxChildren,

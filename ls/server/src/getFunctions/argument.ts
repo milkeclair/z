@@ -1,3 +1,4 @@
+import { Range } from 'immutable';
 import { COMMENT_CHAR, NAMED_ARG_POSITION } from './constant';
 import { namedArgRegex, positionalArgRegex, specialArgRegex } from './regex';
 import { FuncArg } from './type';
@@ -50,58 +51,27 @@ function parseNamedArg(line: string): FuncArg | null {
   };
 }
 
-function sortArgs(args: FuncArg[]): FuncArg[] {
-  // [
-  //   { position: 1, isNamed: false },
-  //   { position: 2, isNamed: false },
-  //   { position: -1, isNamed: true, name: 'option1' },
-  //   { position: -1, isNamed: true, name: 'option2' },
-  // ]
-  return args.sort((left, right) => {
-    if (left.isNamed && right.isNamed) {
-      return 0;
-    }
-    if (left.isNamed) {
-      return 1;
-    }
-    if (right.isNamed) {
-      return -1;
-    }
+function sortArgs(args: readonly FuncArg[]): FuncArg[] {
+  return args.toSorted((left, right) => {
+    if (left.isNamed && right.isNamed) return 0;
+    if (left.isNamed) return 1;
+    if (right.isNamed) return -1;
     return left.position - right.position;
   });
 }
-
-export function extractFunctionArgs(lines: string[], functionLineIndex: number): FuncArg[] {
-  const args: FuncArg[] = [];
-
-  const outOfCommentLine = (line: string): boolean => {
-    return !line.trim().startsWith(COMMENT_CHAR);
-  };
-
-  for (let i = functionLineIndex - 1; i >= 0; i--) {
-    const line = lines[i];
-
-    if (outOfCommentLine(line)) {
-      break;
-    }
-
-    const positionalArg = parsePositionalArg(line);
-    if (positionalArg) {
-      args.push(positionalArg);
-      continue;
-    }
-
-    const specialArg = parseSpecialArg(line);
-    if (specialArg) {
-      args.push(specialArg);
-      continue;
-    }
-
-    const namedArg = parseNamedArg(line);
-    if (namedArg) {
-      args.push(namedArg);
-    }
-  }
-
+export function extractFunctionArgs(
+  lines: readonly string[],
+  functionLineIndex: number,
+): FuncArg[] {
+  const args = Range(functionLineIndex - 1, -1, -1)
+    .takeWhile((index) => lines[index].trim().startsWith(COMMENT_CHAR))
+    .map(
+      (index) =>
+        parsePositionalArg(lines[index]) ??
+        parseSpecialArg(lines[index]) ??
+        parseNamedArg(lines[index]),
+    )
+    .filter((argument): argument is FuncArg => argument !== null)
+    .toArray();
   return sortArgs(args);
 }

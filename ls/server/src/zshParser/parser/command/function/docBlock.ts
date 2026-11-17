@@ -1,5 +1,5 @@
 import { List } from 'immutable';
-import { loop, again, done } from '../../../../util/loop';
+import { again, done, loop } from '../../../../util/loop';
 import type { DocBlockNode } from '../../../ast';
 import type { SourceRange, Token } from '../../../lexer';
 import type { CommentContext } from '../../comment';

@@ -1,4 +1,3 @@
-import { findLineBoundaryIndex } from '../opaque/scan';
 import { parseCommand } from '..';
 import type { CommandNode, CompoundCommandNode, ListNode } from '../../../ast';
 import type { Token } from '../../../lexer';
@@ -8,6 +7,7 @@ import { readPostCommandRedirects } from '../../redirect';
 import type { NodeResult, ParseState } from '../../state';
 import { advanceState, currentToken, skipTrivia, tokenSlice } from '../../state';
 import { readWordNode } from '../../word/composite';
+import { findLineBoundaryIndex } from '../opaque/scan';
 import { readCaseBody } from './case';
 import { readConditionalLoopBody, readIfBody } from './conditional';
 import { readIterationBody } from './iteration';

@@ -10,7 +10,7 @@ import type { FunctionTargets } from './target';
 
 export type FunctionSnapshot = {
   readonly hydrator: ZshHydrator;
-  readonly functions: Func[];
+  readonly functions: readonly Func[];
   readonly targets: FunctionTargets;
   readonly documents: DocumentSnapshots;
   readonly fileProjections: FileFunctionProjections;
@@ -65,7 +65,7 @@ export function refreshFunctionSnapshot({
   };
 }
 
-export function refreshFunctions(input: RefreshInput): Func[] {
+export function refreshFunctions(input: RefreshInput): readonly Func[] {
   return refreshFunctionSnapshot(input).functions;
 }
 

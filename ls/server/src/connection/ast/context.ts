@@ -1,8 +1,11 @@
+import { OrderedSet, Seq } from 'immutable';
 import { pathToFileURL } from 'url';
+import type { CodeProgram } from '../../embeddedCode';
 import type { FuncArg } from '../../getFunctions/type';
 import type { FunctionSnapshot } from '../../refreshFunctions/main';
 import type { FunctionTarget } from '../../refreshFunctions/target';
 import { literalWord } from '../../refreshFunctions/word';
+import { again, done, loop } from '../../util/loop';
 import type { FunctionDefinitionNode, WordNode } from '../../zshParser/ast';
 import type { Cursor } from './cursor';
 import { callAt, functionCommand, inside } from './cursor';
@@ -21,40 +24,46 @@ export function resolveFunction(
   name: string,
   cursor: Pick<Cursor, 'file' | 'offset' | 'program' | 'targets'>,
 ): FunctionTarget | null {
-  let program = cursor.program;
-  let offset = cursor.offset;
-  while (program) {
-    const local = closest(program.targets.get(name) ?? [], offset);
-    if (local) {
-      return local;
-    }
-    offset = program.word.range.start.offset;
-    program = program.parent;
-  }
-  const own = closest(cursor.targets?.get(name) ?? [], offset);
-  if (own) {
-    return own;
-  }
-  const candidates = snapshot.targets.get(name) ?? [];
-  const uri = fileUri(cursor.file.sourceFile);
-  const local = candidates.filter((candidate) => candidate.uri === uri);
-  return closest(local, offset) ?? candidates[0] ?? null;
+  type Search = { readonly program: CodeProgram | undefined; readonly offset: number };
+  return loop<Search, FunctionTarget | null>(
+    { program: cursor.program, offset: cursor.offset },
+    (current) => {
+      if (current.program) {
+        const local = closest(current.program.targets.get(name) ?? [], current.offset);
+        return local
+          ? done(local)
+          : again({
+              program: current.program.parent,
+              offset: current.program.word.range.start.offset,
+            });
+      }
+      const own = closest(cursor.targets?.get(name) ?? [], current.offset);
+      if (own) {
+        return done(own);
+      }
+      const candidates = snapshot.targets.get(name) ?? [];
+      const uri = fileUri(cursor.file.sourceFile);
+      const local = candidates.filter((candidate) => candidate.uri === uri);
+      return done(closest(local, current.offset) ?? candidates[0] ?? null);
+    },
+  );
 }
 
 /** 内側のローカルな名前を候補へ加え、公開索引は変更しない。 */
 export function candidateNames(snapshot: FunctionSnapshot, cursor: Cursor): ReadonlySet<string> {
-  const names = new Set(snapshot.targets.keys());
-  for (const name of cursor.targets?.keys() ?? []) {
-    names.add(name);
-  }
-  let program = cursor.program;
-  while (program) {
-    for (const name of program.targets.keys()) {
-      names.add(name);
-    }
-    program = program.parent;
-  }
-  return names;
+  type Names = { readonly program: CodeProgram | undefined; readonly names: OrderedSet<string> };
+  const initial: Names = {
+    program: cursor.program,
+    names: OrderedSet(snapshot.targets.keys()).union(cursor.targets?.keys() ?? []),
+  };
+  return loop<Names, ReadonlySet<string>>(initial, (current) =>
+    current.program
+      ? again({
+          program: current.program.parent,
+          names: current.names.union(current.program.targets.keys()),
+        })
+      : done(new Set(current.names)),
+  );
 }
 
 function fileUri(sourceFile: string): string {
@@ -62,7 +71,7 @@ function fileUri(sourceFile: string): string {
 }
 
 export function declarationAt(snapshot: FunctionSnapshot, cursor: Cursor): FunctionTarget | null {
-  for (const node of [...cursor.path].reverse()) {
+  for (const node of cursor.path.toReversed()) {
     if (node.kind !== 'functionDefinition') {
       continue;
     }
@@ -81,8 +90,8 @@ export function declarationAt(snapshot: FunctionSnapshot, cursor: Cursor): Funct
 }
 
 export function ownerFunction(snapshot: FunctionSnapshot, cursor: Cursor): FunctionTarget | null {
-  const definition = [...cursor.path]
-    .reverse()
+  const definition = cursor.path
+    .toReversed()
     .find((node): node is FunctionDefinitionNode => node.kind === 'functionDefinition');
   if (!definition) {
     return null;
@@ -151,25 +160,29 @@ export function activeArgument(
   if (named >= 0) {
     return { argument: args[named], index: named };
   }
-  const used = new Set<string>();
-  let position = 1;
-  for (const word of command.arguments) {
-    if (word === current || word.range.start.offset >= cursor.offset) {
-      break;
-    }
-    const candidate = namedKey(word);
-    if (candidate && args.some((arg) => arg.isNamed && arg.name === candidate)) {
-      used.add(candidate);
-    } else {
-      position += 1;
-    }
-  }
-  let index = args.findIndex((arg) => !arg.isNamed && arg.position === position);
-  if (index < 0) {
-    index = args.findIndex((arg) => !arg.isNamed && (arg.name === '@' || arg.name === '*'));
-  }
-  if (index < 0) {
-    index = args.findIndex((arg) => arg.isNamed && !used.has(arg.name));
-  }
+  const supplied = Seq(command.arguments)
+    .takeWhile((word) => word !== current && word.range.start.offset < cursor.offset)
+    .reduce(
+      (previous, word) => {
+        const candidate = namedKey(word);
+        return candidate && args.some((argument) => argument.isNamed && argument.name === candidate)
+          ? { ...previous, used: previous.used.add(candidate) }
+          : { ...previous, position: previous.position + 1 };
+      },
+      { used: OrderedSet<string>(), position: 1 },
+    );
+  const positional = args.findIndex(
+    (argument) => !argument.isNamed && argument.position === supplied.position,
+  );
+  const rest =
+    positional >= 0
+      ? positional
+      : args.findIndex(
+          (argument) => !argument.isNamed && (argument.name === '@' || argument.name === '*'),
+        );
+  const index =
+    rest >= 0
+      ? rest
+      : args.findIndex((argument) => argument.isNamed && !supplied.used.has(argument.name));
   return index < 0 ? null : { argument: args[index], index };
 }

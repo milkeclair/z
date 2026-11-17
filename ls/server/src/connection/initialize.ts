@@ -5,8 +5,8 @@ import { InitializeParams } from '../vscode_type';
 import { projectRootFromSettings, workspaceProjectRoot } from './projectRoot';
 
 export type ZLsSettings = {
-  zPath: string;
-  completion: {
+  readonly zPath: string;
+  readonly completion: {
     showPrivateFunctions: boolean;
   };
 };
@@ -71,12 +71,12 @@ export function zSettingsFromConfigurationNotification(value: unknown): ZLsSetti
 }
 
 export function zInitialize(params: InitializeParams): {
-  projectRoot: string;
-  workspaceRoot: string;
-  snapshot: FunctionSnapshot;
-  functions: Func[];
-  settings: ZLsSettings;
-  serverCapabilities: ReturnType<typeof serverCapability>;
+  readonly projectRoot: string;
+  readonly workspaceRoot: string;
+  readonly snapshot: FunctionSnapshot;
+  readonly functions: readonly Func[];
+  readonly settings: ZLsSettings;
+  readonly serverCapabilities: ReturnType<typeof serverCapability>;
 } {
   const settings = zSettingsFromInitializationOptions(params.initializationOptions);
   const workspaceRoot = workspaceProjectRoot(params);

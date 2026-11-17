@@ -1,3 +1,4 @@
+import { newIORef } from 'fp-ts/IORef';
 import path from 'node:path';
 import { workspace, type ExtensionContext } from 'vscode';
 import {
@@ -8,7 +9,7 @@ import {
   type ServerOptions,
 } from 'vscode-languageclient/node';
 
-let client: LanguageClient;
+const clientReference = newIORef<LanguageClient | undefined>(undefined)();
 
 function createServerLaunch(serverModule: string): NodeModule {
   return {
@@ -48,10 +49,16 @@ function createClientOptions(): LanguageClientOptions {
 }
 
 export function activate(context: ExtensionContext): void {
-  client = new LanguageClient('z-ls', 'z-ls', createServerOptions(context), createClientOptions());
+  const client = new LanguageClient(
+    'z-ls',
+    'z-ls',
+    createServerOptions(context),
+    createClientOptions(),
+  );
+  clientReference.write(client)();
   void client.start();
 }
 
 export function deactivate() {
-  return client?.stop();
+  return clientReference.read()?.stop();
 }

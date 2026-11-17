@@ -1,4 +1,6 @@
+import { OrderedSet } from 'immutable';
 import { literalWord } from '../refreshFunctions/word';
+import { again, done, loop } from '../util/loop';
 import type { SimpleCommandNode } from '../zshParser/ast';
 
 const BUILTINS: ReadonlyMap<string, readonly string[]> = new Map([
@@ -19,25 +21,21 @@ export function moduleBuiltins(command: SimpleCommandNode): readonly string[] {
   ) {
     return [];
   }
-  const values: string[] = [];
-  for (const word of command.arguments) {
-    const value = literalWord(word);
-    if (value === null) {
-      return [];
-    }
-    values.push(value);
+  const values = command.arguments.map((word) => literalWord(word));
+  if (!values.every((value): value is string => value !== null)) {
+    return [];
   }
-  const options = new Set<string>();
-  let index = 0;
-  while (values[index]?.startsWith('-')) {
-    const option = values[index++];
-    if (option === '--') {
-      break;
+  const initial = { index: 0, options: OrderedSet<string>() };
+  const parsed = loop<typeof initial, typeof initial>(initial, (state) => {
+    const option = values[state.index];
+    if (!option?.startsWith('-')) {
+      return done(state);
     }
-    for (const flag of option.slice(1)) {
-      options.add(flag);
-    }
-  }
+    return option === '--'
+      ? done({ ...state, index: state.index + 1 })
+      : again({ index: state.index + 1, options: state.options.union(option.slice(1)) });
+  });
+  const { index, options } = parsed;
   const modules = values.slice(index);
   if (!modules.length) {
     return [];
@@ -46,17 +44,16 @@ export function moduleBuiltins(command: SimpleCommandNode): readonly string[] {
     if ([...options].some((flag) => !'Fa'.includes(flag))) {
       return [];
     }
-    const builtins = new Set<string>();
-    for (const feature of modules.slice(1)) {
+    const builtins = modules.slice(1).reduce((previous, feature) => {
       if (feature.startsWith('b:')) {
-        builtins.add(feature.slice(2));
-      } else if (feature.startsWith('+b:')) {
-        builtins.add(feature.slice(3));
-      } else if (feature.startsWith('-b:')) {
-        builtins.delete(feature.slice(3));
+        return previous.add(feature.slice(2));
       }
-    }
-    return [...builtins];
+      if (feature.startsWith('+b:')) {
+        return previous.add(feature.slice(3));
+      }
+      return feature.startsWith('-b:') ? previous.delete(feature.slice(3)) : previous;
+    }, OrderedSet<string>());
+    return builtins.toArray();
   }
   if (options.has('a')) {
     if ([...options].some((flag) => !'abi'.includes(flag))) {

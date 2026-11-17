@@ -1,3 +1,6 @@
+import { List, Range } from 'immutable';
+import { again, done, loop } from '../util/loop';
+import { lowerBound } from '../util/search';
 import type { WordNode } from '../zshParser/ast';
 import type { SourcePosition, SourceRange } from '../zshParser/lexer';
 import type { DecodedLiteral, SourceSpan } from './literal';
@@ -71,16 +74,7 @@ export function codeOffset(source: CodeSourceMap, offset: number): number | null
   if (relative < source.start || relative > source.end) {
     return null;
   }
-  let low = 0;
-  let high = source.spans.length;
-  while (low < high) {
-    const middle = Math.floor((low + high) / 2);
-    if (source.spans[middle].end <= relative) {
-      low = middle + 1;
-    } else {
-      high = middle;
-    }
-  }
+  const low = lowerBound(source.spans.length, (index) => source.spans[index].end <= relative);
   const span = source.spans[low];
   if (span && span.start < relative && relative < span.end) {
     return null;
@@ -94,53 +88,49 @@ export function codeRanges(
   range: SourceRange,
   maxRanges = Number.POSITIVE_INFINITY,
 ): readonly SourceRange[] {
-  const result: { start: number; end: number }[] = [];
   if (maxRanges <= 0) {
     return [];
   }
-  for (let index = range.start.offset; index < range.end.offset; index++) {
-    const span = source.spans[index];
-    if (!span) {
-      break;
+  const initial = { index: range.start.offset, spans: List<SourceSpan>() };
+  const spans = loop<typeof initial, List<SourceSpan>>(initial, (state) => {
+    const span = source.spans[state.index];
+    if (state.index >= range.end.offset || !span) {
+      return done(state.spans);
     }
-    const last = result.at(-1);
+    const last = state.spans.last();
     if (last && span.start <= last.end) {
-      last.end = Math.max(last.end, span.end);
-    } else {
-      if (result.length >= maxRanges) {
-        break;
-      }
-      result.push({ start: span.start, end: span.end });
+      return again({
+        index: state.index + 1,
+        spans: state.spans.set(-1, { ...last, end: Math.max(last.end, span.end) }),
+      });
     }
-  }
-  return result.map((span) => ({
-    start: sourcePosition(source, span.start),
-    end: sourcePosition(source, span.end),
-  }));
+    return state.spans.size >= maxRanges
+      ? done(state.spans)
+      : again({
+          index: state.index + 1,
+          spans: state.spans.push({ start: span.start, end: span.end }),
+        });
+  });
+  return spans
+    .map((span) => ({
+      start: sourcePosition(source, span.start),
+      end: sourcePosition(source, span.end),
+    }))
+    .toArray();
 }
 
 /** CRLFを一つの改行として扱い、UTF-16位置の逆引き用に行頭を保存する。 */
 export function textLineStarts(text: string): readonly number[] {
-  const starts = [0];
-  for (let index = 0; index < text.length; index++) {
-    if (text[index] === '\n' || (text[index] === '\r' && text[index + 1] !== '\n')) {
-      starts.push(index + 1);
-    }
-  }
-  return starts;
+  return [
+    0,
+    ...Range(0, text.length)
+      .filter((index) => text[index] === '\n' || (text[index] === '\r' && text[index + 1] !== '\n'))
+      .map((index) => index + 1),
+  ];
 }
 
 /** キャッシュした行頭から、復号済みコードの位置を返す。 */
 export function textPosition(starts: readonly number[], offset: number): SourcePosition {
-  let low = 0;
-  let high = starts.length;
-  while (low + 1 < high) {
-    const middle = Math.floor((low + high) / 2);
-    if (starts[middle] <= offset) {
-      low = middle;
-    } else {
-      high = middle;
-    }
-  }
-  return { offset, line: low, character: offset - starts[low] };
+  const line = Math.max(0, lowerBound(starts.length, (index) => starts[index] <= offset) - 1);
+  return { offset, line, character: offset - starts[line] };
 }

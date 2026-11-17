@@ -2,6 +2,8 @@ import type { CodeProgram } from '../../embeddedCode';
 import { codeOffset } from '../../embeddedCode/sourceMap';
 import type { FunctionSnapshot } from '../../refreshFunctions/main';
 import type { FunctionTargets } from '../../refreshFunctions/target';
+import { again, done, loop } from '../../util/loop';
+import { lowerBound } from '../../util/search';
 import type { TextDocument } from '../../vscode_type';
 import type { ZshFileHydration } from '../../zshHydrator';
 import type { AstNode, SimpleCommandNode } from '../../zshParser/ast';
@@ -16,65 +18,82 @@ export type Cursor = {
   readonly program?: CodeProgram;
   readonly targets?: FunctionTargets;
 };
-
+type TokenSelection = { readonly selected: number; readonly token: Token | null };
+function previousSyntaxToken(
+  file: ZshFileHydration,
+  content: string,
+  offset: number,
+): TokenSelection {
+  const selected = loop(Math.max(0, offset - 1), (index) =>
+    index > 0 && (content[index] === ' ' || content[index] === '\t' || content[index] === '\r')
+      ? again(index - 1)
+      : done(index),
+  );
+  return loop<TokenSelection, TokenSelection>(
+    { selected, token: tokenAtOffset(file.tokens, selected) },
+    (current) => {
+      const token = current.token;
+      if (!token || (token.kind !== 'whitespace' && token.kind !== 'continuation')) {
+        return done(current);
+      }
+      if (token.range.start.offset === 0) {
+        return done({ ...current, token: null });
+      }
+      const selected = token.range.start.offset - 1;
+      return again({ selected, token: tokenAtOffset(file.tokens, selected) });
+    },
+  );
+}
 export function cursorAt(
   snapshot: FunctionSnapshot,
   document: TextDocument,
-  offset: number,
+  inputOffset: number,
   programs: readonly CodeProgram[] = [],
 ): Cursor | null {
   const cached = snapshot.documents.get(document.uri);
   if (!cached || cached.version !== document.version || cached.content !== document.getText()) {
     return null;
   }
-  let program: CodeProgram | undefined;
-  let localOffset = offset;
-  for (const candidate of programs) {
-    if (candidate.root !== cached.file || (program && candidate.depth <= program.depth)) {
-      continue;
-    }
-    const mapped = codeOffset(candidate.source, offset);
-    if (mapped !== null) {
-      program = candidate;
-      localOffset = mapped;
-    }
-  }
-  const file = program?.file ?? cached.file;
-  const content = program?.content ?? cached.content;
-  offset = localOffset;
+  const scoped = programs.reduce<{
+    readonly program: CodeProgram | undefined;
+    readonly offset: number;
+  }>(
+    (previous, candidate) => {
+      if (
+        candidate.root !== cached.file ||
+        (previous.program && candidate.depth <= previous.program.depth)
+      ) {
+        return previous;
+      }
+      const mapped = codeOffset(candidate.source, inputOffset);
+      return mapped === null ? previous : { program: candidate, offset: mapped };
+    },
+    { program: undefined, offset: inputOffset },
+  );
+  const { program, offset } = scoped;
+  const file = program?.file ?? cached.file,
+    content = program?.content ?? cached.content;
   const direct = locate(file.query, offset);
   if (direct?.kind === 'comment') {
     return null;
   }
-  let token = tokenAtOffset(file.tokens, offset);
-  let selected = offset;
-  if (
+  const token = tokenAtOffset(file.tokens, offset);
+  const previous =
     token?.kind !== 'word' ||
     offset >= token.range.end.offset ||
     (direct?.kind === 'syntax' &&
-      (direct.node.kind === 'commandSubstitution' || direct.node.kind === 'processSubstitution'))
+      (direct.node.kind === 'commandSubstitution' || direct.node.kind === 'processSubstitution'));
+  const chosen = previous
+    ? previousSyntaxToken(file, content, offset)
+    : { selected: offset, token };
+  if (
+    chosen.token?.kind === 'comment' ||
+    chosen.token?.kind === 'hereDocBody' ||
+    chosen.token?.kind === 'hereDocEnd'
   ) {
-    selected = Math.max(0, offset - 1);
-    while (
-      selected > 0 &&
-      (content[selected] === ' ' || content[selected] === '\t' || content[selected] === '\r')
-    ) {
-      selected -= 1;
-    }
-    token = tokenAtOffset(file.tokens, selected);
-    while (token && (token.kind === 'whitespace' || token.kind === 'continuation')) {
-      if (token.range.start.offset === 0) {
-        token = null;
-        break;
-      }
-      selected = token.range.start.offset - 1;
-      token = tokenAtOffset(file.tokens, selected);
-    }
-  }
-  if (token?.kind === 'comment' || token?.kind === 'hereDocBody' || token?.kind === 'hereDocEnd') {
     return null;
   }
-  const location = selected === offset ? direct : locate(file.query, selected);
+  const location = chosen.selected === offset ? direct : locate(file.query, chosen.selected);
   if (location?.kind === 'comment') {
     return null;
   }
@@ -86,14 +105,13 @@ export function cursorAt(
     file,
     offset,
     path,
-    token,
+    token: chosen.token,
     ...(program ? { program } : {}),
     ...(cached.targets ? { targets: cached.targets } : {}),
   };
 }
-
 export function callAt(cursor: Cursor): SimpleCommandNode | null {
-  for (const node of [...cursor.path].reverse()) {
+  for (const node of cursor.path.toReversed()) {
     if (
       node.kind === 'redirect' ||
       node.kind === 'commandSubstitution' ||
@@ -108,37 +126,22 @@ export function callAt(cursor: Cursor): SimpleCommandNode | null {
   }
   return null;
 }
-
 export function functionCommand(command: SimpleCommandNode): boolean {
   return !command.precommandModifiers.some(
     (modifier) => modifier.type === 'builtin' || modifier.type === 'command',
   );
 }
-
 export function inside(range: SourceRange, offset: number): boolean {
   return range.start.offset <= offset && offset <= range.end.offset;
 }
-
 export function protocolRange(range: SourceRange) {
   return {
     start: { line: range.start.line, character: range.start.character },
     end: { line: range.end.line, character: range.end.character },
   };
 }
-
 function tokenAtOffset(tokens: readonly Token[], offset: number): Token | null {
-  let low = 0;
-  let high = tokens.length - 1;
-  while (low <= high) {
-    const middle = Math.floor((low + high) / 2);
-    const token = tokens[middle];
-    if (offset < token.range.start.offset) {
-      high = middle - 1;
-    } else if (offset >= token.range.end.offset) {
-      low = middle + 1;
-    } else {
-      return token;
-    }
-  }
-  return null;
+  const index = lowerBound(tokens.length, (index) => tokens[index].range.end.offset <= offset);
+  const token = tokens[index];
+  return token && offset >= token.range.start.offset ? token : null;
 }

@@ -1,6 +1,6 @@
 import { List } from 'immutable';
-import { loop, again, done } from '../../../../util/loop';
-import type { AssignNode, RedirectNode, SimpleCommandNode, WordNode } from '../../../ast';
+import { again, done, loop } from '../../../../util/loop';
+import type { SimpleCommandNode } from '../../../ast';
 import type { Token } from '../../../lexer';
 import { isCommandBoundary } from '../../boundary';
 import { enclosingRange, rangeFromTokens } from '../../range';

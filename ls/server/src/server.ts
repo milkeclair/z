@@ -1,18 +1,27 @@
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
-import type { PendingAnalysis } from './connection/analysis';
-import { analysisDelay, queueAnalysis } from './connection/analysis';
+import { analysisDelay, queueAnalysis, type PendingAnalysis } from './connection/analysis';
 import { projectRootFromSettings } from './connection/projectRoot';
 import { startPeriodicRescan } from './connection/rescan';
-import { emptyShellEnvironment, readShellEnvironment } from './diagnostics/environment';
-import { createDiagnosticSnapshot, refreshDiagnosticSnapshot } from './diagnostics/snapshot';
+import {
+  emptyShellEnvironment,
+  readShellEnvironment,
+  type ShellEnvironment,
+} from './diagnostics/environment';
+import {
+  createDiagnosticSnapshot,
+  refreshDiagnosticSnapshot,
+  type DiagnosticSnapshot,
+} from './diagnostics/snapshot';
 import {
   createFunctionSnapshot,
   refreshFunctionSnapshot,
   zInitialize,
   zSettingsFromConfigurationNotification,
 } from './main';
+import type { FunctionSnapshot } from './refreshFunctions/main';
 import { registerLanguageFeatures } from './server/providers';
+import { createIOState } from './util/ioState';
 import {
   createConnection,
   DidChangeWatchedFilesNotification,
@@ -21,186 +30,229 @@ import {
   TextDocuments,
 } from './vscode_type';
 
+type ServerState = {
+  readonly snapshot: FunctionSnapshot;
+  readonly diagnosticSnapshot: DiagnosticSnapshot;
+  readonly environment: ShellEnvironment;
+  readonly projectRoot: string;
+  readonly workspaceRoot: string;
+  readonly showPrivateFunctions: boolean;
+  readonly supportsRefresh: boolean;
+  readonly supportsWatchRegistration: boolean;
+  readonly watcherReady: boolean;
+  readonly stopped: boolean;
+  readonly stopRescan: (() => void) | undefined;
+  readonly pendingAnalysis: PendingAnalysis | null;
+  readonly analysisTimer: ReturnType<typeof setTimeout> | undefined;
+  readonly diagnosticsTimer: ReturnType<typeof setTimeout> | undefined;
+};
+
+function localFilePaths(uris: readonly string[]): readonly string[] {
+  return uris.flatMap((uri) => {
+    try {
+      return [fileURLToPath(uri)];
+    } catch {
+      return [];
+    }
+  });
+}
+
 function startServer(): void {
-  const conn = createConnection(ProposedFeatures.all);
+  const connection = createConnection(ProposedFeatures.all);
   const documents = new TextDocuments(TextDocument);
-  let snapshot = createFunctionSnapshot();
-  let diagnosticSnapshot = createDiagnosticSnapshot();
-  let environment = emptyShellEnvironment();
-  let projectRoot = '';
-  let workspaceRoot = '';
-  let showPrivateFunctions = false;
-  let supportsRefresh = false;
-  let supportsWatchRegistration = false;
-  let watcherReady = false;
-  let stopped = false;
-  let stopRescan: (() => void) | undefined;
-  let pendingAnalysis: PendingAnalysis | null = null;
-  let analysisTimer: ReturnType<typeof setTimeout> | undefined;
-  let diagnosticsTimer: ReturnType<typeof setTimeout> | undefined;
+  const state = createIOState<ServerState>({
+    snapshot: createFunctionSnapshot(),
+    diagnosticSnapshot: createDiagnosticSnapshot(),
+    environment: emptyShellEnvironment(),
+    projectRoot: '',
+    workspaceRoot: '',
+    showPrivateFunctions: false,
+    supportsRefresh: false,
+    supportsWatchRegistration: false,
+    watcherReady: false,
+    stopped: false,
+    stopRescan: undefined,
+    pendingAnalysis: null,
+    analysisTimer: undefined,
+    diagnosticsTimer: undefined,
+  });
 
   function scheduleDiagnosticsRefresh(): void {
-    if (!supportsRefresh) {
+    const current = state.read();
+    if (!current.supportsRefresh) {
       return;
     }
-    clearTimeout(diagnosticsTimer);
-    diagnosticsTimer = setTimeout(() => {
-      diagnosticsTimer = undefined;
-      void conn.languages.diagnostics.refresh().catch((error: unknown) => {
-        conn.console.warn('Diagnostic refresh failed: ' + String(error));
+    clearTimeout(current.diagnosticsTimer);
+    const timer = setTimeout(() => {
+      state.update((previous) => ({ ...previous, diagnosticsTimer: undefined }));
+      void connection.languages.diagnostics.refresh().catch((error: unknown) => {
+        connection.console.warn('Diagnostic refresh failed: ' + String(error));
       });
     }, 500);
+    state.update((previous) => ({ ...previous, diagnosticsTimer: timer }));
   }
 
-  function refresh(root = projectRoot, changedPaths?: readonly string[]): void {
-    const next = refreshFunctionSnapshot({
+  function refresh(root = state.read().projectRoot, changedPaths?: readonly string[]): void {
+    const current = state.read();
+    const snapshot = refreshFunctionSnapshot({
       projectRoot: root,
       documents,
-      previous: snapshot,
-      changedPaths: watcherReady ? changedPaths : undefined,
+      previous: current.snapshot,
+      changedPaths: current.watcherReady ? changedPaths : undefined,
     });
-    const nextDiagnostics = refreshDiagnosticSnapshot({
-      snapshot: next,
-      environment,
-      previous: diagnosticSnapshot,
+    const diagnosticSnapshot = refreshDiagnosticSnapshot({
+      snapshot,
+      environment: current.environment,
+      previous: current.diagnosticSnapshot,
     });
-    snapshot = next;
-    diagnosticSnapshot = nextDiagnostics;
-    projectRoot = root;
+    state.replace({ ...current, snapshot, diagnosticSnapshot, projectRoot: root });
     scheduleDiagnosticsRefresh();
   }
 
   function flushAnalysis(): void {
-    clearTimeout(analysisTimer);
-    analysisTimer = undefined;
-    if (!pendingAnalysis) {
+    const current = state.read();
+    clearTimeout(current.analysisTimer);
+    state.update((previous) => ({ ...previous, analysisTimer: undefined }));
+    if (!current.pendingAnalysis) {
       return;
     }
-    refresh(projectRoot, pendingAnalysis.changedPaths);
-    pendingAnalysis = null;
+    refresh(current.projectRoot, current.pendingAnalysis.changedPaths);
+    state.update((previous) => ({ ...previous, pendingAnalysis: null }));
   }
 
   function scheduleAnalysis(changedPaths: readonly string[] | undefined): void {
-    if (stopped) {
+    const current = state.read();
+    if (current.stopped) {
       return;
     }
     const now = performance.now();
-    pendingAnalysis = queueAnalysis(pendingAnalysis, watcherReady ? changedPaths : undefined, now);
-    clearTimeout(analysisTimer);
-    analysisTimer = setTimeout(
+    const pendingAnalysis = queueAnalysis(
+      current.pendingAnalysis,
+      current.watcherReady ? changedPaths : undefined,
+      now,
+    );
+    clearTimeout(current.analysisTimer);
+    const timer = setTimeout(
       () => {
         try {
           flushAnalysis();
         } catch (error: unknown) {
-          conn.console.error('Analysis refresh failed: ' + String(error));
+          connection.console.error('Analysis refresh failed: ' + String(error));
         }
       },
       analysisDelay(pendingAnalysis, now),
     );
+    state.replace({ ...current, pendingAnalysis, analysisTimer: timer });
   }
 
-  function refreshAll(root = projectRoot): void {
-    clearTimeout(analysisTimer);
-    analysisTimer = undefined;
+  function refreshAll(root = state.read().projectRoot): void {
+    clearTimeout(state.read().analysisTimer);
+    state.update((previous) => ({ ...previous, analysisTimer: undefined }));
     refresh(root);
-    pendingAnalysis = null;
+    state.update((previous) => ({ ...previous, pendingAnalysis: null }));
   }
 
-  conn.onInitialize(async (params) => {
-    const result = zInitialize(params);
-    projectRoot = result.projectRoot;
-    workspaceRoot = result.workspaceRoot;
-    snapshot = result.snapshot;
-    environment = await readShellEnvironment();
+  connection.onInitialize(async (params) => {
+    const initialized = zInitialize(params);
+    state.update((previous) => ({
+      ...previous,
+      projectRoot: initialized.projectRoot,
+      workspaceRoot: initialized.workspaceRoot,
+      snapshot: initialized.snapshot,
+    }));
+    const environment = await readShellEnvironment();
     if (environment.kind === 'unavailable') {
-      conn.console.warn('Shell environment unavailable: ' + environment.reason);
+      connection.console.warn('Shell environment unavailable: ' + environment.reason);
     }
-    diagnosticSnapshot = refreshDiagnosticSnapshot({ snapshot, environment });
-    showPrivateFunctions = result.settings.completion.showPrivateFunctions;
-    supportsRefresh = params.capabilities.workspace?.diagnostics?.refreshSupport === true;
-    supportsWatchRegistration =
-      params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration === true;
-    return result.serverCapabilities;
+    const current = state.read();
+    state.replace({
+      ...current,
+      environment,
+      diagnosticSnapshot: refreshDiagnosticSnapshot({ snapshot: current.snapshot, environment }),
+      showPrivateFunctions: initialized.settings.completion.showPrivateFunctions,
+      supportsRefresh: params.capabilities.workspace?.diagnostics?.refreshSupport === true,
+      supportsWatchRegistration:
+        params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration === true,
+    });
+    return initialized.serverCapabilities;
   });
 
-  conn.onInitialized(() => {
-    if (stopped) {
+  connection.onInitialized(() => {
+    const current = state.read();
+    if (current.stopped) {
       return;
     }
-    stopRescan?.();
-    stopRescan = startPeriodicRescan(
+    current.stopRescan?.();
+    const stopRescan = startPeriodicRescan(
       () => {
-        if (projectRoot) {
+        if (state.read().projectRoot) {
           refreshAll();
         }
       },
-      (error) => conn.console.error('Periodic rescan failed: ' + String(error)),
+      (error) => connection.console.error('Periodic rescan failed: ' + String(error)),
     );
-    if (supportsWatchRegistration) {
-      void conn.client
+    state.update((previous) => ({ ...previous, stopRescan }));
+    if (current.supportsWatchRegistration) {
+      void connection.client
         .register(DidChangeWatchedFilesNotification.type, {
           watchers: [{ globPattern: '**/*.zsh' }],
         })
         .then(() => {
-          if (stopped) {
+          if (state.read().stopped) {
             return;
           }
           refreshAll();
-          watcherReady = workspaceRoot !== '' && projectRoot === workspaceRoot;
+          state.update((previous) => ({
+            ...previous,
+            watcherReady:
+              previous.workspaceRoot !== '' && previous.projectRoot === previous.workspaceRoot,
+          }));
         })
-        .catch((error: unknown) => {
-          conn.console.warn('File watcher registration failed: ' + String(error));
-        });
+        .catch((error: unknown) =>
+          connection.console.warn('File watcher registration failed: ' + String(error)),
+        );
     }
   });
 
-  conn.onDidChangeConfiguration((params) => {
+  connection.onDidChangeConfiguration((params) => {
     const settings = zSettingsFromConfigurationNotification(params.settings);
-    showPrivateFunctions = settings.completion.showPrivateFunctions;
-    refreshAll(projectRootFromSettings(workspaceRoot, settings.zPath));
+    state.update((previous) => ({
+      ...previous,
+      showPrivateFunctions: settings.completion.showPrivateFunctions,
+    }));
+    refreshAll(projectRootFromSettings(state.read().workspaceRoot, settings.zPath));
   });
-  function filePaths(uris: readonly string[]): readonly string[] {
-    return uris.flatMap((uri) => {
-      try {
-        return [fileURLToPath(uri)];
-      } catch {
-        return [];
-      }
-    });
-  }
-
-  conn.onDidChangeWatchedFiles((params) =>
-    scheduleAnalysis(filePaths(params.changes.map((change) => change.uri))),
+  connection.onDidChangeWatchedFiles((params) =>
+    scheduleAnalysis(localFilePaths(params.changes.map((change) => change.uri))),
   );
   documents.onDidChangeContent(() => scheduleAnalysis([]));
   documents.onDidSave((event) => {
-    scheduleAnalysis(filePaths([event.document.uri]));
+    scheduleAnalysis(localFilePaths([event.document.uri]));
     flushAnalysis();
   });
   documents.onDidClose((event) => {
-    scheduleAnalysis(filePaths([event.document.uri]));
+    scheduleAnalysis(localFilePaths([event.document.uri]));
     flushAnalysis();
   });
 
   registerLanguageFeatures({
-    connection: conn,
+    connection,
     documents,
-    currentState() {
+    currentState: () => {
       flushAnalysis();
+      const { snapshot, diagnosticSnapshot, showPrivateFunctions } = state.read();
       return { snapshot, diagnosticSnapshot, showPrivateFunctions };
     },
   });
 
-  conn.onShutdown(() => {
-    stopped = true;
-    stopRescan?.();
-    stopRescan = undefined;
-    pendingAnalysis = null;
-    clearTimeout(analysisTimer);
-    clearTimeout(diagnosticsTimer);
+  connection.onShutdown(() => {
+    const current = state.read();
+    state.replace({ ...current, stopped: true, stopRescan: undefined, pendingAnalysis: null });
+    current.stopRescan?.();
+    clearTimeout(current.analysisTimer);
+    clearTimeout(current.diagnosticsTimer);
   });
-  documents.listen(conn);
-  conn.listen();
+  documents.listen(connection);
+  connection.listen();
 }
-
 startServer();

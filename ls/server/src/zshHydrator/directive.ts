@@ -1,3 +1,6 @@
+import { List } from 'immutable';
+import { again, done, loop } from '../util/loop';
+import { horizontalWhitespaceEnd, textWhileEnd } from '../util/text';
 import type { CommentNode } from '../zshParser/ast';
 import type { SourceRange } from '../zshParser/lexer';
 import { rangeWithinText } from '../zshParser/parser/range';
@@ -27,10 +30,7 @@ export function commentPayload(comment: CommentNode): {
   readonly text: string;
   readonly start: number;
 } {
-  let start = comment.text.startsWith('#') ? 1 : 0;
-  while (comment.text[start] === ' ' || comment.text[start] === '\t') {
-    start += 1;
-  }
+  const start = horizontalWhitespaceEnd(comment.text, comment.text.startsWith('#') ? 1 : 0);
   return { text: comment.text.slice(start), start };
 }
 export function parseDirective(
@@ -44,35 +44,37 @@ export function parseDirective(
   if (!namespace) {
     return null;
   }
-  let cursor = payload.start + namespace.length + 1;
-  const words: { readonly value: string; readonly start: number; readonly end: number }[] = [];
-  while (cursor < comment.text.length) {
-    while (comment.text[cursor] === ' ' || comment.text[cursor] === '\t') {
-      cursor += 1;
-    }
-    const start = cursor;
-    while (
-      cursor < comment.text.length &&
-      comment.text[cursor] !== ' ' &&
-      comment.text[cursor] !== '\t'
-    ) {
-      cursor += 1;
-    }
-    if (cursor > start) {
-      words.push({ value: comment.text.slice(start, cursor), start, end: cursor });
-    }
-  }
+  type Word = { readonly value: string; readonly start: number; readonly end: number };
+  const words = loop<{ readonly index: number; readonly words: List<Word> }, List<Word>>(
+    { index: payload.start + namespace.length + 1, words: List() },
+    (progress) => {
+      const start = horizontalWhitespaceEnd(comment.text, progress.index);
+      if (start >= comment.text.length) {
+        return done(progress.words);
+      }
+      const end = textWhileEnd(comment.text, start, (char) => char !== ' ' && char !== '\t');
+      return again({
+        index: end,
+        words: progress.words.push({ value: comment.text.slice(start, end), start, end }),
+      });
+    },
+  );
   return {
     kind: 'directive',
     range: rangeWithinText(comment.range, comment.text, payload.start, comment.text.length),
     raw: comment.text.slice(payload.start),
     namespace,
-    command: words[0]?.value ?? null,
-    arguments: words.slice(1).map((word) => ({
-      kind: 'directiveArgument',
-      raw: word.value,
-      value: word.value,
-      range: rangeWithinText(comment.range, comment.text, word.start, word.end),
-    })),
+    command: words.first()?.value ?? null,
+    arguments: words
+      .skip(1)
+      .map(
+        (word): DirectiveArgument => ({
+          kind: 'directiveArgument',
+          raw: word.value,
+          value: word.value,
+          range: rangeWithinText(comment.range, comment.text, word.start, word.end),
+        }),
+      )
+      .toArray(),
   };
 }

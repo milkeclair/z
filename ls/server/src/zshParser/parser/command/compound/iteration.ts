@@ -1,5 +1,5 @@
 import { List } from 'immutable';
-import { loop, again, done } from '../../../../util/loop';
+import { again, done, loop } from '../../../../util/loop';
 import type { ArithmeticExpansionNode, WordNode } from '../../../ast';
 import { delimitedEnd } from '../../../lexer/delimiter';
 import type { ParserContext } from '../../context';

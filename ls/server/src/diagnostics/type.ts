@@ -12,11 +12,11 @@ export type Diagnostics = {
 };
 
 export type WorkspaceDiagnosticsReport = {
-  items: {
+  readonly items: readonly {
     uri: string;
     version: number | null;
     resultId?: string;
     kind: typeof DocumentDiagnosticReportKind.Full;
-    items: Diagnostics[];
+    items: readonly Diagnostics[];
   }[];
 };

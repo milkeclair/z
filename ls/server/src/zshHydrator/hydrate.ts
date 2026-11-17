@@ -1,3 +1,4 @@
+import { Map as PersistentMap, Set as PersistentSet } from 'immutable';
 import type {
   AstNode,
   CommentNode,
@@ -47,18 +48,26 @@ export function hydrateAst(
   source: string,
   options: HydrationOptions = {},
 ): FileNode {
-  const documents = new Map<number, FunctionDocumentation>();
-  const exampleComments = new Set<number>();
-  for (const definition of findAll(ast, 'functionDefinition')) {
-    if (!definition.leadingDoc) {
-      continue;
-    }
-    const result = parseFunctionDocumentation(definition.leadingDoc, source, options);
-    documents.set(definition.leadingDoc.range.start.offset, result.documentation);
-    for (const offset of result.exampleComments) {
-      exampleComments.add(offset);
-    }
-  }
+  const parsed = findAll(ast, 'functionDefinition').reduce(
+    (previous, definition) => {
+      if (!definition.leadingDoc) {
+        return previous;
+      }
+      const result = parseFunctionDocumentation(definition.leadingDoc, source, options);
+      return {
+        documents: previous.documents.set(
+          definition.leadingDoc.range.start.offset,
+          result.documentation,
+        ),
+        exampleComments: previous.exampleComments.union(result.exampleComments),
+      };
+    },
+    {
+      documents: PersistentMap<number, FunctionDocumentation>(),
+      exampleComments: PersistentSet<number>(),
+    },
+  );
+  const { documents, exampleComments } = parsed;
   return mapAst(ast, (node: AstNode): AstNode => {
     if (node.kind === 'docBlock') {
       const original = documents.get(node.range.start.offset);

@@ -1,4 +1,5 @@
 import { globSync } from 'glob';
+import { OrderedMap, OrderedSet } from 'immutable';
 import type { TextDocument, TextDocuments } from '../vscode_type';
 import type { HydrationOptions } from './directive';
 import {
@@ -103,7 +104,7 @@ function createHydratorFromInputs({
     nodir: true,
     dot: true,
     ignore: ['**/.git/**', '**/node_modules/**'],
-  }).sort();
+  }).toSorted();
   const diskFileSet = new Set(diskFiles);
   const documentsByPath = new Map(documents.map((input) => [input.relativePath, input]));
   const diskEntries = diskFiles.flatMap((relativePath) => {
@@ -131,58 +132,51 @@ function updateHydratorFromInputs(
   documents: readonly DocumentInput[],
   changedPaths: readonly string[],
 ): ZshHydrator {
-  const files = new Map(previous.files);
-  const diskPaths = new Set(previous.diskPaths);
   const open = new Map(documents.map((input) => [input.relativePath, input]));
-  const pending = new Set(
-    changedPaths
-      .map((filename) => relativeProjectPath(previous.projectRoot, filename))
-      .filter((filename): filename is string => filename !== null),
+  const changed = changedPaths
+    .map((filename) => relativeProjectPath(previous.projectRoot, filename))
+    .filter((filename): filename is string => filename !== null);
+  const closed = [...previous.files].flatMap(([filename, entry]) =>
+    entry.fingerprint.kind === 'document' && !open.has(filename) ? [filename] : [],
   );
-  for (const [filename, entry] of previous.files) {
-    if (entry.fingerprint.kind === 'document' && !open.has(filename)) {
-      pending.add(filename);
-    }
-  }
-  for (const input of documents) {
-    if (!previous.files.has(input.relativePath)) {
-      pending.add(input.relativePath);
-    }
-  }
-  for (const filename of pending) {
+  const added = documents
+    .filter((input) => !previous.files.has(input.relativePath))
+    .map((input) => input.relativePath);
+  const pending = OrderedSet([...changed, ...closed, ...added]);
+  const initial = { files: OrderedMap(previous.files), diskPaths: OrderedSet(previous.diskPaths) };
+  const disk = pending.reduce((current, filename) => {
     const document = open.get(filename);
     if (document) {
-      if (isTrackedDiskPath(filename) && isRegularFile(document.absolutePath)) {
-        diskPaths.add(filename);
-      } else {
-        diskPaths.delete(filename);
-      }
-    } else {
-      const entry = isTrackedDiskPath(filename)
-        ? hydrateDiskFile({ previous, projectRoot: previous.projectRoot, relativePath: filename })
-        : null;
-      if (entry) {
-        files.set(filename, entry);
-        diskPaths.add(filename);
-      } else {
-        files.delete(filename);
-        diskPaths.delete(filename);
-      }
+      return {
+        ...current,
+        diskPaths:
+          isTrackedDiskPath(filename) && isRegularFile(document.absolutePath)
+            ? current.diskPaths.add(filename)
+            : current.diskPaths.delete(filename),
+      };
     }
-  }
-  for (const input of documents) {
-    files.set(input.relativePath, hydrateOpenDocument({ previous, input }));
-  }
-  // ディスク上の候補は整列順の優先度を保ち、文書だけに存在する候補は開いた順に並べる。
-  const entries = [...diskPaths].sort().flatMap((filename) => {
+    const entry = isTrackedDiskPath(filename)
+      ? hydrateDiskFile({ previous, projectRoot: previous.projectRoot, relativePath: filename })
+      : null;
+    return entry
+      ? { files: current.files.set(filename, entry), diskPaths: current.diskPaths.add(filename) }
+      : { files: current.files.delete(filename), diskPaths: current.diskPaths.delete(filename) };
+  }, initial);
+  const files = documents.reduce(
+    (current, input) => current.set(input.relativePath, hydrateOpenDocument({ previous, input })),
+    disk.files,
+  );
+  const diskEntries = [...disk.diskPaths].toSorted().flatMap((filename) => {
     const entry = files.get(filename);
     return entry ? [entry] : [];
   });
-  for (const input of documents) {
+  const openEntries = documents.flatMap((input) => {
     const entry = files.get(input.relativePath);
-    if (entry && !diskPaths.has(input.relativePath)) {
-      entries.push(entry);
-    }
-  }
-  return { ...previous, diskPaths, files: new Map(entries.map((entry) => [entry.file, entry])) };
+    return entry && !disk.diskPaths.has(input.relativePath) ? [entry] : [];
+  });
+  return {
+    ...previous,
+    diskPaths: new Set(disk.diskPaths),
+    files: new Map([...diskEntries, ...openEntries].map((entry) => [entry.file, entry])),
+  };
 }

@@ -1,4 +1,4 @@
-import { loop, again, done } from '../../../../util/loop';
+import { again, done, loop } from '../../../../util/loop';
 import type { VariableReferenceNode } from '../../../ast';
 import { delimitedEnd } from '../../../lexer/delimiter';
 import { rangeWithinText } from '../../range';

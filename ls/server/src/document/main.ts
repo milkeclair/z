@@ -1,89 +1,63 @@
+import { List } from 'immutable';
 import { sectionExtractRegexes, sectionRegexes } from './regex';
-import { Result } from './type';
-import { useCurrentSection } from './useCurrentSection';
+import type { Result, Section } from './type';
+
+type DocumentationState = {
+  readonly section: Section;
+  readonly description: List<string>;
+  readonly example: List<string>;
+  readonly result: Result;
+};
+
+function readLine(state: DocumentationState, line: string): DocumentationState {
+  const text = line.trim();
+  if (text === '') {
+    return state;
+  }
+  if (sectionRegexes.parameters.test(text)) {
+    const match = text.match(sectionExtractRegexes.parameters) || ['', ''];
+    return {
+      ...state,
+      section: 'parameters',
+      result: {
+        ...state.result,
+        parameters: [...state.result.parameters, { name: match[1], description: match[2] }],
+      },
+    };
+  }
+  if (sectionRegexes.reply.test(text)) {
+    const match = text.match(sectionExtractRegexes.reply) || [''];
+    return { ...state, section: 'reply', result: { ...state.result, reply: match[1] } };
+  }
+  if (sectionRegexes.return.test(text)) {
+    const match = text.match(sectionExtractRegexes.return) || [''];
+    return { ...state, section: 'return', result: { ...state.result, return: match[1] } };
+  }
+  if (sectionRegexes.example.test(text)) {
+    return { ...state, section: 'example' };
+  }
+  if (state.section === 'example') {
+    const match = text.match(sectionExtractRegexes.example) || [''];
+    return { ...state, example: state.example.push(match[1]) };
+  }
+  if (state.section === 'description') {
+    const match = text.match(sectionExtractRegexes.description) || [''];
+    return { ...state, description: state.description.push(match[1]) };
+  }
+  return state;
+}
 
 export function Document(commentText: string): Result {
-  const lines = commentText.split('\n');
-  const descriptionLines: string[] = [];
-  const exampleLines: string[] = [];
-  const result: Result = {
-    description: '',
-    parameters: [],
-    reply: '',
-    return: '',
-    example: '',
+  const initial: DocumentationState = {
+    section: 'description',
+    description: List(),
+    example: List(),
+    result: { description: '', parameters: [], reply: '', return: '', example: '' },
   };
-
-  const [currentSection, setCurrentSection] = useCurrentSection('description');
-
-  const handleParameters = (trimmedLine: string) => {
-    const isParam = sectionRegexes.parameters.test(trimmedLine);
-
-    if (isParam) {
-      const match = trimmedLine.match(sectionExtractRegexes.parameters) || ['', ''];
-
-      result.parameters.push({ name: match[1], description: match[2] });
-      setCurrentSection('parameters');
-    }
+  const parsed = commentText.split('\n').reduce(readLine, initial);
+  return {
+    ...parsed.result,
+    description: parsed.description.join('\n'),
+    example: parsed.example.join('\n'),
   };
-
-  const handleReply = (trimmedLine: string) => {
-    const isReply = sectionRegexes.reply.test(trimmedLine);
-
-    if (isReply) {
-      const match = trimmedLine.match(sectionExtractRegexes.reply) || [''];
-
-      result.reply = match[1];
-      setCurrentSection('reply');
-    }
-  };
-
-  const handleReturn = (trimmedLine: string) => {
-    const isReturn = sectionRegexes.return.test(trimmedLine);
-
-    if (isReturn) {
-      const match = trimmedLine.match(sectionExtractRegexes.return) || [''];
-
-      result.return = match[1];
-      setCurrentSection('return');
-    }
-  };
-
-  const handleExample = (trimmedLine: string) => {
-    const isExample = sectionRegexes.example.test(trimmedLine);
-
-    if (isExample) {
-      setCurrentSection('example');
-    } else if (currentSection() === 'example') {
-      const match = trimmedLine.match(sectionExtractRegexes.example) || [''];
-
-      exampleLines.push(match[1]);
-    }
-  };
-
-  const handleDescription = (trimmedLine: string) => {
-    if (currentSection() === 'description') {
-      const match = trimmedLine.match(sectionExtractRegexes.description) || [''];
-
-      descriptionLines.push(match[1]);
-    }
-  };
-
-  for (const line of lines) {
-    const trimmedLine = line.trim();
-    if (trimmedLine === '') {
-      continue;
-    }
-
-    handleParameters(trimmedLine);
-    handleReply(trimmedLine);
-    handleReturn(trimmedLine);
-    handleExample(trimmedLine);
-    handleDescription(trimmedLine);
-  }
-
-  result.description = descriptionLines.join('\n');
-  result.example = exampleLines.join('\n');
-
-  return result;
 }

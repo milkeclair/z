@@ -10,7 +10,7 @@ export type LanguageFeatureRequest<Params> = {
 };
 
 export type HoverContent = {
-  contents: {
+  readonly contents: {
     kind: 'markdown';
     value: string;
   };

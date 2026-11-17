@@ -1,5 +1,5 @@
 import { List } from 'immutable';
-import { loop, again, done } from '../../../util/loop';
+import { again, done, loop } from '../../../util/loop';
 import type { PipelineNode } from '../../ast';
 import { parseCommand } from '../command';
 import type { ParserContext } from '../context';

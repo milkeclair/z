@@ -1,5 +1,5 @@
 import { List } from 'immutable';
-import { loop, again, done } from '../../../util/loop';
+import { again, done, loop } from '../../../util/loop';
 import { SpecialCharacters } from '../character';
 import type { Cursor } from '../cursor';
 import { createCursor, eof, position } from '../cursor';

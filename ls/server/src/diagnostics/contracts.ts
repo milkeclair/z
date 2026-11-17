@@ -38,32 +38,29 @@ export function sameCallContracts(left: FunctionTargets, right: FunctionTargets)
   if (left.size !== right.size) {
     return false;
   }
-  for (const [name, candidates] of left) {
+  return [...left].every(([name, candidates]) => {
     const next = right.get(name);
-    if (!next || candidates.length !== next.length) {
-      return false;
-    }
-    for (let index = 0; index < candidates.length; index++) {
-      const target = candidates[index];
-      const other = next[index];
-      if (!target || !other || target.name !== other.name || target.uri !== other.uri) {
-        return false;
-      }
-      if (target.definition === other.definition) {
-        continue;
-      }
-      const parameters = documentationOf(target.definition)?.parameters ?? [];
-      const nextParameters = documentationOf(other.definition)?.parameters ?? [];
-      if (
-        parameters.length !== nextParameters.length ||
-        !parameters.every((parameter, position) => {
-          const nextParameter = nextParameters[position];
-          return nextParameter !== undefined && sameParameter(parameter, nextParameter);
-        })
-      ) {
-        return false;
-      }
-    }
-  }
-  return true;
+    return (
+      next !== undefined &&
+      candidates.length === next.length &&
+      candidates.every((target, index) => {
+        const other = next[index];
+        if (!target || !other || target.name !== other.name || target.uri !== other.uri) {
+          return false;
+        }
+        if (target.definition === other.definition) {
+          return true;
+        }
+        const parameters = documentationOf(target.definition)?.parameters ?? [];
+        const nextParameters = documentationOf(other.definition)?.parameters ?? [];
+        return (
+          parameters.length === nextParameters.length &&
+          parameters.every((parameter, position) => {
+            const otherParameter = nextParameters[position];
+            return otherParameter !== undefined && sameParameter(parameter, otherParameter);
+          })
+        );
+      })
+    );
+  });
 }

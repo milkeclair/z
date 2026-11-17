@@ -1,3 +1,4 @@
+import { List, OrderedMap, OrderedSet } from 'immutable';
 import { resolveFunction } from '../connection/ast/context';
 import { functionCommand, protocolRange } from '../connection/ast/cursor';
 import { namedKey } from '../connection/ast/word';
@@ -53,17 +54,16 @@ function argumentDiagnostics(
       .filter((parameter) => parameter.kind === 'namedParameterDoc')
       .map((parameter) => parameter.name),
   );
-  const present = new Set<string>();
-  let positional = 0;
-  for (const word of command.arguments) {
-    const key = namedKey(word);
-    if (key && named.has(key)) {
-      present.add(key);
-    } else {
-      positional += 1;
-    }
-  }
-  const diagnostics: Diagnostics[] = [];
+  const supplied = command.arguments.reduce(
+    (current, word) => {
+      const key = namedKey(word);
+      return key && named.has(key)
+        ? { ...current, present: current.present.add(key) }
+        : { ...current, positional: current.positional + 1 };
+    },
+    { present: OrderedSet<string>(), positional: 0 },
+  );
+  const { present, positional } = supplied;
   const range = protocolRange(mapRange(command.commandName?.range ?? command.range));
   const missing = parameters.filter(
     (parameter) =>
@@ -71,37 +71,37 @@ function argumentDiagnostics(
       !parameter.optional &&
       parameter.position > positional,
   );
-  if (missing.length) {
-    diagnostics.push({
-      severity: DiagnosticSeverity.Error,
-      code: 'missing-positional-argument',
-      range,
-      source: 'z-ls',
-      message:
-        'Missing required argument(s): ' +
-        missing
-          .map((parameter) =>
-            parameter.kind === 'positionalParameterDoc' ? '$' + parameter.position : '',
-          )
-          .join(', '),
-    });
-  }
-  for (const parameter of parameters) {
-    if (
-      parameter.kind === 'namedParameterDoc' &&
-      !parameter.optional &&
-      !present.has(parameter.name)
-    ) {
-      diagnostics.push({
-        severity: DiagnosticSeverity.Error,
-        code: 'missing-named-argument',
-        range,
-        source: 'z-ls',
-        message: 'Missing required named argument: ' + parameter.name,
-      });
-    }
-  }
-  return diagnostics;
+  const positionalDiagnostics: readonly Diagnostics[] = missing.length
+    ? [
+        {
+          severity: DiagnosticSeverity.Error,
+          code: 'missing-positional-argument',
+          range,
+          source: 'z-ls',
+          message:
+            'Missing required argument(s): ' +
+            missing
+              .map((parameter) =>
+                parameter.kind === 'positionalParameterDoc' ? '$' + parameter.position : '',
+              )
+              .join(', '),
+        },
+      ]
+    : [];
+  const namedDiagnostics = parameters.flatMap((parameter): readonly Diagnostics[] =>
+    parameter.kind === 'namedParameterDoc' && !parameter.optional && !present.has(parameter.name)
+      ? [
+          {
+            severity: DiagnosticSeverity.Error,
+            code: 'missing-named-argument',
+            range,
+            source: 'z-ls',
+            message: 'Missing required named argument: ' + parameter.name,
+          },
+        ]
+      : [],
+  );
+  return [...positionalDiagnostics, ...namedDiagnostics];
 }
 
 export type CallScope = { readonly file: ZshFileHydration; readonly offset: number };
@@ -122,22 +122,23 @@ function localDefinitions(
   snapshot: FunctionSnapshot,
   file: ZshFileHydration,
 ): ReadonlyMap<string, readonly FunctionDefinitionNode[]> {
-  const local = new Map<string, FunctionDefinitionNode[]>();
   if (snapshot.hydrator.files.get(file.file) === file) {
-    return local;
+    return new Map();
   }
-  for (const definition of new Set(file.functions.map((entry) => entry.definition))) {
-    for (const word of definition.names) {
-      const name = literalWord(word);
-      if (!name) {
-        continue;
-      }
-      const group = local.get(name) ?? [];
-      group.push(definition);
-      local.set(name, group);
-    }
-  }
-  return local;
+  const grouped = OrderedSet(file.functions.map((entry) => entry.definition)).reduce(
+    (groups, definition) =>
+      definition.names.reduce((previous, word) => {
+        const name = literalWord(word);
+        return name
+          ? previous.set(
+              name,
+              (previous.get(name) ?? List<FunctionDefinitionNode>()).push(definition),
+            )
+          : previous;
+      }, groups),
+    OrderedMap<string, List<FunctionDefinitionNode>>(),
+  );
+  return new Map(grouped.map((definitions) => definitions.toArray()));
 }
 
 /** 既存の前方参照の動作を保ちながら、直前にある最も近い定義を優先する。 */
@@ -160,8 +161,6 @@ export function analyzeCalls(
   context: ResolutionContext,
   options: CallAnalysisOptions = {},
 ): CallAnalysis {
-  const diagnostics: Diagnostics[] = [];
-  const targets = new Map<SimpleCommandNode, FunctionDefinitionNode>();
   const local = localDefinitions(snapshot, file);
   const scopes = (options.scopes ?? []).map((scope) => ({
     ...scope,
@@ -170,14 +169,20 @@ export function analyzeCalls(
   const origin = scopes.at(-1);
   const mapRange = options.mapRange ?? ((range) => range);
   const incomplete = file.lexerDiagnostics.length > 0 || file.parserDiagnostics.length > 0;
-  for (const command of commands) {
-    const word = command.commandName?.word;
-    const name = word && literalWord(word);
-    if (!word || !name) {
-      continue;
-    }
-    if ((!word.quoted && word.raw.startsWith('=')) || uncertainWord(word, context)) {
-      continue;
+  const initial = {
+    diagnostics: List<Diagnostics>(),
+    targets: OrderedMap<SimpleCommandNode, FunctionDefinitionNode>(),
+  };
+  const result = commands.reduce((previous, command) => {
+    const word = command.commandName?.word,
+      name = word && literalWord(word);
+    if (
+      !word ||
+      !name ||
+      (!word.quoted && word.raw.startsWith('=')) ||
+      uncertainWord(word, context)
+    ) {
+      return previous;
     }
     const inspect = command.precommandModifiers.some(
       (modifier) =>
@@ -185,7 +190,7 @@ export function analyzeCalls(
         modifier.options.some((option) => option.name.includes('v') || option.name.includes('V')),
     );
     if (inspect || isAliasReference(name, word, context)) {
-      continue;
+      return previous;
     }
     const inherited = scopes
       .map((scope) => localDefinition(scope.definitions, name, scope.offset))
@@ -199,33 +204,37 @@ export function analyzeCalls(
         })?.definition)
       : null;
     if (target) {
-      targets.set(command, target);
-      if (!incomplete) {
-        for (const diagnostic of argumentDiagnostics(command, target, context, mapRange)) {
-          if (
-            !options.ignores ||
-            !ignored(options.ignores, word.range.start.line, diagnostic.code)
-          ) {
-            diagnostics.push(diagnostic);
-          }
-        }
-      }
-    } else if (context.autoloads.has(name) && functionCommand(command)) {
-      continue;
-    } else if (
-      isKnownShellCommand(name, command, context) === false &&
-      (!options.ignores || !ignored(options.ignores, word.range.start.line, 'undefined-command'))
-    ) {
-      diagnostics.push({
-        severity: DiagnosticSeverity.Error,
-        code: 'undefined-command',
-        range: protocolRange(mapRange(word.range)),
-        source: 'z-ls',
-        message: name + ' is not defined in the project or shell environment.',
-      });
+      const diagnostics = incomplete
+        ? previous.diagnostics
+        : previous.diagnostics.concat(
+            argumentDiagnostics(command, target, context, mapRange).filter(
+              (diagnostic) =>
+                !options.ignores ||
+                !ignored(options.ignores, word.range.start.line, diagnostic.code),
+            ),
+          );
+      return { diagnostics, targets: previous.targets.set(command, target) };
     }
-  }
-  return { diagnostics, targets };
+    if (context.autoloads.has(name) && functionCommand(command)) {
+      return previous;
+    }
+    const unknown =
+      isKnownShellCommand(name, command, context) === false &&
+      (!options.ignores || !ignored(options.ignores, word.range.start.line, 'undefined-command'));
+    return unknown
+      ? {
+          ...previous,
+          diagnostics: previous.diagnostics.push({
+            severity: DiagnosticSeverity.Error,
+            code: 'undefined-command',
+            range: protocolRange(mapRange(word.range)),
+            source: 'z-ls',
+            message: name + ' is not defined in the project or shell environment.',
+          }),
+        }
+      : previous;
+  }, initial);
+  return { diagnostics: result.diagnostics.toArray(), targets: new Map(result.targets) };
 }
 
 /** 関数の参照先を必要としない呼び出し元向けに、既存の診断のみを返すAPIを保つ。 */

@@ -1,4 +1,4 @@
-import { loop, again, done } from '../../../util/loop';
+import { again, done, loop } from '../../../util/loop';
 import type { PipelineModifierNode } from '../../ast';
 import type { Token } from '../../lexer';
 import type { ParseState } from '../state';
