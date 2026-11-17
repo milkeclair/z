@@ -142,6 +142,27 @@ describe('scoped class references', () => {
     expect(semantic(fixture(source, classApi + counterClass + arrayClass).items)).toEqual([]);
   });
 
+  test('プロジェクト外の文書はプロジェクトと文書内のクラスを使い、文書内の定義は外へ漏れない', () => {
+    const scenario = fixture('z.cls.new Local leaked\nleaked.value\n', classApi + counterClass);
+    const outside = TextDocument.create(
+      pathToFileURL(path.join(path.dirname(scenario.root), 'outside.zsh')).href, 'shellscript', 1,
+      'z.cls.draw Local\nz.cls.fn value "REPLY=1"\nz.cls.drew\n' +
+      'z.cls.new Counter counter\ncounter.increment\nz.cls.new Local local_object\nlocal_object.value\n',
+    );
+    const snapshot = refreshFunctionSnapshot({
+      projectRoot: scenario.root,
+      documents: [scenario.document, outside],
+      previous: scenario.snapshot,
+    });
+
+    const diagnostics = refreshDiagnosticSnapshot({ snapshot, environment, previous: scenario.diagnostics });
+
+    expect(diagnostics.files.get(outside.uri)?.project).toBe(false);
+    expect(semantic(validateTextDocument({ diagnostics, textDocument: outside }))).toEqual([]);
+    expect(semantic(validateTextDocument({ diagnostics, textDocument: scenario.document })))
+      .toMatchObject([{ code: 'undefined-command', message: 'leaked.value is not defined in the project or shell environment.' }]);
+  });
+
   test('外側の関数の引数使用へメソッド内の引数を混ぜない', () => {
     const source = '# $1: loader argument\nload() {\n' +
       counterClass.replace('(( ++count ))', 'print "$1"') + '}\n';

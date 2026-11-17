@@ -48,7 +48,6 @@ function sameSet(left: ReadonlySet<string>, right: ReadonlySet<string>): boolean
 function resolutionContext(facts: readonly FileFacts[], environment: ShellEnvironment, projectRoot: string,
   previous: ResolutionContext): ResolutionContext {
   const classFiles = facts.map(file => file.classes);
-  const generated = classCommands(classFiles);
   const declarations: Declarations = {
     aliases: new Set(facts.flatMap(file => [...file.declarations.aliases])),
     globalAliases: new Set(facts.flatMap(file => [...file.declarations.globalAliases])),
@@ -64,7 +63,7 @@ function resolutionContext(facts: readonly FileFacts[], environment: ShellEnviro
     ...declarations,
     environment,
     projectRoot,
-    classCommands: generated,
+    classCommands: classCommands(classFiles),
     classFiles,
   };
 }
@@ -101,18 +100,8 @@ export function refreshDiagnosticSnapshot({ snapshot, environment, previous = cr
       reusableContracts && previous.context === context) {
       files.set(uri, cached);
     } else {
-      const local = input.project ? context : resolutionContext([...projectFacts, current], environment,
+      const effective = input.project ? context : resolutionContext([...projectFacts, current], environment,
         context.projectRoot, context);
-      const effective = input.project ? context : {
-        ...context,
-        classCommands: local.classCommands,
-        classFiles: local.classFiles,
-        aliases: new Set([...context.aliases, ...local.aliases]),
-        globalAliases: new Set([...context.globalAliases, ...local.globalAliases]),
-        suffixAliases: new Set([...context.suffixAliases, ...local.suffixAliases]),
-        autoloads: new Set([...context.autoloads, ...local.autoloads]),
-        builtins: new Set([...context.builtins, ...local.builtins]),
-      };
       files.set(uri, { ...input, facts: current, resultId: String(revision),
         items: suppressed(input.file, [...current.base, ...embeddedCallDiagnostics(snapshot, input.file, current.calls, effective)])
           .toSorted((left, right) => left.range.start.line - right.range.start.line ||
