@@ -51,9 +51,11 @@ z.t.describe "z.cls.instance.call._access"; {
   z.t.context "符号付きの整数を更新する場合"; {
     z.t.it "正負の符号を共通の整数判定で扱う"; {
       () {
-        z.cls.draw SignedAccess
-        z.cls.attr count 0
-        z.cls.drew
+        z.cls.draw SignedAccess; {
+          z.cls.attr count 0
+          z.cls.drew
+        }
+
         local object=""
         z.cls.new SignedAccess object
         z_cls_values[${object}:count]='typeset -i count=0'
@@ -101,10 +103,12 @@ z.t.describe "z.cls.instance.call._access"; {
   z.t.context "整数setterが他の属性を参照する場合"; {
     z.t.it "復元した実体のスコープで評価する"; {
       () {
-        z.cls.draw DirectAccessScope
-        z.cls.attr count 1
-        z.cls.attr other 13
-        z.cls.drew
+        z.cls.draw DirectAccessScope; {
+          z.cls.attr count 1
+          z.cls.attr other 13
+          z.cls.drew
+        }
+
         local object=""
         z.cls.new DirectAccessScope object
         z_cls_values[${object}:count]='typeset -i count=1'
@@ -124,10 +128,12 @@ z.t.describe "z.cls.instance.call._run"; {
   z.t.context "メソッドが0以外で戻る場合"; {
     z.t.it "更新とREPLYを保ちactive状態を解放する"; {
       () {
-        z.cls.draw DirectRunScope
-        z.cls.attr count 0
-        z.cls.fn fail 'count=4; REPLY=failed; return 7'
-        z.cls.drew
+        z.cls.draw DirectRunScope; {
+          z.cls.attr count 0
+          z.cls.fn fail 'count=4; REPLY=failed; return 7'
+          z.cls.drew
+        }
+
         local object=""
         z.cls.new DirectRunScope object
 

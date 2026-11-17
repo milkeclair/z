@@ -31,7 +31,7 @@ z.cls.draw TestCounter; {
     for item in one two; do
       label+=":$item"
     done
-    if [[ $label == default:* ]]; then
+    if z.str.start_with "$label" default:; then
       REPLY=$label
     fi
   z.cls.fn.done

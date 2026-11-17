@@ -27,6 +27,7 @@ z.t.describe "z.cls.capture._stop"; {
       TRAPDEBUG() {
         return 0
       }
+
       local original_debug=$functions[TRAPDEBUG]
       z.cls.capture._start captured_method test_stack test_file 0
 

@@ -4,30 +4,105 @@ source ${z_main}
 
 z.t.describe "z.clsのシェル設定"; {
   z.t.context "定義時のオプションを変更する場合"; {
-    local setting
+    z.t.it "localoptionsの設定を保持してメソッドを呼び出せる"; {
+      local -a output=()
+      output=("${(@f)$(
+        setopt localoptions
+        local before="$options[localoptions]:$options[localtraps]:$options[debugbeforecmd]:$options[functionargzero]"
+        source "$z_root/test/lib/cls/counter.zsh"
+        print -rl -- "$?" "$before" "$options[localoptions]:$options[localtraps]:$options[debugbeforecmd]:$options[functionargzero]"
+        local first=""
+        z.cls.new TestCounter first
+        first.increment
+        print -rl -- "$REPLY"
+      )}")
 
-    for setting in localoptions localtraps nodebugbeforecmd \
-        "localoptions localtraps nodebugbeforecmd" nofunctionargzero; do
-      z.t.it "${setting}の設定を保持してメソッドを呼び出せる"; {
-        local -a output=()
-        output=("${(@f)$(
-          setopt ${=setting}
-          local before="$options[localoptions]:$options[localtraps]:$options[debugbeforecmd]:$options[functionargzero]"
-          source "$z_root/test/lib/cls/counter.zsh"
-          print -rl -- "$?" "$before" "$options[localoptions]:$options[localtraps]:$options[debugbeforecmd]:$options[functionargzero]"
-          local first=""
-          z.cls.new TestCounter first
-          first.increment
-          print -rl -- "$REPLY"
-        )}")
+      z.t.expect.status.is.true
+      z.t.expect "${#output}" 4
+      z.t.expect "$output[1]" 0
+      z.t.expect "$output[3]" "$output[2]"
+      z.t.expect "$output[4]" 1
+    }
 
-        z.t.expect.status.is.true
-        z.t.expect "${#output}" 4
-        z.t.expect "$output[1]" 0
-        z.t.expect "$output[3]" "$output[2]"
-        z.t.expect "$output[4]" 1
-      }
-    done
+    z.t.it "localtrapsの設定を保持してメソッドを呼び出せる"; {
+      local -a output=()
+      output=("${(@f)$(
+        setopt localtraps
+        local before="$options[localoptions]:$options[localtraps]:$options[debugbeforecmd]:$options[functionargzero]"
+        source "$z_root/test/lib/cls/counter.zsh"
+        print -rl -- "$?" "$before" "$options[localoptions]:$options[localtraps]:$options[debugbeforecmd]:$options[functionargzero]"
+        local first=""
+        z.cls.new TestCounter first
+        first.increment
+        print -rl -- "$REPLY"
+      )}")
+
+      z.t.expect.status.is.true
+      z.t.expect "${#output}" 4
+      z.t.expect "$output[1]" 0
+      z.t.expect "$output[3]" "$output[2]"
+      z.t.expect "$output[4]" 1
+    }
+
+    z.t.it "nodebugbeforecmdの設定を保持してメソッドを呼び出せる"; {
+      local -a output=()
+      output=("${(@f)$(
+        setopt nodebugbeforecmd
+        local before="$options[localoptions]:$options[localtraps]:$options[debugbeforecmd]:$options[functionargzero]"
+        source "$z_root/test/lib/cls/counter.zsh"
+        print -rl -- "$?" "$before" "$options[localoptions]:$options[localtraps]:$options[debugbeforecmd]:$options[functionargzero]"
+        local first=""
+        z.cls.new TestCounter first
+        first.increment
+        print -rl -- "$REPLY"
+      )}")
+
+      z.t.expect.status.is.true
+      z.t.expect "${#output}" 4
+      z.t.expect "$output[1]" 0
+      z.t.expect "$output[3]" "$output[2]"
+      z.t.expect "$output[4]" 1
+    }
+
+    z.t.it "複数の設定を同時に保持してメソッドを呼び出せる"; {
+      local -a output=()
+      output=("${(@f)$(
+        setopt localoptions localtraps nodebugbeforecmd
+        local before="$options[localoptions]:$options[localtraps]:$options[debugbeforecmd]:$options[functionargzero]"
+        source "$z_root/test/lib/cls/counter.zsh"
+        print -rl -- "$?" "$before" "$options[localoptions]:$options[localtraps]:$options[debugbeforecmd]:$options[functionargzero]"
+        local first=""
+        z.cls.new TestCounter first
+        first.increment
+        print -rl -- "$REPLY"
+      )}")
+
+      z.t.expect.status.is.true
+      z.t.expect "${#output}" 4
+      z.t.expect "$output[1]" 0
+      z.t.expect "$output[3]" "$output[2]"
+      z.t.expect "$output[4]" 1
+    }
+
+    z.t.it "functionargzeroが無効でもメソッドを呼び出せる"; {
+      local -a output=()
+      output=("${(@f)$(
+        setopt nofunctionargzero
+        local before="$options[localoptions]:$options[localtraps]:$options[debugbeforecmd]:$options[functionargzero]"
+        source "$z_root/test/lib/cls/counter.zsh"
+        print -rl -- "$?" "$before" "$options[localoptions]:$options[localtraps]:$options[debugbeforecmd]:$options[functionargzero]"
+        local first=""
+        z.cls.new TestCounter first
+        first.increment
+        print -rl -- "$REPLY"
+      )}")
+
+      z.t.expect.status.is.true
+      z.t.expect "${#output}" 4
+      z.t.expect "$output[1]" 0
+      z.t.expect "$output[3]" "$output[2]"
+      z.t.expect "$output[4]" 1
+    }
   }
 
   z.t.context "実体を操作する際のオプションを変更する場合"; {

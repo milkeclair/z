@@ -85,6 +85,7 @@ z.t.describe "z.clsのsource"; {
           (( ++trap_calls ))
           return 0
         }
+
         local before=$functions[TRAPDEBUG]
         source "$z_root/test/lib/cls/counter.zsh"
         local after=$functions[TRAPDEBUG]
