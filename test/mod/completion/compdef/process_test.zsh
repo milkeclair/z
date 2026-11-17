@@ -18,6 +18,25 @@ z.t.describe "z.completion.compdef._register"; {
     }
   }
 
+  z.t.context "z関数候補のメニューを既に設定している場合"; {
+    z.t.it "登録時に利用者の設定を保持する"; {
+      local actual=$(z_mode=normal zsh -dfc '
+        source "$Z_ROOT/main.zsh"
+        autoload -Uz compinit
+        compinit -D
+        local context=":completion:*:*:*:*:z-functions"
+        local -a settings=()
+        zstyle "$context" menu no no-select
+
+        z.completion.compdef._register || exit 1
+        zstyle -g settings "$context" menu
+        print -r -- "$settings"
+      ')
+
+      z.t.expect "$actual" "no no-select"
+    }
+  }
+
   z.t.context "コマンド補完を繰り返し登録する場合"; {
     z.t.it "既存の補完関数を引数とともに呼べる"; {
       local actual=$(z_mode=normal zsh -dfc '

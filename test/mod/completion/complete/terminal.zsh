@@ -13,7 +13,6 @@ if z.is.eq "$1" initialize; then
   z.completion.cache.build.docs._from_file "$Z_ROOT/lib/t/mock.zsh"
   z.completion.cache.build._names
   z.completion.compdef._register || return 1
-  z.completion.compdef._register || return 1
 
   # 実際の補完処理を実行し、一致件数と表示件数を報告する
   z92_complete() {
@@ -86,6 +85,7 @@ z92_terminal_read() {
 # $input: 補完するコマンド行
 # $setup?: このケースを準備するシェルコマンド
 # $command_path?: 外部コマンドのテスト用ディレクトリ
+# $select_keys?: 候補表示後に選択メニューへ送るキー
 # $display?: 補完画面の出力を結果へ含めるか
 # $wait_for?: バッファを読む前に待つ表示文字列
 # REPLY: null
@@ -96,6 +96,7 @@ z92_terminal() {
   z.arg.named input "$@" && local input=$REPLY
   z.arg.named setup "$@" && local setup=$REPLY
   z.arg.named command_path "$@" && local command_path=$REPLY
+  z.arg.named select_keys "$@" && local select_keys=$REPLY
   z.arg.named display "$@" default=false && local display=$REPLY
   z.arg.named wait_for "$@" && local wait_for=$REPLY
   local completion_display=""
@@ -104,7 +105,7 @@ z92_terminal() {
   local prepare="PATH=${(q)command_path}; hash -r; "
   prepare+="unsetopt complete_in_word; "
   prepare+="unset z_completion_code_depth z_completion_command_depth; "
-  prepare+="unalias z.fixture.alias fixture-command 2>/dev/null; "
+  prepare+="unalias z.fixture.alias fixture-command fixture-copy 2>/dev/null; "
   prepare+="zstyle -d ':completion:*' ignored-patterns; "
   prepare+="zstyle -d ':completion:*:z-functions' ignored-patterns"
   prepare+=$'\n'"$setup"$'\n'"z.io Z92_READY"
@@ -121,7 +122,7 @@ z92_terminal() {
         local marker=:Z92_END
         ;;
       buffer)
-        zpty -w -n completion_terminal $'\x18\x18'
+        zpty -w -n completion_terminal "$select_keys"$'\x18\x18'
         local marker=:Z92_END
         ;;
     esac
