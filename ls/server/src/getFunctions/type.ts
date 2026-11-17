@@ -5,6 +5,8 @@ export type FuncArg = {
   name: string;
   optional: boolean;
   isNamed: boolean;
+  readonly valueType?: 'code';
+  readonly literalValues?: readonly string[];
 };
 
 export type Func = {

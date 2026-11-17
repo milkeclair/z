@@ -205,3 +205,42 @@ describe('argument hover@AST', () => {
     }
   });
 });
+
+describe('コード引数の型情報@help', () => {
+  const codeDefinition = "# $behavior? [code | 'call_original']: commands to execute\nrun_code() { : }\n";
+
+  test('関数hoverと補完説明へ型と許可値を残す', () => {
+    const f = fixture('run_c¦ode', codeDefinition);
+    expect(f.hover()).toMatchObject({
+      contents: { value: expect.stringContaining("$behavior? [code | 'call_original']:") },
+    });
+    const item = f.complete()?.[0];
+    if (!item) throw new Error('completion required');
+    expect(zCompletionResolve(item, f.snapshot).documentation).toMatchObject({
+      value: expect.stringContaining("$behavior? [code | 'call_original']:"),
+    });
+  });
+
+  test('引数hoverと署名にも同じ型と許可値を表示する', () => {
+    const f = fixture("run_code behavior=call_ori¦ginal", codeDefinition);
+    expect(f.hover()).toMatchObject({
+      contents: { value: expect.stringContaining("[code | 'call_original']") },
+    });
+    expect(f.signature()).toMatchObject({
+      signatures: [{
+        label: "run_code [behavior= [code | 'call_original']]",
+        parameters: [{ label: "behavior= [code | 'call_original']" }],
+      }],
+    });
+  });
+
+  test('位置引数と可変長引数のcode型も表示する', () => {
+    const f = fixture('run_c¦ode', "# $1 [code]: command\n# $@ [code | 'noop']: remaining commands\nrun_code() { : }\n");
+    expect(f.hover()).toMatchObject({
+      contents: { value: expect.stringContaining('$1 [code]:') },
+    });
+    expect(f.hover()).toMatchObject({
+      contents: { value: expect.stringContaining("$@ [code | 'noop']:") },
+    });
+  });
+});

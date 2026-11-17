@@ -1,3 +1,6 @@
+import type { FunctionTargets } from '../../refreshFunctions/target';
+import type { CodeProgram } from '../../embeddedCode';
+import { codeOffset } from '../../embeddedCode/sourceMap';
 import type { TextDocument } from '../../vscode_type';
 import type { AstNode, SimpleCommandNode } from '../../zshParser/ast';
 import { locate } from '../../zshParser/ast';
@@ -10,13 +13,23 @@ export type Cursor = {
   readonly offset: number;
   readonly path: readonly AstNode[];
   readonly token: Token | null;
+  readonly program?: CodeProgram;
+  readonly targets?: FunctionTargets;
 };
 
-export function cursorAt(snapshot: FunctionSnapshot, document: TextDocument, offset: number): Cursor | null {
+export function cursorAt(snapshot: FunctionSnapshot, document: TextDocument, offset: number, programs: readonly CodeProgram[] = []): Cursor | null {
   const cached = snapshot.documents.get(document.uri);
   if (!cached || cached.version !== document.version || cached.content !== document.getText()) return null;
-  const file = cached.file;
-  const content = cached.content;
+  let program: CodeProgram | undefined;
+  let localOffset = offset;
+  for (const candidate of programs) {
+    if (candidate.root !== cached.file || program && candidate.depth <= program.depth) continue;
+    const mapped = codeOffset(candidate.source, offset);
+    if (mapped !== null) { program = candidate; localOffset = mapped; }
+  }
+  const file = program?.file ?? cached.file;
+  const content = program?.content ?? cached.content;
+  offset = localOffset;
   const direct = locate(file.query, offset);
   if (direct?.kind === 'comment') return null;
   let token = tokenAtOffset(file.tokens, offset);
@@ -37,7 +50,7 @@ export function cursorAt(snapshot: FunctionSnapshot, document: TextDocument, off
   if (location?.kind === 'comment') return null;
   const path = location?.kind === 'syntax' ? location.path : [];
   if (path.some(node => node.kind === 'opaqueCommand' || node.kind === 'hereDocument')) return null;
-  return { file, offset, path, token };
+  return { file, offset, path, token, ...(program ? { program } : {}), ...(cached.targets ? { targets: cached.targets } : {}) };
 }
 
 export function callAt(cursor: Cursor): SimpleCommandNode | null {

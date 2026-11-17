@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { refreshFunctionSnapshot } from '../../src/refreshFunctions/main';
 import { refreshDiagnosticSnapshot } from '../../src/diagnostics/snapshot';
-import { embeddedCallDiagnostics } from '../../src/diagnostics/embedded';
+import { analyzeEmbeddedCode } from '../../src/embeddedCode';
 import { Lexer } from '../../src/zshParser/lexer';
 import type { ShellEnvironment } from '../../src/diagnostics/environment';
 
@@ -202,7 +202,7 @@ describe('documented code argument diagnostics', () => {
     const report = f.diagnostics.files.get(f.document.uri);
     if (!report) throw new Error('caller report expected');
     const spy = vi.spyOn(Lexer, 'tokenize');
-    const items = embeddedCallDiagnostics(f.snapshot, report.file, report.facts.calls, f.diagnostics.context, limits);
+    const items = analyzeEmbeddedCode(f.snapshot, report.file, report.facts.calls, f.diagnostics.context, limits).diagnostics;
     expect(items).toMatchObject([{ code: 'embedded-analysis-limit' }]);
     expect(spy).not.toHaveBeenCalled();
   });
@@ -225,7 +225,7 @@ describe('documented code argument diagnostics', () => {
     const f = fixture("run_code 'missing-one' 'missing-two'\n", '# $@ [code]: commands\nrun_code() { print "$@" }\n');
     const report = f.diagnostics.files.get(f.document.uri);
     if (!report) throw new Error('caller report expected');
-    const items = embeddedCallDiagnostics(f.snapshot, report.file, report.facts.calls, f.diagnostics.context, { maxText: 20 });
+    const items = analyzeEmbeddedCode(f.snapshot, report.file, report.facts.calls, f.diagnostics.context, { maxText: 20 }).diagnostics;
     expect(items.filter(item => item.code === 'embedded-analysis-limit')).toHaveLength(1);
     expect(items.filter(item => item.code === 'undefined-command')).toHaveLength(1);
   });

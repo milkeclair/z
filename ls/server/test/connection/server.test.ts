@@ -7,7 +7,7 @@ import { spawn } from 'node:child_process';
 import {
   createProtocolConnection, InitializeRequest, InitializedNotification,
   ShutdownRequest, ExitNotification, RegistrationRequest, CompletionRequest,
-  CompletionResolveRequest, HoverRequest, SignatureHelpRequest, DefinitionRequest, DocumentDiagnosticRequest, WorkspaceDiagnosticRequest,
+  CompletionResolveRequest, HoverRequest, SignatureHelpRequest, DefinitionRequest, DocumentDiagnosticRequest, WorkspaceDiagnosticRequest, SemanticTokensRequest,
   DidOpenTextDocumentNotification, DidChangeTextDocumentNotification,
   DidSaveTextDocumentNotification, DidCloseTextDocumentNotification,
   DidChangeWatchedFilesNotification, DidChangeConfigurationNotification, FileChangeType,
@@ -713,3 +713,70 @@ describe('server@hydration stdio', () => {
   }, 15000);
 
 });
+
+test('code引数内を実サーバーの補完・hover・署名・定義・色分けで編集する', async () => {
+  const root = fixture();
+  const definitionFile = path.join(root, 'definition.zsh');
+  const definitionUri = pathToFileURL(definitionFile).href;
+  const uri = pathToFileURL(path.join(root, 'caller.zsh')).href;
+  fs.writeFileSync(definitionFile, [
+    "# $code? [code | 'noop']: commands", 'run_code() { : }',
+    '# Greeting', '# $1: value', 'greet() { : }', '',
+  ].join('\n'));
+  const client = startServer();
+  try {
+    const initialized = await client.initialize(root, false);
+    expect(initialized.capabilities.semanticTokensProvider).toMatchObject({
+      full: true, legend: { tokenTypes: expect.arrayContaining(['function', 'variable', 'keyword']) },
+    });
+    let content = "run_code code='gr'\n";
+    await client.open(uri, content);
+    const items = await client.items(uri, content.indexOf('gr') + 2);
+    const item = items.find(item => item.label === 'greet');
+    expect(item).toMatchObject({ textEdit: { newText: 'greet', range: {
+      start: { line: 0, character: content.indexOf('gr') },
+      end: { line: 0, character: content.indexOf('gr') + 2 },
+    } } });
+
+    content = "run_code code='greet value'\n";
+    await client.edit(uri, content, 2);
+    const position = { line: 0, character: content.indexOf('greet') + 2 };
+    expect(await bounded(client.connection.sendRequest(HoverRequest.type, { textDocument: { uri }, position })))
+      .toMatchObject({ contents: { value: expect.stringContaining('Greeting') } });
+    expect(await bounded(client.connection.sendRequest(DefinitionRequest.type, { textDocument: { uri }, position })))
+      .toMatchObject({ uri: definitionUri });
+    expect(await bounded(client.connection.sendRequest(SignatureHelpRequest.type, {
+      textDocument: { uri }, position: { line: 0, character: content.indexOf('value') + 1 },
+    }))).toMatchObject({ signatures: [{ label: 'greet $1' }], activeParameter: 0 });
+    expect(await bounded(client.connection.sendRequest(HoverRequest.type, {
+      textDocument: { uri }, position: { line: 0, character: content.indexOf('code=') + 1 },
+    }))).toMatchObject({ contents: { value: expect.stringContaining("[code | 'noop']") } });
+    const colors = await bounded(client.connection.sendRequest(SemanticTokensRequest.type, { textDocument: { uri } }));
+    expect(colors?.data.length).toBeGreaterThan(0);
+
+    await client.edit(uri, "run_code code='gr", 3);
+    expect((await client.items(uri, 17)).map(item => item.label)).toContain('greet');
+
+    await client.edit(uri, 'run_code code=noop\n', 4);
+    expect(await bounded(client.connection.sendRequest(SemanticTokensRequest.type, { textDocument: { uri } })))
+      .toEqual({ data: [] });
+    await client.edit(uri, "print 'greet'\n", 5);
+    expect(await bounded(client.connection.sendRequest(SemanticTokensRequest.type, { textDocument: { uri } })))
+      .toEqual({ data: [] });
+
+    content = "run_code code='inner() { : }; inner'\ninner\n";
+    await client.edit(uri, content, 6);
+    const innerPosition = { line: 0, character: content.lastIndexOf("inner'") + 2 };
+    const localItems = await bounded(client.connection.sendRequest(CompletionRequest.type, { textDocument: { uri }, position: innerPosition }));
+    const localItem = (Array.isArray(localItems) ? localItems : localItems?.items ?? []).find(item => item.label === 'inner');
+    if (!localItem) throw new Error('inner completion required');
+    const resolved = await bounded(client.connection.sendRequest(CompletionResolveRequest.type, localItem));
+    expect(resolved.detail).not.toContain('#code:');
+    expect(await bounded(client.connection.sendRequest(DefinitionRequest.type, { textDocument: { uri }, position: innerPosition })))
+      .toMatchObject({ uri, range: { start: { line: 0, character: content.indexOf('inner') } } });
+    const outside = await bounded(client.connection.sendRequest(CompletionRequest.type, {
+      textDocument: { uri }, position: { line: 1, character: 5 },
+    }));
+    expect((Array.isArray(outside) ? outside : outside?.items ?? []).map(item => item.label)).not.toContain('inner');
+  } finally { await client.close(); }
+}, 15000);
