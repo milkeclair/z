@@ -52,11 +52,12 @@ z.t.describe "z.cls.instance._execute"; {
   }
 
   z.t.context "メソッドが0以外で戻る場合"; {
-    z.t.it "引数と終了状態を保持し、メソッドのlocal変数を呼出元へ漏らさない"; {
+    z.t.it "終了トラップの引数と戻り値を保ち、local変数を漏らさない"; {
       z.cls.store._ensure
       z_cls_instances[execute_ref]=Execute
-      z_cls_bodies[Execute:fail]='local literal=inner; REPLY="$literal:$1"; return 7'
+      z_cls_bodies[Execute:fail]='local literal=inner; trap "exit_arg=\$1" EXIT; REPLY="$literal:$1"; return 7'
       local literal=outer
+      local exit_arg=""
 
       z.cls.instance._execute execute_ref method fail argument
       local call_status=$?
@@ -65,8 +66,9 @@ z.t.describe "z.cls.instance._execute"; {
       z.t.expect "$call_status" 7
       z.t.expect "$call_reply" inner:argument
       z.t.expect "$literal" outer
+      z.t.expect "$exit_arg" argument
 
-      unset literal 'z_cls_instances[execute_ref]' 'z_cls_bodies[Execute:fail]'
+      unset literal exit_arg 'z_cls_instances[execute_ref]' 'z_cls_bodies[Execute:fail]'
     }
   }
 
