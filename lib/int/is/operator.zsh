@@ -175,3 +175,43 @@ z.int.is.lteq() {
 
   (( a <= b ))
 }
+
+# 値が上下限を含む十進整数の範囲内か確認する
+#
+# $1: 判定する値。先頭ゼロを許可する
+# $min: 下限
+# $max: 上限
+# $signed?: 値の符号を許可するか（true|false、既定: true）
+# REPLY: null
+# return: 0|1
+#
+# example:
+#  z.int.is.between 3000 min=1 max=65535 signed=false
+#  # return: 0
+z.int.is.between() {
+  z.int.is.gteq $# 1 || return 1
+  local value=$1
+  shift
+  z.arg.named min "$@" && local minimum=$REPLY
+  z.arg.named max "$@" && local maximum=$REPLY
+  z.arg.named signed "$@" default=true && local signed=$REPLY
+
+  case $signed in
+  false)
+    if z.str.start_with "$value" "+" || z.str.start_with "$value" "-"; then
+      return 1
+    fi
+    ;;
+  true)
+    ;;
+  *)
+    return 1
+    ;;
+  esac
+
+  # 同値は元の位置で比較されるため、範囲内なら下限・値・上限の順を保つ
+  z.arr.sort.numeric by=asc "$minimum" "$value" "$maximum" || return 1
+  local ordered=("${REPLY[@]}")
+
+  z.is.eq "$ordered[1]" "$minimum" && z.is.eq "$ordered[3]" "$maximum"
+}
