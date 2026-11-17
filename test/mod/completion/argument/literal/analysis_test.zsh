@@ -1,7 +1,7 @@
 source "$z_main"
 
 z.t.describe "z.completion.argument.literal._read"; {
-  z.t.it "コロンや空白を含む値と後続の注記を返す"; {
+  z.t.it "コロンや空白を含む値と後続のアノテーションを返す"; {
     z.completion.argument.literal._read "'a:b c' | 'other']"
 
     z.t.expect.reply.is.arr "a:b c" " | 'other']"

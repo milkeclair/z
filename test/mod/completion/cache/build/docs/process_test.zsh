@@ -140,7 +140,7 @@ z.t.describe "z.completion.cache.build.docs._from_file"; {
 }
 
 z.t.describe "z.completion.cache.build.docs._from_file code仕様"; {
-  z.t.it "実際のコメントから型情報を構築し、注釈削除後は残さない"; {
+  z.t.it "実際のコメントから型情報を構築し、型アノテーション削除後は残さない"; {
     local fixture_dir=$(mktemp -d)
     local fixture_file=$fixture_dir/code.zsh
     z.fixture.cached_code() { :; }

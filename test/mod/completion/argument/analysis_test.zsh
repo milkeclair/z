@@ -33,7 +33,7 @@ z.t.describe "z.completion.argument._parse"; {
     z.t.expect.is.null "$parsed[6]"
   }
 
-  z.t.it "未知の型と不完全な注釈を拒否する"; {
+  z.t.it "未知の型と不完全な型アノテーションを拒否する"; {
     z.completion.argument._parse '$code [string]: commands'
     z.t.expect.status.is.false
 

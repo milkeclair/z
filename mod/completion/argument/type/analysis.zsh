@@ -1,8 +1,8 @@
-# code型の注記を読み、後続の記述と許可値を返す
+# code型アノテーションを読み、後続の記述と許可値を返す
 #
-# $1: 型注記から始まる記述
+# $1: 型アノテーションから始まる記述
 # REPLY: 閉じ角括弧の後ろの記述、許可値
-# return: code型の注記なら0、それ以外は1
+# return: code型アノテーションなら0、それ以外は1
 #
 # example:
 #  z.completion.argument.type._read "[code | 'noop']: commands"
