@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { numberRange } from '../../src/util/collections';
 import { describe, expect, test } from 'vitest';
 import { decodeLiteral, literalValue } from '../../src/embeddedCode/literal';
 import {
@@ -16,10 +16,7 @@ describe('createCodeSourceMap', () => {
   describe('内側のコードを元の位置へ対応付ける場合', () => {
     test('複数段の引用を平坦なmapへ合成する', () => {
       const quote = (value: string) => "'" + value.split("'").join("'\\''") + "'";
-      const text = Immutable.Range(0, 4).reduce(
-        (text) => 'run code=' + quote(text),
-        'missing-command',
-      );
+      const text = numberRange(0, 4).reduce((text) => 'run code=' + quote(text), 'missing-command');
       const physical = 'print 😀;\r\n' + text + '\r\n';
 
       type Layer = {
@@ -31,7 +28,7 @@ describe('createCodeSourceMap', () => {
         file: createZshFileHydration({ sourceFile: 'x', file: 'x', content: physical }),
         source: undefined,
       };
-      const { file, source } = Immutable.Range(0, 4).reduce<Layer>((previous) => {
+      const { file, source } = numberRange(0, 4).reduce<Layer>((previous) => {
         const call = findAll(previous.file.ast, 'simpleCommand').find(
           (command) => command.commandName?.word.raw === 'run',
         );

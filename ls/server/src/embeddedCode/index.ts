@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray } from '../util/collections';
 import { protocolRange } from '../connection/ast/cursor';
 import type { CallScope, ResolutionContext } from '../diagnostics/calls';
 import { analyzeCalls } from '../diagnostics/calls';
@@ -72,14 +72,13 @@ function programTargets(
 }
 
 type AnalysisProgress = {
-  readonly pending: Immutable.List<Pending>;
+  readonly pending: ReadonlyArray<Pending>;
   readonly textBudget: number;
-  readonly diagnostics: Immutable.List<Diagnostics>;
-  readonly programs: Immutable.List<CodeProgram>;
+  readonly diagnostics: ReadonlyArray<Diagnostics>;
+  readonly programs: ReadonlyArray<CodeProgram>;
 };
 
 type ExpansionContext = {
-  readonly snapshot: FunctionSnapshot;
   readonly root: ZshFileHydration;
   readonly current: Pending;
   readonly maxDepth: number;
@@ -106,18 +105,16 @@ function embeddedSyntax(program: CodeProgram): readonly Diagnostics[] {
 
   return syntax
     .filter((diagnostic) => !ignored(controls, diagnostic.range.start.line, diagnostic.kind))
-    .map(
-      (diagnostic): Diagnostics => ({
-        severity:
-          diagnostic.source === 'z-ls/documentation'
-            ? DiagnosticSeverity.Warning
-            : DiagnosticSeverity.Error,
-        code: diagnostic.kind,
-        range: protocolRange(codeRange(program.source, diagnostic.range)),
-        message: diagnostic.message,
-        source: diagnostic.source,
-      }),
-    );
+    .map((diagnostic): Diagnostics => ({
+      severity:
+        diagnostic.source === 'z-ls/documentation'
+          ? DiagnosticSeverity.Warning
+          : DiagnosticSeverity.Error,
+      code: diagnostic.kind,
+      range: protocolRange(codeRange(program.source, diagnostic.range)),
+      message: diagnostic.message,
+      source: diagnostic.source,
+    }));
 }
 
 function inheritedContext(
@@ -149,7 +146,7 @@ function expandArgument(
   argument: CodeArgument,
   context: ExpansionContext,
 ): AnalysisProgress {
-  const { current, root, snapshot, maxDepth, complete, sourceMap, ignores } = context;
+  const { current, root, maxDepth, complete, sourceMap, ignores } = context;
 
   if (argument.kind === 'limit' || current.depth >= maxDepth) {
     const report =
@@ -159,7 +156,7 @@ function expandArgument(
     return report
       ? {
           ...progress,
-          diagnostics: progress.diagnostics.push({
+          diagnostics: appendItems(progress.diagnostics, {
             severity: DiagnosticSeverity.Warning,
             code: 'embedded-analysis-limit',
             source: 'z-ls',
@@ -206,9 +203,9 @@ function expandArgument(
 
   return {
     ...progress,
-    programs: progress.programs.push(program),
+    programs: appendItems(progress.programs, program),
     diagnostics: progress.diagnostics.concat(embeddedSyntax(program)),
-    pending: progress.pending.push(pending),
+    pending: appendItems(progress.pending, pending),
   };
 }
 
@@ -228,9 +225,9 @@ export function analyzeEmbeddedCode(
 } {
   const maxDepth = limits.maxDepth ?? MAX_CODE_DEPTH;
   const initial: AnalysisProgress = {
-    pending: Immutable.List([{ file, calls, context, scopes: [], depth: 0 }]),
-    diagnostics: Immutable.List(),
-    programs: Immutable.List(),
+    pending: collectArray([{ file, calls, context, scopes: [], depth: 0 }]),
+    diagnostics: collectArray(),
+    programs: collectArray(),
     textBudget: limits.maxText ?? MAX_CODE_TEXT,
   };
 
@@ -241,10 +238,10 @@ export function analyzeEmbeddedCode(
       readonly programs: readonly CodeProgram[];
     }
   >(initial, (state) => {
-    const current = state.pending.last();
+    const current = state.pending.at(-1);
 
     if (!current) {
-      return done({ diagnostics: state.diagnostics.toArray(), programs: state.programs.toArray() });
+      return done({ diagnostics: state.diagnostics, programs: state.programs });
     }
 
     const sourceMap = current.program?.source;
@@ -257,7 +254,7 @@ export function analyzeEmbeddedCode(
     });
     const reported: AnalysisProgress = {
       ...state,
-      pending: state.pending.pop(),
+      pending: state.pending.slice(0, -1),
       diagnostics: complete ? state.diagnostics.concat(analysis.diagnostics) : state.diagnostics,
     };
     const next = [...analysis.targets].reduce((progress, [command, target]) => {
@@ -267,7 +264,6 @@ export function analyzeEmbeddedCode(
       return batch.arguments.reduce(
         (previous, argument) =>
           expandArgument(previous, argument, {
-            snapshot,
             root: file,
             current,
             maxDepth,

@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray, numberRange } from '../../src/util/collections';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -48,40 +48,38 @@ function tokens(content: string) {
     readonly end: number;
   };
 
-  return Immutable.Range(0, result.data.length, 5)
-    .reduce(
-      (previous, index) => {
-        const line = previous.line + result.data[index];
-        const character = result.data[index]
-          ? result.data[index + 1]
-          : previous.character + result.data[index + 1];
-        const length = result.data[index + 2];
-        const last = previous.tokens.last();
+  return numberRange(0, result.data.length, 5).reduce(
+    (previous, index) => {
+      const line = previous.line + result.data[index];
+      const character = result.data[index]
+        ? result.data[index + 1]
+        : previous.character + result.data[index + 1];
+      const length = result.data[index + 2];
+      const last = previous.tokens.at(-1);
 
-        expect(length).toBeGreaterThan(0);
+      expect(length).toBeGreaterThan(0);
 
-        if (last?.line === line) {
-          expect(character).toBeGreaterThanOrEqual(last.end);
-        }
+      if (last?.line === line) {
+        expect(character).toBeGreaterThanOrEqual(last.end);
+      }
 
-        return {
-          line,
-          character,
-          tokens: previous.tokens.push({
-            text: document.getText({
-              start: { line, character },
-              end: { line, character: character + length },
-            }),
-            type: codeTokenTypes[result.data[index + 3]],
-            line,
-            start: character,
-            end: character + length,
+      return {
+        line,
+        character,
+        tokens: appendItems(previous.tokens, {
+          text: document.getText({
+            start: { line, character },
+            end: { line, character: character + length },
           }),
-        };
-      },
-      { line: 0, character: 0, tokens: Immutable.List<Decoded>() },
-    )
-    .tokens.toArray();
+          type: codeTokenTypes[result.data[index + 3]],
+          line,
+          start: character,
+          end: character + length,
+        }),
+      };
+    },
+    { line: 0, character: 0, tokens: collectArray<Decoded>() },
+  ).tokens;
 }
 
 describe('zSemanticTokens', () => {
@@ -143,10 +141,7 @@ describe('zSemanticTokens', () => {
 
   describe('解析量の上限を守る場合', () => {
     test('深いコマンド置換でも色分けを有界に返す', () => {
-      const code = Immutable.Range(0, 1000).reduce(
-        (code) => 'print "$(' + code + ')"',
-        'greet value',
-      );
+      const code = numberRange(0, 1000).reduce((code) => 'print "$(' + code + ')"', 'greet value');
       const result = tokens("run_code code='" + code + "'\n");
 
       expect(result.length).toBeGreaterThan(0);

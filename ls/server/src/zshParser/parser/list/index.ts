@@ -1,5 +1,5 @@
-import * as Immutable from 'immutable';
 import { again, done, loop } from '../../../util/loop';
+import { pushStack, stackValues, type Stack } from '../../../util/stack';
 import type { ListItemNode, ListNode } from '../../ast';
 import type { ParserContext } from '../context';
 import { parseListItem } from '../listItem';
@@ -58,31 +58,36 @@ function parseListItems({
   readonly context: ParserContext;
   readonly isEnd: ListEnd;
 }): ListItemsResult {
-  const initial = { current: skipTrivia(state), items: Immutable.List<ListItemNode>() };
+  type Progress = {
+    readonly state: ParseState;
+    readonly items: Stack<ListItemNode> | null;
+  };
 
-  return loop<typeof initial, ListItemsResult>(initial, ({ current, items }) => {
-    if (isEnd(currentToken(current))) {
-      return done({ items: items.toArray(), state: current });
+  const result = loop<Progress, Progress>({ state: skipTrivia(state), items: null }, (progress) => {
+    const { state: current, items } = progress;
+    const token = currentToken(current);
+
+    if (isEnd(token)) {
+      return done(progress);
     }
 
     if (current.stopped) {
-      const range = { start: currentToken(current).range.start, end: current.eof.range.end };
+      const range = { start: token.range.start, end: current.eof.range.end };
+      const item: ListItemNode = {
+        kind: 'listItem',
+        range,
+        terminator: null,
+        sublist: { kind: 'unknown', range, reason: 'nestingLimitExceeded' },
+      };
 
       return done({
-        items: items
-          .push({
-            kind: 'listItem',
-            range,
-            terminator: null,
-            sublist: { kind: 'unknown', range, reason: 'nestingLimitExceeded' },
-          })
-          .toArray(),
+        items: pushStack(item, items),
         state: { ...current, index: current.tokens.length - 1 },
       });
     }
 
-    if (listTerminatorType(currentToken(current))) {
-      return again({ current: skipTrivia(advanceState(current)), items });
+    if (listTerminatorType(token)) {
+      return again({ state: skipTrivia(advanceState(current)), items });
     }
 
     const item = parseListItem({ state: current, context });
@@ -91,6 +96,8 @@ function parseListItems({
         ? advanceState(item.state)
         : item.state;
 
-    return again({ current: skipTrivia(next), items: items.push(item.node) });
+    return again({ state: skipTrivia(next), items: pushStack(item.node, items) });
   });
+
+  return { items: Array.from(stackValues(result.items)).toReversed(), state: result.state };
 }

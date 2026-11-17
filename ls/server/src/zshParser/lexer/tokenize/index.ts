@@ -1,5 +1,3 @@
-import * as Immutable from 'immutable';
-import { again, done, loop } from '../../../util/loop';
 import { SpecialCharacters } from '../character';
 import type { Cursor } from '../cursor';
 import { createCursor, eof, position } from '../cursor';
@@ -35,64 +33,48 @@ export function tokenize(input: string, options: TokenizeOptions = {}): Tokenize
     context: createLexicalContext(),
   };
 
-  type Progress = {
-    readonly state: TokenizeState;
-    readonly tokens: Immutable.List<Token>;
-    readonly diagnostics: Immutable.List<LexerDiagnostic>;
-  };
-
-  const result = loop<Progress, Progress>(
-    { state: initial, tokens: Immutable.List(), diagnostics: Immutable.List() },
-    (progress) => {
-      if (eof(progress.state.cursor) && !progress.state.context.readHereDocs) {
-        return done(progress);
-      }
-
-      const next = readTokenizeStep({ state: progress.state, sourceFile, reader, isWordBoundary });
-
-      return again({
-        state: next,
-        tokens: progress.tokens.concat(next.tokens),
-        diagnostics: progress.diagnostics.concat(next.diagnostics),
-      });
-    },
-  );
-  const end = position(result.state.cursor);
-
-  type FinalContext = {
-    readonly context: LexicalContext | null;
-    readonly diagnostics: Immutable.List<LexerDiagnostic>;
-  };
-
-  const diagnostics = loop<FinalContext, Immutable.List<LexerDiagnostic>>(
-    { context: result.state.context, diagnostics: result.diagnostics },
-    (progress) => {
-      if (!progress.context) {
-        return done(progress.diagnostics);
-      }
-
-      const unclosed = progress.context.pendingHereDocs.map(
-        (request): LexerDiagnostic => ({
-          kind: 'unclosedHereDocument',
-          message: 'Missing here-document delimiter ' + request.delimiter,
-          sourceFile,
-          range: { start: end, end },
-        }),
-      );
-
-      return again({
-        context: progress.context.parent,
-        diagnostics: progress.diagnostics.concat(unclosed),
-      });
-    },
-  );
+  const chunks = Array.from(readTokens(initial, sourceFile, reader));
 
   return {
-    tokens: result.tokens
-      .push(
-        createToken({ kind: 'eof', value: SpecialCharacters.empty, sourceFile, start: end, end }),
-      )
-      .toArray(),
-    diagnostics: diagnostics.toArray(),
+    tokens: chunks.flatMap((chunk) => chunk.tokens),
+    diagnostics: chunks.flatMap((chunk) => chunk.diagnostics),
   };
+}
+
+function* readTokens(
+  state: TokenizeState,
+  sourceFile: string,
+  reader: ReturnType<typeof Reader>,
+): Generator<TokenizeResult> {
+  while (!eof(state.cursor) || state.context.readHereDocs) {
+    state = readTokenizeStep({ state, sourceFile, reader, isWordBoundary });
+    yield { tokens: state.tokens, diagnostics: state.diagnostics };
+  }
+
+  const end = position(state.cursor);
+  yield {
+    tokens: [
+      createToken({ kind: 'eof', value: SpecialCharacters.empty, sourceFile, start: end, end }),
+    ],
+    diagnostics: Array.from(unclosedHereDocuments(state.context, sourceFile, end)),
+  };
+}
+
+function* unclosedHereDocuments(
+  context: LexicalContext | null,
+  sourceFile: string,
+  end: ReturnType<typeof position>,
+): Generator<LexerDiagnostic> {
+  while (context) {
+    for (const request of context.pendingHereDocs) {
+      yield {
+        kind: 'unclosedHereDocument',
+        message: 'Missing here-document delimiter ' + request.delimiter,
+        sourceFile,
+        range: { start: end, end },
+      };
+    }
+
+    context = context.parent;
+  }
 }

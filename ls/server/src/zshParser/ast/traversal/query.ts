@@ -1,4 +1,3 @@
-import * as Immutable from 'immutable';
 import type {
   AstNode,
   CommandSubstitutionNode,
@@ -295,18 +294,15 @@ function closestSyntaxFrame(file: FileNode, offset: number): PositionFrame {
   return best;
 }
 
+function* ancestors(frame: PositionFrame | null): Generator<AstNode> {
+  while (frame) {
+    yield frame.node;
+    frame = frame.parent;
+  }
+}
+
 function syntaxPath(frame: PositionFrame): readonly AstNode[] {
-  return loop<
-    {
-      readonly frame: PositionFrame | null;
-      readonly nodes: Immutable.List<AstNode>;
-    },
-    readonly AstNode[]
-  >({ frame: frame, nodes: Immutable.List() }, (progress) =>
-    progress.frame
-      ? again({ frame: progress.frame.parent, nodes: progress.nodes.push(progress.frame.node) })
-      : done(progress.nodes.reverse().toArray()),
-  );
+  return Array.from(ancestors(frame)).toReversed();
 }
 
 export function locate(query: QueryContext, offset: number): AstLocation | null {

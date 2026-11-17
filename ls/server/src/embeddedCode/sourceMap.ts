@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray, numberRange, replaceItem } from '../util/collections';
 import { again, done, loop } from '../util/loop';
 import { lowerBound } from '../util/search';
 import type { WordNode } from '../zshParser/ast';
@@ -102,44 +102,42 @@ export function codeRanges(
     return [];
   }
 
-  const initial = { index: range.start.offset, spans: Immutable.List<SourceSpan>() };
-  const spans = loop<typeof initial, Immutable.List<SourceSpan>>(initial, (state) => {
+  const initial = { index: range.start.offset, spans: collectArray<SourceSpan>() };
+  const spans = loop<typeof initial, ReadonlyArray<SourceSpan>>(initial, (state) => {
     const span = source.spans[state.index];
 
     if (state.index >= range.end.offset || !span) {
       return done(state.spans);
     }
 
-    const last = state.spans.last();
+    const last = state.spans.at(-1);
 
     if (last && span.start <= last.end) {
       return again({
         index: state.index + 1,
-        spans: state.spans.set(-1, { ...last, end: Math.max(last.end, span.end) }),
+        spans: replaceItem(state.spans, -1, { ...last, end: Math.max(last.end, span.end) }),
       });
     }
 
-    return state.spans.size >= maxRanges
+    return state.spans.length >= maxRanges
       ? done(state.spans)
       : again({
           index: state.index + 1,
-          spans: state.spans.push({ start: span.start, end: span.end }),
+          spans: appendItems(state.spans, { start: span.start, end: span.end }),
         });
   });
 
-  return spans
-    .map((span) => ({
-      start: sourcePosition(source, span.start),
-      end: sourcePosition(source, span.end),
-    }))
-    .toArray();
+  return spans.map((span) => ({
+    start: sourcePosition(source, span.start),
+    end: sourcePosition(source, span.end),
+  }));
 }
 
 /** CRLFを一つの改行として扱い、UTF-16位置の逆引き用に行頭を保存する。 */
 export function textLineStarts(text: string): readonly number[] {
   return [
     0,
-    ...Immutable.Range(0, text.length)
+    ...numberRange(0, text.length)
       .filter((index) => text[index] === '\n' || (text[index] === '\r' && text[index + 1] !== '\n'))
       .map((index) => index + 1),
   ];

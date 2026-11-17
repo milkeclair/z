@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray } from '../../../../util/collections';
 import { createWordNode } from '..';
 import type { ListNode, WordNode, WordPartNode } from '../../../ast';
 import type { SourceRange } from '../../../lexer';
@@ -48,19 +48,17 @@ function readSubstitutionBody(
     comments,
     nesting: { depth: state.nesting.depth + 1, limit: state.nesting.limit },
   });
-  const lexical = lexed.diagnostics.map(
-    (diagnostic): ParserDiagnostic => ({
-      kind: 'unexpectedToken',
-      message: diagnostic.message,
-      sourceFile: state.sourceFile,
-      range: rangeWithinText(
-        range,
-        raw,
-        diagnostic.range.start.offset + prefix,
-        diagnostic.range.end.offset + prefix,
-      ),
-    }),
-  );
+  const lexical = lexed.diagnostics.map((diagnostic): ParserDiagnostic => ({
+    kind: 'unexpectedToken',
+    message: diagnostic.message,
+    sourceFile: state.sourceFile,
+    range: rangeWithinText(
+      range,
+      raw,
+      diagnostic.range.start.offset + prefix,
+      diagnostic.range.end.offset + prefix,
+    ),
+  }));
   const closing: readonly ParserDiagnostic[] = closed
     ? []
     : [
@@ -88,27 +86,27 @@ export function readWordNode(state: ParseState): NodeResult<WordNode> {
   const parsed = syntax.parts.reduce(
     (previous, part) => {
       if (part.kind !== 'commandSubstitution' && part.kind !== 'processSubstitution') {
-        return { ...previous, parts: previous.parts.push(part) };
+        return { ...previous, parts: appendItems(previous.parts, part) };
       }
 
       const body = readSubstitutionBody(part.raw, part.range, state, previous.comments);
 
       return {
-        parts: previous.parts.push({ ...part, body: body.body }),
+        parts: appendItems(previous.parts, { ...part, body: body.body }),
         comments: body.comments,
         diagnostics: previous.diagnostics.concat(body.diagnostics),
       };
     },
     {
-      parts: Immutable.List<WordPartNode>(),
+      parts: collectArray<WordPartNode>(),
       comments: state.comments,
-      diagnostics: Immutable.List<ParserDiagnostic>(),
+      diagnostics: collectArray<ParserDiagnostic>(),
     },
   );
   const next = advanceState(state, result.nextIndex - state.index);
 
   return {
-    node: { ...syntax, parts: parsed.parts.toArray() },
+    node: { ...syntax, parts: parsed.parts },
     state: {
       ...next,
       comments: parsed.comments,

@@ -1,11 +1,11 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray } from '../util/collections';
 import { sectionExtractRegexes, sectionRegexes } from './regex';
 import type { Result, Section } from './type';
 
 type DocumentationState = {
   readonly section: Section;
-  readonly description: Immutable.List<string>;
-  readonly example: Immutable.List<string>;
+  readonly description: ReadonlyArray<string>;
+  readonly example: ReadonlyArray<string>;
   readonly result: Result;
 };
 
@@ -48,13 +48,13 @@ function readLine(state: DocumentationState, line: string): DocumentationState {
   if (state.section === 'example') {
     const match = text.match(sectionExtractRegexes.example) || [''];
 
-    return { ...state, example: state.example.push(match[1]) };
+    return { ...state, example: appendItems(state.example, match[1]) };
   }
 
   if (state.section === 'description') {
     const match = text.match(sectionExtractRegexes.description) || [''];
 
-    return { ...state, description: state.description.push(match[1]) };
+    return { ...state, description: appendItems(state.description, match[1]) };
   }
 
   return state;
@@ -63,8 +63,8 @@ function readLine(state: DocumentationState, line: string): DocumentationState {
 export function Document(commentText: string): Result {
   const initial: DocumentationState = {
     section: 'description',
-    description: Immutable.List(),
-    example: Immutable.List(),
+    description: collectArray(),
+    example: collectArray(),
     result: { description: '', parameters: [], reply: '', return: '', example: '' },
   };
   const parsed = commentText.split('\n').reduce(readLine, initial);

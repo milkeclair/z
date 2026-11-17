@@ -1,4 +1,3 @@
-import { newIORef } from 'fp-ts/IORef';
 import path from 'node:path';
 import { workspace, type ExtensionContext } from 'vscode';
 import {
@@ -9,7 +8,19 @@ import {
   type ServerOptions,
 } from 'vscode-languageclient/node';
 
-const clientReference = newIORef<LanguageClient | undefined>(undefined)();
+function createClientLifecycle(activeClient?: LanguageClient) {
+  return {
+    start(client: LanguageClient): void {
+      activeClient = client;
+      void client.start();
+    },
+    stop() {
+      return activeClient?.stop();
+    },
+  };
+}
+
+const clientLifecycle = createClientLifecycle();
 
 function createServerLaunch(serverModule: string): NodeModule {
   return {
@@ -57,10 +68,9 @@ export function activate(context: ExtensionContext): void {
     createServerOptions(context),
     createClientOptions(),
   );
-  clientReference.write(client)();
-  void client.start();
+  clientLifecycle.start(client);
 }
 
 export function deactivate() {
-  return clientReference.read()?.stop();
+  return clientLifecycle.stop();
 }

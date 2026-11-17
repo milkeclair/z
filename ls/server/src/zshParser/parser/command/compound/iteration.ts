@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray } from '../../../../util/collections';
 import { again, done, loop } from '../../../../util/loop';
 import type { ArithmeticExpansionNode, WordNode } from '../../../ast';
 import { delimitedEnd } from '../../../lexer/delimiter';
@@ -94,7 +94,7 @@ function readVariables(state: ParseState): {
   readonly state: ParseState;
   readonly variables: readonly WordNode[];
 } {
-  const initial = { current: state, names: Immutable.List<WordNode>() };
+  const initial = { current: state, names: collectArray<WordNode>() };
 
   return loop<
     typeof initial,
@@ -107,14 +107,17 @@ function readVariables(state: ParseState): {
 
     if (
       token.kind !== 'word' ||
-      (!progress.names.isEmpty() && (isWord(token, 'in') || isWord(token, 'do')))
+      (!(progress.names.length === 0) && (isWord(token, 'in') || isWord(token, 'do')))
     ) {
-      return done({ state: progress.current, variables: progress.names.toArray() });
+      return done({ state: progress.current, variables: progress.names });
     }
 
     const word = readWordNode(progress.current);
 
-    return again({ current: skipInlineTrivia(word.state), names: progress.names.push(word.node) });
+    return again({
+      current: skipInlineTrivia(word.state),
+      names: appendItems(progress.names, word.node),
+    });
   });
 }
 
@@ -122,7 +125,7 @@ function readValues(state: ParseState): {
   readonly state: ParseState;
   readonly words: readonly WordNode[];
 } {
-  const initial = { current: state, words: Immutable.List<WordNode>() };
+  const initial = { current: state, words: collectArray<WordNode>() };
 
   return loop<
     typeof initial,
@@ -139,14 +142,14 @@ function readValues(state: ParseState): {
       token.operatorKind === 'semicolon' ||
       token.operatorKind === 'rightParen'
     ) {
-      return done({ state: progress.current, words: progress.words.toArray() });
+      return done({ state: progress.current, words: progress.words });
     }
 
     const word = isWordStart(progress.current) ? readWordNode(progress.current) : null;
 
     return again({
       current: word ? skipInlineTrivia(word.state) : advanceState(progress.current),
-      words: word ? progress.words.push(word.node) : progress.words,
+      words: word ? appendItems(progress.words, word.node) : progress.words,
     });
   });
 }

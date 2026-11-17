@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { addValue, makeSet, takeWhile, unionValues } from '../../util/collections';
 import { pathToFileURL } from 'url';
 import type { CodeProgram } from '../../embeddedCode';
 import type { FuncArg } from '../../getFunctions/type';
@@ -62,19 +62,19 @@ export function resolveFunction(
 export function candidateNames(snapshot: FunctionSnapshot, cursor: Cursor): ReadonlySet<string> {
   type Names = {
     readonly program: CodeProgram | undefined;
-    readonly names: Immutable.OrderedSet<string>;
+    readonly names: ReadonlySet<string>;
   };
 
   const initial: Names = {
     program: cursor.program,
-    names: Immutable.OrderedSet(snapshot.targets.keys()).union(cursor.targets?.keys() ?? []),
+    names: unionValues(makeSet(snapshot.targets.keys()), cursor.targets?.keys() ?? []),
   };
 
   return loop<Names, ReadonlySet<string>>(initial, (current) =>
     current.program
       ? again({
           program: current.program.parent,
-          names: current.names.union(current.program.targets.keys()),
+          names: unionValues(current.names, current.program.targets.keys()),
         })
       : done(new Set(current.names)),
   );
@@ -198,18 +198,19 @@ export function activeArgument(
     return { argument: args[named], index: named };
   }
 
-  const supplied = Immutable.Seq(command.arguments)
-    .takeWhile((word) => word !== current && word.range.start.offset < cursor.offset)
-    .reduce(
-      (previous, word) => {
-        const candidate = namedKey(word);
+  const supplied = takeWhile(
+    Iterator.from(command.arguments),
+    (word) => word !== current && word.range.start.offset < cursor.offset,
+  ).reduce(
+    (previous, word) => {
+      const candidate = namedKey(word);
 
-        return candidate && args.some((argument) => argument.isNamed && argument.name === candidate)
-          ? { ...previous, used: previous.used.add(candidate) }
-          : { ...previous, position: previous.position + 1 };
-      },
-      { used: Immutable.OrderedSet<string>(), position: 1 },
-    );
+      return candidate && args.some((argument) => argument.isNamed && argument.name === candidate)
+        ? { ...previous, used: addValue(previous.used, candidate) }
+        : { ...previous, position: previous.position + 1 };
+    },
+    { used: makeSet<string>(), position: 1 },
+  );
   const positional = args.findIndex(
     (argument) => !argument.isNamed && argument.position === supplied.position,
   );

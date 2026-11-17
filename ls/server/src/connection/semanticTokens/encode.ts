@@ -1,10 +1,9 @@
-import * as Immutable from 'immutable';
+import { produce } from '../../util/collections';
 import { again, done, loop } from '../../util/loop';
 import type { TextDocument } from '../../vscode_type';
 import { codeTokenTypes, MAX_HIGHLIGHT_SPANS, type Span } from './types';
 
 type Encoded = {
-  readonly data: Immutable.List<number>;
   readonly lastLine: number;
   readonly lastCharacter: number;
 };
@@ -14,6 +13,7 @@ function encodeSpan(
   content: string,
   span: Span,
   initial: Encoded,
+  data: number[],
 ): Encoded {
   return loop<
     {
@@ -35,24 +35,19 @@ function encodeSpan(
         ? again(end - 1)
         : done(end),
     );
+    if (end > offset) {
+      data.push(
+        start.line - encoded.lastLine,
+        start.line === encoded.lastLine ? start.character - encoded.lastCharacter : start.character,
+        end - offset,
+        codeTokenTypes.indexOf(span.type),
+        0,
+      );
+    }
     const result =
-      end > offset
-        ? {
-            data: encoded.data.push(
-              start.line - encoded.lastLine,
-              start.line === encoded.lastLine
-                ? start.character - encoded.lastCharacter
-                : start.character,
-              end - offset,
-              codeTokenTypes.indexOf(span.type),
-              0,
-            ),
-            lastLine: start.line,
-            lastCharacter: start.character,
-          }
-        : encoded;
+      end > offset ? { lastLine: start.line, lastCharacter: start.character } : encoded;
 
-    return result.data.size >= MAX_HIGHLIGHT_SPANS * 5 || next <= offset || next >= span.end
+    return data.length >= MAX_HIGHLIGHT_SPANS * 5 || next <= offset || next >= span.end
       ? done(result)
       : again({ offset: next, encoded: result });
   });
@@ -60,21 +55,20 @@ function encodeSpan(
 
 export function encodeSpans(document: TextDocument, spans: readonly Span[]): readonly number[] {
   const content = document.getText();
-  const initial = {
-    index: 0,
-    encoded: { data: Immutable.List<number>(), lastLine: 0, lastCharacter: 0 },
-  };
+  return produce<readonly number[]>([], (data) => {
+    const initial = { index: 0, encoded: { lastLine: 0, lastCharacter: 0 } };
 
-  return loop<typeof initial, readonly number[]>(initial, (state) => {
-    const span = spans[state.index];
+    loop<typeof initial, void>(initial, (state) => {
+      const span = spans[state.index];
 
-    if (!span || state.encoded.data.size >= MAX_HIGHLIGHT_SPANS * 5) {
-      return done(state.encoded.data.toArray());
-    }
+      if (!span || data.length >= MAX_HIGHLIGHT_SPANS * 5) {
+        return done(undefined);
+      }
 
-    return again({
-      index: state.index + 1,
-      encoded: encodeSpan(document, content, span, state.encoded),
+      return again({
+        index: state.index + 1,
+        encoded: encodeSpan(document, content, span, state.encoded, data),
+      });
     });
   });
 }

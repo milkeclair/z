@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { numberRange } from '../../src/util/collections';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -211,7 +211,7 @@ describe('projectFunctions', () => {
     test('連続編集でも現在のhydrationだけをキャッシュに保持する', () => {
       const root = createSnapshotFixture({ 'a.zsh': 'helper() { : }\n' });
       const initial = refreshFunctionSnapshot({ projectRoot: root, documents: [] });
-      Immutable.Range(1, 21).reduce((previous, version) => {
+      numberRange(1, 21).reduce((previous, version) => {
         const next = refreshFunctionSnapshot({
           projectRoot: root,
           previous,

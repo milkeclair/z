@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { collectArray } from '../../../util/collections';
 import type { Cursor } from '../cursor';
 import { advance, position } from '../cursor';
 import { hereDocEnd } from '../delimiter/heredoc';
@@ -28,13 +28,13 @@ export function readHereDocuments(
         diagnostics: progress.diagnostics.concat(parsed.diagnostics),
       };
     },
-    { cursor, tokens: Immutable.List<Token>(), diagnostics: Immutable.List<LexerDiagnostic>() },
+    { cursor, tokens: collectArray<Token>(), diagnostics: collectArray<LexerDiagnostic>() },
   );
 
   return {
     cursor: result.cursor,
-    tokens: result.tokens.toArray(),
-    diagnostics: result.diagnostics.toArray(),
+    tokens: result.tokens,
+    diagnostics: result.diagnostics,
   };
 }
 

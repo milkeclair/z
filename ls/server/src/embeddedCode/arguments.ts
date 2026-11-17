@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray } from '../util/collections';
 import { namedKey } from '../connection/ast/word';
 import type { ResolutionContext } from '../diagnostics/calls';
 import { uncertainWord } from '../diagnostics/calls';
@@ -30,7 +30,7 @@ type ParameterIndex = {
 type ArgumentProgress = {
   readonly position: number;
   readonly uncertain: boolean;
-  readonly result: Immutable.List<CodeArgument>;
+  readonly result: ReadonlyArray<CodeArgument>;
   readonly remaining: number;
 };
 
@@ -112,7 +112,7 @@ function inspectCodeArgument(
   }
 
   if (word.raw.length > current.remaining) {
-    return { ...current, result: current.result.push({ kind: 'limit', word }) };
+    return { ...current, result: appendItems(current.result, { kind: 'limit', word }) };
   }
 
   const bounded = { ...current, remaining: current.remaining - word.raw.length };
@@ -130,7 +130,7 @@ function inspectCodeArgument(
 
   return {
     ...bounded,
-    result: bounded.result.push({
+    result: appendItems(bounded.result, {
       kind: 'code',
       word,
       source,
@@ -160,7 +160,7 @@ export function codeArguments(
   const initial: ArgumentProgress = {
     position: 0,
     uncertain: false,
-    result: Immutable.List(),
+    result: collectArray(),
     remaining: maxText,
   };
   const parsed = command.arguments.reduce((previous, word) => {
@@ -171,5 +171,5 @@ export function codeArguments(
       : previous;
   }, initial);
 
-  return { arguments: parsed.result.toArray(), inspected: maxText - parsed.remaining };
+  return { arguments: parsed.result, inspected: maxText - parsed.remaining };
 }

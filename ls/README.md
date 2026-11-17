@@ -47,7 +47,9 @@ npm ci
 npm test -- --maxWorkers=2
 ```
 
-テストコマンドはPrettierで書式を確認し、ビルド成果物を削除して、clientとserverをコンパイルしてテストの型を確認し、Vitestの全テストを実行します。結合テストではビルドしたNodeサーバーと実際のZshプロセスを起動し、並行実行は2ワーカーに制限します。
+書式を直すには `npm run format`、書式だけを確認するには `npm run format:check`、コードだけを検査するには `npm run lint` を使います。
+
+テストコマンドはOxfmtで書式、Oxlintでコードを確認し、ビルド成果物を削除して、clientとserverをコンパイルしてテストの型を確認し、Vitestの全テストを実行します。結合テストではビルドしたNodeサーバーと実際のZshプロセスを起動し、並行実行は2ワーカーに制限します。
 
 リポジトリのCIでも、Zshライブラリのテストと同じソースビルド版のZshを使って検証します。Nodeのセットアップでは`package-lock.json`をキーにnpmのダウンロードをキャッシュし、毎回`npm ci`で固定済みの依存関係を導入します。
 
@@ -61,9 +63,9 @@ npm test -- --maxWorkers=2
 
 ## 実装の構成
 
-Lexer、Parser、AST、文書索引、診断は、入力から次の値を返す関数で構成します。レコードと配列はreadonlyで受け渡し、蓄積やキャッシュにはImmutable.jsのList・Map・Setを使います。更新後も元の値を参照でき、既存の値を変更しません。公開するASTやLSPの結果は、境界で通常の配列やMapへ変換します。
+Lexer、Parser、AST、文書索引、診断は、入力から次の値を返す関数で構成します。レコード・配列・Map・Setは読み取り専用の型で受け渡します。索引などをまとめて更新する箇所ではImmerのdraftを使い、更新後の値を返します。
 
-走査は配列のmap・reduce、Immutable.jsのRange、またはutil/loop.tsのloop・again・doneで記述します。loopはfp-tsのtailRecを使い、深い入力でも呼び出しスタックを増やさず次の状態へ進みます。let、class、anyによる実装は使いません。
+走査は配列のmap・reduce、数値範囲の反復、またはutil/loop.tsのloop・again・doneで記述します。loopは深い入力でも呼び出しスタックを増やさず次の状態へ進みます。let、class、anyによる実装は使いません。
 
 プロセス、接続、タイマーなどのI/Oはclientとserver、および環境取得・ファイル読込の境界に集めます。イベント間で保持する値はutil/ioState.tsで参照し直し、値の変換は独立した関数に渡します。解析用の状態をこの参照へ持ち込まず、更新前後の値を引数と戻り値で表します。
 

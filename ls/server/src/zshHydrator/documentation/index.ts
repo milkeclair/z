@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { addValue, appendItems, collectArray, makeSet, skipWhile } from '../../util/collections';
 import type { CommentNode, DocBlockNode } from '../../zshParser/ast';
 import type { HydrationOptions } from '../directive';
 import { commentPayload, parseDirective } from '../directive';
@@ -22,15 +22,15 @@ type Section = {
   readonly indent: number;
   readonly first: CommentNode;
   readonly last: CommentNode;
-  readonly text: Immutable.List<string>;
+  readonly text: ReadonlyArray<string>;
 };
 
 type DocumentationProgress = {
-  readonly description: Immutable.List<DocDescription>;
-  readonly parameters: Immutable.List<ParameterDoc>;
-  readonly examples: Immutable.List<DocExample>;
-  readonly diagnostics: Immutable.List<HydrationDiagnostic>;
-  readonly exampleComments: Immutable.OrderedSet<number>;
+  readonly description: ReadonlyArray<DocDescription>;
+  readonly parameters: ReadonlyArray<ParameterDoc>;
+  readonly examples: ReadonlyArray<DocExample>;
+  readonly diagnostics: ReadonlyArray<HydrationDiagnostic>;
+  readonly exampleComments: ReadonlySet<number>;
   readonly reply: DocReply | null;
   readonly returns: DocReturn | null;
   readonly section: Section | null;
@@ -62,11 +62,10 @@ function finishSection(state: DocumentationProgress, source: string): Documentat
 
   const range = { start: section.first.range.start, end: section.last.range.end };
   const raw = source.slice(range.start.offset, range.end.offset);
-  const lines = section.text
-    .skipWhile((line) => line.trim() === '')
-    .reverse()
-    .skipWhile((line) => line.trim() === '')
-    .reverse();
+  const lines = skipWhile(
+    skipWhile(section.text, (line) => line.trim() === '').toReversed(),
+    (line) => line.trim() === '',
+  ).toReversed();
   const joined = lines.join('\n');
   const text = section.kind === 'example' ? joined : joined.trim();
   const base = { ...state, section: null };
@@ -77,7 +76,10 @@ function finishSection(state: DocumentationProgress, source: string): Documentat
     case 'returns':
       return { ...base, returns: { kind: 'docReturn', range, raw, text } };
     case 'example':
-      return { ...base, examples: state.examples.push({ kind: 'docExample', range, raw, text }) };
+      return {
+        ...base,
+        examples: appendItems(state.examples, { kind: 'docExample', range, raw, text }),
+      };
   }
 }
 
@@ -101,11 +103,11 @@ function readComment(
         indent: info.start,
         first: comment,
         last: comment,
-        text: Immutable.List([payload.slice(header.length).trimStart()]),
+        text: collectArray([payload.slice(header.length).trimStart()]),
       },
       exampleComments:
         header.kind === 'example'
-          ? finished.exampleComments.add(comment.range.start.offset)
+          ? addValue(finished.exampleComments, comment.range.start.offset)
           : finished.exampleComments,
     };
   }
@@ -119,8 +121,8 @@ function readComment(
 
     return {
       ...state,
-      section: { ...section, last: comment, text: section.text.push(content) },
-      exampleComments: state.exampleComments.add(comment.range.start.offset),
+      section: { ...section, last: comment, text: appendItems(section.text, content) },
+      exampleComments: addValue(state.exampleComments, comment.range.start.offset),
     };
   }
 
@@ -133,10 +135,10 @@ function readComment(
     const parameter = parseParameter(comment);
 
     return parameter
-      ? { ...finished, parameters: finished.parameters.push(parameter) }
+      ? { ...finished, parameters: appendItems(finished.parameters, parameter) }
       : {
           ...finished,
-          diagnostics: finished.diagnostics.push({
+          diagnostics: appendItems(finished.diagnostics, {
             kind: 'invalidParameterDoc',
             range: comment.range,
             message: 'Expected $parameter[?]: description, optionally with [code] before the colon',
@@ -145,12 +147,15 @@ function readComment(
   }
 
   if (section) {
-    return { ...state, section: { ...section, last: comment, text: section.text.push(payload) } };
+    return {
+      ...state,
+      section: { ...section, last: comment, text: appendItems(section.text, payload) },
+    };
   }
 
   return {
     ...state,
-    description: state.description.push({
+    description: appendItems(state.description, {
       kind: 'docDescription',
       range: comment.range,
       raw: comment.text,
@@ -168,11 +173,11 @@ export function parseFunctionDocumentation(
   readonly exampleComments: ReadonlySet<number>;
 } {
   const initial: DocumentationProgress = {
-    description: Immutable.List(),
-    parameters: Immutable.List(),
-    examples: Immutable.List(),
-    diagnostics: Immutable.List(),
-    exampleComments: Immutable.OrderedSet(),
+    description: collectArray(),
+    parameters: collectArray(),
+    examples: collectArray(),
+    diagnostics: collectArray(),
+    exampleComments: makeSet(),
     reply: null,
     returns: null,
     section: null,
@@ -188,12 +193,12 @@ export function parseFunctionDocumentation(
       kind: 'functionDocumentation',
       range: block.range,
       raw: source.slice(block.range.start.offset, block.range.end.offset),
-      description: result.description.toArray(),
-      parameters: result.parameters.toArray(),
+      description: result.description,
+      parameters: result.parameters,
       reply: result.reply,
       returns: result.returns,
-      examples: result.examples.toArray(),
-      diagnostics: result.diagnostics.toArray(),
+      examples: result.examples,
+      diagnostics: result.diagnostics,
     },
     exampleComments: new Set(result.exampleComments),
   };

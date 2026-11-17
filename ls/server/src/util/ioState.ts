@@ -1,18 +1,18 @@
-import { newIORef } from 'fp-ts/IORef';
-
 export type IOState<State> = {
   readonly read: () => State;
   readonly replace: (next: State) => void;
   readonly update: (transition: (previous: State) => State) => void;
 };
 
-/** 接続・プロセスなどのI/O境界で、不変の値を参照し直す。データの更新処理は次の値を返す。 */
-export function createIOState<State>(initial: State): IOState<State> {
-  const reference = newIORef(initial)();
-
+/** I/O境界で、保持中の値への参照を更新する。 */
+export function createIOState<State>(state: State): IOState<State> {
   return {
-    read: reference.read,
-    replace: (next) => reference.write(next)(),
-    update: (transition) => reference.modify(transition)(),
+    read: () => state,
+    replace: (next) => {
+      state = next;
+    },
+    update: (transition) => {
+      state = transition(state);
+    },
   };
 }

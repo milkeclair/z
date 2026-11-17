@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { collectArray } from '../util/collections';
 import type { CodeProgram } from '../embeddedCode';
 import { again, done, loop } from '../util/loop';
 import type { TextDocument } from '../vscode_type';
@@ -19,17 +19,17 @@ export function zSemanticTokens({
 }): {
   readonly data: readonly number[];
 } {
-  const initial = { index: 0, spans: Immutable.List<Span>() };
+  const initial = { index: 0, spans: collectArray<Span>() };
   const spans = loop<typeof initial, readonly Span[]>(initial, (state) => {
     const program = programs[state.index];
 
-    if (!program || state.spans.size >= MAX_HIGHLIGHT_SPANS) {
-      return done(state.spans.toArray());
+    if (!program || state.spans.length >= MAX_HIGHLIGHT_SPANS) {
+      return done(state.spans);
     }
 
     return again({
       index: state.index + 1,
-      spans: state.spans.concat(programSpans(program, MAX_HIGHLIGHT_SPANS - state.spans.size)),
+      spans: state.spans.concat(programSpans(program, MAX_HIGHLIGHT_SPANS - state.spans.length)),
     });
   });
 

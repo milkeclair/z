@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { numberRange } from '../../../src/util/collections';
 import { describe, expect, test, vi } from 'vitest';
 import type { AstNode, CommandNode, FileNode, GroupCommandNode } from '../../../src/zshParser/ast';
 import { createQueryContext, findAll, locate, mapAst, walk } from '../../../src/zshParser/ast';
@@ -132,7 +132,7 @@ describe('walk', () => {
 
       const initialCommand: CommandNode = first.sublist.first.first;
       const range = initialCommand.range;
-      const command = Immutable.Range(0, 10000).reduce<CommandNode>((previous) => {
+      const command = numberRange(0, 10000).reduce<CommandNode>((previous) => {
         const group: GroupCommandNode = {
           kind: 'groupCommand',
           range,

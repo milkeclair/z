@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { collectArray } from '../../../../util/collections';
 import { again, done, loop } from '../../../../util/loop';
 import type { SimpleCommandNode } from '../../../ast';
 import type { Token } from '../../../lexer';
@@ -56,9 +56,9 @@ function readSimpleCommandAccumulator(
 ): SimpleCommandAccumulator {
   const initial = {
     parts: accumulator,
-    args: Immutable.List(accumulator.arguments),
-    assignments: Immutable.List(accumulator.prefixAssignments),
-    redirects: Immutable.List(accumulator.redirects),
+    args: collectArray(accumulator.arguments),
+    assignments: collectArray(accumulator.prefixAssignments),
+    redirects: collectArray(accumulator.redirects),
   };
 
   return loop<typeof initial, SimpleCommandAccumulator>(initial, (progress) => {
@@ -74,9 +74,9 @@ function readSimpleCommandAccumulator(
     if (current.state.stopped || isCommandBoundary(token) || token.kind === 'comment') {
       return done({
         ...current,
-        arguments: progress.args.toArray(),
-        prefixAssignments: progress.assignments.toArray(),
-        redirects: progress.redirects.toArray(),
+        arguments: progress.args,
+        prefixAssignments: progress.assignments,
+        redirects: progress.redirects,
       });
     }
 

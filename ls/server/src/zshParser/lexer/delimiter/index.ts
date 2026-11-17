@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { numberRange } from '../../../util/collections';
 import type { LoopStep } from '../../../util/loop';
 import { again, done, loop } from '../../../util/loop';
 import { pushStack, type Stack } from '../../../util/stack';
@@ -348,7 +348,7 @@ function readShellWord(text: string, progress: Progress, frame: Frame): Delimite
   const { index } = progress;
 
   const end =
-    Immutable.Range(index, text.length).find(
+    numberRange(index, text.length).find(
       (offset) => ' \t\r\n;|&(){}\\"\'$'.includes(text[offset]) || text[offset] === backtick,
     ) ?? text.length;
 

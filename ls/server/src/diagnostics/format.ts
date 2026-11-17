@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray } from '../util/collections';
 import { again, done, loop } from '../util/loop';
 import { DiagnosticSeverity } from '../vscode_type';
 import type { ZshFileHydration } from '../zshHydrator';
@@ -30,7 +30,7 @@ export function formatDiagnostics(file: ZshFileHydration): readonly Diagnostics[
             : null;
       const diagnostics =
         message && syntaxSpace
-          ? state.diagnostics.push({
+          ? appendItems(state.diagnostics, {
               severity: DiagnosticSeverity.Warning,
               code: 'empty-line',
               range: {
@@ -44,11 +44,11 @@ export function formatDiagnostics(file: ZshFileHydration): readonly Diagnostics[
 
       return { offset: state.offset + physical.length + 1, tokenIndex, diagnostics };
     },
-    { offset: 0, tokenIndex: 0, diagnostics: Immutable.List<Diagnostics>() },
+    { offset: 0, tokenIndex: 0, diagnostics: collectArray<Diagnostics>() },
   );
 
   if (text.endsWith('\n')) {
-    return scanned.diagnostics.toArray();
+    return scanned.diagnostics;
   }
 
   const position = {
@@ -56,13 +56,11 @@ export function formatDiagnostics(file: ZshFileHydration): readonly Diagnostics[
     character: file.ast.eof.range.start.character,
   };
 
-  return scanned.diagnostics
-    .push({
-      severity: DiagnosticSeverity.Warning,
-      code: 'final-newline',
-      range: { start: position, end: position },
-      message: 'File does not end with a newline.',
-      source: 'z-ls',
-    })
-    .toArray();
+  return appendItems(scanned.diagnostics, {
+    severity: DiagnosticSeverity.Warning,
+    code: 'final-newline',
+    range: { start: position, end: position },
+    message: 'File does not end with a newline.',
+    source: 'z-ls',
+  });
 }

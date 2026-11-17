@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { collectArray } from '../../../../util/collections';
 import { again, done, loop } from '../../../../util/loop';
 import type { Token } from '../../../lexer';
 import { areAdjacentTokens } from '../../range';
@@ -19,9 +19,9 @@ export function isProcessSubstitutionStart(tokens: readonly Token[], index: numb
 
   return Boolean(
     token &&
-      ['<', '>', '='].includes(token.value) &&
-      next?.operatorKind === 'leftParen' &&
-      areAdjacentTokens(token, next),
+    ['<', '>', '='].includes(token.value) &&
+    next?.operatorKind === 'leftParen' &&
+    areAdjacentTokens(token, next),
   );
 }
 
@@ -116,17 +116,17 @@ export function readWordTokens({
   readonly index: number;
   readonly collected: readonly Token[];
 }): TokenReadResult {
-  const initial = { index, parts: Immutable.List(collected) };
+  const initial = { index, parts: collectArray(collected) };
 
   return loop<typeof initial, TokenReadResult>(initial, (progress) => {
     const segment = readWordSegment(tokens, progress.index);
 
     if (!segment) {
-      return done({ tokens: progress.parts.toArray(), nextIndex: progress.index });
+      return done({ tokens: progress.parts, nextIndex: progress.index });
     }
 
     const parts = progress.parts.concat(segment.tokens);
-    const previous = parts.last();
+    const previous = parts.at(-1);
     const next = tokens[segment.nextIndex];
     const adjacent = previous && next && areAdjacentTokens(previous, next);
     const continued =
@@ -134,6 +134,6 @@ export function readWordTokens({
 
     return !segment.finished && adjacent && continued
       ? again({ index: segment.nextIndex, parts })
-      : done({ tokens: parts.toArray(), nextIndex: segment.nextIndex });
+      : done({ tokens: parts, nextIndex: segment.nextIndex });
   });
 }

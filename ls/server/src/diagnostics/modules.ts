@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { addValue, deleteValue, makeSet, unionValues } from '../util/collections';
 import { literalWord } from '../refreshFunctions/word';
 import { again, done, loop } from '../util/loop';
 import type { SimpleCommandNode } from '../zshParser/ast';
@@ -28,7 +28,7 @@ export function moduleBuiltins(command: SimpleCommandNode): readonly string[] {
     return [];
   }
 
-  const initial = { index: 0, options: Immutable.OrderedSet<string>() };
+  const initial = { index: 0, options: makeSet<string>() };
   const parsed = loop<typeof initial, typeof initial>(initial, (state) => {
     const option = values[state.index];
 
@@ -38,7 +38,7 @@ export function moduleBuiltins(command: SimpleCommandNode): readonly string[] {
 
     return option === '--'
       ? done({ ...state, index: state.index + 1 })
-      : again({ index: state.index + 1, options: state.options.union(option.slice(1)) });
+      : again({ index: state.index + 1, options: unionValues(state.options, option.slice(1)) });
   });
   const { index, options } = parsed;
   const modules = values.slice(index);
@@ -54,17 +54,17 @@ export function moduleBuiltins(command: SimpleCommandNode): readonly string[] {
 
     const builtins = modules.slice(1).reduce((previous, feature) => {
       if (feature.startsWith('b:')) {
-        return previous.add(feature.slice(2));
+        return addValue(previous, feature.slice(2));
       }
 
       if (feature.startsWith('+b:')) {
-        return previous.add(feature.slice(3));
+        return addValue(previous, feature.slice(3));
       }
 
-      return feature.startsWith('-b:') ? previous.delete(feature.slice(3)) : previous;
-    }, Immutable.OrderedSet<string>());
+      return feature.startsWith('-b:') ? deleteValue(previous, feature.slice(3)) : previous;
+    }, makeSet<string>());
 
-    return builtins.toArray();
+    return [...builtins];
   }
 
   if (options.has('a')) {

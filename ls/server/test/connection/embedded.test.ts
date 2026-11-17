@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { numberRange } from '../../src/util/collections';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -424,7 +424,7 @@ describe('zCompletion', () => {
       const request = createLanguageFeatureRequest("run_code code='gr¦eet value'");
       const spy = vi.spyOn(Lexer, 'tokenize');
 
-      for (const i of Immutable.Range(0, 5)) {
+      for (const _attempt of numberRange(0, 5)) {
         zCompletion(request);
         zHover(request);
         zDefinition(request);
@@ -483,7 +483,7 @@ describe('zCompletion', () => {
         }
 
         const initial = TextDocument.applyEdits(request.document, [item.textEdit]);
-        const text = Immutable.Range(0, 2).reduce((previous) => {
+        const text = numberRange(0, 2).reduce((previous) => {
           const file = createZshFileHydration({ sourceFile: 'x', file: 'x', content: previous });
 
           expect(file.lexerDiagnostics).toEqual([]);

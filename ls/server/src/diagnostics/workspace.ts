@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { makeSet } from '../util/collections';
 import { DocumentDiagnosticReportKind } from '../vscode_type';
 import type { DiagnosticSnapshot } from './snapshot';
 import type { WorkspaceDiagnosticsReport } from './type';
@@ -29,21 +29,19 @@ export function workspaceDiagnostics({
       : [],
   );
   const reported = new Set(current.map((item) => item.uri));
-  const removed = Immutable.OrderedSet(previousResultIds.map((previous) => previous.uri)).filter(
+  const removed = [...makeSet(previousResultIds.map((previous) => previous.uri))].filter(
     (uri) => !reported.has(uri),
   );
 
   return {
     items: [
       ...current,
-      ...removed.map(
-        (uri): ReportItem => ({
-          uri,
-          version: null,
-          kind: DocumentDiagnosticReportKind.Full,
-          items: [],
-        }),
-      ),
+      ...[...removed].map((uri): ReportItem => ({
+        uri,
+        version: null,
+        kind: DocumentDiagnosticReportKind.Full,
+        items: [],
+      })),
     ],
   };
 }

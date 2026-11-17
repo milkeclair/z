@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray } from '../../../util/collections';
 import type { AstNode } from '..';
 import { again, done, loop } from '../../../util/loop';
 
@@ -177,13 +177,13 @@ function cursorArray(cursor: ChildCursor | null): readonly AstNode[] {
   return loop<
     {
       readonly cursor: ChildCursor | null;
-      readonly nodes: Immutable.List<AstNode>;
+      readonly nodes: ReadonlyArray<AstNode>;
     },
     readonly AstNode[]
-  >({ cursor, nodes: Immutable.List() }, (state) =>
+  >({ cursor, nodes: collectArray() }, (state) =>
     state.cursor
-      ? again({ cursor: state.cursor.tail(), nodes: state.nodes.push(state.cursor.node) })
-      : done(state.nodes.toArray()),
+      ? again({ cursor: state.cursor.tail(), nodes: appendItems(state.nodes, state.cursor.node) })
+      : done(state.nodes),
   );
 }
 

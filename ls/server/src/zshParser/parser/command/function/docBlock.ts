@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray } from '../../../../util/collections';
 import { again, done, loop } from '../../../../util/loop';
 import type { DocBlockNode } from '../../../ast';
 import type { SourceRange, Token } from '../../../lexer';
@@ -56,11 +56,11 @@ function collectLeadingCommentTokens({
   readonly index: number;
   readonly comments: readonly Token[];
 }): readonly Token[] {
-  const initial = { index, comments: Immutable.List(comments) };
+  const initial = { index, comments: collectArray(comments) };
 
   return loop<typeof initial, readonly Token[]>(initial, (current) => {
     if (current.index < 0) {
-      return done(current.comments.reverse().toArray());
+      return done(current.comments.toReversed());
     }
 
     const beforeLine = findPreviousNewline({ tokens, index: current.index });
@@ -70,9 +70,9 @@ function collectLeadingCommentTokens({
     return beforeComment
       ? again({
           index: beforeComment.index - 1,
-          comments: current.comments.push(beforeComment.comment),
+          comments: appendItems(current.comments, beforeComment.comment),
         })
-      : done(current.comments.reverse().toArray());
+      : done(current.comments.toReversed());
   });
 }
 

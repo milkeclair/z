@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { numberRange } from '../../src/util/collections';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -39,7 +39,7 @@ describe('startServer', () => {
         await client.items(caller, 6);
         const before = parsed();
 
-        for (const version of Immutable.Range(2, 101 + 1)) {
+        for (const version of numberRange(2, 101 + 1)) {
           await client.edit(uri, '# Version ' + version + '\ngreet_final() { : }\n', version);
         }
 
@@ -66,7 +66,7 @@ describe('startServer', () => {
         await client.items(uri);
         const before = parsed();
 
-        for (const version of Immutable.Range(2, 101 + 1)) {
+        for (const version of numberRange(2, 101 + 1)) {
           await client.edit(uri, '# Version ' + version + '\nquiet_latest() { : }\n', version);
         }
 

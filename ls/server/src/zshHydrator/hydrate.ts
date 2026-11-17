@@ -1,4 +1,3 @@
-import * as Immutable from 'immutable';
 import { lowerBound } from '../util/search';
 import type {
   AstNode,
@@ -10,8 +9,7 @@ import type {
 import { findAll, mapAst } from '../zshParser/ast';
 import type { ControlComment, HydrationOptions } from './directive';
 import { parseDirective } from './directive';
-import type { FunctionDocumentation } from './documentation';
-import { parseFunctionDocumentation } from './documentation';
+import { parseFunctionDocumentation, type FunctionDocumentation } from './documentation';
 
 export type HydratedDocBlock = DocBlockNode & {
   readonly hydration: FunctionDocumentation;
@@ -62,21 +60,12 @@ export function hydrateAst(
   const documentedFunctions = findAll(ast, 'functionDefinition').flatMap((definition) =>
     definition.leadingDoc ? [{ definition, leadingDoc: definition.leadingDoc }] : [],
   );
-  const parsed = documentedFunctions.reduce(
-    (previous, { leadingDoc }) => {
-      const result = parseFunctionDocumentation(leadingDoc, source, options);
-
-      return {
-        documents: previous.documents.set(leadingDoc.range.start.offset, result.documentation),
-        exampleComments: previous.exampleComments.union(result.exampleComments),
-      };
-    },
-    {
-      documents: Immutable.Map<number, FunctionDocumentation>(),
-      exampleComments: Immutable.Set<number>(),
-    },
-  );
-  const { documents, exampleComments } = parsed;
+  const parsed = documentedFunctions.map(({ leadingDoc }) => ({
+    offset: leadingDoc.range.start.offset,
+    ...parseFunctionDocumentation(leadingDoc, source, options),
+  }));
+  const documents = new Map(parsed.map(({ offset, documentation }) => [offset, documentation]));
+  const exampleComments = new Set(parsed.flatMap(({ exampleComments }) => [...exampleComments]));
 
   if (
     documents.size === 0 &&
@@ -116,7 +105,7 @@ export function hydrateAst(
         }
 
         if (isHydratedComment(node)) {
-          const { hydration, ...syntax } = node;
+          const { hydration: _hydration, ...syntax } = node;
 
           return syntax;
         }

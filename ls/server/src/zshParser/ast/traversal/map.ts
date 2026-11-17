@@ -1,4 +1,5 @@
-import * as Immutable from 'immutable';
+import { castDraft } from 'immer';
+import { produce } from '../../../util/collections';
 import type {
   AssignNode,
   AstNode,
@@ -19,17 +20,11 @@ import { again, done, loop } from '../../../util/loop';
 import { pushStack, type Stack } from '../../../util/stack';
 import { relatedChildCursor, someChild, type ChildCursor } from './children';
 
-type NodeMap = Immutable.Map<AstNode, AstNode>;
+type NodeMap = ReadonlyMap<AstNode, () => AstNode>;
 
 type Frame = {
   readonly node: AstNode;
   readonly children: ChildCursor | null;
-};
-
-type Progress = {
-  readonly mapped: NodeMap;
-  readonly active: Immutable.Set<AstNode>;
-  readonly frames: Stack<Frame> | null;
 };
 
 function ofKind<K extends AstNode['kind']>(
@@ -54,7 +49,7 @@ function getMappedNode<K extends AstNode['kind']>(
     readonly kind: K;
   }
 > {
-  const result = mapped.get(node) ?? node;
+  const result = mapped.get(node)?.() ?? node;
 
   if (!ofKind(result, kind)) {
     throw new Error('AST transformation changed a node kind');
@@ -69,62 +64,55 @@ export function mapAst(
   transform: (node: AstNode) => AstNode,
   shouldVisit?: (node: AstNode) => boolean,
 ): FileNode {
-  const initial: Progress = {
-    mapped: Immutable.Map(),
-    active: Immutable.Set([file]),
-    frames: pushStack({ node: file, children: relatedChildCursor(file) }),
-  };
+  const mapped = new Map<AstNode, () => AstNode>();
+  const active = new Map<AstNode, true>([[file, true]]);
+  const initial = pushStack<Frame>({ node: file, children: relatedChildCursor(file) });
 
-  return loop<Progress, FileNode>(initial, (state) => {
-    const stack = state.frames;
+  const result = produce({ mapped, active }, ({ mapped, active }) => {
+    loop<Stack<Frame> | null, void>(initial, (stack) => {
+      if (!stack) return done(undefined);
 
-    if (!stack) {
-      return done(getMappedNode(state.mapped, file, 'file'));
-    }
+      const frame = stack.value;
+      const child = frame.children;
 
-    const frame = stack.value;
-    const child = frame.children;
+      if (child) {
+        const frames = pushStack({ ...frame, children: child.tail() }, stack.next);
 
-    if (child) {
-      const frames = pushStack({ ...frame, children: child.tail() }, stack.next);
+        if (shouldVisit && !shouldVisit(child.node)) return again(frames);
 
-      if (shouldVisit && !shouldVisit(child.node)) {
-        return again({ ...state, frames });
+        if (active.has(castDraft(child.node))) {
+          throw new Error('Cyclic AST ownership');
+        }
+
+        if (mapped.has(castDraft(child.node))) return again(frames);
+
+        active.set(castDraft(child.node), true);
+
+        return again(
+          pushStack({ node: child.node, children: relatedChildCursor(child.node) }, frames),
+        );
       }
 
-      if (state.active.has(child.node)) {
-        throw new Error('Cyclic AST ownership');
+      const changed = someChild(
+        relatedChildCursor(frame.node),
+        (source) => (mapped.get(castDraft(source))?.() ?? source) !== source,
+      );
+      const node = changed ? rebuildNode(frame.node, mapped) : frame.node;
+      const transformed = transform(node);
+
+      if (transformed.kind !== node.kind) {
+        throw new Error('AST transformation changed a node kind');
       }
 
-      return state.mapped.has(child.node)
-        ? again({ ...state, frames })
-        : again({
-            ...state,
-            active: state.active.add(child.node),
-            frames: pushStack(
-              { node: child.node, children: relatedChildCursor(child.node) },
-              frames,
-            ),
-          });
-    }
+      // 関数を介して保持し、共有ノードをdraftに変換せず元の参照を返す。
+      mapped.set(castDraft(frame.node), () => transformed);
+      active.delete(castDraft(frame.node));
 
-    const changed = someChild(
-      relatedChildCursor(frame.node),
-      (source) => (state.mapped.get(source) ?? source) !== source,
-    );
-    const node = changed ? rebuildNode(frame.node, state.mapped) : frame.node;
-    const result = transform(node);
-
-    if (result.kind !== node.kind) {
-      throw new Error('AST transformation changed a node kind');
-    }
-
-    return again({
-      mapped: state.mapped.set(frame.node, result),
-      active: state.active.delete(frame.node),
-      frames: stack.next,
+      return again(stack.next);
     });
   });
+
+  return getMappedNode(result.mapped, file, 'file');
 }
 
 function rebuildPipeline(node: PipelineNode, mapped: NodeMap): AstNode {

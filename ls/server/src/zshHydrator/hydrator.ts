@@ -1,5 +1,7 @@
 import { globSync } from 'glob';
-import * as Immutable from 'immutable';
+import { castDraft } from 'immer';
+import { produce } from '../util/collections';
+
 import type { TextDocument, TextDocuments } from '../vscode_type';
 import type { HydrationOptions } from './directive';
 import {
@@ -146,50 +148,52 @@ function updateHydratorFromInputs(
   const added = documents
     .filter((input) => !previous.files.has(input.relativePath))
     .map((input) => input.relativePath);
-  const pending = Immutable.OrderedSet([...changed, ...closed, ...added]);
-  const initial = {
-    files: Immutable.OrderedMap(previous.files),
-    diskPaths: Immutable.OrderedSet(previous.diskPaths),
-  };
-  const disk = pending.reduce((current, filename) => {
-    const document = open.get(filename);
+  const pending = new Set([...changed, ...closed, ...added]);
+  const disk = produce({ files: previous.files, diskPaths: previous.diskPaths }, (draft) => {
+    for (const filename of pending) {
+      const document = open.get(filename);
 
-    if (document) {
-      return {
-        ...current,
-        diskPaths:
-          isTrackedDiskPath(filename) && isRegularFile(document.absolutePath)
-            ? current.diskPaths.add(filename)
-            : current.diskPaths.delete(filename),
-      };
+      if (document) {
+        if (isTrackedDiskPath(filename) && isRegularFile(document.absolutePath)) {
+          draft.diskPaths.add(filename);
+        } else {
+          draft.diskPaths.delete(filename);
+        }
+
+        continue;
+      }
+
+      const entry = isTrackedDiskPath(filename)
+        ? hydrateDiskFile({ previous, projectRoot: previous.projectRoot, relativePath: filename })
+        : null;
+
+      if (entry) {
+        draft.files.set(filename, castDraft(entry));
+        draft.diskPaths.add(filename);
+      } else {
+        draft.files.delete(filename);
+        draft.diskPaths.delete(filename);
+      }
     }
 
-    const entry = isTrackedDiskPath(filename)
-      ? hydrateDiskFile({ previous, projectRoot: previous.projectRoot, relativePath: filename })
-      : null;
-
-    return entry
-      ? { files: current.files.set(filename, entry), diskPaths: current.diskPaths.add(filename) }
-      : { files: current.files.delete(filename), diskPaths: current.diskPaths.delete(filename) };
-  }, initial);
-  const files = documents.reduce(
-    (current, input) => current.set(input.relativePath, hydrateOpenDocument({ previous, input })),
-    disk.files,
-  );
+    for (const input of documents) {
+      draft.files.set(input.relativePath, castDraft(hydrateOpenDocument({ previous, input })));
+    }
+  });
   const diskEntries = [...disk.diskPaths].toSorted().flatMap((filename) => {
-    const entry = files.get(filename);
+    const entry = disk.files.get(filename);
 
     return entry ? [entry] : [];
   });
   const openEntries = documents.flatMap((input) => {
-    const entry = files.get(input.relativePath);
+    const entry = disk.files.get(input.relativePath);
 
     return entry && !disk.diskPaths.has(input.relativePath) ? [entry] : [];
   });
 
   return {
     ...previous,
-    diskPaths: new Set(disk.diskPaths),
+    diskPaths: disk.diskPaths,
     files: new Map([...diskEntries, ...openEntries].map((entry) => [entry.file, entry])),
   };
 }

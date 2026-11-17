@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { addValue, makeMap, makeSet, setEntry } from '../../../../util/collections';
 import type { WordNode } from '../../../ast';
 import type { QuoteKind, Token } from '../../../lexer';
 import { rangeFromTokens } from '../../range';
@@ -18,18 +18,18 @@ export function createCompositeWordNode(
         offset: end,
         literalEnds:
           token.kind === 'comment' || token.kind === 'hereDocBody' || token.kind === 'hereDocEnd'
-            ? previous.literalEnds.set(previous.offset, end)
+            ? setEntry(previous.literalEnds, previous.offset, end)
             : previous.literalEnds,
         processStarts:
           token.kind === 'word' && token.value === '='
-            ? previous.processStarts.add(previous.offset)
+            ? addValue(previous.processStarts, previous.offset)
             : previous.processStarts,
       };
     },
     {
       offset: 0,
-      literalEnds: Immutable.Map<number, number>(),
-      processStarts: Immutable.Set<number>(),
+      literalEnds: makeMap<number, number>(),
+      processStarts: makeSet<number>(),
     },
   );
   const literalEnds = new Map(offsets.literalEnds);

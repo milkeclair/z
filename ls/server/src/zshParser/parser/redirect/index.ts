@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray } from '../../../util/collections';
 import { again, done, loop } from '../../../util/loop';
 import type { HereDocumentNode, RedirectNode, WordNode } from '../../ast';
 import type { SourceRange, Token } from '../../lexer';
@@ -27,18 +27,21 @@ export function isRedirectStart(state: ParseState): boolean {
 }
 
 export function readPostCommandRedirects(state: ParseState): RedirectsReadResult {
-  const initial = { current: state, redirects: Immutable.List<RedirectNode>() };
+  const initial = { current: state, redirects: collectArray<RedirectNode>() };
 
   return loop<typeof initial, RedirectsReadResult>(initial, (progress) => {
     const candidate = skipInlineTrivia(progress.current);
 
     if (!isRedirectStart(candidate)) {
-      return done({ redirects: progress.redirects.toArray(), state: progress.current });
+      return done({ redirects: progress.redirects, state: progress.current });
     }
 
     const result = readRedirectNode(candidate);
 
-    return again({ current: result.state, redirects: progress.redirects.push(result.node) });
+    return again({
+      current: result.state,
+      redirects: appendItems(progress.redirects, result.node),
+    });
   });
 }
 

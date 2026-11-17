@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { makeMap, produce } from '../../util/collections';
 import { again, done, loop } from '../../util/loop';
 import type { Span } from './types';
 
@@ -9,7 +9,7 @@ type BoundaryEvent = {
   readonly id: number;
 };
 
-type ActiveSpans = Immutable.OrderedMap<number, Span>;
+type ActiveSpans = ReadonlyMap<number, Span>;
 
 function boundaryEvents(spans: readonly Span[]): readonly BoundaryEvent[] {
   return spans
@@ -21,70 +21,68 @@ function boundaryEvents(spans: readonly Span[]): readonly BoundaryEvent[] {
 }
 
 function visibleSpan(active: ActiveSpans): Span | undefined {
-  return active.reduce<Span | undefined>(
+  return [...active.values()].reduce<Span | undefined>(
     (selected, span) => (!selected || span.priority > selected.priority ? span : selected),
     undefined,
   );
 }
 
-function appendSpan(
-  spans: Immutable.List<Span>,
-  selected: Span | undefined,
-  start: number,
-  end: number,
-): Immutable.List<Span> {
+function appendSpan(spans: Span[], selected: Span | undefined, start: number, end: number): void {
   if (!selected || end <= start) {
-    return spans;
+    return;
   }
 
-  const last = spans.last();
+  const last = spans.at(-1);
 
   if (last && last.end === start && last.type === selected.type) {
-    return spans.set(-1, { ...last, end });
+    spans[spans.length - 1] = { ...last, end };
+    return;
   }
 
-  return spans.push({ ...selected, start, end });
+  spans.push({ ...selected, start, end });
 }
 
-function applyBoundaryEvents(events: readonly BoundaryEvent[], index: number, active: ActiveSpans) {
+function applyBoundaryEvents(
+  events: readonly BoundaryEvent[],
+  index: number,
+  active: Map<number, Span>,
+): number {
   const offset = events[index].offset;
 
-  return loop({ index, active }, (current) => {
-    const event = events[current.index];
+  while (events[index]?.offset === offset) {
+    const event = events[index];
 
-    if (!event || event.offset !== offset) {
-      return done(current);
+    if (event.start) {
+      active.set(event.id, event.span);
+    } else {
+      active.delete(event.id);
     }
 
-    return again({
-      index: current.index + 1,
-      active: event.start
-        ? current.active.set(event.id, event.span)
-        : current.active.delete(event.id),
-    });
-  });
+    index += 1;
+  }
+
+  return index;
 }
 
 /** 外側の文字列より深いコードを優先し、重複しない範囲へ整列する。 */
 export function disjoint(spans: readonly Span[]): readonly Span[] {
   const events = boundaryEvents(spans);
-  const initial = {
-    offset: 0,
-    index: 0,
-    active: Immutable.OrderedMap<number, Span>(),
-    spans: Immutable.List<Span>(),
+
+  const initial: { readonly active: ActiveSpans; readonly spans: readonly Span[] } = {
+    active: makeMap(),
+    spans: [],
   };
 
-  return loop<typeof initial, readonly Span[]>(initial, (state) => {
-    const event = events[state.index];
+  return produce(initial, (draft) => {
+    loop({ offset: 0, index: 0 }, (state) => {
+      const event = events[state.index];
 
-    if (!event) {
-      return done(state.spans.toArray());
-    }
+      if (!event) return done(undefined);
 
-    const spans = appendSpan(state.spans, visibleSpan(state.active), state.offset, event.offset);
-    const next = applyBoundaryEvents(events, state.index, state.active);
+      appendSpan(draft.spans, visibleSpan(draft.active), state.offset, event.offset);
+      const index = applyBoundaryEvents(events, state.index, draft.active);
 
-    return again({ offset: event.offset, index: next.index, active: next.active, spans });
-  });
+      return again({ offset: event.offset, index });
+    });
+  }).spans;
 }

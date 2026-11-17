@@ -1,4 +1,12 @@
-import * as Immutable from 'immutable';
+import {
+  addValue,
+  appendItems,
+  collectArray,
+  makeMap,
+  makeSet,
+  mapValues,
+  setEntry,
+} from '../util/collections';
 import { resolveFunction } from '../connection/ast/context';
 import { functionCommand, protocolRange } from '../connection/ast/cursor';
 import { namedKey } from '../connection/ast/word';
@@ -66,10 +74,10 @@ function argumentDiagnostics(
       const key = namedKey(word);
 
       return key && named.has(key)
-        ? { ...current, present: current.present.add(key) }
+        ? { ...current, present: addValue(current.present, key) }
         : { ...current, positional: current.positional + 1 };
     },
-    { present: Immutable.OrderedSet<string>(), positional: 0 },
+    { present: makeSet<string>(), positional: 0 },
   );
   const { present, positional } = supplied;
   const range = protocolRange(mapRange(command.commandName?.range ?? command.range));
@@ -138,22 +146,23 @@ function localDefinitions(
     return new Map();
   }
 
-  const grouped = Immutable.OrderedSet(file.functions.map((entry) => entry.definition)).reduce(
+  const grouped = [...makeSet(file.functions.map((entry) => entry.definition))].reduce(
     (groups, definition) =>
       definition.names.reduce((previous, word) => {
         const name = literalWord(word);
 
         return name
-          ? previous.set(
+          ? setEntry(
+              previous,
               name,
-              (previous.get(name) ?? Immutable.List<FunctionDefinitionNode>()).push(definition),
+              appendItems(previous.get(name) ?? collectArray<FunctionDefinitionNode>(), definition),
             )
           : previous;
       }, groups),
-    Immutable.OrderedMap<string, Immutable.List<FunctionDefinitionNode>>(),
+    makeMap<string, ReadonlyArray<FunctionDefinitionNode>>(),
   );
 
-  return new Map(grouped.map((definitions) => definitions.toArray()));
+  return new Map(mapValues(grouped, (definitions) => definitions));
 }
 
 /** 既存の前方参照の動作を保ちながら、直前にある最も近い定義を優先する。 */
@@ -186,8 +195,8 @@ export function analyzeCalls(
   const mapRange = options.mapRange ?? ((range) => range);
   const incomplete = file.lexerDiagnostics.length > 0 || file.parserDiagnostics.length > 0;
   const initial = {
-    diagnostics: Immutable.List<Diagnostics>(),
-    targets: Immutable.OrderedMap<SimpleCommandNode, FunctionDefinitionNode>(),
+    diagnostics: collectArray<Diagnostics>(),
+    targets: makeMap<SimpleCommandNode, FunctionDefinitionNode>(),
   };
   const result = commands.reduce((previous, command) => {
     const word = command.commandName?.word;
@@ -235,7 +244,7 @@ export function analyzeCalls(
             ),
           );
 
-      return { diagnostics, targets: previous.targets.set(command, target) };
+      return { diagnostics, targets: setEntry(previous.targets, command, target) };
     }
 
     if (context.autoloads.has(name) && functionCommand(command)) {
@@ -249,7 +258,7 @@ export function analyzeCalls(
     return unknown
       ? {
           ...previous,
-          diagnostics: previous.diagnostics.push({
+          diagnostics: appendItems(previous.diagnostics, {
             severity: DiagnosticSeverity.Error,
             code: 'undefined-command',
             range: protocolRange(mapRange(word.range)),
@@ -260,7 +269,7 @@ export function analyzeCalls(
       : previous;
   }, initial);
 
-  return { diagnostics: result.diagnostics.toArray(), targets: new Map(result.targets) };
+  return { diagnostics: result.diagnostics, targets: new Map(result.targets) };
 }
 
 /** 関数の参照先を必要としない呼び出し元向けに、既存の診断のみを返すAPIを保つ。 */

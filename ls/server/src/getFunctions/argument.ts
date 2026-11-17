@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { numberRange, takeWhile } from '../util/collections';
 import { COMMENT_CHAR, NAMED_ARG_POSITION } from './constant';
 import { namedArgRegex, positionalArgRegex, specialArgRegex } from './regex';
 import { FuncArg } from './type';
@@ -70,8 +70,9 @@ export function extractFunctionArgs(
   lines: readonly string[],
   functionLineIndex: number,
 ): FuncArg[] {
-  const args = Immutable.Range(functionLineIndex - 1, -1, -1)
-    .takeWhile((index) => lines[index].trim().startsWith(COMMENT_CHAR))
+  const args = takeWhile(numberRange(functionLineIndex - 1, -1, -1), (index) =>
+    lines[index].trim().startsWith(COMMENT_CHAR),
+  )
     .map(
       (index) =>
         parsePositionalArg(lines[index]) ??

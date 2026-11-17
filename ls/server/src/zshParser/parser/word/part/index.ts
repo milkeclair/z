@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray } from '../../../../util/collections';
 import { again, done, loop } from '../../../../util/loop';
 import type { StringLiteralNode, WordPartNode } from '../../../ast';
 import { rangeWithinText } from '../../range';
@@ -14,14 +14,14 @@ export function createWordParts(segment: WordSegment): readonly WordPartNode[] {
     index: segment.start,
     literalStart: segment.start,
     quote: 'none',
-    parts: Immutable.List(),
+    parts: collectArray(),
   };
 
   const state = loop(initial, (current) =>
     current.index < current.end ? again(readWordPart(current)) : done(current),
   );
 
-  return appendLiteralIfNeeded(state).toArray();
+  return appendLiteralIfNeeded(state);
 }
 
 function readWordPart(state: WordPartState): WordPartState {
@@ -64,7 +64,7 @@ function readExpansionPart(state: WordPartState): WordPartState {
       ...state,
       index: expansion.nextIndex,
       literalStart: expansion.nextIndex,
-      parts: appendLiteralBeforeExpansion(state).push(expansion.node),
+      parts: appendItems(appendLiteralBeforeExpansion(state), expansion.node),
     };
   } else {
     return { ...state, index: state.index + 1 };
@@ -83,9 +83,10 @@ function isEscape(state: WordPartState): boolean {
   }
 }
 
-function appendLiteralIfNeeded(state: WordPartState): Immutable.List<WordPartNode> {
-  if (state.literalStart < state.index || state.parts.size === 0) {
-    return state.parts.push(
+function appendLiteralIfNeeded(state: WordPartState): ReadonlyArray<WordPartNode> {
+  if (state.literalStart < state.index || state.parts.length === 0) {
+    return appendItems(
+      state.parts,
       createStringLiteralNode({
         ...state,
         start: state.literalStart,
@@ -97,9 +98,10 @@ function appendLiteralIfNeeded(state: WordPartState): Immutable.List<WordPartNod
   }
 }
 
-function appendLiteralBeforeExpansion(state: WordPartState): Immutable.List<WordPartNode> {
+function appendLiteralBeforeExpansion(state: WordPartState): ReadonlyArray<WordPartNode> {
   if (state.literalStart < state.index) {
-    return state.parts.push(
+    return appendItems(
+      state.parts,
       createStringLiteralNode({
         ...state,
         start: state.literalStart,

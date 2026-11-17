@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray, numberRange } from '../../../util/collections';
 import { again, done, loop } from '../../../util/loop';
 
 export type Escape = {
@@ -65,9 +65,8 @@ function escapeValue(raw: string, prefix: EscapePrefix): Escape {
     const limit = octal ? 3 : char === 'x' ? 2 : char === 'u' ? 4 : 8;
     const boundary = Math.min(raw.length, first + limit);
     const end =
-      Immutable.Range(first, boundary).find(
-        (cursor) => !digits.includes(raw[cursor].toLowerCase()),
-      ) ?? boundary;
+      numberRange(first, boundary).find((cursor) => !digits.includes(raw[cursor].toLowerCase())) ??
+      boundary;
 
     if (end > first) {
       const code = Number.parseInt(raw.slice(first, end), octal ? 8 : 16);
@@ -117,17 +116,17 @@ type DelimiterProgress = {
   readonly quote: string;
   readonly delimiter: string;
   readonly quoted: boolean;
-  readonly bytes: Immutable.List<number>;
+  readonly bytes: ReadonlyArray<number>;
 };
 
 function flushDelimiter(state: DelimiterProgress): DelimiterProgress {
-  if (state.bytes.isEmpty()) {
+  if (state.bytes.length === 0) {
     return state;
   }
 
   const text = new TextDecoder('utf-8', { ignoreBOM: true }).decode(Uint8Array.from(state.bytes));
 
-  return { ...state, delimiter: state.delimiter + text, bytes: Immutable.List() };
+  return { ...state, delimiter: state.delimiter + text, bytes: collectArray() };
 }
 
 function readAnsiDelimiterEscape(raw: string, state: DelimiterProgress): DelimiterProgress {
@@ -138,7 +137,7 @@ function readAnsiDelimiterEscape(raw: string, state: DelimiterProgress): Delimit
     return {
       ...state,
       index: escaped.end,
-      bytes: state.bytes.push(escaped.value.charCodeAt(0)),
+      bytes: appendItems(state.bytes, escaped.value.charCodeAt(0)),
     };
   }
 
@@ -244,7 +243,7 @@ export function removeHereDocQuotes(
     quote: '',
     delimiter: '',
     quoted: false,
-    bytes: Immutable.List(),
+    bytes: collectArray(),
   };
   const parsed = loop<DelimiterProgress, DelimiterProgress>(initial, (state) =>
     state.index >= raw.length

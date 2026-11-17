@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { produce } from '../util/collections';
 import { spawn } from 'node:child_process';
 import { createIOState } from '../util/ioState';
 import { again, done, loop } from '../util/loop';
@@ -38,18 +38,12 @@ const QUERY = [
 ].join('\n');
 
 type SymbolTables = {
-  readonly commands: Immutable.OrderedSet<string>;
-  readonly builtins: Immutable.OrderedSet<string>;
-  readonly aliases: Immutable.OrderedSet<string>;
-  readonly functions: Immutable.OrderedSet<string>;
-  readonly globalAliases: Immutable.OrderedSet<string>;
-  readonly suffixAliases: Immutable.OrderedSet<string>;
-};
-
-type EnvironmentProgress = {
-  readonly index: number;
-  readonly commandBuiltins: boolean;
-  readonly tables: SymbolTables;
+  readonly commands: ReadonlySet<string>;
+  readonly builtins: ReadonlySet<string>;
+  readonly aliases: ReadonlySet<string>;
+  readonly functions: ReadonlySet<string>;
+  readonly globalAliases: ReadonlySet<string>;
+  readonly suffixAliases: ReadonlySet<string>;
 };
 
 const TABLE_NAMES: Readonly<Record<string, keyof SymbolTables | undefined>> = {
@@ -61,21 +55,6 @@ const TABLE_NAMES: Readonly<Record<string, keyof SymbolTables | undefined>> = {
   'suffix-alias': 'suffixAliases',
 };
 
-function environmentFrom(progress: EnvironmentProgress): ShellEnvironment {
-  const tables = progress.tables;
-
-  return {
-    kind: 'available',
-    commandBuiltins: progress.commandBuiltins,
-    commands: new Set(tables.commands),
-    builtins: new Set(tables.builtins),
-    aliases: new Set(tables.aliases),
-    functions: new Set(tables.functions),
-    globalAliases: new Set(tables.globalAliases),
-    suffixAliases: new Set(tables.suffixAliases),
-  };
-}
-
 export function parseShellEnvironment(output: string): ShellEnvironment {
   const marker = '__ZLS_ENV_V1__' + String.fromCharCode(0);
   const start = output.indexOf(marker);
@@ -85,51 +64,53 @@ export function parseShellEnvironment(output: string): ShellEnvironment {
   }
 
   const words = output.slice(start + marker.length).split(String.fromCharCode(0));
-  const initial: EnvironmentProgress = {
-    index: 0,
+  const initial: {
+    readonly tables: SymbolTables;
+    readonly valid: boolean;
+    readonly commandBuiltins: boolean;
+  } = {
+    valid: false,
     commandBuiltins: false,
     tables: {
-      commands: Immutable.OrderedSet(),
-      builtins: Immutable.OrderedSet(),
-      aliases: Immutable.OrderedSet(),
-      functions: Immutable.OrderedSet(),
-      globalAliases: Immutable.OrderedSet(),
-      suffixAliases: Immutable.OrderedSet(),
+      commands: new Set(),
+      builtins: new Set(),
+      aliases: new Set(),
+      functions: new Set(),
+      globalAliases: new Set(),
+      suffixAliases: new Set(),
     },
   };
+  const parsed = produce(initial, (draft) => {
+    loop<number, void>(0, (index) => {
+      const kind = words[index];
 
-  return loop<EnvironmentProgress, ShellEnvironment>(initial, (progress) => {
-    const kind = words[progress.index];
+      if (kind === '__ZLS_ENV_END__') {
+        draft.valid = true;
 
-    if (kind === '__ZLS_ENV_END__') {
-      return done(environmentFrom(progress));
-    }
+        return done(undefined);
+      }
 
-    const name = words[progress.index + 1];
+      const name = words[index + 1];
+      if (!name) return done(undefined);
 
-    if (!name) {
-      return done({ kind: 'unavailable', reason: 'invalid-output' });
-    }
+      if (kind === 'option' && name === 'command-builtins') {
+        draft.commandBuiltins = true;
 
-    if (kind === 'option') {
-      return name === 'command-builtins'
-        ? again({ ...progress, index: progress.index + 2, commandBuiltins: true })
-        : done({ kind: 'unavailable', reason: 'invalid-output' });
-    }
+        return again(index + 2);
+      }
 
-    const table = Object.hasOwn(TABLE_NAMES, kind) ? TABLE_NAMES[kind] : undefined;
+      const table = Object.hasOwn(TABLE_NAMES, kind) ? TABLE_NAMES[kind] : undefined;
+      if (!table) return done(undefined);
 
-    return table
-      ? again({
-          ...progress,
-          index: progress.index + 2,
-          tables: {
-            ...progress.tables,
-            [table]: progress.tables[table].add(name),
-          },
-        })
-      : done({ kind: 'unavailable', reason: 'invalid-output' });
+      draft.tables[table].add(name);
+
+      return again(index + 2);
+    });
   });
+
+  return parsed.valid
+    ? { ...parsed.tables, kind: 'available', commandBuiltins: parsed.commandBuiltins }
+    : { kind: 'unavailable', reason: 'invalid-output' };
 }
 
 type ProbeState = {

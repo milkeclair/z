@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { numberRange } from '../../../util/collections';
 import { again, done, loop } from '../../../util/loop';
 import type { VariableNameNode } from '../../ast';
 import type { SourceRange } from '../../lexer';
@@ -43,7 +43,7 @@ export function isVariableName(value: string): boolean {
 }
 
 function isNameTail(value: string, index: number): boolean {
-  return Immutable.Range(index, value.length).every((cursor) => isNamePart(value[cursor]));
+  return numberRange(index, value.length).every((cursor) => isNamePart(value[cursor]));
 }
 
 function isNamePart(char: string): boolean {

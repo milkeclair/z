@@ -1,4 +1,5 @@
-import * as Immutable from 'immutable';
+import { castDraft } from 'immer';
+import { produce } from '../../../util/collections';
 import type { AstNode } from '..';
 import { again, done, loop } from '../../../util/loop';
 import { pushStack, type Stack } from '../../../util/stack';
@@ -36,7 +37,6 @@ export type FoldStep<State> = {
 type FoldProgress<State> = {
   readonly result: State;
   readonly tasks: Stack<Task> | null;
-  readonly seen: Immutable.Set<AstNode> | null;
 };
 
 export function foldAst<State>(
@@ -45,11 +45,29 @@ export function foldAst<State>(
   reduce: (state: State, node: AstNode, depth: number) => FoldStep<State>,
   options: WalkOptions = {},
 ): State {
-  const childCursor = options.includeRelated ? relatedChildCursor : syntaxChildCursor;
+  if (!options.includeRelated) {
+    return foldNodes(root, initial, reduce, syntaxChildCursor);
+  }
+
+  // ASTをキーとして保持し、重複の判定でノード自体をdraftへ変換しない。
+  const result = produce({ seen: new Map<AstNode, true>(), read: () => initial }, (draft) => {
+    const value = foldNodes(root, initial, reduce, relatedChildCursor, draft.seen);
+    draft.read = () => value;
+  });
+
+  return result.read();
+}
+
+function foldNodes<State>(
+  root: AstNode,
+  initial: State,
+  reduce: (state: State, node: AstNode, depth: number) => FoldStep<State>,
+  childCursor: (node: AstNode) => ChildCursor | null,
+  seen?: Map<AstNode, true>,
+): State {
   const progress: FoldProgress<State> = {
     result: initial,
     tasks: pushStack({ kind: 'node', node: root, depth: 0 }),
-    seen: options.includeRelated ? Immutable.Set<AstNode>() : null,
   };
 
   return loop<FoldProgress<State>, State>(progress, (state) => {
@@ -79,7 +97,7 @@ export function foldAst<State>(
         : again({ ...state, tasks: remaining });
     }
 
-    if (state.seen?.has(task.node)) {
+    if (seen?.has(task.node)) {
       return again({ ...state, tasks: remaining });
     }
 
@@ -89,9 +107,10 @@ export function foldAst<State>(
       return done(result.state);
     }
 
+    seen?.set(task.node, true);
+
     return again({
       result: result.state,
-      seen: state.seen?.add(task.node) ?? null,
       tasks:
         result.control === 'skip'
           ? remaining
@@ -142,19 +161,13 @@ export function findAll<K extends AstNode['kind']>(
     readonly kind: K;
   }
 >[] {
-  return foldAst(
-    root,
-    Immutable.List<
-      Extract<
-        AstNode,
-        {
-          readonly kind: K;
-        }
-      >
-    >(),
-    (nodes, node) => ({
-      state: hasKind(node, kind) ? nodes.push(node) : nodes,
-    }),
-    options,
-  ).toArray();
+  return produce<readonly Extract<AstNode, { readonly kind: K }>[]>([], (nodes) => {
+    walk(
+      root,
+      (node) => {
+        if (hasKind(node, kind)) nodes.push(castDraft(node));
+      },
+      options,
+    );
+  });
 }

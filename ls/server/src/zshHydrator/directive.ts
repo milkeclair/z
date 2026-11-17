@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray } from '../util/collections';
 import { again, done, loop } from '../util/loop';
 import { horizontalWhitespaceEnd, textWhileEnd } from '../util/text';
 import type { CommentNode } from '../zshParser/ast';
@@ -61,10 +61,10 @@ export function parseDirective(
   const words = loop<
     {
       readonly index: number;
-      readonly words: Immutable.List<Word>;
+      readonly words: ReadonlyArray<Word>;
     },
-    Immutable.List<Word>
-  >({ index: payload.start + namespace.length + 1, words: Immutable.List() }, (progress) => {
+    ReadonlyArray<Word>
+  >({ index: payload.start + namespace.length + 1, words: collectArray() }, (progress) => {
     const start = horizontalWhitespaceEnd(comment.text, progress.index);
 
     if (start >= comment.text.length) {
@@ -75,7 +75,7 @@ export function parseDirective(
 
     return again({
       index: end,
-      words: progress.words.push({ value: comment.text.slice(start, end), start, end }),
+      words: appendItems(progress.words, { value: comment.text.slice(start, end), start, end }),
     });
   });
 
@@ -84,17 +84,12 @@ export function parseDirective(
     range: rangeWithinText(comment.range, comment.text, payload.start, comment.text.length),
     raw: comment.text.slice(payload.start),
     namespace,
-    command: words.first()?.value ?? null,
-    arguments: words
-      .skip(1)
-      .map(
-        (word): DirectiveArgument => ({
-          kind: 'directiveArgument',
-          raw: word.value,
-          value: word.value,
-          range: rangeWithinText(comment.range, comment.text, word.start, word.end),
-        }),
-      )
-      .toArray(),
+    command: words.at(0)?.value ?? null,
+    arguments: words.slice(1).map((word): DirectiveArgument => ({
+      kind: 'directiveArgument',
+      raw: word.value,
+      value: word.value,
+      range: rangeWithinText(comment.range, comment.text, word.start, word.end),
+    })),
   };
 }

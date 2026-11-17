@@ -1,25 +1,24 @@
-import * as Immutable from 'immutable';
-
+import { appendItems, collectArray, numberRange } from './collections';
 export function levenshteinDistance(source: string, target: string): number {
-  const firstRow = Immutable.List(Immutable.Range(0, target.length + 1));
-  const lastRow = Immutable.Range(1, source.length + 1).reduce(
+  const firstRow = collectArray(numberRange(0, target.length + 1));
+  const lastRow = numberRange(1, source.length + 1).reduce(
     (previous, row) =>
-      Immutable.Range(1, target.length + 1).reduce(
+      numberRange(1, target.length + 1).reduce(
         (current, column) => {
           const substitution =
-            previous.get(column - 1, 0) +
+            (previous.at(column - 1) ?? 0) +
             (source.charAt(row - 1) === target.charAt(column - 1) ? 0 : 1);
-          const insertion = current.last(0) + 1;
-          const deletion = previous.get(column, 0) + 1;
+          const insertion = (current.at(-1) ?? 0) + 1;
+          const deletion = (previous.at(column) ?? 0) + 1;
 
-          return current.push(Math.min(substitution, insertion, deletion));
+          return appendItems(current, Math.min(substitution, insertion, deletion));
         },
-        Immutable.List([row]),
+        collectArray([row]),
       ),
     firstRow,
   );
 
-  return lastRow.last(0);
+  return lastRow.at(-1) ?? 0;
 }
 
 export function findClosestMatch(

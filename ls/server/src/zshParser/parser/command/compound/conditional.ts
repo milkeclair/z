@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray } from '../../../../util/collections';
 import { again, done, loop } from '../../../../util/loop';
 import type { IfBranchNode } from '../../../ast';
 import type { Token } from '../../../lexer';
@@ -13,12 +13,12 @@ export function readIfBody(
   context: ParserContext,
   open: Token,
 ): NodeResult<CompoundContents> {
-  const initial = { current: state, keyword: open, branches: Immutable.List<IfBranchNode>() };
+  const initial = { current: state, keyword: open, branches: collectArray<IfBranchNode>() };
   const parsed = loop<typeof initial, typeof initial>(initial, (progress) => {
     const condition = context.parseNestedList(progress.current, endAt('then', 'fi'));
     const then = takeKeyword(condition.state, 'then');
     const body = context.parseNestedList(then.state, endAt('elif', 'else', 'fi'));
-    const branches = progress.branches.push({
+    const branches = appendItems<IfBranchNode>(progress.branches, {
       kind: 'ifBranch',
       range: { start: progress.keyword.range.start, end: body.node.range.end },
       keyword: progress.keyword.range,
@@ -39,7 +39,7 @@ export function readIfBody(
   return {
     node: {
       kind: 'ifCommand',
-      branches: parsed.branches.toArray(),
+      branches: parsed.branches,
       elseBody: alternative?.node ?? null,
     },
     state: alternative?.state ?? parsed.current,

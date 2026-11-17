@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray } from '../../../../util/collections';
 import { again, done, loop } from '../../../../util/loop';
 import type { CaseArmNode, WordNode } from '../../../ast';
 import type { ParserContext } from '../../context';
@@ -28,7 +28,7 @@ function readPatterns(state: ParseState): {
   readonly patterns: readonly WordNode[];
   readonly state: ParseState;
 } {
-  const initial = { current: state, patterns: Immutable.List<WordNode>() };
+  const initial = { current: state, patterns: collectArray<WordNode>() };
 
   return loop<
     typeof initial,
@@ -40,14 +40,14 @@ function readPatterns(state: ParseState): {
     const token = currentToken(progress.current);
 
     if (token.kind === 'eof' || token.operatorKind === 'rightParen') {
-      return done({ patterns: progress.patterns.toArray(), state: progress.current });
+      return done({ patterns: progress.patterns, state: progress.current });
     }
 
     const word = isWordStart(progress.current) ? readWordNode(progress.current) : null;
 
     return again({
       current: skipTrivia(word?.state ?? advanceState(progress.current)),
-      patterns: word ? progress.patterns.push(word.node) : progress.patterns,
+      patterns: word ? appendItems(progress.patterns, word.node) : progress.patterns,
     });
   });
 }
@@ -97,14 +97,14 @@ export function readCaseBody(
 ): NodeResult<CompoundContents> {
   const subject = readSubject(state);
   const afterIn = skipCommandTerm(takeKeyword(skipCommandTerm(subject.state), 'in').state);
-  const initial = { current: afterIn, arms: Immutable.List<CaseArmNode>() };
+  const initial = { current: afterIn, arms: collectArray<CaseArmNode>() };
   const parsed = loop<typeof initial, typeof initial>(initial, (progress) => {
     if (endAt('esac')(currentToken(progress.current))) {
       return done(progress);
     }
 
     const arm = readCaseArm(progress.current, context);
-    const arms = progress.arms.push(arm.node);
+    const arms = appendItems(progress.arms, arm.node);
 
     return arm.node.termination
       ? again({ current: skipCommandTerm(advanceState(arm.state)), arms })
@@ -112,7 +112,7 @@ export function readCaseBody(
   });
 
   return {
-    node: { kind: 'caseCommand', subject: subject.node, arms: parsed.arms.toArray() },
+    node: { kind: 'caseCommand', subject: subject.node, arms: parsed.arms },
     state: parsed.current,
   };
 }

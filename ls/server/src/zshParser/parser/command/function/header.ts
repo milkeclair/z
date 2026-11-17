@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray } from '../../../../util/collections';
 import { again, done, loop } from '../../../../util/loop';
 import type { FunctionDefinitionForm, OptionNode, WordNode } from '../../../ast';
 import type { SourceRange, Token } from '../../../lexer';
@@ -57,7 +57,7 @@ function readFunctionOptions({
   readonly options: readonly OptionNode[];
   readonly state: ParseState;
 } {
-  const initial = { current: skipTrivia(state), collected: Immutable.List(options) };
+  const initial = { current: skipTrivia(state), collected: collectArray(options) };
 
   return loop<
     typeof initial,
@@ -71,9 +71,9 @@ function readFunctionOptions({
     return token.kind === 'word' && token.value === '-T'
       ? again({
           current: skipTrivia(advanceState(progress.current)),
-          collected: progress.collected.push(createOptionNodeFromToken(token, null)),
+          collected: appendItems(progress.collected, createOptionNodeFromToken(token, null)),
         })
-      : done({ options: progress.collected.toArray(), state: progress.current });
+      : done({ options: progress.collected, state: progress.current });
   });
 }
 
@@ -87,7 +87,7 @@ function readFunctionNames({
   readonly names: readonly WordNode[];
   readonly state: ParseState;
 } {
-  const initial = { current: skipTrivia(state), collected: Immutable.List(names) };
+  const initial = { current: skipTrivia(state), collected: collectArray(names) };
 
   return loop<
     typeof initial,
@@ -101,9 +101,9 @@ function readFunctionNames({
     return token.kind === 'word' && !isFunctionKeyword(token)
       ? again({
           current: skipTrivia(advanceState(progress.current)),
-          collected: progress.collected.push(createWordNode(token)),
+          collected: appendItems(progress.collected, createWordNode(token)),
         })
-      : done({ names: progress.collected.toArray(), state: progress.current });
+      : done({ names: progress.collected, state: progress.current });
   });
 }
 

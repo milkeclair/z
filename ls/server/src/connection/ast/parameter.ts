@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray } from '../../util/collections';
 import type { FuncArg } from '../../getFunctions/type';
 import type { FunctionTarget } from '../../refreshFunctions/target';
 import { literalWord } from '../../refreshFunctions/word';
@@ -27,7 +27,7 @@ function parameterName(raw: string): string | null {
   if (
     bracket > 0 &&
     name.endsWith(']') &&
-    [...name.slice(0, bracket)].every(
+    Array.from(name.slice(0, bracket)).every(
       (char, index) =>
         char === '_' ||
         (char >= 'a' && char <= 'z') ||
@@ -140,14 +140,14 @@ function aliasArgument(target: FunctionTarget, cursor: Cursor, name: string): Fu
 
   type AliasState = {
     readonly result: FuncArg | null;
-    readonly ancestors: Immutable.List<AstNode>;
+    readonly ancestors: ReadonlyArray<AstNode>;
   };
 
   return foldAst<AliasState>(
     target.definition.body,
-    { result: null, ancestors: Immutable.List() },
+    { result: null, ancestors: collectArray() },
     (previous, node, depth) => {
-      const ancestors = previous.ancestors.take(depth).push(node);
+      const ancestors = appendItems(previous.ancestors.slice(0, depth), node);
       const state = { ...previous, ancestors };
 
       if (node.range.start.offset >= cursor.offset || node.kind === 'functionDefinition') {
@@ -179,7 +179,7 @@ function aliasArgument(target: FunctionTarget, cursor: Cursor, name: string): Fu
         const raw = assignment.value ? initializer(assignment.value.value) : null;
         const key =
           raw === '$REPLY'
-            ? namedReply(node, { ...cursor, path: ancestors.toArray() })
+            ? namedReply(node, { ...cursor, path: ancestors })
             : raw
               ? parameterName(raw)
               : null;

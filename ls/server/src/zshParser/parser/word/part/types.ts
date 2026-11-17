@@ -1,4 +1,3 @@
-import * as Immutable from 'immutable';
 import type { ListNode, WordPartNode } from '../../../ast';
 import type { QuoteKind, SourceRange, Token } from '../../../lexer';
 
@@ -21,7 +20,7 @@ export type WordPartState = WordSegment & {
   readonly index: number;
   readonly literalStart: number;
   readonly quote: 'none' | 'single' | 'double' | 'dollarSingle';
-  readonly parts: Immutable.List<WordPartNode>;
+  readonly parts: ReadonlyArray<WordPartNode>;
 };
 
 export type ExpansionReadResult = {

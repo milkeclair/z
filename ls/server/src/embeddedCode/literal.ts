@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { produce } from '../util/collections';
 import { again, done, loop } from '../util/loop';
 import type { WordNode } from '../zshParser/ast';
 import { ansiEscape, doubleEscape } from '../zshParser/lexer/delimiter/heredoc';
@@ -26,26 +26,28 @@ type DecodeProgress = {
   readonly quote: string;
   readonly text: string;
   readonly contentEnd: number;
-  readonly spans: Immutable.List<SourceSpan>;
-  readonly bytes: Immutable.List<EncodedByte>;
+  readonly spans: SourceSpan[];
+  readonly bytes: EncodedByte[];
 };
 
 function emit(state: DecodeProgress, text: string, start: number, end: number): DecodeProgress {
-  return {
-    ...state,
-    text: state.text + text,
-    contentEnd: end,
-    spans: state.spans.concat(Immutable.Range(0, text.length).map(() => ({ start, end }))),
-  };
+  for (const char of text) {
+    const span = { start, end };
+    state.spans.push(span);
+
+    if (char.length === 2) state.spans.push({ start, end });
+  }
+
+  return { ...state, text: state.text + text, contentEnd: end };
 }
 
 function flushBytes(state: DecodeProgress): DecodeProgress | null {
-  if (state.bytes.isEmpty()) {
+  if (state.bytes.length === 0) {
     return state;
   }
 
   try {
-    const bytes = state.bytes.toArray();
+    const bytes = state.bytes;
     const text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(
       Uint8Array.from(bytes.map((byte) => byte.value)),
     );
@@ -63,13 +65,16 @@ function flushBytes(state: DecodeProgress): DecodeProgress | null {
       { offset: 0, state },
     );
 
-    return { ...decoded.state, bytes: Immutable.List() };
+    bytes.length = 0;
+    return decoded.state;
   } catch {
     return null;
   }
 }
 
-function finishLiteral(state: DecodeProgress, allowUnterminated: boolean): DecodedLiteral | null {
+type LiteralText = Omit<DecodedLiteral, 'spans'>;
+
+function finishLiteral(state: DecodeProgress, allowUnterminated: boolean): LiteralText | null {
   if (state.quote && !allowUnterminated) {
     return null;
   }
@@ -82,7 +87,6 @@ function finishLiteral(state: DecodeProgress, allowUnterminated: boolean): Decod
 
   return {
     text: flushed.text,
-    spans: flushed.spans.toArray(),
     end: flushed.contentEnd,
     ...(state.quote ? { unterminated: true } : {}),
   };
@@ -97,15 +101,8 @@ function readAnsiLiteralEscape(raw: string, state: DecodeProgress): DecodeProgre
   }
 
   if (escaped.byte) {
-    return {
-      ...state,
-      index: escaped.end,
-      bytes: state.bytes.push({
-        value: escaped.value.charCodeAt(0),
-        start: index,
-        end: escaped.end,
-      }),
-    };
+    state.bytes.push({ value: escaped.value.charCodeAt(0), start: index, end: escaped.end });
+    return { ...state, index: escaped.end };
   }
 
   const current = flushBytes(state);
@@ -177,22 +174,30 @@ export function decodeLiteral(word: WordNode, allowUnterminated = false): Decode
   }
 
   const raw = word.raw;
-  const initial: DecodeProgress = {
-    index: 0,
-    quote: '',
-    text: '',
-    contentEnd: 0,
-    spans: Immutable.List(),
-    bytes: Immutable.List(),
-  };
+  const buffers = produce<{
+    readonly spans: readonly SourceSpan[];
+    readonly bytes: readonly EncodedByte[];
+    readonly literal: LiteralText | null;
+  }>({ spans: [], bytes: [], literal: null }, (draft) => {
+    const initial: DecodeProgress = {
+      index: 0,
+      quote: '',
+      text: '',
+      contentEnd: 0,
+      spans: draft.spans,
+      bytes: draft.bytes,
+    };
 
-  return loop<DecodeProgress, DecodedLiteral | null>(initial, (state) => {
-    if (state.index >= raw.length) return done(finishLiteral(state, allowUnterminated));
+    draft.literal = loop<DecodeProgress, LiteralText | null>(initial, (state) => {
+      if (state.index >= raw.length) return done(finishLiteral(state, allowUnterminated));
 
-    const next = readLiteralCharacter(raw, state);
+      const next = readLiteralCharacter(raw, state);
 
-    return next ? again(next) : done(null);
+      return next ? again(next) : done(null);
+    });
   });
+
+  return buffers.literal && { ...buffers.literal, spans: buffers.spans };
 }
 
 /** 元ソースとの位置対応を保ちながら、復号済みの名前付き引数から接頭辞を取り除く。 */

@@ -73,8 +73,6 @@ function readParameterExpansion(state: WordPartState): ExpansionReadResult {
     index: state.index + Dollar.length,
     max: state.end,
     open: LeftBrace,
-    close: RightBrace,
-    depth: 0,
   });
   const end = closeIndex === null ? state.end : closeIndex + RightBrace.length;
 
@@ -110,8 +108,6 @@ function readCommandSubstitution(state: WordPartState): ExpansionReadResult {
     index: state.index + Dollar.length,
     max: state.end,
     open: LeftParen,
-    close: RightParen,
-    depth: 0,
   });
   const end = closeIndex === null ? state.end : closeIndex + RightParen.length;
 
@@ -131,15 +127,11 @@ function findMatchingCharacter({
   index,
   max,
   open,
-  close,
-  depth,
 }: {
   readonly text: string;
   readonly index: number;
   readonly max: number;
   readonly open: string;
-  readonly close: string;
-  readonly depth: number;
 }): number | null {
   const kind = open === LeftBrace ? 'brace' : 'paren';
   const end = delimitedEnd(text.slice(0, max), index, kind);

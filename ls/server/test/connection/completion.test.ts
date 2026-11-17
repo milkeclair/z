@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { numberRange } from '../../src/util/collections';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -486,7 +486,7 @@ describe('zCompletion', () => {
       const request = createLanguageFeatureRequest('gr¦eet');
       const spy = vi.spyOn(Lexer, 'tokenize');
 
-      for (const attempt of Immutable.Range(0, 10)) {
+      for (const _attempt of numberRange(0, 10)) {
         const item = zCompletion(request)?.[0];
 
         const definition = zDefinition(request);

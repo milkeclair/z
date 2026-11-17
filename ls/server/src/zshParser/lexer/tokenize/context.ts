@@ -48,10 +48,9 @@ export function isProcessOpen(context: LexicalContext, offset: number): boolean 
 
   return Boolean(
     previous &&
-      previous.range.end.offset === offset &&
-      ((previous.operatorKind === 'redirect' &&
-        (previous.value === '<' || previous.value === '>')) ||
-        (previous.kind === 'word' && (previous.value === '=' || previous.value.endsWith('==')))),
+    previous.range.end.offset === offset &&
+    ((previous.operatorKind === 'redirect' && (previous.value === '<' || previous.value === '>')) ||
+      (previous.kind === 'word' && (previous.value === '=' || previous.value.endsWith('==')))),
   );
 }
 

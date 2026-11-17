@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray, numberRange } from '../../../src/util/collections';
 import type { AstNode, FileNode } from '../../../src/zshParser/ast';
 import { foldAst } from '../../../src/zshParser/ast';
 import type { SourcePosition, SourceRange, Token } from '../../../src/zshParser/lexer';
@@ -10,7 +10,7 @@ export function astContractViolations(
 ): readonly string[] {
   const lines = [
     0,
-    ...Immutable.Range(0, source.length)
+    ...numberRange(0, source.length)
       .filter(
         (index) => source[index] === '\n' || (source[index] === '\r' && source[index + 1] !== '\n'),
       )
@@ -57,10 +57,10 @@ export function astContractViolations(
 
       return {
         cursor: token.range.end.offset,
-        issues: valid ? previous.issues : previous.issues.push('tokenCoverage'),
+        issues: valid ? previous.issues : appendItems(previous.issues, 'tokenCoverage'),
       };
     },
-    { cursor: 0, issues: Immutable.List<string>() },
+    { cursor: 0, issues: collectArray<string>() },
   );
   const comments = new Map(ast.comments.map((comment) => [comment.range.start.offset, comment]));
   const initial = coverage.issues.concat([
@@ -96,9 +96,9 @@ export function astContractViolations(
               issues:
                 part.range.start.offset === previous.offset
                   ? previous.issues
-                  : previous.issues.push('wordPartCoverage'),
+                  : appendItems(previous.issues, 'wordPartCoverage'),
             }),
-            { offset: node.range.start.offset, issues: Immutable.List<string>() },
+            { offset: node.range.start.offset, issues: collectArray<string>() },
           )
         : null;
     const word =
@@ -137,5 +137,5 @@ export function astContractViolations(
 
   return foldAst(ast, initial, (previous, node) => ({ state: previous.concat(nodeIssues(node)) }), {
     includeRelated: true,
-  }).toArray();
+  });
 }

@@ -1,4 +1,4 @@
-import * as Immutable from 'immutable';
+import { appendItems, collectArray } from '../../../util/collections';
 import { again, done, loop } from '../../../util/loop';
 import type { SublistContinuation, SublistNode } from '../../ast';
 import type { ParserContext } from '../context';
@@ -64,7 +64,7 @@ function readSublistRest({
 }): SublistRestResult {
   const initial = {
     current: skipTrivia(state),
-    collected: Immutable.List<SublistContinuation>(rest),
+    collected: collectArray<SublistContinuation>(rest),
   };
 
   return loop<typeof initial, SublistRestResult>(initial, ({ current, collected }) => {
@@ -72,7 +72,7 @@ function readSublistRest({
     const type = logicalOperatorType(token);
 
     if (current.stopped || !type) {
-      return done({ rest: collected.toArray(), state: current });
+      return done({ rest: collected, state: current });
     }
 
     const parsed = parsePipeline({
@@ -82,7 +82,7 @@ function readSublistRest({
 
     return again({
       current: skipTrivia(parsed.state),
-      collected: collected.push({
+      collected: appendItems(collected, {
         operator: createLogicalOperatorNode(token, type),
         pipeline: parsed.node,
       }),
