@@ -81,6 +81,13 @@ export function hydrateAst(
   );
   const { documents, exampleComments } = parsed;
 
+  if (
+    documents.size === 0 &&
+    !ast.comments.some((comment) => isHydratedComment(comment) || parseDirective(comment, options))
+  ) {
+    return ast;
+  }
+
   return mapAst(ast, (node: AstNode): AstNode => {
     if (node.kind === 'docBlock') {
       const original = documents.get(node.range.start.offset);
