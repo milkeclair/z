@@ -55,7 +55,7 @@ z.pj.add() {
   REPLY=""
 }
 
-# 登録済みのプロジェクト名とディレクトリを一覧する
+# 名前を紫、パスを白にして、列を揃えてプロジェクトを一覧する
 #
 # REPLY: null
 # return: 0|1
@@ -63,7 +63,7 @@ z.pj.add() {
 # example:
 #  # some_project=/tmp/exampleだけを登録済みの場合
 #  z.pj.list
-#  # 出力: some_project<TAB>/tmp/example
+#  # 出力（名前は紫、パスは白）: some_project  /tmp/example
 #  # return: 0
 z.pj.list() {
   z.pj.file._names
@@ -75,10 +75,19 @@ z.pj.list() {
     return 0
   fi
 
+  local width=0
   local name
   for name in "${names[@]}"; do
+    z.int.is.gt ${#name} $width && width=${#name}
+  done
+
+  for name in "${names[@]}"; do
     z.pj.file._directory "$name" || return 1
-    z.io message="$name"$'\t'"$REPLY"
+    local dir=$REPLY
+    z.str.ljust "$name" width=$width && local label=$REPLY
+    z.str.color.magenta "$label" && label=$REPLY
+    z.str.color.white "$dir"
+    z.io message="$label  $REPLY"
   done
   REPLY=""
 }

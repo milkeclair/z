@@ -11,9 +11,10 @@ z.t.describe "z.completion.compdef._register"; {
         z.completion.compdef._register || exit 1
         print -r -- "${_comps[-command-]}"
         print -r -- "${_comps[z.arg.named]}"
+        print -r -- "${_comps[z.pj]}"
       ')
 
-      z.t.expect "$actual" $'z.completion.complete._command\n_z_completion'
+      z.t.expect "$actual" $'z.completion.complete._command\n_z_completion\nz.pj.completion._run'
     }
   }
 
