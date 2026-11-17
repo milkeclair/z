@@ -8,15 +8,15 @@ import type { FunctionSnapshot } from '../refreshFunctions/main';
 import type { FunctionTarget } from '../refreshFunctions/target';
 import { cursorAt } from './ast/cursor';
 import { calledFunction, activeArgument } from './ast/context';
-import { argumentDescription, argumentToken, markdownDocumentation } from './functionDoc';
+import { argumentDescription, argumentDisplay, markdownDocumentation } from './functionDoc';
 
 function signatureToken(arg: FuncArg): string {
-  const token = argumentToken(arg);
+  const token = argumentDisplay(arg);
   return arg.optional ? '[' + token + ']' : token;
 }
 
 function parameterInformation(doc: Result, arg: FuncArg): ParameterInformation {
-  return { label: argumentToken(arg), documentation: markdownDocumentation(argumentDescription(doc, arg)) };
+  return { label: argumentDisplay(arg), documentation: markdownDocumentation(argumentDescription(doc, arg)) };
 }
 
 function signatureInformation(target: FunctionTarget, index: number): SignatureInformation {

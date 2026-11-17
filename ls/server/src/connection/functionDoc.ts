@@ -16,6 +16,21 @@ export function argumentToken(arg: FuncArg): string {
   return "$" + arg.position.toString();
 }
 
+/** コード型と許可値を、関数コメントと同じ形式で表示する。 */
+export function argumentType(arg: FuncArg): string {
+  if (arg.valueType !== 'code') return '';
+
+  const values = (arg.literalValues ?? []).map(value =>
+    "'" + value.replaceAll("\\", "\\\\").replaceAll("'", "\\'") + "'");
+  return '[' + ['code', ...values].join(' | ') + ']';
+}
+
+/** 呼び出し用の引数表記へ、型の注記を付ける。 */
+export function argumentDisplay(arg: FuncArg): string {
+  const annotation = argumentType(arg);
+  return argumentToken(arg) + (annotation ? ' ' + annotation : '');
+}
+
 export function argumentDescription(doc: Result | null, arg: FuncArg): string {
   if (!doc) return "";
 
@@ -32,7 +47,7 @@ export function argumentMarkdown(
   doc: Result,
 ): string {
   const description = argumentDescription(doc, arg);
-  const header = `\`${func.name} ${argumentToken(arg)}\``;
+  const header = `\`${func.name} ${argumentDisplay(arg)}\``;
 
   if (!description) return header;
 

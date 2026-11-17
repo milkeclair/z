@@ -1,5 +1,6 @@
 import type { Result } from '../document/type';
 import type { FuncArg } from '../getFunctions/type';
+import { argumentType } from './functionDoc';
 
 function findParameterDescription(
   parameters: { name: string; description: string }[],
@@ -20,10 +21,12 @@ function findParameterDescription(
 
 function formatArgument(arg: FuncArg, parameters: { name: string; description: string }[]): string {
   const optional = arg.optional ? '?' : '';
+  const type = argumentType(arg);
+  const annotation = type ? ' ' + type : '';
   const argName = arg.isNamed ? arg.name : (arg.name === '@' || arg.name === '*') ? arg.name : arg.position.toString();
   const description = findParameterDescription(parameters, argName);
 
-  return `- \`$${argName}${optional}:\` ${description}`;
+  return `- \`$${argName}${optional}${annotation}:\` ${description}`;
 }
 
 function commentToMarkDown(comment: Result, funcName: string, args: FuncArg[] = []): string {
