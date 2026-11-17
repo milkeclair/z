@@ -8,18 +8,38 @@ import { namedKey } from './word';
 import { callAt, functionCommand, inside } from './cursor';
 import type { Cursor } from './cursor';
 
-export function resolveFunction(snapshot: FunctionSnapshot, name: string, cursor: Pick<Cursor, 'file' | 'offset'>): FunctionTarget | null {
+function closest(candidates: readonly FunctionTarget[], offset: number): FunctionTarget | null {
+  return candidates.findLast(target => target.nameNode.range.start.offset <= offset) ?? candidates[0] ?? null;
+}
+
+export function resolveFunction(snapshot: FunctionSnapshot, name: string,
+  cursor: Pick<Cursor, 'file' | 'offset' | 'program' | 'targets'>): FunctionTarget | null {
+  let program = cursor.program;
+  let offset = cursor.offset;
+  while (program) {
+    const local = closest(program.targets.get(name) ?? [], offset);
+    if (local) return local;
+    offset = program.word.range.start.offset;
+    program = program.parent;
+  }
+  const own = closest(cursor.targets?.get(name) ?? [], offset);
+  if (own) return own;
   const candidates = snapshot.targets.get(name) ?? [];
   const uri = fileUri(cursor.file.sourceFile);
-  let local: FunctionTarget | null = null;
-  let nearest: FunctionTarget | null = null;
-  for (const candidate of candidates) {
-    if (candidate.uri !== uri) continue;
-    local ??= candidate;
-    const start = candidate.nameNode.range.start.offset;
-    if (start <= cursor.offset && (!nearest || start > nearest.nameNode.range.start.offset)) nearest = candidate;
+  const local = candidates.filter(candidate => candidate.uri === uri);
+  return closest(local, offset) ?? candidates[0] ?? null;
+}
+
+/** 内側のローカルな名前を候補へ加え、公開索引は変更しない。 */
+export function candidateNames(snapshot: FunctionSnapshot, cursor: Cursor): ReadonlySet<string> {
+  const names = new Set(snapshot.targets.keys());
+  for (const name of cursor.targets?.keys() ?? []) names.add(name);
+  let program = cursor.program;
+  while (program) {
+    for (const name of program.targets.keys()) names.add(name);
+    program = program.parent;
   }
-  return nearest ?? local ?? candidates[0] ?? null;
+  return names;
 }
 
 function fileUri(sourceFile: string): string {
@@ -32,7 +52,7 @@ export function declarationAt(snapshot: FunctionSnapshot, cursor: Cursor): Funct
     const word = node.names.find(name => inside(name.range, cursor.offset));
     if (!word) return null;
     const name = literalWord(word);
-    return name ? snapshot.targets.get(name)?.find(target => target.nameNode === word) ?? null : null;
+    return name ? (cursor.program?.targets ?? cursor.targets ?? snapshot.targets).get(name)?.find(target => target.nameNode === word) ?? null : null;
   }
   return null;
 }
@@ -42,7 +62,7 @@ export function ownerFunction(snapshot: FunctionSnapshot, cursor: Cursor): Funct
   if (!definition) return null;
   for (const word of definition.names) {
     const name = literalWord(word);
-    const target = name ? snapshot.targets.get(name)?.find(candidate => candidate.definition === definition) : null;
+    const target = name ? (cursor.program?.targets ?? cursor.targets ?? snapshot.targets).get(name)?.find(candidate => candidate.definition === definition) : null;
     if (target) return target;
   }
   return null;

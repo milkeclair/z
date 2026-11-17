@@ -7,13 +7,15 @@ import type { ShellEnvironment } from './environment';
 import { emptyShellEnvironment } from './environment';
 import { collectFileFacts } from './facts';
 import type { FileFacts, Declarations } from './facts';
-import { embeddedCallDiagnostics } from './embedded';
+import { analyzeEmbeddedCode } from '../embeddedCode';
+import type { CodeProgram } from '../embeddedCode';
 import { sameCallContracts } from './contracts';
 import type { ResolutionContext } from './calls';
 import type { Diagnostics } from './type';
 
 export type FileDiagnostics = {
   readonly file: ZshFileHydration; readonly facts: FileFacts; readonly items: readonly Diagnostics[];
+  readonly codePrograms: readonly CodeProgram[];
   readonly version: number | null; readonly project: boolean; readonly resultId: string;
 };
 export type DiagnosticSnapshot = {
@@ -87,8 +89,9 @@ export function refreshDiagnosticSnapshot({ snapshot, environment, previous = cr
         autoloads: new Set([...context.autoloads, ...local.autoloads]),
         builtins: new Set([...context.builtins, ...local.builtins]),
       };
-      files.set(uri, { ...input, facts: current, resultId: String(revision),
-        items: suppressed(input.file, [...current.base, ...embeddedCallDiagnostics(snapshot, input.file, current.calls, effective)])
+      const embedded = analyzeEmbeddedCode(snapshot, input.file, current.calls, effective);
+      files.set(uri, { ...input, facts: current, resultId: String(revision), codePrograms: embedded.programs,
+        items: suppressed(input.file, [...current.base, ...embedded.diagnostics])
           .toSorted((left, right) => left.range.start.line - right.range.start.line ||
             left.range.start.character - right.range.start.character) });
     }

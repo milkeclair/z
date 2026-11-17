@@ -1,3 +1,4 @@
+import type { CodeProgram } from '../embeddedCode';
 import { HoverParams, TextDocuments, TextDocument, MarkupKind } from '../vscode_type';
 import type { FunctionSnapshot } from '../refreshFunctions/main';
 import { commentToMarkDown } from './hook';
@@ -6,12 +7,12 @@ import { cursorAt } from './ast/cursor';
 import { targetAtName } from './ast/context';
 import { zArgumentHover } from './argumentHover';
 
-export function zHover({ params, documents, snapshot }: {
-  params: HoverParams; documents: Pick<TextDocuments<TextDocument>, 'get'>; snapshot: FunctionSnapshot;
+export function zHover({ params, documents, snapshot, programs }: {
+  params: HoverParams; documents: Pick<TextDocuments<TextDocument>, 'get'>; snapshot: FunctionSnapshot; programs?: readonly CodeProgram[];
 }): HoverContent | null {
   const document = documents.get(params.textDocument.uri);
   if (!document) return null;
-  const cursor = cursorAt(snapshot, document, document.offsetAt(params.position));
+  const cursor = cursorAt(snapshot, document, document.offsetAt(params.position), programs);
   if (!cursor) return null;
   const match = targetAtName(snapshot, cursor);
   if (match) return { contents: { kind: MarkupKind.Markdown,

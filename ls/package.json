@@ -50,6 +50,14 @@
           "description": "Show private z functions in completion results."
         }
       }
+    },
+    "configurationDefaults": {
+      "[shellscript]": {
+        "editor.semanticHighlighting.enabled": true,
+        "editor.quickSuggestions": {
+          "strings": "on"
+        }
+      }
     }
   },
   "scripts": {

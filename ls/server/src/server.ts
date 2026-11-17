@@ -16,6 +16,7 @@ import { projectRootFromSettings } from './connection/projectRoot';
 import { queueAnalysis, analysisDelay } from './connection/analysis';
 import type { PendingAnalysis } from './connection/analysis';
 import { startPeriodicRescan } from './connection/rescan';
+import { zSemanticTokens } from './connection/semanticTokens';
 
 function startServer(): void {
   const conn = createConnection(ProposedFeatures.all);
@@ -134,20 +135,36 @@ function startServer(): void {
 
   conn.onCompletion((params) => {
     flushAnalysis();
-    return zCompletion({ params, documents, snapshot, showPrivateFunctions });
+    return zCompletion({ params, documents, snapshot, showPrivateFunctions,
+      programs: diagnosticSnapshot.files.get(params.textDocument.uri)?.codePrograms });
   });
-  conn.onCompletionResolve((result) => { flushAnalysis(); return zCompletionResolve(result, snapshot); });
+  conn.onCompletionResolve((result) => {
+    flushAnalysis();
+    const data: unknown = result.data;
+    const uri = typeof data === 'object' && data !== null && 'uri' in data && typeof data.uri === 'string' ? data.uri : '';
+    return zCompletionResolve(result, snapshot, diagnosticSnapshot.files.get(uri)?.codePrograms);
+  });
   conn.onHover((params) => {
     flushAnalysis();
-    return zHover({ params, documents, snapshot });
+    return zHover({ params, documents, snapshot,
+      programs: diagnosticSnapshot.files.get(params.textDocument.uri)?.codePrograms });
   });
   conn.onSignatureHelp((params) => {
     flushAnalysis();
-    return zSignatureHelp({ params, documents, snapshot });
+    return zSignatureHelp({ params, documents, snapshot,
+      programs: diagnosticSnapshot.files.get(params.textDocument.uri)?.codePrograms });
   });
   conn.onDefinition((params) => {
     flushAnalysis();
-    return zDefinition({ params, documents, snapshot });
+    return zDefinition({ params, documents, snapshot,
+      programs: diagnosticSnapshot.files.get(params.textDocument.uri)?.codePrograms });
+  });
+
+  conn.languages.semanticTokens.on((params) => {
+    flushAnalysis();
+    const document = documents.get(params.textDocument.uri);
+    return document ? zSemanticTokens({ document,
+      programs: diagnosticSnapshot.files.get(document.uri)?.codePrograms ?? [] }) : { data: [] };
   });
 
   conn.languages.diagnostics.on((params) => {

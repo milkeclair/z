@@ -35,7 +35,7 @@ export function projectFunctions(
 }
 
 /** 情報を付加した1ファイルから、互換用の情報と定義の参照先を取り出す。 */
-function projectFileFunctions(entry: ZshFileHydration): FunctionProjection {
+export function projectFileFunctions(entry: ZshFileHydration): FunctionProjection {
   const functions: Func[] = [];
   const targets = new Map<string, FunctionTarget[]>();
   const definitions = new Set(entry.functions.map(fn => fn.definition));

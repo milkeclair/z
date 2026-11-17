@@ -1,3 +1,4 @@
+import type { CodeProgram } from '../embeddedCode';
 import {
   MarkupKind, ParameterInformation, SignatureHelp, SignatureHelpParams,
   SignatureInformation, TextDocument, TextDocuments,
@@ -29,12 +30,12 @@ function signatureInformation(target: FunctionTarget, index: number): SignatureI
   };
 }
 
-export function zSignatureHelp({ params, documents, snapshot }: {
-  params: SignatureHelpParams; documents: Pick<TextDocuments<TextDocument>, 'get'>; snapshot: FunctionSnapshot;
+export function zSignatureHelp({ params, documents, snapshot, programs }: {
+  params: SignatureHelpParams; documents: Pick<TextDocuments<TextDocument>, 'get'>; snapshot: FunctionSnapshot; programs?: readonly CodeProgram[];
 }): SignatureHelp | null {
   const document = documents.get(params.textDocument.uri);
   if (!document) return null;
-  const cursor = cursorAt(snapshot, document, document.offsetAt(params.position));
+  const cursor = cursorAt(snapshot, document, document.offsetAt(params.position), programs);
   if (!cursor) return null;
   const target = calledFunction(snapshot, cursor);
   const active = target && activeArgument(target, cursor);
