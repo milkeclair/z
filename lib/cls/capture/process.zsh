@@ -73,17 +73,19 @@ z.cls.capture._debug() {
     return 0
   fi
 
-  if z.is.eq "$1" z.cls.fn.done; then
-    if z.is.eq "$z_cls_capture_discard" 1; then
-      z.cls.abort
-      z_cls_capture_done_result=1
-    else
-      z_cls_bodies[$z_cls_drawing:$z_cls_capture_method]=$z_cls_capture_body
-      z_cls_class_methods[$z_cls_drawing]+="$z_cls_capture_method "
-      z.cls.capture._stop
-    fi
-  else
+  if z.is.not.eq "$1" z.cls.fn.done; then
     z_cls_capture_body+="$1"$'\n'
     setopt errexit
+    return 0
   fi
+
+  if z.is.eq "$z_cls_capture_discard" 1; then
+    z.cls.abort
+    z_cls_capture_done_result=1
+    return 0
+  fi
+
+  z_cls_bodies[$z_cls_drawing:$z_cls_capture_method]=$z_cls_capture_body
+  z_cls_class_methods[$z_cls_drawing]+="$z_cls_capture_method "
+  z.cls.capture._stop
 }
