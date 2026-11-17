@@ -8,16 +8,19 @@ export function createTemporaryDirectories() {
   const directories = createIOState<readonly string[]>([]);
   const track = (directory: string): void =>
     directories.update((previous) => [...previous, directory]);
+
   return {
     track,
     create(prefix: string): string {
       const directory = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
       track(directory);
+
       return directory;
     },
     cleanup(): void {
       const pending = directories.read();
       directories.replace([]);
+
       for (const directory of pending) {
         fs.rmSync(directory, { recursive: true, force: true });
       }

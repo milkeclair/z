@@ -24,16 +24,19 @@ type LspClientOptions = {
   rejectWatchRegistration?: boolean;
   preload?: string;
 };
+
 type InitializeClientOptions = {
   projectRoot: string;
   supportsRefresh: boolean;
   useWorkspace?: boolean;
 };
+
 const temporaryDirectories = createTemporaryDirectories();
 
 export function createProjectDirectory(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-lsp-stdio-'));
   temporaryDirectories.track(root);
+
   return root;
 }
 
@@ -44,6 +47,7 @@ afterEach(() => {
 export async function withRequestTimeout<T>(promise: Promise<T>): Promise<T> {
   const deadline = Promise.withResolvers<never>();
   const timer = setTimeout(() => deadline.reject(new Error('LSP request timed out')), 5000);
+
   try {
     return await Promise.race([promise, deadline.promise]);
   } finally {
@@ -88,6 +92,7 @@ export function createLspClient({
         ...params.registrations.map((registration) => registration.method),
       ],
     }));
+
     if (rejectWatchRegistration) {
       throw new Error('watch registration rejected by client');
     }
@@ -99,6 +104,7 @@ export function createLspClient({
     }));
   });
   connection.listen();
+
   return {
     connection,
     get registrations() {
@@ -128,6 +134,7 @@ export function createLspClient({
         connection.sendRequest(InitializeRequest.type, params),
       );
       await connection.sendNotification(InitializedNotification.type, {});
+
       return result;
     },
     async open(uri: string, content: string, version = 1) {
@@ -148,6 +155,7 @@ export function createLspClient({
           position: { line: 0, character },
         }),
       );
+
       return Array.isArray(result) ? result : (result?.items ?? []);
     },
     async close() {
@@ -156,15 +164,19 @@ export function createLspClient({
           await withRequestTimeout(connection.sendRequest(ShutdownRequest.type));
           await connection.sendNotification(ExitNotification.type);
         }
+
         const code = await withRequestTimeout(exited);
         const stderr = trace.read().stderr;
+
         expect(code, stderr).toBe(0);
         expect(stderr).toBe('');
       } finally {
         connection.dispose();
+
         if (child.exitCode === null) {
           child.kill('SIGKILL');
         }
+
         await withRequestTimeout(exited);
       }
     },
@@ -192,6 +204,7 @@ export function createObservedLspClient(root: string) {
       '};',
     ].join('\n'),
   );
+
   return {
     client: createLspClient({ rejectWatchRegistration: false, preload: preload }),
     parsed: () => fs.readFileSync(filename, 'utf8').split('\n').filter(Boolean),
@@ -216,6 +229,7 @@ export function createPeriodicLspClient(root: string) {
       '};',
     ].join('\n'),
   );
+
   return {
     client: createLspClient({ rejectWatchRegistration: false, preload: preload }),
     ticks: () => fs.readFileSync(filename, 'utf8').length,

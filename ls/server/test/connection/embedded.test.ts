@@ -1,4 +1,4 @@
-import { Range } from 'immutable';
+import * as Immutable from 'immutable';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -22,6 +22,7 @@ import { Lexer } from '../../src/zshParser/lexer';
 import { createTemporaryDirectories } from '../support/tempDirectories';
 
 const temporaryDirectories = createTemporaryDirectories();
+
 afterEach(() => {
   vi.restoreAllMocks();
   temporaryDirectories.cleanup();
@@ -37,7 +38,7 @@ const definitions = [
   '',
 ].join('\n');
 
-function createProviderFixture(
+function createLanguageFeatureRequest(
   source: string,
   outside = false,
   extraDefinitions: readonly string[] = [],
@@ -47,9 +48,11 @@ function createProviderFixture(
   const definitionUri = pathToFileURL(path.join(root, 'definition.zsh')).href;
   fs.writeFileSync(path.join(root, 'definition.zsh'), definitions + extraDefinitions.join('\n'));
   const offset = source.indexOf('¦');
+
   if (offset < 0) {
     throw new Error('cursor required');
   }
+
   const sourceFile = outside
     ? path.join(path.dirname(root), path.basename(root) + '-outside.zsh')
     : path.join(root, 'caller.zsh');
@@ -64,193 +67,459 @@ function createProviderFixture(
   const programs = diagnostics.files.get(document.uri)?.codePrograms ?? [];
   const documents = { get: (uri: string) => (uri === document.uri ? document : undefined) };
   const params = { textDocument: { uri: document.uri }, position: document.positionAt(offset) };
+
   return {
     document,
     snapshot,
     programs,
     definitionUri,
-    complete: () =>
-      zCompletion({ params, documents, snapshot, programs, showPrivateFunctions: true }),
-    hover: () => zHover({ params, documents, snapshot, programs }),
-    definition: () => zDefinition({ params, documents, snapshot, programs }),
-    signature: () => zSignatureHelp({ params, documents, snapshot, programs }),
+    params,
+    documents,
+    showPrivateFunctions: true,
   };
 }
 
-describe('code argument providers', () => {
-  test.each([
-    "run_code code='gr¦'",
-    'run_code code="gr¦"',
-    "run_code code=$'gr¦'",
-    "run_code code='gr¦",
-    'run_code code="gr¦',
-    "run_code code=$'gr¦",
-    "run_code 'code=gr¦'",
-    'run_code code="run_code code=\'gr¦\'"',
-    "print 日本😀; run_code code='print value\ngr¦'",
-  ])('コード内のコマンドを元文書へ補完する: %s', (source) => {
-    const scenario = createProviderFixture(source);
-    const item = scenario.complete()?.find((item) => item.label === 'greet');
-    expect(item).toMatchObject({ textEdit: { newText: 'greet' } });
-    if (!item?.textEdit || !('range' in item.textEdit)) {
-      throw new Error('edit expected');
-    }
-    const start = scenario.document.offsetAt(item.textEdit.range.start);
-    const end = scenario.document.offsetAt(item.textEdit.range.end);
-    expect(scenario.document.getText().slice(start, end)).toBe('gr');
-    expect(
-      zCompletionResolve(item, scenario.snapshot, scenario.programs).documentation,
-    ).toMatchObject({
-      value: expect.stringContaining('Greeting'),
-    });
-  });
+describe('zCompletion', () => {
+  describe('コード引数内を編集する場合', () => {
+    test('単引用のコード内を元文書へ補完する', () => {
+      const source = "run_code code='gr¦'";
 
-  test.each(["run_code code='¦'", "run_code code='¦"])(
-    '空のコード位置から候補を返す: %s',
-    (source) => {
-      expect(
-        createProviderFixture(source)
-          .complete()
-          ?.map((item) => item.label),
-      ).toContain('greet');
-    },
-  );
+      const request = createLanguageFeatureRequest(source);
+      const item = zCompletion(request)?.find((item) => item.label === 'greet');
 
-  test('コード内のhover・署名・定義を通常の関数へ接続する', () => {
-    const scenario = createProviderFixture("run_code code='gr¦eet value'");
-    expect(scenario.hover()).toMatchObject({
-      contents: { value: expect.stringContaining('Greeting') },
-    });
-    expect(scenario.definition()?.uri).toBe(scenario.definitionUri);
-    expect(createProviderFixture("run_code code='greet ¦'").signature()).toMatchObject({
-      signatures: [{ label: 'greet $1' }],
-      activeParameter: 0,
-    });
-  });
+      expect(item).toMatchObject({ textEdit: { newText: 'greet' } });
 
-  test('内側の定義を補完・解決し、元の文字列位置へ定義ジャンプする', () => {
-    const source = "run_code code='inner() { : }; in¦ner'";
-    const scenario = createProviderFixture(source);
-    expect(scenario.complete()?.map((item) => item.label)).toContain('inner');
-    expect(scenario.definition()).toMatchObject({
-      uri: scenario.document.uri,
-      range: { start: { line: 0, character: source.indexOf('inner') } },
-    });
-    expect(
-      createProviderFixture(source.replace('in¦ner', 'inner') + '\nin¦ner').definition(),
-    ).toBeNull();
-  });
-
-  test('外側の引用符へ安全に文字列を挿入する', () => {
-    for (const source of [
-      "run_code code='hello¦'",
-      'run_code code="hello¦"',
-      "run_code code=$'hello¦'",
-      "run_code code='hel'lo¦",
-      'run_code code=hello¦',
-    ]) {
-      const scenario = createProviderFixture(source);
-      const item = scenario.complete()?.find((item) => item.label === 'hello world');
       if (!item?.textEdit || !('range' in item.textEdit)) {
         throw new Error('edit expected');
       }
-      const edited = TextDocument.applyEdits(scenario.document, [item.textEdit]);
-      const outer = createZshFileHydration({ sourceFile: 'x', file: 'x', content: edited });
-      expect(outer.lexerDiagnostics).toEqual([]);
-      const word = findAll(outer.ast, 'simpleCommand')[0].arguments[0];
-      const decoded = decodeLiteral(word);
-      if (!decoded) {
-        throw new Error('literal expected');
-      }
-      const inner = createZshFileHydration({
-        sourceFile: 'x',
-        file: 'x',
-        content: literalValue(decoded, 5).text,
+
+      const start = request.document.offsetAt(item.textEdit.range.start);
+      const end = request.document.offsetAt(item.textEdit.range.end);
+
+      expect(request.document.getText().slice(start, end)).toBe('gr');
+      expect(
+        zCompletionResolve(item, request.snapshot, request.programs).documentation,
+      ).toMatchObject({
+        value: expect.stringContaining('Greeting'),
       });
-      const command = findAll(inner.ast, 'simpleCommand')[0];
-      if (!command.commandName) {
-        throw new Error('command expected');
+    });
+
+    test('二重引用のコード内を元文書へ補完する', () => {
+      const source = 'run_code code="gr¦"';
+
+      const request = createLanguageFeatureRequest(source);
+      const item = zCompletion(request)?.find((item) => item.label === 'greet');
+
+      expect(item).toMatchObject({ textEdit: { newText: 'greet' } });
+
+      if (!item?.textEdit || !('range' in item.textEdit)) {
+        throw new Error('edit expected');
       }
-      expect(literalWord(command.commandName.word)).toBe('hello world');
-    }
+
+      const start = request.document.offsetAt(item.textEdit.range.start);
+      const end = request.document.offsetAt(item.textEdit.range.end);
+
+      expect(request.document.getText().slice(start, end)).toBe('gr');
+      expect(
+        zCompletionResolve(item, request.snapshot, request.programs).documentation,
+      ).toMatchObject({
+        value: expect.stringContaining('Greeting'),
+      });
+    });
+
+    test('ANSI引用のコード内を元文書へ補完する', () => {
+      const source = "run_code code=$'gr¦'";
+
+      const request = createLanguageFeatureRequest(source);
+      const item = zCompletion(request)?.find((item) => item.label === 'greet');
+
+      expect(item).toMatchObject({ textEdit: { newText: 'greet' } });
+
+      if (!item?.textEdit || !('range' in item.textEdit)) {
+        throw new Error('edit expected');
+      }
+
+      const start = request.document.offsetAt(item.textEdit.range.start);
+      const end = request.document.offsetAt(item.textEdit.range.end);
+
+      expect(request.document.getText().slice(start, end)).toBe('gr');
+      expect(
+        zCompletionResolve(item, request.snapshot, request.programs).documentation,
+      ).toMatchObject({
+        value: expect.stringContaining('Greeting'),
+      });
+    });
+
+    test('閉じていない単引用のコード内を補完する', () => {
+      const source = "run_code code='gr¦";
+
+      const request = createLanguageFeatureRequest(source);
+      const item = zCompletion(request)?.find((item) => item.label === 'greet');
+
+      expect(item).toMatchObject({ textEdit: { newText: 'greet' } });
+
+      if (!item?.textEdit || !('range' in item.textEdit)) {
+        throw new Error('edit expected');
+      }
+
+      const start = request.document.offsetAt(item.textEdit.range.start);
+      const end = request.document.offsetAt(item.textEdit.range.end);
+
+      expect(request.document.getText().slice(start, end)).toBe('gr');
+      expect(
+        zCompletionResolve(item, request.snapshot, request.programs).documentation,
+      ).toMatchObject({
+        value: expect.stringContaining('Greeting'),
+      });
+    });
+
+    test('閉じていない二重引用のコード内を補完する', () => {
+      const source = 'run_code code="gr¦';
+
+      const request = createLanguageFeatureRequest(source);
+      const item = zCompletion(request)?.find((item) => item.label === 'greet');
+
+      expect(item).toMatchObject({ textEdit: { newText: 'greet' } });
+
+      if (!item?.textEdit || !('range' in item.textEdit)) {
+        throw new Error('edit expected');
+      }
+
+      const start = request.document.offsetAt(item.textEdit.range.start);
+      const end = request.document.offsetAt(item.textEdit.range.end);
+
+      expect(request.document.getText().slice(start, end)).toBe('gr');
+      expect(
+        zCompletionResolve(item, request.snapshot, request.programs).documentation,
+      ).toMatchObject({
+        value: expect.stringContaining('Greeting'),
+      });
+    });
+
+    test('閉じていないANSI引用のコード内を補完する', () => {
+      const source = "run_code code=$'gr¦";
+
+      const request = createLanguageFeatureRequest(source);
+      const item = zCompletion(request)?.find((item) => item.label === 'greet');
+
+      expect(item).toMatchObject({ textEdit: { newText: 'greet' } });
+
+      if (!item?.textEdit || !('range' in item.textEdit)) {
+        throw new Error('edit expected');
+      }
+
+      const start = request.document.offsetAt(item.textEdit.range.start);
+      const end = request.document.offsetAt(item.textEdit.range.end);
+
+      expect(request.document.getText().slice(start, end)).toBe('gr');
+      expect(
+        zCompletionResolve(item, request.snapshot, request.programs).documentation,
+      ).toMatchObject({
+        value: expect.stringContaining('Greeting'),
+      });
+    });
+
+    test('引数全体を引用したコード内を補完する', () => {
+      const source = "run_code 'code=gr¦'";
+
+      const request = createLanguageFeatureRequest(source);
+      const item = zCompletion(request)?.find((item) => item.label === 'greet');
+
+      expect(item).toMatchObject({ textEdit: { newText: 'greet' } });
+
+      if (!item?.textEdit || !('range' in item.textEdit)) {
+        throw new Error('edit expected');
+      }
+
+      const start = request.document.offsetAt(item.textEdit.range.start);
+      const end = request.document.offsetAt(item.textEdit.range.end);
+
+      expect(request.document.getText().slice(start, end)).toBe('gr');
+      expect(
+        zCompletionResolve(item, request.snapshot, request.programs).documentation,
+      ).toMatchObject({
+        value: expect.stringContaining('Greeting'),
+      });
+    });
+
+    test('入れ子のコード引数内を補完する', () => {
+      const source = 'run_code code="run_code code=\'gr¦\'"';
+
+      const request = createLanguageFeatureRequest(source);
+      const item = zCompletion(request)?.find((item) => item.label === 'greet');
+
+      expect(item).toMatchObject({ textEdit: { newText: 'greet' } });
+
+      if (!item?.textEdit || !('range' in item.textEdit)) {
+        throw new Error('edit expected');
+      }
+
+      const start = request.document.offsetAt(item.textEdit.range.start);
+      const end = request.document.offsetAt(item.textEdit.range.end);
+
+      expect(request.document.getText().slice(start, end)).toBe('gr');
+      expect(
+        zCompletionResolve(item, request.snapshot, request.programs).documentation,
+      ).toMatchObject({
+        value: expect.stringContaining('Greeting'),
+      });
+    });
+
+    test('日本語と絵文字を含む複数行のコード内を補完する', () => {
+      const source = "print 日本😀; run_code code='print value\ngr¦'";
+
+      const request = createLanguageFeatureRequest(source);
+      const item = zCompletion(request)?.find((item) => item.label === 'greet');
+
+      expect(item).toMatchObject({ textEdit: { newText: 'greet' } });
+
+      if (!item?.textEdit || !('range' in item.textEdit)) {
+        throw new Error('edit expected');
+      }
+
+      const start = request.document.offsetAt(item.textEdit.range.start);
+      const end = request.document.offsetAt(item.textEdit.range.end);
+
+      expect(request.document.getText().slice(start, end)).toBe('gr');
+      expect(
+        zCompletionResolve(item, request.snapshot, request.programs).documentation,
+      ).toMatchObject({
+        value: expect.stringContaining('Greeting'),
+      });
+    });
+
+    test('空のコード文字列から候補を返す', () => {
+      const source = "run_code code='¦'";
+
+      const request = createLanguageFeatureRequest(source);
+
+      const completion = zCompletion(request);
+
+      expect(completion?.map((item) => item.label)).toContain('greet');
+    });
+
+    test('引用符を入力した直後から候補を返す', () => {
+      const source = "run_code code='¦";
+
+      const request = createLanguageFeatureRequest(source);
+
+      const completion = zCompletion(request);
+
+      expect(completion?.map((item) => item.label)).toContain('greet');
+    });
+
+    test('コード内のhover・署名・定義を通常の関数へ接続する', () => {
+      const request = createLanguageFeatureRequest("run_code code='gr¦eet value'");
+
+      const hover = zHover(request);
+
+      expect(hover).toMatchObject({
+        contents: { value: expect.stringContaining('Greeting') },
+      });
+      const definition = zDefinition(request);
+
+      expect(definition?.uri).toBe(request.definitionUri);
+      const request2 = createLanguageFeatureRequest("run_code code='greet ¦'");
+
+      const signature = zSignatureHelp(request2);
+
+      expect(signature).toMatchObject({
+        signatures: [{ label: 'greet $1' }],
+        activeParameter: 0,
+      });
+    });
+
+    test('内側の定義を補完・解決し、元の文字列位置へ定義ジャンプする', () => {
+      const source = "run_code code='inner() { : }; in¦ner'";
+      const request = createLanguageFeatureRequest(source);
+
+      const completion = zCompletion(request);
+
+      expect(completion?.map((item) => item.label)).toContain('inner');
+      const definition = zDefinition(request);
+
+      expect(definition).toMatchObject({
+        uri: request.document.uri,
+        range: { start: { line: 0, character: source.indexOf('inner') } },
+      });
+      const request2 = createLanguageFeatureRequest(source.replace('in¦ner', 'inner') + '\nin¦ner');
+
+      const definition2 = zDefinition(request2);
+
+      expect(definition2).toBeNull();
+    });
+
+    test('外側の引用符へ安全に文字列を挿入する', () => {
+      for (const source of [
+        "run_code code='hello¦'",
+        'run_code code="hello¦"',
+        "run_code code=$'hello¦'",
+        "run_code code='hel'lo¦",
+        'run_code code=hello¦',
+      ]) {
+        const request = createLanguageFeatureRequest(source);
+        const item = zCompletion(request)?.find((item) => item.label === 'hello world');
+
+        if (!item?.textEdit || !('range' in item.textEdit)) {
+          throw new Error('edit expected');
+        }
+
+        const edited = TextDocument.applyEdits(request.document, [item.textEdit]);
+        const outer = createZshFileHydration({ sourceFile: 'x', file: 'x', content: edited });
+
+        expect(outer.lexerDiagnostics).toEqual([]);
+        const word = findAll(outer.ast, 'simpleCommand')[0].arguments[0];
+        const decoded = decodeLiteral(word);
+
+        if (!decoded) {
+          throw new Error('literal expected');
+        }
+
+        const inner = createZshFileHydration({
+          sourceFile: 'x',
+          file: 'x',
+          content: literalValue(decoded, 5).text,
+        });
+        const command = findAll(inner.ast, 'simpleCommand')[0];
+
+        if (!command.commandName) {
+          throw new Error('command expected');
+        }
+
+        expect(literalWord(command.commandName.word)).toBe('hello world');
+      }
+    });
+
+    test('通常の文字列ではコード補完を行わない', () => {
+      const source = "print 'gr¦'";
+
+      const request = createLanguageFeatureRequest(source);
+
+      const completion = zCompletion(request);
+
+      expect(completion).toEqual([]);
+    });
+
+    test('許可値の途中ではコード補完を行わない', () => {
+      const source = "run_code code='no¦op'";
+
+      const request = createLanguageFeatureRequest(source);
+
+      const completion = zCompletion(request);
+
+      expect(completion).toEqual([]);
+    });
+
+    test('変数展開の途中ではコード補完を行わない', () => {
+      const source = 'run_code code="$gr¦"';
+
+      const request = createLanguageFeatureRequest(source);
+
+      const completion = zCompletion(request);
+
+      expect(completion).toEqual([]);
+    });
+
+    test('編集中の要求で同じ埋め込みASTを再利用する', () => {
+      const request = createLanguageFeatureRequest("run_code code='gr¦eet value'");
+      const spy = vi.spyOn(Lexer, 'tokenize');
+
+      for (const i of Immutable.Range(0, 5)) {
+        zCompletion(request);
+        zHover(request);
+        zDefinition(request);
+        zSignatureHelp(request);
+      }
+
+      expect(spy).not.toHaveBeenCalled();
+    });
   });
 
-  test.each(["print 'gr¦'", "run_code code='no¦op'", 'run_code code="$gr¦"'])(
-    '通常の文字列・許可値・外側の動的展開をコードにしない: %s',
-    (source) => {
-      expect(createProviderFixture(source).complete()).toEqual([]);
-    },
-  );
+  describe('内側と外側のコードを保持する場合', () => {
+    test('workspace外の文書にある定義を、そのコード内だけで解決する', () => {
+      const request = createLanguageFeatureRequest(
+        "outside_only() { : }; run_code code='out¦side_only'",
+        true,
+      );
 
-  test('編集中の要求で同じ埋め込みASTを再利用する', () => {
-    const scenario = createProviderFixture("run_code code='gr¦eet value'");
-    const spy = vi.spyOn(Lexer, 'tokenize');
-    for (const i of Range(0, 5)) {
-      scenario.complete();
-      scenario.hover();
-      scenario.definition();
-      scenario.signature();
-    }
-    expect(spy).not.toHaveBeenCalled();
-  });
-});
+      expect(request.snapshot.targets.has('outside_only')).toBe(false);
+      const item = zCompletion(request)?.find((item) => item.label === 'outside_only');
 
-test('workspace外の文書にある定義を、そのコード内だけで解決する', () => {
-  const scenario = createProviderFixture(
-    "outside_only() { : }; run_code code='out¦side_only'",
-    true,
-  );
-  expect(scenario.snapshot.targets.has('outside_only')).toBe(false);
-  const item = scenario.complete()?.find((item) => item.label === 'outside_only');
-  expect(item).toBeDefined();
-  expect(scenario.definition()?.uri).toBe(scenario.document.uri);
-  if (!item) {
-    throw new Error('outside completion required');
-  }
-  expect(
-    zCompletionResolve(item, scenario.snapshot, scenario.programs).documentation,
-  ).toBeDefined();
-});
+      expect(item).toBeDefined();
+      const definition = zDefinition(request);
 
-test('複数段の引用でも特殊文字を実行可能な展開へ変えず挿入する', () => {
-  const names = [
-    "a'b",
-    'a"b',
-    'a\\b',
-    '$value',
-    '$(never-run)',
-    String.fromCharCode(96) + 'never-run' + String.fromCharCode(96),
-  ];
-  for (const name of names) {
-    const extra = ['function ' + commandInsertion(name) + ' { : }\n'];
-    const scenario = createProviderFixture('run_code code="run_code code=\'¦\'"', false, extra);
-    const item = scenario.complete()?.find((item) => item.label === name);
-    if (!item?.textEdit || !('range' in item.textEdit)) {
-      throw new Error('edit expected: ' + name);
-    }
-    const initial = TextDocument.applyEdits(scenario.document, [item.textEdit]);
-    const text = Range(0, 2).reduce((previous) => {
-      const file = createZshFileHydration({ sourceFile: 'x', file: 'x', content: previous });
-      expect(file.lexerDiagnostics).toEqual([]);
-      const argument = findAll(file.ast, 'simpleCommand')[0].arguments[0],
-        decoded = decodeLiteral(argument);
-      if (!decoded) {
-        throw new Error('outer expansion introduced: ' + name);
+      expect(definition?.uri).toBe(request.document.uri);
+
+      if (!item) {
+        throw new Error('outside completion required');
       }
-      return literalValue(decoded, 5).text;
-    }, initial);
-    const file = createZshFileHydration({ sourceFile: 'x', file: 'x', content: text });
-    const word = findAll(file.ast, 'simpleCommand')[0].commandName?.word;
-    if (!word) {
-      throw new Error('command expected');
-    }
-    expect(literalWord(word)).toBe(name);
-  }
-});
 
-test('物理的に複数行になる補完編集やカーソルを含まない範囲を返さない', () => {
-  expect(
-    createProviderFixture('run_code code="gr' + String.fromCharCode(92) + '\nee¦t"').complete(),
-  ).toEqual([]);
-  expect(createProviderFixture("run_code code='gr''¦'").complete()).toEqual([]);
+      expect(
+        zCompletionResolve(item, request.snapshot, request.programs).documentation,
+      ).toBeDefined();
+    });
+
+    test('複数段の引用でも特殊文字を実行可能な展開へ変えず挿入する', () => {
+      const names = [
+        "a'b",
+        'a"b',
+        'a\\b',
+        '$value',
+        '$(never-run)',
+        String.fromCharCode(96) + 'never-run' + String.fromCharCode(96),
+      ];
+
+      for (const name of names) {
+        const extra = ['function ' + commandInsertion(name) + ' { : }\n'];
+        const request = createLanguageFeatureRequest(
+          'run_code code="run_code code=\'¦\'"',
+          false,
+          extra,
+        );
+        const item = zCompletion(request)?.find((item) => item.label === name);
+
+        if (!item?.textEdit || !('range' in item.textEdit)) {
+          throw new Error('edit expected: ' + name);
+        }
+
+        const initial = TextDocument.applyEdits(request.document, [item.textEdit]);
+        const text = Immutable.Range(0, 2).reduce((previous) => {
+          const file = createZshFileHydration({ sourceFile: 'x', file: 'x', content: previous });
+
+          expect(file.lexerDiagnostics).toEqual([]);
+          const argument = findAll(file.ast, 'simpleCommand')[0].arguments[0];
+          const decoded = decodeLiteral(argument);
+
+          if (!decoded) {
+            throw new Error('outer expansion introduced: ' + name);
+          }
+
+          return literalValue(decoded, 5).text;
+        }, initial);
+        const file = createZshFileHydration({ sourceFile: 'x', file: 'x', content: text });
+        const word = findAll(file.ast, 'simpleCommand')[0].commandName?.word;
+
+        if (!word) {
+          throw new Error('command expected');
+        }
+
+        expect(literalWord(word)).toBe(name);
+      }
+    });
+
+    test('物理的に複数行になる補完編集やカーソルを含まない範囲を返さない', () => {
+      const request = createLanguageFeatureRequest(
+        'run_code code="gr' + String.fromCharCode(92) + '\nee¦t"',
+      );
+
+      const completion = zCompletion(request);
+
+      expect(completion).toEqual([]);
+      const request2 = createLanguageFeatureRequest("run_code code='gr''¦'");
+
+      const completion2 = zCompletion(request2);
+
+      expect(completion2).toEqual([]);
+    });
+  });
 });
