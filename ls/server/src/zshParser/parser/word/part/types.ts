@@ -20,7 +20,7 @@ export type WordPartState = WordSegment & {
   readonly index: number;
   readonly literalStart: number;
   readonly quote: 'none' | 'single' | 'double' | 'dollarSingle';
-  readonly parts: readonly WordPartNode[];
+  readonly parts: ReadonlyArray<WordPartNode>;
 };
 
 export type ExpansionReadResult = {

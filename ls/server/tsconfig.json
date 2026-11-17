@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "Node16",
     "target": "es2024",
-    "lib": ["es2024"],
+    "lib": ["es2024", "esnext.iterator"],
     "outDir": "dist",
     "rootDir": "src",
     "moduleResolution": "node16",

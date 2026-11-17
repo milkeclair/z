@@ -31,5 +31,8 @@ export const DollarSingleQuoteDefinition: QuoteDefinition = {
 };
 
 export const BacktickQuoteDefinition: QuoteDefinition = {
-  quoteKind: 'backtick', start: String.fromCharCode(96), end: String.fromCharCode(96), escapeBackslash: true,
+  quoteKind: 'backtick',
+  start: String.fromCharCode(96),
+  end: String.fromCharCode(96),
+  escapeBackslash: true,
 };

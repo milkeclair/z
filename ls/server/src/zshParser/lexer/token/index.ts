@@ -31,7 +31,14 @@ export type OperatorKind =
   | 'arithmeticStart'
   | 'arithmeticEnd';
 
-export type QuoteKind = 'none' | 'single' | 'double' | 'dollarSingle' | 'backtick' | 'backslash' | 'mixed';
+export type QuoteKind =
+  | 'none'
+  | 'single'
+  | 'double'
+  | 'dollarSingle'
+  | 'backtick'
+  | 'backslash'
+  | 'mixed';
 
 export type SourcePosition = {
   readonly offset: number;
@@ -53,8 +60,11 @@ export type Token = {
   readonly quoteKind: QuoteKind;
   readonly operatorKind?: OperatorKind;
   readonly hereDoc?: {
-    readonly operatorOffset: number; readonly delimiter: string; readonly quoted: boolean;
-    readonly stripTabs: boolean; readonly closed: boolean;
+    readonly operatorOffset: number;
+    readonly delimiter: string;
+    readonly quoted: boolean;
+    readonly stripTabs: boolean;
+    readonly closed: boolean;
   };
 };
 

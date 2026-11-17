@@ -3,14 +3,16 @@ import { Lexer } from '../../../src/zshParser/lexer';
 import { Parser } from '../../../src/zshParser/parser';
 import { TestSourceFile } from './helper';
 
-describe('parse@facade', () => {
-  test('Parser.parseはASTを返す', () => {
-    const tokenized = Lexer.tokenize('echo ok\n', { sourceFile: TestSourceFile });
-    const options = {
-      sourceFile: TestSourceFile,
-      path: TestSourceFile,
-    };
+describe('Parser.parse', () => {
+  describe('解析結果を解析する場合', () => {
+    test('Parser.parseはASTを返す', () => {
+      const tokenized = Lexer.tokenize('echo ok\n', { sourceFile: TestSourceFile });
+      const options = {
+        sourceFile: TestSourceFile,
+        path: TestSourceFile,
+      };
 
-    expect(Parser.parse(tokenized.tokens, options).ast.kind).toBe('file');
+      expect(Parser.parse(tokenized.tokens, options).ast.kind).toBe('file');
+    });
   });
 });

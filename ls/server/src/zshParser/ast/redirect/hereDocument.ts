@@ -1,5 +1,5 @@
-import type { BaseNode } from '../base';
 import type { SourceRange } from '../../lexer';
+import type { BaseNode } from '../base';
 
 export type HereDocumentNode = BaseNode<'hereDocument'> & {
   readonly raw: string;

@@ -3,10 +3,24 @@ import { documentationOf } from '../zshHydrator';
 import type { ParameterDoc } from '../zshHydrator/documentation/types';
 
 function sameParameter(left: ParameterDoc, right: ParameterDoc): boolean {
-  if (left.kind !== right.kind || left.optional !== right.optional || left.valueType !== right.valueType) return false;
+  if (
+    left.kind !== right.kind ||
+    left.optional !== right.optional ||
+    left.valueType !== right.valueType
+  ) {
+    return false;
+  }
+
   const literals = new Set(left.literalValues ?? []);
   const otherLiterals = new Set(right.literalValues ?? []);
-  if (literals.size !== otherLiterals.size || ![...literals].every(value => otherLiterals.has(value))) return false;
+
+  if (
+    literals.size !== otherLiterals.size ||
+    ![...literals].every((value) => otherLiterals.has(value))
+  ) {
+    return false;
+  }
+
   switch (left.kind) {
     case 'positionalParameterDoc':
       return right.kind === left.kind && left.position === right.position;
@@ -21,24 +35,43 @@ function sameParameter(left: ParameterDoc, right: ParameterDoc): boolean {
 // オフセットと説明文は現在のproviderのsnapshotに属し、診断には含めない。
 // 関連する定義位置を診断に追加する場合は、その位置も比較に含める。
 export function sameCallContracts(left: FunctionTargets, right: FunctionTargets): boolean {
-  if (left === right) return true;
-  if (left.size !== right.size) return false;
-  for (const [name, candidates] of left) {
-    const next = right.get(name);
-    if (!next || candidates.length !== next.length) return false;
-    for (let index = 0; index < candidates.length; index++) {
-      const target = candidates[index];
-      const other = next[index];
-      if (!target || !other || target.name !== other.name || target.uri !== other.uri) return false;
-      if (target.definition === other.definition) continue;
-      const parameters = documentationOf(target.definition)?.parameters ?? [];
-      const nextParameters = documentationOf(other.definition)?.parameters ?? [];
-      if (parameters.length !== nextParameters.length ||
-        !parameters.every((parameter, position) => {
-          const nextParameter = nextParameters[position];
-          return nextParameter !== undefined && sameParameter(parameter, nextParameter);
-        })) return false;
-    }
+  if (left === right) {
+    return true;
   }
-  return true;
+
+  if (left.size !== right.size) {
+    return false;
+  }
+
+  return [...left].every(([name, candidates]) => {
+    const next = right.get(name);
+
+    return (
+      next !== undefined &&
+      candidates.length === next.length &&
+      candidates.every((target, index) => {
+        const other = next[index];
+
+        if (!target || !other || target.name !== other.name || target.uri !== other.uri) {
+          return false;
+        }
+
+        if (target.definition === other.definition) {
+          return true;
+        }
+
+        const parameters = documentationOf(target.definition)?.parameters ?? [];
+        const nextParameters = documentationOf(other.definition)?.parameters ?? [];
+
+        return (
+          parameters.length === nextParameters.length &&
+          parameters.every((parameter, position) => {
+            const otherParameter = nextParameters[position];
+
+            return otherParameter !== undefined && sameParameter(parameter, otherParameter);
+          })
+        );
+      })
+    );
+  });
 }

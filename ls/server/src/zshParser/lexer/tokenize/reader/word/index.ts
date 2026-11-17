@@ -1,13 +1,13 @@
-import { position } from '../../../cursor';
 import type { Cursor } from '../../../cursor';
+import { position } from '../../../cursor';
 import type { LexerDiagnostic } from '../../../diagnostic';
 import { scan } from '../../../scan';
 import type { Token } from '../../../token';
 import { createToken } from '../../../token';
 import type { ReadResult } from '../result';
-import { readWordStep, readWordDone } from './part';
-import { initialWordState } from './state';
+import { readWordDone, readWordStep } from './part';
 import type { WordState } from './state';
+import { initialWordState } from './state';
 
 export type WordBoundary = (cursor: Cursor) => boolean;
 

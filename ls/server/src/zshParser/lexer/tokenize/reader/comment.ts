@@ -1,5 +1,5 @@
-import { position } from '../../cursor';
 import type { Cursor } from '../../cursor';
+import { position } from '../../cursor';
 import type { Token } from '../../token';
 import { createToken } from '../../token';
 import { isNewline } from '../predicate';
