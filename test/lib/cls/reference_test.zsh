@@ -171,21 +171,19 @@ z.t.describe "z.clsの実体参照"; {
 
         z.t.expect.status.is.false
 
-        () {
-          local fresh=""
+        local fresh=""
 
-          z.cls.new TestCounter fresh
+        z.cls.new TestCounter fresh
 
-          z.t.expect.status.is.true
+        z.t.expect.status.is.true
 
-          fresh.increment
+        fresh.increment
 
-          z.t.expect.reply 1
+        z.t.expect.reply 1
 
-          z.cls.delete fresh
+        z.cls.delete fresh
 
-          z.t.expect.status.is.true
-        }
+        z.t.expect.status.is.true
 
         unfunction object.increment
       }
@@ -276,26 +274,23 @@ z.t.describe "z.clsの実体参照"; {
 
   z.t.context "作成先のコマンド名に既存の関数がある場合"; {
     z.t.it "既存の関数を保ち、実体のコマンドを部分的に残さない"; {
-      () {
-        local first=""
-        first.value() {
-          REPLY=original
-        }
-
-        z.cls.new TestCounter first 2>/dev/null
-
-        z.t.expect.status.is.false
-
-        first.value
-
-        z.t.expect.reply original
-
-        z.var.exists 'functions[first.increment]'
-
-        z.t.expect.status.is.false
-
-        unfunction first.value
+      first.value() {
+        REPLY=original
       }
+
+      z.cls.new TestCounter first 2>/dev/null
+
+      z.t.expect.status.is.false
+
+      first.value
+
+      z.t.expect.reply original
+
+      z.var.exists 'functions[first.increment]'
+
+      z.t.expect.status.is.false
+
+      unfunction first.value
     }
   }
 }

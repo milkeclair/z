@@ -26,7 +26,7 @@ z.cls.instance._call() {
   fi
 }
 
-# 子の関数スコープでメソッドを実行するか、復元済みの属性を取得・更新する。
+# メソッドのlocal変数と引数をこの関数内に保ち、復元済みの属性を取得・更新する。
 #
 # $1: 実体の参照
 # $2: method、get、setのいずれか
@@ -45,9 +45,7 @@ z.cls.instance._execute() {
     method)
       local z_cls_body=$z_cls_bodies[${z_cls_instances[$z_cls_instance]}:$z_cls_member]
 
-      () {
-        eval "$z_cls_body"
-      } "$@"
+      eval "$z_cls_body"
       ;;
     get)
       z.cls.instance.execute._get "$z_cls_member" "$@"

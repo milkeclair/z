@@ -4,10 +4,12 @@ z.t.describe "z.cls.instance._call"; {
   z.t.context "既存の実体を参照する場合"; {
     z.t.it "メソッドの更新と結果を保存する"; {
       () {
-        z.cls.draw DirectCall
-        z.cls.attr count 0
-        z.cls.fn add '(( count += $1 )); REPLY=$count'
-        z.cls.drew
+        z.cls.draw DirectCall; {
+          z.cls.attr count 0
+          z.cls.fn add '(( count += $1 )); REPLY=$count'
+          z.cls.drew
+        }
+
         local object=""
         z.cls.new DirectCall object
 
@@ -50,16 +52,21 @@ z.t.describe "z.cls.instance._execute"; {
   }
 
   z.t.context "メソッドが0以外で戻る場合"; {
-    z.t.it "終了状態を保持する"; {
+    z.t.it "引数と終了状態を保持し、メソッドのlocal変数を呼出元へ漏らさない"; {
       z.cls.store._ensure
       z_cls_instances[execute_ref]=Execute
-      z_cls_bodies[Execute:fail]='return 7'
+      z_cls_bodies[Execute:fail]='local literal=inner; REPLY="$literal:$1"; return 7'
+      local literal=outer
 
-      z.cls.instance._execute execute_ref method fail
+      z.cls.instance._execute execute_ref method fail argument
+      local call_status=$?
+      local call_reply=$REPLY
 
-      z.t.expect.status 7
+      z.t.expect "$call_status" 7
+      z.t.expect "$call_reply" inner:argument
+      z.t.expect "$literal" outer
 
-      unset 'z_cls_instances[execute_ref]' 'z_cls_bodies[Execute:fail]'
+      unset literal 'z_cls_instances[execute_ref]' 'z_cls_bodies[Execute:fail]'
     }
   }
 
@@ -112,9 +119,11 @@ z.t.describe "z.cls.instance._release"; {
   z.t.context "他の実体が残る場合"; {
     z.t.it "対象だけを解放して生存中の状態を保つ"; {
       () {
-        z.cls.draw DirectRelease
-        z.cls.attr count 3
-        z.cls.drew
+        z.cls.draw DirectRelease; {
+          z.cls.attr count 3
+          z.cls.drew
+        }
+
         local first=""
         z.cls.new DirectRelease first
         local second=""

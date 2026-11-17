@@ -64,13 +64,9 @@ z.t.describe "z.cls.instance.execute._get"; {
 
   z.t.context "余分な引数がある場合"; {
     z.t.it "取得を拒否する"; {
-      () {
-        local literal=value
+      z.cls.instance.execute._get literal extra
 
-        z.cls.instance.execute._get literal extra
-
-        z.t.expect.status.is.false
-      }
+      z.t.expect.status.is.false
     }
   }
 }
