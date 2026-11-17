@@ -62,7 +62,8 @@ z.wtproxy._config.value() {
 #  local -A config=($REPLY)
 #  # config: proxy_port_1=3000、proxy_port_2=5432、proxy_port_3=5173
 z.wtproxy._config.values() {
-  local -A config=("${(@kv)z_wtproxy_default_config_values}")
+  z.hash.entries z_wtproxy_default_config_values
+  local -A config=("${REPLY[@]}")
 
   z.wtproxy._config.file.values
   local -A file_config=("${(@)REPLY}")

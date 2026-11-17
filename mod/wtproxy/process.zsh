@@ -141,7 +141,8 @@ z.wtproxy.start() {
   z.wtproxy._entry.current activate=true || return 1
   local -A entry=("${(@)REPLY}")
   z.wtproxy.start._daemon || return 1
-  z.wtproxy._print.entry "${(@kv)entry}"
+  z.hash.entries entry
+  z.wtproxy._print.entry "${REPLY[@]}"
 }
 
 # プロキシデーモンを停止する

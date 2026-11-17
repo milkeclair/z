@@ -23,17 +23,19 @@ z.process._pids() {
     ;;
   port=*)
     z.arg.named port "$@" && local port=$REPLY
-    if ! z.int.is.lteq ${#port} 5 || [[ $port != <1-65535> ]]; then
+    if ! z.int.is.lteq ${#port} 5 || ! z.int.is.between "$port" min=1 max=65535 signed=false; then
       z.io.error "Invalid TCP port: $port"
       return 1
     fi
 
     # localの終了コードで上書きされる前に、コマンド置換の成否を保存する。
-    local pids=(${(f)"$(lsof -nP -t -iTCP:$port -sTCP:LISTEN)"}) lookup_status=$?
+    local listing="$(lsof -nP -t -iTCP:$port -sTCP:LISTEN)" lookup_status=$?
     if z.int.is.not.zero "$lookup_status"; then
       z.io.error "Unable to resolve TCP listeners for port: $port"
       return 1
     fi
+    z.str.split.line "$listing" empty=drop
+    local pids=("${REPLY[@]}")
     ;;
   name=*)
     z.arg.named name "$@" && local name=$REPLY
@@ -67,13 +69,13 @@ z.process._pids() {
 
   local target_pid
   for target_pid in "${pids[@]}"; do
-    if ! z.int.is.lteq ${#target_pid} 10 || [[ $target_pid != <1-2147483647> ]]; then
+    if ! z.int.is.lteq ${#target_pid} 10 || ! z.int.is.between "$target_pid" min=1 max=2147483647 signed=false; then
       z.io.error "Invalid process ID: $target_pid"
       return 1
     fi
   done
 
-  REPLY=("${(@u)pids}")
+  z.arr.unique "${pids[@]}"
 }
 
 # プロセスID・名前・取得可能なTCP待受ポートを表示する

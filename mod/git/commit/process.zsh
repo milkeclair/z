@@ -71,7 +71,8 @@ z.git.commit() {
     local -A args=("${(@)REPLY}")
     local tag=$args[tag] && local message=$args[message] && local ticket=$args[ticket]
 
-    z.git.commit._arg.extract.opts "${(@kv)args}"
+    z.hash.entries args
+    z.git.commit._arg.extract.opts "${REPLY[@]}"
     local opts=(${(@)REPLY})
   }
 
@@ -111,7 +112,8 @@ z.git.commit.tdd() {
     local -A args=("${(@)REPLY}")
     local tag=$args[tag] && local message=$args[message] && local ticket=$args[ticket]
 
-    z.git.commit._arg.extract.opts "${(@kv)args}"
+    z.hash.entries args
+    z.git.commit._arg.extract.opts "${REPLY[@]}"
     local opts=(${(@)REPLY})
   }
 

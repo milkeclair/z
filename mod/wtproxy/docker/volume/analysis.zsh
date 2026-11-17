@@ -14,6 +14,7 @@ z.wtproxy._docker.volume.names() {
   local output
   output=$(docker volume ls --quiet --filter "$label_filter") || return 1
 
-  local -a volume_names=("${(@f)output}")
+  z.str.split.line "$output"
+  local -a volume_names=("${REPLY[@]}")
   z.arr.unique ${volume_names[@]}
 }

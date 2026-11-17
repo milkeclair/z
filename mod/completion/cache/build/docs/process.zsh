@@ -13,7 +13,8 @@ z.completion.cache.build.docs._from_file() {
 
   local file_path=$1
   z.file.read path=$file_path
-  local lines=("${(@f)REPLY}")
+  z.str.split.line "$REPLY"
+  local lines=("${REPLY[@]}")
   local line_count=${#lines[@]}
   local idx=0
   local docs_lines=()
@@ -28,7 +29,7 @@ z.completion.cache.build.docs._from_file() {
     local trimmed_line=$REPLY
     if z.completion.cache.build.line._function_name "$line" "$trimmed_line"; then
       local function_name=$REPLY
-      if z.int.is.positive ${+functions[$function_name]} &&
+      if z.hash.has.key functions "key=$function_name" &&
         z.int.is.positive ${#docs_lines[@]}; then
         z.arr.join.line "${docs_lines[@]}"
         z.help._strip_comment_prefix "$REPLY"

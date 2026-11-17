@@ -48,7 +48,8 @@ z.completion.argument._docs() {
   local records=()
   local has_code=false
   local line
-  for line in "${(@f)1}"; do
+  z.str.split.line "$1"
+  for line in "${REPLY[@]}"; do
     z.str.trim "$line"
     local trimmed=$REPLY
     z.str.start_with "$trimmed" example: && break
@@ -118,7 +119,8 @@ z.completion.argument._select() {
 #  # REPLY: "code=z.arg.g"
 z.completion.argument._value() {
   local input=$1
-  local value=${(Q)input}
+  z.str.unquote "$input"
+  local value=$REPLY
   local quote_pattern="[\\\"']"
   if z.is.not.eq "$value" "$input" || ! z.str.is.match "$input" "$quote_pattern"; then
     REPLY=$value
@@ -128,7 +130,8 @@ z.completion.argument._value() {
   local quote
   for quote in "'" '"'; do
     local closed="$input$quote"
-    local decoded=${(Q)closed}
+    z.str.unquote "$closed"
+    local decoded=$REPLY
     if z.is.not.eq "$decoded" "$closed"; then
       REPLY=$decoded
       return 0

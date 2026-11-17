@@ -12,7 +12,7 @@
 z.completion.docs._get() {
   local function_name=$1
 
-  if z.int.is.positive ${+z_completion_docs[$function_name]}; then
+  if z.hash.has.key z_completion_docs "key=$function_name"; then
     REPLY="${z_completion_docs[$function_name]}"
     return
   fi
@@ -45,7 +45,8 @@ z.completion.docs._format() {
   local formatted=()
   local line
 
-  for line in "${(@f)docs}"; do
+  z.str.split.line "$docs"
+  for line in "${REPLY[@]}"; do
     if z.is.true $in_example && z.str.is.match "$line" '^[[:space:]]+[^[:space:]]'; then
       formatted+=("${example_color}${line}${reset}")
       continue

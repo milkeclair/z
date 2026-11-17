@@ -24,7 +24,8 @@ z.wtproxy.init._config.content() {
     lines+=("$env_name=$value")
   done
 
-  REPLY="${(F)lines}"$'\n'
+  z.arr.join.line "${lines[@]}"
+  REPLY="$REPLY"$'\n'
 }
 
 # wtproxyの初期設定ファイルを作成する
