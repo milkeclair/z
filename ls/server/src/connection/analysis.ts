@@ -3,11 +3,18 @@ export type PendingAnalysis = {
   readonly changedPaths: readonly string[] | undefined;
 };
 
-export function queueAnalysis(previous: PendingAnalysis | null,
-  changedPaths: readonly string[] | undefined, now: number): PendingAnalysis {
-  return { since: previous?.since ?? now,
-    changedPaths: changedPaths === undefined || previous && previous.changedPaths === undefined
-      ? undefined : [...new Set([...(previous?.changedPaths ?? []), ...changedPaths])] };
+export function queueAnalysis(
+  previous: PendingAnalysis | null,
+  changedPaths: readonly string[] | undefined,
+  now: number,
+): PendingAnalysis {
+  return {
+    since: previous?.since ?? now,
+    changedPaths:
+      changedPaths === undefined || (previous && previous.changedPaths === undefined)
+        ? undefined
+        : [...new Set([...(previous?.changedPaths ?? []), ...changedPaths])],
+  };
 }
 
 export function analysisDelay(pending: PendingAnalysis, now: number): number {

@@ -57,8 +57,8 @@ z.hash.entries() {
 #  z.hash.count hash
 #  # REPLY: 2
 z.hash.count() {
-  local hash_name=$1
-  local -A hash_ref=("${(@Pkv)hash_name}")
+  z.hash.entries "$1"
+  local -A hash_ref=("${REPLY[@]}")
 
   REPLY=${#hash_ref}
 }

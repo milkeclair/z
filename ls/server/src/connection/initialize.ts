@@ -1,12 +1,12 @@
-import { InitializeParams } from '../vscode_type';
 import { Func } from '../getFunctions/type';
 import { refreshFunctionSnapshot, type FunctionSnapshot } from '../refreshFunctions/main';
-import { projectRootFromSettings, workspaceProjectRoot } from './projectRoot';
 import { serverCapability } from '../serverCapability/main';
+import { InitializeParams } from '../vscode_type';
+import { projectRootFromSettings, workspaceProjectRoot } from './projectRoot';
 
 export type ZLsSettings = {
-  zPath: string;
-  completion: {
+  readonly zPath: string;
+  readonly completion: {
     showPrivateFunctions: boolean;
   };
 };
@@ -21,23 +21,32 @@ function isRecord(value: unknown): value is UnknownRecord {
 }
 
 function readObject(value: unknown, key: string): UnknownRecord {
-  if (!isRecord(value)) return {};
+  if (!isRecord(value)) {
+    return {};
+  }
 
   const child = value[key];
+
   return isRecord(child) ? child : {};
 }
 
 function readString(value: unknown, key: string, defaultValue: string): string {
-  if (!isRecord(value)) return defaultValue;
+  if (!isRecord(value)) {
+    return defaultValue;
+  }
 
   const child = value[key];
+
   return typeof child === 'string' ? child : defaultValue;
 }
 
 function readBoolean(value: unknown, key: string, defaultValue: boolean): boolean {
-  if (!isRecord(value)) return defaultValue;
+  if (!isRecord(value)) {
+    return defaultValue;
+  }
 
   const child = value[key];
+
   return typeof child === 'boolean' ? child : defaultValue;
 }
 
@@ -50,25 +59,27 @@ export function zSettingsFromInitializationOptions(value: unknown): ZLsSettings 
       showPrivateFunctions: readBoolean(
         completion,
         'showPrivateFunctions',
-        DEFAULT_SHOW_PRIVATE_FUNCTIONS
+        DEFAULT_SHOW_PRIVATE_FUNCTIONS,
       ),
     },
   };
 }
 
 export function zSettingsFromConfigurationNotification(value: unknown): ZLsSettings {
-  if (!isRecord(value)) return zSettingsFromInitializationOptions({});
+  if (!isRecord(value)) {
+    return zSettingsFromInitializationOptions({});
+  }
 
   return zSettingsFromInitializationOptions(value['z-ls']);
 }
 
 export function zInitialize(params: InitializeParams): {
-  projectRoot: string;
-  workspaceRoot: string;
-  snapshot: FunctionSnapshot;
-  functions: Func[];
-  settings: ZLsSettings;
-  serverCapabilities: ReturnType<typeof serverCapability>;
+  readonly projectRoot: string;
+  readonly workspaceRoot: string;
+  readonly snapshot: FunctionSnapshot;
+  readonly functions: readonly Func[];
+  readonly settings: ZLsSettings;
+  readonly serverCapabilities: ReturnType<typeof serverCapability>;
 } {
   const settings = zSettingsFromInitializationOptions(params.initializationOptions);
   const workspaceRoot = workspaceProjectRoot(params);

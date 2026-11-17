@@ -1,19 +1,39 @@
-import type { WordContext } from '../part/types';
+import { addValue, makeMap, makeSet, setEntry } from '../../../../util/collections';
 import type { WordNode } from '../../../ast';
 import type { QuoteKind, Token } from '../../../lexer';
 import { rangeFromTokens } from '../../range';
 import { createWordParts } from '../part';
+import type { WordContext } from '../part/types';
 
-export function createCompositeWordNode(tokens: readonly Token[], context: WordContext = {}): WordNode {
+export function createCompositeWordNode(
+  tokens: readonly Token[],
+  context: WordContext = {},
+): WordNode {
   const raw = tokens.map((token) => token.value).join('');
-  const literalEnds = new Map<number, number>();
-  const processStarts = new Set<number>();
-  let offset = 0;
-  for (const token of tokens) {
-    if (token.kind === 'word' && token.value === '=') processStarts.add(offset);
-    if (token.kind === 'comment' || token.kind === 'hereDocBody' || token.kind === 'hereDocEnd') literalEnds.set(offset, offset + token.value.length);
-    offset += token.value.length;
-  }
+  const offsets = tokens.reduce(
+    (previous, token) => {
+      const end = previous.offset + token.value.length;
+
+      return {
+        offset: end,
+        literalEnds:
+          token.kind === 'comment' || token.kind === 'hereDocBody' || token.kind === 'hereDocEnd'
+            ? setEntry(previous.literalEnds, previous.offset, end)
+            : previous.literalEnds,
+        processStarts:
+          token.kind === 'word' && token.value === '='
+            ? addValue(previous.processStarts, previous.offset)
+            : previous.processStarts,
+      };
+    },
+    {
+      offset: 0,
+      literalEnds: makeMap<number, number>(),
+      processStarts: makeSet<number>(),
+    },
+  );
+  const literalEnds = new Map(offsets.literalEnds);
+  const processStarts = new Set(offsets.processStarts);
 
   return {
     kind: 'word',
@@ -22,10 +42,15 @@ export function createCompositeWordNode(tokens: readonly Token[], context: WordC
     quoted: tokens.some((token) => token.quoted),
     quoteKind: compositeQuoteKind(tokens),
     parts: createWordParts({
-      literalEnds, processStarts,
+      literalEnds,
+      processStarts,
       ...context,
-      text: raw, range: rangeFromTokens(tokens), start: 0, end: raw.length,
-      quoted: tokens.some((token) => token.quoted), quoteKind: compositeQuoteKind(tokens),
+      text: raw,
+      range: rangeFromTokens(tokens),
+      start: 0,
+      end: raw.length,
+      quoted: tokens.some((token) => token.quoted),
+      quoteKind: compositeQuoteKind(tokens),
     }),
   };
 }

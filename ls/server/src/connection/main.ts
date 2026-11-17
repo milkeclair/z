@@ -1,16 +1,16 @@
-import { zInitialize, zSettingsFromConfigurationNotification } from './initialize';
 import { zCompletion } from './completion';
 import { zCompletionResolve } from './completionResolve';
-import { zHover } from './hover';
 import { zDefinition } from './definition';
+import { zHover } from './hover';
+import { zInitialize, zSettingsFromConfigurationNotification } from './initialize';
 import { zSignatureHelp } from './signatureHelp';
 
 export {
-  zInitialize,
-  zSettingsFromConfigurationNotification,
   zCompletion,
   zCompletionResolve,
-  zHover,
   zDefinition,
+  zHover,
+  zInitialize,
+  zSettingsFromConfigurationNotification,
   zSignatureHelp,
 };

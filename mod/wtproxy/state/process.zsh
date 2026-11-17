@@ -32,19 +32,22 @@ z.wtproxy._state.load() {
   z.file.not.exists $state_file && return 0
 
   while IFS= read -r line || [[ -n $line ]]; do
-    local words=("${(@)${(z)line}}")
+    z.str.split.shell "$line"
+    local words=("${REPLY[@]}")
     local kind=$words[1]
 
     if z.is.eq $kind active; then
-      z_wtproxy_state_active_path=${(Q)words[2]}
+      z.str.unquote "$words[2]"
+      z_wtproxy_state_active_path=$REPLY
       continue
     fi
 
     if z.is.eq $kind entry; then
-      local worktree_path=${(Q)words[2]}
+      z.arr.unquote "${words[@]:1:3}"
+      local worktree_path=$REPLY[1]
       z_wtproxy_state_paths+=($worktree_path)
-      z_wtproxy_state_branch[$worktree_path]=${(Q)words[3]}
-      z_wtproxy_state_compose[$worktree_path]=${(Q)words[4]}
+      z_wtproxy_state_branch[$worktree_path]=$REPLY[2]
+      z_wtproxy_state_compose[$worktree_path]=$REPLY[3]
 
       local word_index=5
       for ((; word_index<=${#words[@]}; word_index++)); do
@@ -76,9 +79,8 @@ z.wtproxy._state.save() {
 
   z.dir.make path=$config[state_dir]
 
-  local state_lines=(
-    "active ${(qqq)z_wtproxy_state_active_path}"
-  )
+  z.str.quote "$z_wtproxy_state_active_path" style=double
+  local state_lines=("active $REPLY")
   for worktree_path in $z_wtproxy_state_paths; do
     local port_entries=()
     z.wtproxy._port.keys
@@ -89,16 +91,13 @@ z.wtproxy._state.save() {
       z.is.not.null "$port" && port_entries+=("$port_key=$port")
     done
 
-    local entry_fields=(
-      entry
-      ${(qqq)worktree_path}
-      ${(qqq)z_wtproxy_state_branch[$worktree_path]}
-      ${(qqq)z_wtproxy_state_compose[$worktree_path]}
-    )
+    z.arr.quote style=double "$worktree_path" "$z_wtproxy_state_branch[$worktree_path]" "$z_wtproxy_state_compose[$worktree_path]"
+    local entry_fields=(entry "${REPLY[@]}")
     z.arr.join ${entry_fields[@]} ${port_entries[@]}
     state_lines+=("$REPLY")
   done
-  z.file.write path=$config[state_file] content="${(F)state_lines}"$'\n'
+  z.arr.join.line "${state_lines[@]}"
+  z.file.write path=$config[state_file] content="$REPLY"$'\n'
 
   z.perm path=$config[state_file] mode=600
 }

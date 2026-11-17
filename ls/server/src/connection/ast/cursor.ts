@@ -1,57 +1,162 @@
+import type { CodeProgram } from '../../embeddedCode';
+import { codeOffset } from '../../embeddedCode/sourceMap';
+import type { FunctionSnapshot } from '../../refreshFunctions/main';
+import type { FunctionTargets } from '../../refreshFunctions/target';
+import { again, done, loop } from '../../util/loop';
+import { lowerBound } from '../../util/search';
 import type { TextDocument } from '../../vscode_type';
+import type { ZshFileHydration } from '../../zshHydrator';
 import type { AstNode, SimpleCommandNode } from '../../zshParser/ast';
 import { locate } from '../../zshParser/ast';
 import type { SourceRange, Token } from '../../zshParser/lexer';
-import type { ZshFileHydration } from '../../zshHydrator';
-import type { FunctionSnapshot } from '../../refreshFunctions/main';
 
 export type Cursor = {
   readonly file: ZshFileHydration;
   readonly offset: number;
   readonly path: readonly AstNode[];
   readonly token: Token | null;
+  readonly program?: CodeProgram;
+  readonly targets?: FunctionTargets;
 };
 
-export function cursorAt(snapshot: FunctionSnapshot, document: TextDocument, offset: number): Cursor | null {
+type TokenSelection = {
+  readonly selected: number;
+  readonly token: Token | null;
+};
+
+function previousSyntaxToken(
+  file: ZshFileHydration,
+  content: string,
+  offset: number,
+): TokenSelection {
+  const selected = loop(Math.max(0, offset - 1), (index) =>
+    index > 0 && (content[index] === ' ' || content[index] === '\t' || content[index] === '\r')
+      ? again(index - 1)
+      : done(index),
+  );
+
+  return loop<TokenSelection, TokenSelection>(
+    { selected, token: tokenAtOffset(file.tokens, selected) },
+    (current) => {
+      const token = current.token;
+
+      if (!token || (token.kind !== 'whitespace' && token.kind !== 'continuation')) {
+        return done(current);
+      }
+
+      if (token.range.start.offset === 0) {
+        return done({ ...current, token: null });
+      }
+
+      const selected = token.range.start.offset - 1;
+
+      return again({ selected, token: tokenAtOffset(file.tokens, selected) });
+    },
+  );
+}
+
+export function cursorAt(
+  snapshot: FunctionSnapshot,
+  document: TextDocument,
+  inputOffset: number,
+  programs: readonly CodeProgram[] = [],
+): Cursor | null {
   const cached = snapshot.documents.get(document.uri);
-  if (!cached || cached.version !== document.version || cached.content !== document.getText()) return null;
-  const file = cached.file;
-  const content = cached.content;
-  const direct = locate(file.query, offset);
-  if (direct?.kind === 'comment') return null;
-  let token = tokenAtOffset(file.tokens, offset);
-  let selected = offset;
-  if (token?.kind !== 'word' || offset >= token.range.end.offset || direct?.kind === 'syntax' &&
-    (direct.node.kind === 'commandSubstitution' || direct.node.kind === 'processSubstitution')) {
-    selected = Math.max(0, offset - 1);
-    while (selected > 0 && (content[selected] === ' ' || content[selected] === '\t' || content[selected] === '\r')) selected -= 1;
-    token = tokenAtOffset(file.tokens, selected);
-    while (token && (token.kind === 'whitespace' || token.kind === 'continuation')) {
-      if (token.range.start.offset === 0) { token = null; break; }
-      selected = token.range.start.offset - 1;
-      token = tokenAtOffset(file.tokens, selected);
-    }
+
+  if (!cached || cached.version !== document.version || cached.content !== document.getText()) {
+    return null;
   }
-  if (token?.kind === 'comment' || token?.kind === 'hereDocBody' || token?.kind === 'hereDocEnd') return null;
-  const location = selected === offset ? direct : locate(file.query, selected);
-  if (location?.kind === 'comment') return null;
+
+  const scoped = programs.reduce<{
+    readonly program: CodeProgram | undefined;
+    readonly offset: number;
+  }>(
+    (previous, candidate) => {
+      if (
+        candidate.root !== cached.file ||
+        (previous.program && candidate.depth <= previous.program.depth)
+      ) {
+        return previous;
+      }
+
+      const mapped = codeOffset(candidate.source, inputOffset);
+
+      return mapped === null ? previous : { program: candidate, offset: mapped };
+    },
+    { program: undefined, offset: inputOffset },
+  );
+  const { program, offset } = scoped;
+  const file = program?.file ?? cached.file;
+  const content = program?.content ?? cached.content;
+  const direct = locate(file.query, offset);
+
+  if (direct?.kind === 'comment') {
+    return null;
+  }
+
+  const token = tokenAtOffset(file.tokens, offset);
+  const previous =
+    token?.kind !== 'word' ||
+    offset >= token.range.end.offset ||
+    (direct?.kind === 'syntax' &&
+      (direct.node.kind === 'commandSubstitution' || direct.node.kind === 'processSubstitution'));
+  const chosen = previous
+    ? previousSyntaxToken(file, content, offset)
+    : { selected: offset, token };
+
+  if (
+    chosen.token?.kind === 'comment' ||
+    chosen.token?.kind === 'hereDocBody' ||
+    chosen.token?.kind === 'hereDocEnd'
+  ) {
+    return null;
+  }
+
+  const location = chosen.selected === offset ? direct : locate(file.query, chosen.selected);
+
+  if (location?.kind === 'comment') {
+    return null;
+  }
+
   const path = location?.kind === 'syntax' ? location.path : [];
-  if (path.some(node => node.kind === 'opaqueCommand' || node.kind === 'hereDocument')) return null;
-  return { file, offset, path, token };
+
+  if (path.some((node) => node.kind === 'opaqueCommand' || node.kind === 'hereDocument')) {
+    return null;
+  }
+
+  return {
+    file,
+    offset,
+    path,
+    token: chosen.token,
+    ...(program ? { program } : {}),
+    ...(cached.targets ? { targets: cached.targets } : {}),
+  };
 }
 
 export function callAt(cursor: Cursor): SimpleCommandNode | null {
-  for (const node of [...cursor.path].reverse()) {
-    if (node.kind === 'redirect' || node.kind === 'commandSubstitution' || node.kind === 'processSubstitution' ||
-      node.kind === 'subshellCommand') return null;
-    if (node.kind === 'simpleCommand') return node;
+  for (const node of cursor.path.toReversed()) {
+    if (
+      node.kind === 'redirect' ||
+      node.kind === 'commandSubstitution' ||
+      node.kind === 'processSubstitution' ||
+      node.kind === 'subshellCommand'
+    ) {
+      return null;
+    }
+
+    if (node.kind === 'simpleCommand') {
+      return node;
+    }
   }
+
   return null;
 }
 
 export function functionCommand(command: SimpleCommandNode): boolean {
-  return !command.precommandModifiers.some(modifier =>
-    modifier.type === 'builtin' || modifier.type === 'command');
+  return !command.precommandModifiers.some(
+    (modifier) => modifier.type === 'builtin' || modifier.type === 'command',
+  );
 }
 
 export function inside(range: SourceRange, offset: number): boolean {
@@ -66,14 +171,8 @@ export function protocolRange(range: SourceRange) {
 }
 
 function tokenAtOffset(tokens: readonly Token[], offset: number): Token | null {
-  let low = 0;
-  let high = tokens.length - 1;
-  while (low <= high) {
-    const middle = Math.floor((low + high) / 2);
-    const token = tokens[middle];
-    if (offset < token.range.start.offset) high = middle - 1;
-    else if (offset >= token.range.end.offset) low = middle + 1;
-    else return token;
-  }
-  return null;
+  const index = lowerBound(tokens.length, (index) => tokens[index].range.end.offset <= offset);
+  const token = tokens[index];
+
+  return token && offset >= token.range.start.offset ? token : null;
 }

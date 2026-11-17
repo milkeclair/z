@@ -1,3 +1,5 @@
+import { numberRange } from '../../../util/collections';
+import { again, done, loop } from '../../../util/loop';
 import type { VariableNameNode } from '../../ast';
 import type { SourceRange } from '../../lexer';
 
@@ -27,9 +29,9 @@ export function readNameEnd({
   readonly index: number;
   readonly max: number;
 }): number {
-  let cursor = index;
-  while (cursor < max && isNamePart(value[cursor] ?? Empty)) cursor += 1;
-  return cursor;
+  return loop(index, (cursor) =>
+    cursor < max && isNamePart(value[cursor] ?? Empty) ? again(cursor + 1) : done(cursor),
+  );
 }
 
 export function isNameStart(char: string): boolean {
@@ -41,8 +43,7 @@ export function isVariableName(value: string): boolean {
 }
 
 function isNameTail(value: string, index: number): boolean {
-  for (let cursor = index; cursor < value.length; cursor += 1) if (!isNamePart(value[cursor])) return false;
-  return true;
+  return numberRange(index, value.length).every((cursor) => isNamePart(value[cursor]));
 }
 
 function isNamePart(char: string): boolean {
@@ -50,10 +51,7 @@ function isNamePart(char: string): boolean {
 }
 
 function isAsciiLetter(char: string): boolean {
-  return (
-    (char >= 'a' && char <= 'z') ||
-    (char >= 'A' && char <= 'Z')
-  );
+  return (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z');
 }
 
 function isAsciiDigit(char: string): boolean {

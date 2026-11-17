@@ -1,11 +1,11 @@
-import { Lexer } from '../../../src/zshParser/lexer';
-import { Parser } from '../../../src/zshParser/parser';
 import type {
   CommandNode,
   ListItemNode,
   SimpleCommandNode,
   SublistNode,
 } from '../../../src/zshParser/ast';
+import { Lexer } from '../../../src/zshParser/lexer';
+import { Parser } from '../../../src/zshParser/parser';
 
 export const TestSourceFile = 'test.zsh';
 

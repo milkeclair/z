@@ -1,94 +1,134 @@
 import { pathToFileURL } from 'url';
-import { literalWord } from './word';
-import type { FunctionTarget, FunctionTargets } from './target';
 import type { Result } from '../document/type';
-import type { Func, FuncArg } from '../getFunctions/type';
 import { NAMED_ARG_POSITION } from '../getFunctions/constant';
+import type { Func, FuncArg } from '../getFunctions/type';
+import type {
+  FunctionDocumentation,
+  ParameterDoc,
+  ZshFileHydration,
+  ZshHydrator,
+} from '../zshHydrator';
 import { documentationOf } from '../zshHydrator';
-import type { FunctionDocumentation, ParameterDoc, ZshFileHydration, ZshHydrator } from '../zshHydrator';
+import type { FunctionTarget, FunctionTargets } from './target';
+import { literalWord } from './word';
 
 type FunctionProjection = {
-  readonly functions: Func[];
+  readonly functions: readonly Func[];
   readonly targets: FunctionTargets;
 };
+
 export type FileFunctionProjections = ReadonlyMap<ZshFileHydration, FunctionProjection>;
 
 /** 現在のファイル単位の変換結果を再利用し、hydratorの順序で候補を統合する。 */
 export function projectFunctions(
-  hydrator: ZshHydrator, previous: FileFunctionProjections = new Map(),
-): FunctionProjection & { readonly fileProjections: FileFunctionProjections } {
-  const functions: Func[] = [];
-  const targets = new Map<string, FunctionTarget[]>();
-  const fileProjections = new Map<ZshFileHydration, FunctionProjection>();
-  for (const entry of hydrator.files.values()) {
-    if (entry.functions.length === 0) continue;
-    const projection = previous.get(entry) ?? projectFileFunctions(entry);
-    fileProjections.set(entry, projection);
-    for (const info of projection.functions) functions.push(info);
-    for (const [name, candidates] of projection.targets) {
-      const group = targets.get(name) ?? [];
-      for (const target of candidates) group.push(target);
-      targets.set(name, group);
-    }
-  }
-  return { functions, targets, fileProjections };
+  hydrator: ZshHydrator,
+  previous: FileFunctionProjections = new Map(),
+): FunctionProjection & {
+  readonly fileProjections: FileFunctionProjections;
+} {
+  const entries: readonly (readonly [ZshFileHydration, FunctionProjection])[] = [
+    ...hydrator.files.values(),
+  ]
+    .filter((entry) => entry.functions.length > 0)
+    .map((entry) => [entry, previous.get(entry) ?? projectFileFunctions(entry)]);
+  const projections = entries.map(([, projection]) => projection);
+  const targets = projections.flatMap((projection) => [...projection.targets.values()].flat());
+
+  return {
+    functions: projections.flatMap((projection) => projection.functions),
+    targets: Map.groupBy(targets, (target) => target.name),
+    fileProjections: new Map(entries),
+  };
 }
 
 /** 情報を付加した1ファイルから、互換用の情報と定義の参照先を取り出す。 */
-function projectFileFunctions(entry: ZshFileHydration): FunctionProjection {
-  const functions: Func[] = [];
-  const targets = new Map<string, FunctionTarget[]>();
-  const definitions = new Set(entry.functions.map(fn => fn.definition));
-  for (const definition of definitions) {
+export function projectFileFunctions(entry: ZshFileHydration): FunctionProjection {
+  const uri = pathToFileURL(entry.sourceFile).href;
+  const definitions = new Set(entry.functions.map((fn) => fn.definition));
+  const projected = [...definitions].flatMap((definition) => {
     const documentation = documentationOf(definition);
-    const parameters = documentation?.parameters ?? [];
-    const args = parameters.toReversed().map(legacyArgument).sort((left, right) => {
-      if (left.isNamed && right.isNamed) return 0;
-      if (left.isNamed) return 1;
-      if (right.isNamed) return -1;
-      return left.position - right.position;
-    });
+    const args = (documentation?.parameters ?? [])
+      .toReversed()
+      .map(legacyArgument)
+      .toSorted((left, right) => {
+        if (left.isNamed && right.isNamed) return 0;
+        if (left.isNamed) return 1;
+        if (right.isNamed) return -1;
+        return left.position - right.position;
+      });
     const view = legacyDocumentation(documentation);
-    for (const word of definition.names) {
-      const info = { name: word.raw, file: entry.file, line: word.range.start.line + 1,
-        args, documentation: view };
-      functions.push(info);
+
+    return definition.names.map((word) => {
+      const info = {
+        name: word.raw,
+        file: entry.file,
+        line: word.range.start.line + 1,
+        args,
+        documentation: view,
+      } satisfies Func;
       const name = literalWord(word);
-      if (!name) continue;
-      const target: FunctionTarget = {
-        name, uri: pathToFileURL(entry.sourceFile).href, definition, nameNode: word,
-        info: { ...info, name },
-      };
-      const group = targets.get(name) ?? [];
-      group.push(target);
-      targets.set(name, group);
-    }
-  }
-  return { functions, targets };
+      const target: FunctionTarget | null = name
+        ? { name, uri, definition, nameNode: word, info: { ...info, name } }
+        : null;
+
+      return { info, target };
+    });
+  });
+  const targets = projected.flatMap(({ target }) => (target ? [target] : []));
+
+  return {
+    functions: projected.map(({ info }) => info),
+    targets: Map.groupBy(targets, (target) => target.name),
+  };
 }
 
 function legacyArgument(parameter: ParameterDoc): FuncArg {
-  const common = { optional: parameter.optional };
+  const common = {
+    optional: parameter.optional,
+    ...(parameter.valueType ? { valueType: parameter.valueType } : {}),
+    ...(parameter.literalValues ? { literalValues: parameter.literalValues } : {}),
+  };
+
   switch (parameter.kind) {
     case 'positionalParameterDoc':
-      return { ...common, position: parameter.position, name: parameter.description, isNamed: false };
+      return {
+        ...common,
+        position: parameter.position,
+        name: parameter.description,
+        isNamed: false,
+      };
     case 'namedParameterDoc':
       return { ...common, position: NAMED_ARG_POSITION, name: parameter.name, isNamed: true };
     case 'restParameterDoc':
-      return { ...common, position: Number.MAX_SAFE_INTEGER, name: parameter.parameter, isNamed: false };
+      return {
+        ...common,
+        position: Number.MAX_SAFE_INTEGER,
+        name: parameter.parameter,
+        isNamed: false,
+      };
   }
 }
 
 function legacyDocumentation(documentation: FunctionDocumentation | null): Result {
   return {
-    description: documentation?.description.map(line => line.text).join('\n').trim() ?? '',
-    parameters: documentation?.parameters.map(parameter => ({
-      name: '$' + (parameter.kind === 'positionalParameterDoc' ? parameter.position
-        : parameter.kind === 'namedParameterDoc' ? parameter.name : parameter.parameter),
-      description: parameter.description,
-    })) ?? [],
+    description:
+      documentation?.description
+        .map((line) => line.text)
+        .join('\n')
+        .trim() ?? '',
+    parameters:
+      documentation?.parameters.map((parameter) => ({
+        name:
+          '$' +
+          (parameter.kind === 'positionalParameterDoc'
+            ? parameter.position
+            : parameter.kind === 'namedParameterDoc'
+              ? parameter.name
+              : parameter.parameter),
+        description: parameter.description,
+      })) ?? [],
     reply: documentation?.reply?.text ?? '',
     return: documentation?.returns?.text ?? '',
-    example: documentation?.examples.map(example => example.text).join('\n\n') ?? '',
+    example: documentation?.examples.map((example) => example.text).join('\n\n') ?? '',
   };
 }

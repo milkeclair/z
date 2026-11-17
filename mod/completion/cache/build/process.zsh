@@ -9,11 +9,15 @@
 #  # z_completion_function_namesの要素例: "z.example"
 z.completion.cache.build._names() {
   z_completion_function_names=()
-  for function_name in ${(ko)functions}; do
+  z.hash.keys functions
+  for function_name in "${REPLY[@]}"; do
     if z.str.start_with "$function_name" "z." && ! z.completion.function.is._private "$function_name"; then
       z_completion_function_names+=("$function_name")
     fi
   done
+
+  z.arr.sort "${z_completion_function_names[@]}"
+  z_completion_function_names=("${REPLY[@]}")
 }
 
 # 関数ドキュメントのキャッシュを作成する
@@ -27,6 +31,7 @@ z.completion.cache.build._names() {
 #  # 変更後: z_completion_docs[z.example]="使用例"
 z.completion.cache.build._docs() {
   z_completion_docs=()
+  z_completion_argument_specs=()
 
   local files=(
     "${z_root}"/*.zsh(N)
@@ -55,7 +60,8 @@ z.completion.cache.build._result() {
 
   z.completion.cache._build
   z.completion.cache._dump
-  local lines=("${(@f)REPLY}")
+  z.str.split.line "$REPLY"
+  local lines=("${REPLY[@]}")
   z.file.write path="$result" content=""
   for line in "${lines[@]}"; do
     z.file.write.last path="$result" content="$line"

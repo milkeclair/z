@@ -1,42 +1,94 @@
+import { appendItems, collectArray } from '../util/collections';
+import { again, done, loop } from '../util/loop';
+import { horizontalWhitespaceEnd, textWhileEnd } from '../util/text';
 import type { CommentNode } from '../zshParser/ast';
 import type { SourceRange } from '../zshParser/lexer';
 import { rangeWithinText } from '../zshParser/parser/range';
 
 export type DirectiveArgument = {
-  readonly kind: 'directiveArgument'; readonly range: SourceRange; readonly raw: string; readonly value: string;
+  readonly kind: 'directiveArgument';
+  readonly range: SourceRange;
+  readonly raw: string;
+  readonly value: string;
 };
+
 export type Directive = {
-  readonly kind: 'directive'; readonly range: SourceRange; readonly raw: string;
-  readonly namespace: string; readonly command: string | null; readonly arguments: readonly DirectiveArgument[];
+  readonly kind: 'directive';
+  readonly range: SourceRange;
+  readonly raw: string;
+  readonly namespace: string;
+  readonly command: string | null;
+  readonly arguments: readonly DirectiveArgument[];
 };
+
 export type ControlComment = {
-  readonly kind: 'controlComment'; readonly directives: readonly Directive[];
+  readonly kind: 'controlComment';
+  readonly directives: readonly Directive[];
 };
+
 export type HydrationOptions = {
   readonly directiveNamespaces?: readonly string[];
 };
-export function commentPayload(comment: CommentNode): { readonly text: string; readonly start: number } {
-  let start = comment.text.startsWith('#') ? 1 : 0;
-  while (comment.text[start] === ' ' || comment.text[start] === '\t') start += 1;
+
+export function commentPayload(comment: CommentNode): {
+  readonly text: string;
+  readonly start: number;
+} {
+  const start = horizontalWhitespaceEnd(comment.text, comment.text.startsWith('#') ? 1 : 0);
+
   return { text: comment.text.slice(start), start };
 }
-export function parseDirective(comment: CommentNode, options: HydrationOptions = {}): Directive | null {
+
+export function parseDirective(
+  comment: CommentNode,
+  options: HydrationOptions = {},
+): Directive | null {
   const payload = commentPayload(comment);
-  const namespace = (options.directiveNamespaces ?? ['zls']).find((name) => payload.text.startsWith(name + ':'));
-  if (!namespace) return null;
-  let cursor = payload.start + namespace.length + 1;
-  const words: { readonly value: string; readonly start: number; readonly end: number }[] = [];
-  while (cursor < comment.text.length) {
-    while (comment.text[cursor] === ' ' || comment.text[cursor] === '\t') cursor += 1;
-    const start = cursor;
-    while (cursor < comment.text.length && comment.text[cursor] !== ' ' && comment.text[cursor] !== '\t') cursor += 1;
-    if (cursor > start) words.push({ value: comment.text.slice(start, cursor), start, end: cursor });
+  const namespace = (options.directiveNamespaces ?? ['zls']).find((name) =>
+    payload.text.startsWith(name + ':'),
+  );
+
+  if (!namespace) {
+    return null;
   }
+
+  type Word = {
+    readonly value: string;
+    readonly start: number;
+    readonly end: number;
+  };
+
+  const words = loop<
+    {
+      readonly index: number;
+      readonly words: ReadonlyArray<Word>;
+    },
+    ReadonlyArray<Word>
+  >({ index: payload.start + namespace.length + 1, words: collectArray() }, (progress) => {
+    const start = horizontalWhitespaceEnd(comment.text, progress.index);
+
+    if (start >= comment.text.length) {
+      return done(progress.words);
+    }
+
+    const end = textWhileEnd(comment.text, start, (char) => char !== ' ' && char !== '\t');
+
+    return again({
+      index: end,
+      words: appendItems(progress.words, { value: comment.text.slice(start, end), start, end }),
+    });
+  });
+
   return {
-    kind: 'directive', range: rangeWithinText(comment.range, comment.text, payload.start, comment.text.length),
-    raw: comment.text.slice(payload.start), namespace, command: words[0]?.value ?? null,
-    arguments: words.slice(1).map((word) => ({
-      kind: 'directiveArgument', raw: word.value, value: word.value,
+    kind: 'directive',
+    range: rangeWithinText(comment.range, comment.text, payload.start, comment.text.length),
+    raw: comment.text.slice(payload.start),
+    namespace,
+    command: words.at(0)?.value ?? null,
+    arguments: words.slice(1).map((word): DirectiveArgument => ({
+      kind: 'directiveArgument',
+      raw: word.value,
+      value: word.value,
       range: rangeWithinText(comment.range, comment.text, word.start, word.end),
     })),
   };

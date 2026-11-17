@@ -7,11 +7,7 @@ type OptionNodeInput = {
   readonly value: WordNode | null;
 };
 
-function createOptionNode({
-  range,
-  name,
-  value,
-}: OptionNodeInput): OptionNode {
+function createOptionNode({ range, name, value }: OptionNodeInput): OptionNode {
   return {
     kind: 'option',
     range,

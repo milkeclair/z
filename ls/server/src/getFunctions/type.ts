@@ -1,18 +1,20 @@
 import type { Result } from '../document/type';
 
 export type FuncArg = {
-  position: number;
-  name: string;
-  optional: boolean;
-  isNamed: boolean;
+  readonly position: number;
+  readonly name: string;
+  readonly optional: boolean;
+  readonly isNamed: boolean;
+  readonly valueType?: 'code';
+  readonly literalValues?: readonly string[];
 };
 
 export type Func = {
-  documentation?: Result;
-  name: string;
-  file: string;
-  line: number;
-  args: FuncArg[];
+  readonly documentation?: Result;
+  readonly name: string;
+  readonly file: string;
+  readonly line: number;
+  readonly args: readonly FuncArg[];
 };
 
 export type FuncContent = Omit<Func, 'file'>;

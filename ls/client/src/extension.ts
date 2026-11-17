@@ -1,59 +1,76 @@
+import path from 'node:path';
+import { workspace, type ExtensionContext } from 'vscode';
 import {
   LanguageClient,
   TransportKind,
-  ServerOptions,
-  LanguageClientOptions,
+  type LanguageClientOptions,
+  type NodeModule,
+  type ServerOptions,
 } from 'vscode-languageclient/node';
-import { workspace, ExtensionContext } from 'vscode';
-import path from 'path';
 
-let client: LanguageClient;
-
-export function activate(context: ExtensionContext) {
-  const serverModule = context.asAbsolutePath(path.join('server', 'dist', 'server.js'));
-  const serverOptions: ServerOptions = {
-    run: {
-      module: serverModule,
-      transport: TransportKind.ipc,
-      options: {
-        cwd: path.dirname(serverModule),
-        execArgv: ['--no-allocation-site-pretenuring'],
-      },
+function createClientLifecycle(activeClient?: LanguageClient) {
+  return {
+    start(client: LanguageClient): void {
+      activeClient = client;
+      void client.start();
     },
-    debug: {
-      module: serverModule,
-      transport: TransportKind.ipc,
-      options: {
-        cwd: path.dirname(serverModule),
-        execArgv: ['--no-allocation-site-pretenuring'],
-      },
+    stop() {
+      return activeClient?.stop();
     },
   };
+}
 
+const clientLifecycle = createClientLifecycle();
+
+function createServerLaunch(serverModule: string): NodeModule {
+  return {
+    module: serverModule,
+    transport: TransportKind.ipc,
+    options: {
+      cwd: path.dirname(serverModule),
+      execArgv: ['--no-allocation-site-pretenuring'],
+    },
+  };
+}
+
+function createServerOptions(context: ExtensionContext): ServerOptions {
+  const serverModule = context.asAbsolutePath(path.join('server', 'dist', 'server.js'));
+
+  return {
+    run: createServerLaunch(serverModule),
+    debug: createServerLaunch(serverModule),
+  };
+}
+
+function createClientOptions(): LanguageClientOptions {
   const configuration = workspace.getConfiguration('z-ls');
-  const zPath = configuration.get<string>('zPath');
-  const showPrivateFunctions =
-    configuration.get<boolean>('completion.showPrivateFunctions') ?? false;
 
-  const clientOptions: LanguageClientOptions = {
+  return {
     documentSelector: [{ scheme: 'file', language: 'shellscript' }],
     synchronize: {
       fileEvents: workspace.createFileSystemWatcher('**/*.{zsh}'),
       configurationSection: 'z-ls',
     },
     initializationOptions: {
-      zPath,
-      completion: { showPrivateFunctions },
+      zPath: configuration.get<string>('zPath'),
+      completion: {
+        showPrivateFunctions:
+          configuration.get<boolean>('completion.showPrivateFunctions') ?? false,
+      },
     },
   };
+}
 
-  client = new LanguageClient('z-ls', 'z-ls', serverOptions, clientOptions);
-  client.start();
+export function activate(context: ExtensionContext): void {
+  const client = new LanguageClient(
+    'z-ls',
+    'z-ls',
+    createServerOptions(context),
+    createClientOptions(),
+  );
+  clientLifecycle.start(client);
 }
 
 export function deactivate() {
-  if (!client) {
-    return undefined;
-  }
-  return client.stop();
+  return clientLifecycle.stop();
 }

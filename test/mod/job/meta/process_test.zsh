@@ -16,6 +16,35 @@ z.t.describe "z.job.meta._write"; {
       z.t.expect "$z_job_on_success" "z.is.not.null"
     }
   }
+
+  z.t.context "空値と引用・改行・置換式を含む場合"; {
+    z.t.it "全フィールドをそのまま復元し、置換式を実行しない"; {
+      local dir=$(mktemp -d)
+      local marker=$dir/never-created
+      local id=$'job "one"\nsecond'
+      local name="日本語 'job' \\ \$(print changed > $marker)"
+      local command='style=double'
+      local on_failure='default=x'
+
+      {
+        z.job.meta._write "id=$id" "name=$name" "command=$command" on_success= "on_failure=$on_failure" "dir=$dir"
+        z.job.meta._read "dir=$dir"
+        local actual=("$z_job_id" "$z_job_name" "$z_job_command" "$z_job_on_success" "$z_job_on_failure" "$z_job_dir")
+        z.file.not.exists "$marker"
+        local marker_status=$?
+
+        z.t.expect "$marker_status" 0
+        z.t.expect "$actual[1]" "$id"
+        z.t.expect "$actual[2]" "$name"
+        z.t.expect "$actual[3]" "$command"
+        z.t.expect.is.null "$actual[4]"
+        z.t.expect "$actual[5]" "$on_failure"
+        z.t.expect "$actual[6]" "$dir"
+      } always {
+        z.dir.remove "path=$dir"
+      }
+    }
+  }
 }
 
 z.t.describe "z.job.meta._read"; {

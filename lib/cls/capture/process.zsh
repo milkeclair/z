@@ -7,6 +7,8 @@
 # REPLY: null
 # return: 0
 z.cls.capture._start() {
+  local REPLY=""
+
   typeset -g z_cls_capture_discard=${4:-0}
   typeset -g z_cls_capture_done_result=0
   typeset -g z_cls_capture_stack=$2
@@ -20,10 +22,12 @@ z.cls.capture._start() {
 
   local trap_line
 
-  for trap_line in "${(@f)$(trap)}"; do
+  z.str.split.line "$(trap)"
+  for trap_line in "${REPLY[@]}"; do
     z.str.start_with "$trap_line" 'trap -- ' || continue
 
-    local -a trap_words=(${(z)trap_line})
+    z.str.split.shell "$trap_line"
+    local -a trap_words=("${REPLY[@]}")
 
     z.is.eq "$trap_words[4]" DEBUG && z_cls_debug_trap=$trap_line
   done

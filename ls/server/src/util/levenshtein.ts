@@ -1,96 +1,44 @@
-export function levenshteinDistance(str1: string, str2: string): number {
-  const memoTable: number[][] = [];
+import { appendItems, collectArray, numberRange } from './collections';
+export function levenshteinDistance(source: string, target: string): number {
+  const firstRow = collectArray(numberRange(0, target.length + 1));
+  const lastRow = numberRange(1, source.length + 1).reduce(
+    (previous, row) =>
+      numberRange(1, target.length + 1).reduce(
+        (current, column) => {
+          const substitution =
+            (previous.at(column - 1) ?? 0) +
+            (source.charAt(row - 1) === target.charAt(column - 1) ? 0 : 1);
+          const insertion = (current.at(-1) ?? 0) + 1;
+          const deletion = (previous.at(column) ?? 0) + 1;
 
-  const initRow = () => {
-    for (let row = 0; row <= str1.length; row++) {
-      memoTable[row] = [row];
-    }
-  };
+          return appendItems(current, Math.min(substitution, insertion, deletion));
+        },
+        collectArray([row]),
+      ),
+    firstRow,
+  );
 
-  const initCol = () => {
-    for (let col = 0; col <= str2.length; col++) {
-      memoTable[0][col] = col;
-    }
-  };
-
-  const eachRow = (fn: (row: number) => void) => {
-    for (let row = 1; row <= str1.length; row++) {
-      fn(row);
-    }
-  };
-
-  const eachCol = (fn: (col: number) => void) => {
-    for (let col = 1; col <= str2.length; col++) {
-      fn(col);
-    }
-  };
-
-  const matchChar = (row: number, col: number): boolean => {
-    return str1.charAt(row - 1) === str2.charAt(col - 1);
-  };
-
-  const replaceChar = (row: number, col: number): number => {
-    const diagonal = memoTable[row - 1][col - 1];
-    const cost = 1;
-
-    return diagonal + cost;
-  };
-
-  const insertChar = (row: number, col: number): number => {
-    const left = memoTable[row][col - 1];
-    const cost = 1;
-
-    return left + cost;
-  };
-
-  const deleteChar = (row: number, col: number): number => {
-    const upper = memoTable[row - 1][col];
-    const cost = 1;
-
-    return upper + cost;
-  };
-
-  initRow();
-  initCol();
-
-  eachRow((row) => {
-    eachCol((col) => {
-      if (matchChar(row, col)) {
-        const diagonal = memoTable[row - 1][col - 1];
-
-        memoTable[row][col] = diagonal;
-      } else {
-        memoTable[row][col] = Math.min(
-          replaceChar(row, col),
-          insertChar(row, col),
-          deleteChar(row, col)
-        );
-      }
-    });
-  });
-
-  const result = memoTable[str1.length][str2.length];
-  return result;
+  return lastRow.at(-1) ?? 0;
 }
 
 export function findClosestMatch(
   target: string,
-  candidates: string[],
-  threshold: number = 3
+  candidates: readonly string[],
+  threshold = 3,
 ): string | null {
-  let minDistance = Infinity;
-  let closestMatch: string | null = null;
+  const best = candidates.reduce<{
+    readonly distance: number;
+    readonly name: string | null;
+  }>(
+    (previous, candidate) => {
+      const distance = levenshteinDistance(target, candidate);
 
-  for (const candidate of candidates) {
-    const distance = levenshteinDistance(target, candidate);
-    const withinThreshold = distance <= threshold;
-    const closerThanBefore = distance < minDistance;
+      return distance <= threshold && distance < previous.distance
+        ? { distance, name: candidate }
+        : previous;
+    },
+    { distance: Infinity, name: null },
+  );
 
-    if (withinThreshold && closerThanBefore) {
-      minDistance = distance;
-      closestMatch = candidate;
-    }
-  }
-
-  return closestMatch;
+  return best.name;
 }

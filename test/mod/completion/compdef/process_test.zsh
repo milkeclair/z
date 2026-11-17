@@ -11,9 +11,29 @@ z.t.describe "z.completion.compdef._register"; {
         z.completion.compdef._register || exit 1
         print -r -- "${_comps[-command-]}"
         print -r -- "${_comps[z.arg.named]}"
+        print -r -- "${_comps[z.pj]}"
       ')
 
-      z.t.expect "$actual" $'z.completion.complete._command\n_z_completion'
+      z.t.expect "$actual" $'z.completion.complete._command\n_z_completion\nz.pj.completion._run'
+    }
+  }
+
+  z.t.context "z関数候補のメニューを既に設定している場合"; {
+    z.t.it "登録時に利用者の設定を保持する"; {
+      local actual=$(z_mode=normal zsh -dfc '
+        source "$Z_ROOT/main.zsh"
+        autoload -Uz compinit
+        compinit -D
+        local context=":completion:*:*:*:*:z-functions"
+        local -a settings=()
+        zstyle "$context" menu no no-select
+
+        z.completion.compdef._register || exit 1
+        zstyle -g settings "$context" menu
+        print -r -- "$settings"
+      ')
+
+      z.t.expect "$actual" "no no-select"
     }
   }
 

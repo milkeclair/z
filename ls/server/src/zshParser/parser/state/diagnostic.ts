@@ -16,7 +16,10 @@ export function addDiagnostic({
   readonly message: string;
   readonly tokens: readonly Token[];
 }): ParseState {
-  if (state.stopped) return state;
+  if (state.stopped) {
+    return state;
+  }
+
   return {
     ...state,
     diagnostics: [

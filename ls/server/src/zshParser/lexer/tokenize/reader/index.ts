@@ -4,8 +4,8 @@ import { readComment } from './comment';
 import { readContinuation, readNewline } from './line';
 import { readOperator } from './operator';
 import { readWhitespace } from './whitespace';
-import { readWord } from './word';
 import type { WordBoundary } from './word';
+import { readWord } from './word';
 
 type ReaderContext = {
   readonly sourceFile: string;

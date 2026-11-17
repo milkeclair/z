@@ -1,51 +1,59 @@
-import { delimitedEnd, hereDocHeader } from '../delimiter';
-import { advance } from '../cursor';
-import { readHereDocuments } from './heredoc';
 import type { OperatorDefinition } from '../character';
-import type { LexicalContext } from './context';
-import { advanceLexicalContext, isDollarOpen, isProcessOpen } from './context';
 import { SpecialCharacters } from '../character';
-import { current, position } from '../cursor';
 import type { Cursor } from '../cursor';
+import { advance, current, position } from '../cursor';
+import { delimitedEnd, hereDocHeader } from '../delimiter';
 import type { LexerDiagnostic } from '../diagnostic';
 import type { Token } from '../token';
 import { createToken } from '../token';
+import type { LexicalContext } from './context';
+import { advanceLexicalContext, isDollarOpen, isProcessOpen } from './context';
+import { readHereDocuments } from './heredoc';
+import type { TokenizeState } from './index';
 import { findOperator, isContinuation, isHorizontalWhitespace, isNewline } from './predicate';
 import { Reader } from './reader';
 import type { ReadResult } from './reader/result';
-import type { TokenizeState } from './index';
+
+type TokenReader = ReturnType<typeof Reader>;
 
 type TokenizeStepValue = {
   readonly tokens: readonly Token[];
   readonly diagnostics: readonly LexerDiagnostic[];
 };
 
-export function readTokenizeStep({
-  state,
-  sourceFile,
-  reader,
-  isWordBoundary,
-}: {
+type TokenizeStepInput = {
   readonly state: TokenizeState;
   readonly sourceFile: string;
-  readonly reader: ReturnType<typeof Reader>;
+  readonly reader: TokenReader;
   readonly isWordBoundary: (cursor: Cursor) => boolean;
-}): TokenizeState {
-  const result = readNext({
-    state,
-    sourceFile,
-    reader,
-    isWordBoundary,
-  });
+};
 
+type TokenReadResult = ReadResult<TokenizeStepValue>;
+
+export function readTokenizeStep(input: TokenizeStepInput): TokenizeState {
+  const { state, sourceFile } = input;
+  const result = readNext(input);
   const context = state.context.readHereDocs
-    ? { ...state.context, previous: result.value.tokens.at(-1) ?? state.context.previous, pendingHereDocs: [], awaitingHereDoc: null, readHereDocs: false }
+    ? {
+        ...state.context,
+        previous: result.value.tokens.at(-1) ?? state.context.previous,
+        pendingHereDocs: [],
+        awaitingHereDoc: null,
+        readHereDocs: false,
+      }
     : result.value.tokens.reduce(advanceLexicalContext, state.context);
-  const unclosed = result.value.tokens.some((token) => token.operatorKind === state.context.close)
-    ? state.context.pendingHereDocs.map((request): LexerDiagnostic => ({
-      kind: 'unclosedHereDocument', message: 'Missing here-document delimiter ' + request.delimiter,
-      sourceFile, range: { start: position(state.cursor), end: position(result.cursor) },
-    })) : [];
+  const closesContext = result.value.tokens.some(
+    (token) => token.operatorKind === state.context.close,
+  );
+  const unclosed: readonly LexerDiagnostic[] = closesContext
+    ? state.context.pendingHereDocs.map((request) => ({
+        kind: 'unclosedHereDocument',
+        message: 'Missing here-document delimiter ' + request.delimiter,
+        sourceFile,
+        range: { start: position(state.cursor), end: position(result.cursor) },
+      }))
+    : [];
+
   return {
     ...state,
     context,
@@ -55,106 +63,137 @@ export function readTokenizeStep({
   };
 }
 
+function singleToken(result: ReadResult<Token>): TokenReadResult {
+  return { cursor: result.cursor, value: { tokens: [result.value], diagnostics: [] } };
+}
+
+function wordToken(result: ReturnType<TokenReader['word']>): TokenReadResult {
+  return {
+    cursor: result.cursor,
+    value: { tokens: [result.value.token], diagnostics: result.value.diagnostics },
+  };
+}
+
+function lineToken(
+  kind: 'continuation' | 'newline',
+  cursor: Cursor,
+  result: ReadResult<string>,
+  sourceFile: string,
+): TokenReadResult {
+  const token = createToken({
+    kind,
+    value: result.value,
+    sourceFile,
+    start: position(cursor),
+    end: position(result.cursor),
+  });
+
+  return { cursor: result.cursor, value: { tokens: [token], diagnostics: [] } };
+}
+
+function startsPatternParenthesis(cursor: Cursor, context: LexicalContext): boolean {
+  const previous = context.previous;
+
+  return (
+    current(cursor) === '(' &&
+    previous?.kind === 'word' &&
+    previous.range.end.offset === position(cursor).offset &&
+    !previous.value.endsWith('=') &&
+    (previous.value.includes('*') ||
+      previous.value.includes('?') ||
+      cursor.text[position(cursor).offset + 1] === '#')
+  );
+}
+
 function readNext({
   state,
   sourceFile,
   reader,
   isWordBoundary,
-}: {
-  readonly state: TokenizeState;
-  readonly sourceFile: string;
-  readonly reader: ReturnType<typeof Reader>;
-  readonly isWordBoundary: (cursor: Cursor) => boolean;
-}): ReadResult<TokenizeStepValue> {
+}: TokenizeStepInput): TokenReadResult {
   if (state.context.readHereDocs) {
     const result = readHereDocuments(state.cursor, state.context.pendingHereDocs, sourceFile);
-    return { cursor: result.cursor, value: { tokens: result.tokens, diagnostics: result.diagnostics } };
+
+    return {
+      cursor: result.cursor,
+      value: { tokens: result.tokens, diagnostics: result.diagnostics },
+    };
   }
+
   const cursor = state.cursor;
   const start = position(cursor);
-
   const pendingHeader = state.context.awaitingHereDoc;
   const header = pendingHeader ? hereDocHeader(cursor.text, pendingHeader.operatorOffset) : null;
-  if (header && header.end > start.offset && !isHorizontalWhitespace(current(cursor)) && !isNewline(cursor) && !isContinuation(cursor)) {
-    const result = reader.word(cursor, (candidate) => position(candidate).offset >= header.end);
-    return { cursor: result.cursor, value: { tokens: [result.value.token], diagnostics: result.value.diagnostics } };
+
+  if (
+    header &&
+    header.end > start.offset &&
+    !isHorizontalWhitespace(current(cursor)) &&
+    !isNewline(cursor) &&
+    !isContinuation(cursor)
+  ) {
+    return wordToken(reader.word(cursor, (candidate) => position(candidate).offset >= header.end));
   }
 
   if (isContinuation(cursor)) {
-    const result = reader.continuation(cursor);
+    return lineToken('continuation', cursor, reader.continuation(cursor), sourceFile);
+  }
 
-    return {
-      cursor: result.cursor,
-      value: {
-        tokens: [
-          createToken({
-            kind: 'continuation',
-            value: result.value,
-            sourceFile,
-            start,
-            end: position(result.cursor),
-          }),
-        ],
-        diagnostics: [],
-      },
-    };
-  } else if (isNewline(cursor)) {
-    const result = reader.newline(cursor);
+  if (isNewline(cursor)) {
+    return lineToken('newline', cursor, reader.newline(cursor), sourceFile);
+  }
 
-    return {
-      cursor: result.cursor,
-      value: {
-        tokens: [
-          createToken({
-            kind: 'newline',
-            value: result.value,
-            sourceFile,
-            start,
-            end: position(result.cursor),
-          }),
-        ],
-        diagnostics: [],
-      },
-    };
-  } else if (isHorizontalWhitespace(current(cursor))) {
-    const result = reader.whitespace(cursor);
+  if (isHorizontalWhitespace(current(cursor))) {
+    return singleToken(reader.whitespace(cursor));
+  }
 
-    return {
-      cursor: result.cursor,
-      value: {
-        tokens: [result.value],
-        diagnostics: [],
-      },
-    };
-  } else if (current(cursor) === SpecialCharacters.hash && (state.context.kind === 'command' || state.context.kind === 'array')) {
-    const result = reader.comment(cursor);
+  if (
+    current(cursor) === SpecialCharacters.hash &&
+    (state.context.kind === 'command' || state.context.kind === 'array')
+  ) {
+    return singleToken(reader.comment(cursor));
+  }
 
-    return {
-      cursor: result.cursor,
-      value: {
-        tokens: [result.value],
-        diagnostics: [],
-      },
-    };
-  } else if (current(cursor) === '(' && state.context.previous?.kind === 'word' &&
-    state.context.previous.range.end.offset === start.offset && !state.context.previous.value.endsWith('=') &&
-    (state.context.previous.value.includes('*') || state.context.previous.value.includes('?') || cursor.text[start.offset + 1] === '#')) {
+  if (startsPatternParenthesis(cursor, state.context)) {
     const end = delimitedEnd(cursor.text, start.offset, 'patternParen');
+
     if (end !== null) {
       const result = advance(cursor, end - start.offset);
-      return { cursor: result.cursor, value: { tokens: [createToken({
-        kind: 'word', value: result.value, sourceFile, start, end: position(result.cursor),
-      })], diagnostics: [] } };
+
+      return singleToken({
+        cursor: result.cursor,
+        value: createToken({
+          kind: 'word',
+          value: result.value,
+          sourceFile,
+          start,
+          end: position(result.cursor),
+        }),
+      });
     }
-    return readWordOrOperator({ cursor, reader, isWordBoundary, context: state.context });
-  } else {
-    return readWordOrOperator({
-      context: state.context,
-      cursor,
-      reader,
-      isWordBoundary,
-    });
   }
+
+  return readWordOrOperator({ cursor, reader, isWordBoundary, context: state.context });
+}
+
+function operatorAt(cursor: Cursor, context: LexicalContext): OperatorDefinition | null {
+  const found = findOperator(cursor);
+
+  if (found?.kind === 'arithmeticEnd' && context.kind !== 'arithmetic') {
+    return { value: ')', kind: 'rightParen' };
+  }
+
+  const arithmetic = context.kind === 'arithmetic' || context.kind === 'math';
+
+  if (
+    found?.kind === 'arithmeticStart' &&
+    (isProcessOpen(context, position(cursor).offset) ||
+      (arithmetic && !isDollarOpen(context, position(cursor).offset)))
+  ) {
+    return { value: '(', kind: 'leftParen' };
+  }
+
+  return found;
 }
 
 function readWordOrOperator({
@@ -165,34 +204,12 @@ function readWordOrOperator({
 }: {
   readonly cursor: Cursor;
   readonly context: LexicalContext;
-  readonly reader: ReturnType<typeof Reader>;
+  readonly reader: TokenReader;
   readonly isWordBoundary: (cursor: Cursor) => boolean;
-}): ReadResult<TokenizeStepValue> {
-  const found = findOperator(cursor);
-  const arithmetic = context.kind === 'arithmetic' || context.kind === 'math';
-  const operator: OperatorDefinition | null = found?.kind === 'arithmeticEnd' && context.kind !== 'arithmetic'
-    ? { value: ')', kind: 'rightParen' }
-    : found?.kind === 'arithmeticStart' && (isProcessOpen(context, position(cursor).offset) || arithmetic && !isDollarOpen(context, position(cursor).offset)) ? { value: '(', kind: 'leftParen' } : found;
+}): TokenReadResult {
+  const operator = operatorAt(cursor, context);
 
-  if (operator) {
-    const result = reader.operator(cursor, operator);
-
-    return {
-      cursor: result.cursor,
-      value: {
-        tokens: [result.value],
-        diagnostics: [],
-      },
-    };
-  } else {
-    const result = reader.word(cursor, isWordBoundary);
-
-    return {
-      cursor: result.cursor,
-      value: {
-        tokens: [result.value.token],
-        diagnostics: result.value.diagnostics,
-      },
-    };
-  }
+  return operator
+    ? singleToken(reader.operator(cursor, operator))
+    : wordToken(reader.word(cursor, isWordBoundary));
 }

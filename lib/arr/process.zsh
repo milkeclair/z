@@ -84,9 +84,13 @@ z.arr.gsub() {
 #  z.arr.sort by=desc "b" "c" "a"
 #  # REPLY: ("c" "b" "a")
 z.arr.sort() {
-  z.arg.named by "$@" default=asc
-  local sort_by=$REPLY
-  z.arg.named.shift by "$@" && local arr=("${REPLY[@]}")
+  local -a input_args=("$@")
+  local -A parsed_named=([by]=asc)
+  local -a parsed_args=()
+  z.arg.parse input=input_args named=parsed_named rest=parsed_args || return 1
+
+  local sort_by=${parsed_named[by]}
+  local arr=("${parsed_args[@]}")
 
   case $sort_by in
   asc)

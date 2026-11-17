@@ -1,4 +1,5 @@
-import { TextDocumentSyncKind, InitializeResult } from '../vscode_type';
+import { codeTokenTypes } from '../connection/semanticTokens';
+import { InitializeResult, TextDocumentSyncKind } from '../vscode_type';
 
 export function serverCapability(): InitializeResult {
   return {
@@ -11,6 +12,10 @@ export function serverCapability(): InitializeResult {
       completionProvider: {
         resolveProvider: true,
         triggerCharacters: ['.'],
+      },
+      semanticTokensProvider: {
+        legend: { tokenTypes: [...codeTokenTypes], tokenModifiers: [] },
+        full: true,
       },
       hoverProvider: true,
       signatureHelpProvider: {

@@ -14,8 +14,14 @@ import { validateTextDocument } from '../../src/diagnostics/main';
 
 const roots: string[] = [];
 const publicCommands = [
-  'z.cls.abort', 'z.cls.attr', 'z.cls.delete', 'z.cls.draw',
-  'z.cls.drew', 'z.cls.fn', 'z.cls.fn.done', 'z.cls.new',
+  'z.cls.abort',
+  'z.cls.attr',
+  'z.cls.delete',
+  'z.cls.draw',
+  'z.cls.drew',
+  'z.cls.fn',
+  'z.cls.fn.done',
+  'z.cls.new',
 ];
 
 afterEach(() => {
@@ -25,8 +31,10 @@ afterEach(() => {
 /** 実際のクラス宣言を通常のprovider snapshot経由で索引化する。 */
 function fixture(content = 'z.cls.¦\n') {
   const repoRoot = path.resolve(__dirname, '../../../..');
-  const source = globSync('lib/cls/**/*.zsh', { cwd: repoRoot, nodir: true }).sort()
-    .map(file => fs.readFileSync(path.join(repoRoot, file), 'utf8')).join('\n');
+  const source = globSync('lib/cls/**/*.zsh', { cwd: repoRoot, nodir: true })
+    .sort()
+    .map((file) => fs.readFileSync(path.join(repoRoot, file), 'utf8'))
+    .join('\n');
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-class-api-'));
   roots.push(root);
   const definitionPath = path.join(root, 'class.zsh');
@@ -35,13 +43,22 @@ function fixture(content = 'z.cls.¦\n') {
   if (offset < 0) throw new Error('Expected a cursor marker');
 
   const document = TextDocument.create(
-    pathToFileURL(path.join(root, 'caller.zsh')).href, 'shellscript', 1, content.replace('¦', ''),
+    pathToFileURL(path.join(root, 'caller.zsh')).href,
+    'shellscript',
+    1,
+    content.replace('¦', ''),
   );
   const snapshot = refreshFunctionSnapshot({ projectRoot: root, documents: [document] });
-  const documents = { get: (uri: string) => uri === document.uri ? document : undefined };
+  const documents = { get: (uri: string) => (uri === document.uri ? document : undefined) };
   const params = { textDocument: { uri: document.uri }, position: document.positionAt(offset) };
 
-  return { definitionUri: pathToFileURL(definitionPath).href, document, snapshot, documents, params };
+  return {
+    definitionUri: pathToFileURL(definitionPath).href,
+    document,
+    snapshot,
+    documents,
+    params,
+  };
 }
 
 describe('class API visibility', () => {
@@ -49,13 +66,16 @@ describe('class API visibility', () => {
     const scenario = fixture();
     const items = zCompletion({ ...scenario, showPrivateFunctions: false });
 
-    expect(items?.map(item => item.label).toSorted()).toEqual(publicCommands);
+    expect(items?.map((item) => item.label).toSorted()).toEqual(publicCommands);
   });
 
   test('private表示を有効にすると内部20関数も参照できる', () => {
     const scenario = fixture();
-    const names = zCompletion({ ...scenario, showPrivateFunctions: true })?.map(item => item.label) ?? [];
-    const internal = names.filter(name => name.split('.').some(segment => segment.startsWith('_')));
+    const names =
+      zCompletion({ ...scenario, showPrivateFunctions: true })?.map((item) => item.label) ?? [];
+    const internal = names.filter((name) =>
+      name.split('.').some((segment) => segment.startsWith('_')),
+    );
 
     expect(names).toHaveLength(28);
     expect(internal).toHaveLength(20);
@@ -66,7 +86,10 @@ describe('class API visibility', () => {
 
   test('明示した内部呼出しは補完の表示設定に関係なく解決する', () => {
     const scenario = fixture('z.cls.instance._¦call reference method member\n');
-    const diagnostics = refreshDiagnosticSnapshot({ snapshot: scenario.snapshot, environment: emptyShellEnvironment() });
+    const diagnostics = refreshDiagnosticSnapshot({
+      snapshot: scenario.snapshot,
+      environment: emptyShellEnvironment(),
+    });
 
     expect(validateTextDocument({ diagnostics, textDocument: scenario.document })).toEqual([]);
     expect(zDefinition(scenario)?.uri).toBe(scenario.definitionUri);

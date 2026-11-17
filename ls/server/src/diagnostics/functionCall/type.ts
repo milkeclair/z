@@ -1,9 +1,9 @@
 export type QuoteState = {
-  inQuote: boolean;
-  quoteChar: string;
-  beforeQuote: string;
-  wasQuoted: boolean;
-  hadQuotedValue: boolean;
+  readonly inQuote: boolean;
+  readonly quoteChar: string;
+  readonly beforeQuote: string;
+  readonly wasQuoted: boolean;
+  readonly hadQuotedValue: boolean;
   startOfQuote(char: string): boolean;
   handleStartOfQuote(char: string, current: string): void;
   endOfQuote(char: string): boolean;
@@ -14,7 +14,7 @@ export type QuoteState = {
 };
 
 export type DiagnosticRange = {
-  startChar: number;
-  endChar: number;
-  lineIndex: number;
+  readonly startChar: number;
+  readonly endChar: number;
+  readonly lineIndex: number;
 };

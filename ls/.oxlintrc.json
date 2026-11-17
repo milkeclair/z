@@ -1,0 +1,6 @@
+{
+  "rules": {
+    "eslint/no-var": "error",
+    "typescript/no-explicit-any": "error"
+  }
+}

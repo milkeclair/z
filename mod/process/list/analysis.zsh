@@ -25,18 +25,19 @@ z.process.list._ports() {
   local pid=0
   local invalid=false
   local line
-  for line in "${(@f)listing}"; do
+  z.str.split.line "$listing"
+  for line in "${REPLY[@]}"; do
     case $line in
     p*)
       pid=${line#p}
-      if ! z.int.is.lteq ${#pid} 10 || [[ $pid != <1-2147483647> ]]; then
+      if ! z.int.is.lteq ${#pid} 10 || ! z.int.is.between "$pid" min=1 max=2147483647 signed=false; then
         invalid=true
         break
       fi
       ;;
     n*)
       local port=${line##*:}
-      if z.int.is.zero "$pid" || ! z.int.is.lteq ${#port} 5 || [[ $port != <1-65535> ]]; then
+      if z.int.is.zero "$pid" || ! z.int.is.lteq ${#port} 5 || ! z.int.is.between "$port" min=1 max=65535 signed=false; then
         invalid=true
         break
       fi
@@ -57,10 +58,12 @@ z.process.list._ports() {
     return 1
   fi
 
-  for pid in "${(@k)ports}"; do
+  z.hash.keys ports
+  for pid in "${REPLY[@]}"; do
     local values=(${=ports[$pid]})
     z.arr.unique "${values[@]}"
-    local sorted=(${(on)REPLY})
+    z.arr.sort.numeric "${REPLY[@]}"
+    local sorted=("${REPLY[@]}")
     z.arr.join delimiter=, "${sorted[@]}"
     ports[$pid]=$REPLY
   done

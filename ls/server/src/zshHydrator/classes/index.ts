@@ -1,9 +1,24 @@
-import type { AstNode, FileNode, FunctionDefinitionNode, SimpleCommandNode } from '../../zshParser/ast';
+import { makeMap } from '../../util/collections';
+import { again, done, loop } from '../../util/loop';
+import type {
+  AstNode,
+  FileNode,
+  FunctionDefinitionNode,
+  SimpleCommandNode,
+} from '../../zshParser/ast';
 import { findAll, mapAst } from '../../zshParser/ast';
 import { collectClassInformation } from './collect';
-import type { ClassFileHydration, ClassInformation, ClassMethod, HydratedClassCommand } from './types';
+import type {
+  ClassFileHydration,
+  ClassInformation,
+  ClassMethod,
+  HydratedClassCommand,
+} from './types';
 import {
-  definitionsFromCommands, instancesFromCommands, membersFromCommands, methodScopesFromDefinitions,
+  definitionsFromCommands,
+  instancesFromCommands,
+  membersFromCommands,
+  methodScopesFromDefinitions,
 } from './indexes';
 
 export type * from './types';
@@ -16,9 +31,15 @@ export function isHydratedClassCommand(node: SimpleCommandNode): node is Hydrate
 
   const information = node.hydration;
 
-  return 'kind' in information && 'name' in information && typeof information.name === 'string' &&
-    (information.kind === 'classDefinition' || information.kind === 'classAttribute' ||
-      information.kind === 'classMethod' || information.kind === 'classInstance');
+  return (
+    'kind' in information &&
+    'name' in information &&
+    typeof information.name === 'string' &&
+    (information.kind === 'classDefinition' ||
+      information.kind === 'classAttribute' ||
+      information.kind === 'classMethod' ||
+      information.kind === 'classInstance')
+  );
 }
 
 /** 汎用の構文ノード型を変えず、クラスの意味情報を取得する。 */
@@ -41,7 +62,7 @@ export function hydrateClasses(ast: FileNode): FileNode {
     }
 
     if (isHydratedClassCommand(node)) {
-      const { hydration, ...syntax } = node;
+      const { hydration: _hydration, ...syntax } = node;
       return syntax;
     }
 
@@ -50,11 +71,19 @@ export function hydrateClasses(ast: FileNode): FileNode {
 }
 
 /** 情報の付加後に役割別の索引を組み合わせ、最終ASTの参照だけを保持する。 */
-export function classesFromAst(ast: FileNode): ClassFileHydration {
+export function classesFromAst(
+  ast: FileNode,
+  functionDefinitions?: readonly FunctionDefinitionNode[],
+): ClassFileHydration {
   const commands = findAll(ast, 'simpleCommand').filter(isHydratedClassCommand);
-  if (commands.length === 0) return { definitions: [], instances: [], methodScopes: new Map() };
+  if (commands.length === 0) return { definitions: [], instances: [], methodScopes: makeMap() };
 
-  const functions = new Map(findAll(ast, 'functionDefinition').map(node => [node.range.start.offset, node]));
+  const functions = makeMap(
+    (functionDefinitions ?? findAll(ast, 'functionDefinition')).map((node) => [
+      node.range.start.offset,
+      node,
+    ]),
+  );
   const members = membersFromCommands(commands);
   const definitions = definitionsFromCommands(ast, commands, functions, members);
 
@@ -66,24 +95,28 @@ export function classesFromAst(ast: FileNode): ClassFileHydration {
 }
 
 /** 診断時にクラスのコマンドを再解釈せず、メソッドの引数の所有関係を調べる。 */
-export function classMethodAt(classes: ClassFileHydration,
-  scope: FunctionDefinitionNode | null, offset: number): ClassMethod | null {
+export function classMethodAt(
+  classes: ClassFileHydration,
+  scope: FunctionDefinitionNode | null,
+  offset: number,
+): ClassMethod | null {
   const methods = classes.methodScopes.get(scope) ?? [];
-  let low = 0;
-  let high = methods.length - 1;
 
-  while (low <= high) {
-    const middle = Math.floor((low + high) / 2);
-    const entry = methods[middle];
+  return loop<{ readonly low: number; readonly high: number }, ClassMethod | null>(
+    { low: 0, high: methods.length - 1 },
+    ({ low, high }) => {
+      if (low > high) return done(null);
 
-    if (offset < entry.range.start.offset) {
-      high = middle - 1;
-    } else if (offset >= entry.range.end.offset) {
-      low = middle + 1;
-    } else {
-      return entry.method;
-    }
-  }
+      const middle = Math.floor((low + high) / 2);
+      const entry = methods[middle];
 
-  return null;
+      if (offset < entry.range.start.offset) {
+        return again({ low, high: middle - 1 });
+      }
+
+      return offset >= entry.range.end.offset
+        ? again({ low: middle + 1, high })
+        : done(entry.method);
+    },
+  );
 }

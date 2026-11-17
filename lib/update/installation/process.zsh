@@ -58,7 +58,7 @@ z.update.installation._reload() {
   z.arg.named previous "$@" default="$PWD"
   local previous_dir=$REPLY
 
-  if (( ${+functions[z.completion.cache._cancel]} )); then
+  if z.hash.has.key functions key=z.completion.cache._cancel; then
     z.completion.cache._cancel
   fi
 
@@ -72,7 +72,7 @@ z.update.installation._reload() {
   export Z_ROOT="$dir"
   source "$dir/main.zsh" || return 1
 
-  if (( ${+functions[z.completion.enable]} )); then
+  if z.hash.has.key functions key=z.completion.enable; then
     z.completion.enable || return 1
   fi
 

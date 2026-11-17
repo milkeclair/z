@@ -34,7 +34,10 @@ function fixture(content: string, definitions: string) {
   fs.writeFileSync(path.join(root, 'definition.zsh'), definitions);
 
   const document = TextDocument.create(
-    pathToFileURL(path.join(root, 'caller.zsh')).href, 'shellscript', 1, content,
+    pathToFileURL(path.join(root, 'caller.zsh')).href,
+    'shellscript',
+    1,
+    content,
   );
   const snapshot = refreshFunctionSnapshot({ projectRoot: root, documents: [document] });
   const diagnostics = refreshDiagnosticSnapshot({ snapshot, environment });
@@ -50,19 +53,23 @@ function fixture(content: string, definitions: string) {
 }
 
 const semantic = (items: Readonly<ReturnType<typeof validateTextDocument>>) =>
-  items.filter(item => ['missing-positional-argument', 'missing-named-argument', 'undefined-command']
-    .includes(item.code ?? ''));
+  items.filter((item) =>
+    ['missing-positional-argument', 'missing-named-argument', 'undefined-command'].includes(
+      item.code ?? '',
+    ),
+  );
 
-const classApi = [
-  'z.cls.draw() { : }',
-  'z.cls.attr() { : }',
-  '# $1: method name',
-  '# $2? [code]: inline body',
-  'z.cls.fn() { : "$@" }',
-  'z.cls.fn.done() { : }',
-  'z.cls.drew() { : }',
-  'z.cls.new() { : }',
-].join('\n') + '\n';
+const classApi =
+  [
+    'z.cls.draw() { : }',
+    'z.cls.attr() { : }',
+    '# $1: method name',
+    '# $2? [code]: inline body',
+    'z.cls.fn() { : "$@" }',
+    'z.cls.fn.done() { : }',
+    'z.cls.drew() { : }',
+    'z.cls.new() { : }',
+  ].join('\n') + '\n';
 const counterClass = [
   'z.cls.draw Counter; {',
   '  z.cls.attr count 0',
@@ -70,15 +77,21 @@ const counterClass = [
   '    (( ++count ))',
   '  z.cls.fn.done',
   '  z.cls.drew',
-  '}', '',
+  '}',
+  '',
 ].join('\n');
 
 describe('class DSL command diagnostics', () => {
   test('引数形式のメソッド本体は共通のコード引数解析で元位置に診断する', () => {
-    const source = counterClass.replace('z.cls.fn increment\n    (( ++count ))\n  z.cls.fn.done',
-      "z.cls.fn increment 'missing_inline_method'");
+    const source = counterClass.replace(
+      'z.cls.fn increment\n    (( ++count ))\n  z.cls.fn.done',
+      "z.cls.fn increment 'missing_inline_method'",
+    );
     const scenario = fixture('', classApi + source);
-    const diagnostics = scenario.diagnostics.files.get(scenario.definitionUri)?.items.filter(item => item.code === 'undefined-command') ?? [];
+    const diagnostics =
+      scenario.diagnostics.files
+        .get(scenario.definitionUri)
+        ?.items.filter((item) => item.code === 'undefined-command') ?? [];
 
     expect(diagnostics).toHaveLength(1);
     expect(diagnostics[0].message).toContain('missing_inline_method');
@@ -86,11 +99,17 @@ describe('class DSL command diagnostics', () => {
   });
 
   test('別ファイルのクラスから生成されるメソッドと属性を認識し、タイプミスは診断する', () => {
-    const scenario = fixture('z.cls.new Counter counter\ncounter.increment\ncounter.count.get\ncounter.count.set 3\ncounter.typo\n',
-      classApi + counterClass);
+    const scenario = fixture(
+      'z.cls.new Counter counter\ncounter.increment\ncounter.count.get\ncounter.count.set 3\ncounter.typo\n',
+      classApi + counterClass,
+    );
 
-    expect(semantic(scenario.items)).toMatchObject([{ code: 'undefined-command',
-      message: 'counter.typo is not defined in the project or shell environment.' }]);
+    expect(semantic(scenario.items)).toMatchObject([
+      {
+        code: 'undefined-command',
+        message: 'counter.typo is not defined in the project or shell environment.',
+      },
+    ]);
 
     expect(semantic(scenario.items)).toHaveLength(1);
   });
@@ -99,34 +118,56 @@ describe('class DSL command diagnostics', () => {
     const source = counterClass.replace('(( ++count ))', 'missing_inside_method');
     const scenario = fixture('', classApi + source);
 
-    expect(semantic(scenario.diagnostics.files.get(scenario.definitionUri)?.items ?? [])).toMatchObject([{
-      code: 'undefined-command', range: { start: { line: 11, character: 4 } },
-    }]);
+    expect(
+      semantic(scenario.diagnostics.files.get(scenario.definitionUri)?.items ?? []),
+    ).toMatchObject([
+      {
+        code: 'undefined-command',
+        range: { start: { line: 11, character: 4 } },
+      },
+    ]);
   });
 
   test('メソッドの編集で未編集の呼出元を再診断する', () => {
-    const scenario = fixture('z.cls.new Counter counter\ncounter.increment\n', classApi + counterClass);
+    const scenario = fixture(
+      'z.cls.new Counter counter\ncounter.increment\n',
+      classApi + counterClass,
+    );
 
     expect(semantic(scenario.items)).toEqual([]);
 
-    const changed = TextDocument.create(scenario.definitionUri, 'shellscript', 1,
-      classApi + counterClass.replace('z.cls.fn increment', 'z.cls.fn reset'));
+    const changed = TextDocument.create(
+      scenario.definitionUri,
+      'shellscript',
+      1,
+      classApi + counterClass.replace('z.cls.fn increment', 'z.cls.fn reset'),
+    );
 
     const snapshot = refreshFunctionSnapshot({
       projectRoot: scenario.root,
       documents: [scenario.document, changed],
       previous: scenario.snapshot,
     });
-    const next = refreshDiagnosticSnapshot({ snapshot, environment, previous: scenario.diagnostics });
+    const next = refreshDiagnosticSnapshot({
+      snapshot,
+      environment,
+      previous: scenario.diagnostics,
+    });
 
-    expect(semantic(validateTextDocument({ diagnostics: next, textDocument: scenario.document })))
-      .toMatchObject([{ code: 'undefined-command' }]);
+    expect(
+      semantic(validateTextDocument({ diagnostics: next, textDocument: scenario.document })),
+    ).toMatchObject([{ code: 'undefined-command' }]);
   });
 
   test('入れ子の関数や文字列内の終了名でメソッドを閉じない', () => {
-    const source = counterClass.replace('(( ++count ))',
-      'helper() { z.cls.fn.done }\n    print "z.cls.fn.done"\n    z.cls.fn imaginary');
-    const scenario = fixture('z.cls.new Counter counter\ncounter.increment\ncounter.imaginary\n', classApi + source);
+    const source = counterClass.replace(
+      '(( ++count ))',
+      'helper() { z.cls.fn.done }\n    print "z.cls.fn.done"\n    z.cls.fn imaginary',
+    );
+    const scenario = fixture(
+      'z.cls.new Counter counter\ncounter.increment\ncounter.imaginary\n',
+      classApi + source,
+    );
 
     expect(semantic(scenario.items)).toHaveLength(1);
     expect(semantic(scenario.items)[0]?.message).toContain('counter.imaginary');
@@ -162,7 +203,9 @@ describe('scoped class references', () => {
   test('プロジェクト外の文書はプロジェクトと文書内のクラスを使い、文書内の定義は外へ漏れない', () => {
     const scenario = fixture('z.cls.new Local leaked\nleaked.value\n', classApi + counterClass);
     const outside = TextDocument.create(
-      pathToFileURL(path.join(path.dirname(scenario.root), 'outside.zsh')).href, 'shellscript', 1,
+      pathToFileURL(path.join(path.dirname(scenario.root), 'outside.zsh')).href,
+      'shellscript',
+      1,
       [
         'z.cls.draw Local',
         '  z.cls.fn value "REPLY=1"',
@@ -180,12 +223,22 @@ describe('scoped class references', () => {
       previous: scenario.snapshot,
     });
 
-    const diagnostics = refreshDiagnosticSnapshot({ snapshot, environment, previous: scenario.diagnostics });
+    const diagnostics = refreshDiagnosticSnapshot({
+      snapshot,
+      environment,
+      previous: scenario.diagnostics,
+    });
 
     expect(diagnostics.files.get(outside.uri)?.project).toBe(false);
     expect(semantic(validateTextDocument({ diagnostics, textDocument: outside }))).toEqual([]);
-    expect(semantic(validateTextDocument({ diagnostics, textDocument: scenario.document })))
-      .toMatchObject([{ code: 'undefined-command', message: 'leaked.value is not defined in the project or shell environment.' }]);
+    expect(
+      semantic(validateTextDocument({ diagnostics, textDocument: scenario.document })),
+    ).toMatchObject([
+      {
+        code: 'undefined-command',
+        message: 'leaked.value is not defined in the project or shell environment.',
+      },
+    ]);
   });
 
   test('外側の関数の引数使用へメソッド内の引数を混ぜない', () => {
@@ -204,7 +257,11 @@ describe('scoped class references', () => {
     ].join('\n');
     const scenario = fixture('', classApi + source);
 
-    expect(scenario.diagnostics.files.get(scenario.definitionUri)?.items.filter(item => item.code === 'unused-argument')).toHaveLength(1);
+    expect(
+      scenario.diagnostics.files
+        .get(scenario.definitionUri)
+        ?.items.filter((item) => item.code === 'unused-argument'),
+    ).toHaveLength(1);
   });
 
   test('メソッドの名前付き引数取得を外側の引数使用へ混ぜない', () => {
@@ -223,14 +280,26 @@ describe('scoped class references', () => {
     ].join('\n');
     const scenario = fixture('', classApi + 'z.arg.named() { : }\n' + source);
 
-    expect(scenario.diagnostics.files.get(scenario.definitionUri)?.items.filter(item => item.code === 'unused-argument')).toHaveLength(1);
+    expect(
+      scenario.diagnostics.files
+        .get(scenario.definitionUri)
+        ?.items.filter((item) => item.code === 'unused-argument'),
+    ).toHaveLength(1);
   });
 });
 
 describe('hydrated class command targets', () => {
   test('別ファイルのクラスと実体を実際のメンバーノードへ結び付ける', () => {
-    const definitions = createZshFileHydration({ sourceFile: '/defs.zsh', file: 'defs.zsh', content: counterClass });
-    const bindings = createZshFileHydration({ sourceFile: '/caller.zsh', file: 'caller.zsh', content: 'z.cls.new Counter object\n' });
+    const definitions = createZshFileHydration({
+      sourceFile: '/defs.zsh',
+      file: 'defs.zsh',
+      content: counterClass,
+    });
+    const bindings = createZshFileHydration({
+      sourceFile: '/caller.zsh',
+      file: 'caller.zsh',
+      content: 'z.cls.new Counter object\n',
+    });
     const targets = classCommands([definitions.classes, bindings.classes]);
     const method = targets.get('object.increment')?.[0];
 
@@ -238,13 +307,18 @@ describe('hydrated class command targets', () => {
     expect(method?.member).toBe(definitions.classes.definitions[0].methods[0]);
     expect(method?.instance).toBe(bindings.classes.instances[0]);
     expect(method?.operation).toBe('method');
-    expect(targets.get('object.count.set')?.[0].member).toBe(definitions.classes.definitions[0].attributes[0]);
+    expect(targets.get('object.count.set')?.[0].member).toBe(
+      definitions.classes.definitions[0].attributes[0],
+    );
   });
 
   test('未公開と破棄済みのクラスからは解決先を生成しない', () => {
     for (const ending of ['', '  z.cls.abort\n']) {
-      const file = createZshFileHydration({ sourceFile: 'x', file: 'x',
-        content: 'z.cls.draw Open\n  z.cls.attr count 0\n' + ending + 'z.cls.new Open object\n' });
+      const file = createZshFileHydration({
+        sourceFile: 'x',
+        file: 'x',
+        content: 'z.cls.draw Open\n  z.cls.attr count 0\n' + ending + 'z.cls.new Open object\n',
+      });
 
       expect(classCommands([file.classes]).size).toBe(0);
     }
@@ -252,7 +326,11 @@ describe('hydrated class command targets', () => {
 
   test('同じASTを再利用し、変更したクラスの参照を古いコンテキストへ残さない', () => {
     const file = createZshFileHydration({ sourceFile: 'x', file: 'x', content: counterClass });
-    const next = createZshFileHydration({ sourceFile: 'x', file: 'x', content: counterClass.replace('increment', 'reset') });
+    const next = createZshFileHydration({
+      sourceFile: 'x',
+      file: 'x',
+      content: counterClass.replace('increment', 'reset'),
+    });
 
     expect(sameClassFiles([file.classes], [file.classes])).toBe(true);
     expect(sameClassFiles([file.classes], [next.classes])).toBe(false);
@@ -262,10 +340,18 @@ describe('hydrated class command targets', () => {
   });
 
   test('呼出し解析がクラスのメンバー宣言を解決先として返す', () => {
-    const scenario = fixture('z.cls.new Counter object\nobject.increment\n', classApi + counterClass);
+    const scenario = fixture(
+      'z.cls.new Counter object\nobject.increment\n',
+      classApi + counterClass,
+    );
     const report = scenario.diagnostics.files.get(scenario.document.uri);
     if (!report) throw new Error('Expected caller diagnostics');
-    const analysis = analyzeCalls(scenario.snapshot, report.file, report.facts.calls, scenario.diagnostics.context);
+    const analysis = analyzeCalls(
+      scenario.snapshot,
+      report.file,
+      report.facts.calls,
+      scenario.diagnostics.context,
+    );
     const targets = [...analysis.classTargets.values()].flat();
 
     expect(targets).toHaveLength(1);
@@ -275,7 +361,10 @@ describe('hydrated class command targets', () => {
 
   test('コード引数内の実体は外側のクラスを使い、外側へ漏れない', () => {
     const api = '# $1 [code]: body\nrun() { eval "$1" }\n';
-    const scenario = fixture("run 'z.cls.new Counter inside; inside.increment'\ninside.increment\n", classApi + counterClass + api);
+    const scenario = fixture(
+      "run 'z.cls.new Counter inside; inside.increment'\ninside.increment\n",
+      classApi + counterClass + api,
+    );
 
     expect(semantic(scenario.items)).toHaveLength(1);
     expect(semantic(scenario.items)[0].range.start.line).toBe(1);
