@@ -5,19 +5,18 @@ import { pathToFileURL } from 'node:url';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { refreshFunctionSnapshot } from '../../src/refreshFunctions/main';
+import { createTemporaryDirectories } from '../support/tempDirectories';
 
-const roots: string[] = [];
+const temporaryDirectories = createTemporaryDirectories();
 afterEach(() => {
   vi.restoreAllMocks();
-  for (const root of roots.splice(0)) {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
+  temporaryDirectories.cleanup();
 });
 
 describe('refreshFunctionSnapshot incremental inputs', () => {
   test('buffer編集ではディスク走査も無関係なstatも実行しない', () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-incremental-'));
-    roots.push(root);
+    temporaryDirectories.track(root);
     fs.writeFileSync(path.join(root, 'a.zsh'), 'first() { : }\n');
     fs.writeFileSync(path.join(root, 'b.zsh'), 'second() { : }\n');
     const previous = refreshFunctionSnapshot({ projectRoot: root, documents: [] });
@@ -47,7 +46,7 @@ describe('refreshFunctionSnapshot incremental inputs', () => {
   });
   test('buffer-only関数の保存で同名候補の順序が変わったら投影も更新する', () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-incremental-order-'));
-    roots.push(root);
+    temporaryDirectories.track(root);
     fs.writeFileSync(path.join(root, 'z.zsh'), '# $1: disk\nhelper() { : }\n');
     const opened = TextDocument.create(
       pathToFileURL(path.join(root, 'a.zsh')).href,

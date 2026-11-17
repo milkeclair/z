@@ -9,13 +9,12 @@ import { refreshDiagnosticSnapshot } from '../../src/diagnostics/snapshot';
 import { analyzeEmbeddedCode } from '../../src/embeddedCode';
 import { refreshFunctionSnapshot } from '../../src/refreshFunctions/main';
 import { Lexer } from '../../src/zshParser/lexer';
+import { createTemporaryDirectories } from '../support/tempDirectories';
 
-const roots: string[] = [];
+const temporaryDirectories = createTemporaryDirectories();
 afterEach(() => {
   vi.restoreAllMocks();
-  for (const root of roots.splice(0)) {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
+  temporaryDirectories.cleanup();
 });
 const environment: ShellEnvironment = {
   kind: 'available',
@@ -36,7 +35,7 @@ const definitions = [
 ].join('\n');
 function createDiagnosticFixture(content: string, documentation = definitions) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-code-diagnostic-'));
-  roots.push(root);
+  temporaryDirectories.track(root);
   const definitionFile = path.join(root, 'definition.zsh');
   fs.writeFileSync(definitionFile, documentation);
   const document = TextDocument.create(

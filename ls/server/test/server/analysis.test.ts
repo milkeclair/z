@@ -1,3 +1,4 @@
+import { Range } from 'immutable';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -35,13 +36,13 @@ describe('実サーバー: analysis', () => {
       await client.open(caller, 'greet_');
       await client.items(caller, 6);
       const before = parsed();
-      for (let version = 2; version <= 101; version++) {
+      for (const version of Range(2, 101 + 1)) {
         await client.edit(uri, '# Version ' + version + '\ngreet_final() { : }\n', version);
       }
       expect((await client.items(caller, 6)).map((item) => item.label)).toEqual(['greet_final']);
-      const additions = parsed().slice(before.length - 1);
-      expect(additions.match(/greet_final/g)).toHaveLength(1);
-      expect(additions).toContain('Version 101');
+      const additions = parsed().slice(before.length);
+      expect(additions.filter((record) => record.includes('greet_final'))).toHaveLength(1);
+      expect(additions).toEqual([expect.stringContaining('Version 101')]);
     } finally {
       await client.close();
     }
@@ -58,18 +59,18 @@ describe('実サーバー: analysis', () => {
       await client.open(uri, 'old() { : }\n');
       await client.items(uri);
       const before = parsed();
-      for (let version = 2; version <= 101; version++) {
+      for (const version of Range(2, 101 + 1)) {
         await client.edit(uri, '# Version ' + version + '\nquiet_latest() { : }\n', version);
       }
       await expect
         .poll(
           () =>
             parsed()
-              .slice(before.length - 1)
-              .match(/quiet_latest/g)?.length ?? 0,
+              .slice(before.length)
+              .filter((record) => record.includes('quiet_latest')).length,
         )
         .toBe(1);
-      expect(parsed()).toContain('Version 101');
+      expect(parsed()).toContainEqual(expect.stringContaining('Version 101'));
     } finally {
       await client.close();
     }
@@ -177,7 +178,7 @@ describe('実サーバー: analysis', () => {
       const before = parsed();
       await client.edit(uri, 'discarded_on_shutdown() { : }\n', 2);
       await client.close();
-      expect(parsed()).toBe(before);
+      expect(parsed()).toEqual(before);
     } finally {
       await client.close();
     }

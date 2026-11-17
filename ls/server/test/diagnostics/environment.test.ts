@@ -4,11 +4,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, test } from 'vitest';
 import { parseShellEnvironment, readShellEnvironment } from '../../src/diagnostics/environment';
+import { createTemporaryDirectories } from '../support/tempDirectories';
 
-const roots: string[] = [];
+const temporaryDirectories = createTemporaryDirectories();
 function createDiagnosticFixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-lsp-env-'));
-  roots.push(root);
+  temporaryDirectories.track(root);
   fs.mkdirSync(path.join(root, 'bin'));
   fs.mkdirSync(path.join(root, 'functions'));
   fs.writeFileSync(path.join(root, 'bin', 'fixture-command'), '#!/bin/sh\nexit 0\n', {
@@ -29,9 +30,7 @@ function createDiagnosticFixture() {
   return { root, env: { ...process.env, ZDOTDIR: root } };
 }
 afterEach(() => {
-  for (const root of roots.splice(0)) {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
+  temporaryDirectories.cleanup();
 });
 describe('shell environment', () => {
   test('実Zshの外部コマンド・builtin・alias・autoloadと関数を取得する', async () => {
@@ -102,10 +101,11 @@ describe('shell environment', () => {
       env: scenario.env,
       stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
     });
-    let pids: string[] = [];
+    const readPids = (): readonly string[] =>
+      fs.existsSync(pidFile) ? fs.readFileSync(pidFile, 'utf8').trim().split(' ') : [];
     try {
       await expect.poll(() => fs.existsSync(pidFile), { timeout: 3000 }).toBe(true);
-      pids = fs.readFileSync(pidFile, 'utf8').trim().split(' ');
+      const pids = readPids();
       child.send('exit');
       await expect.poll(() => child.exitCode, { timeout: 3000 }).toBe(0);
       await expect
@@ -125,7 +125,7 @@ describe('shell environment', () => {
       if (child.exitCode === null) {
         child.kill('SIGKILL');
       }
-      const leader = pids[0];
+      const leader = readPids()[0];
       if (leader) {
         try {
           process.kill(-Number(leader), 'SIGKILL');
@@ -146,6 +146,14 @@ describe('shell environment', () => {
       ['startup\n__ZLS_ENV_V1__', 'command', 'a b', '__ZLS_ENV_END__', ''].join(zero),
     );
     expect(result.kind === 'available' && result.commands.has('a b')).toBe(true);
+    for (const kind of ['toString', 'constructor', '__proto__']) {
+      expect(
+        parseShellEnvironment(['__ZLS_ENV_V1__', kind, 'x', '__ZLS_ENV_END__', ''].join(zero)),
+      ).toEqual({
+        kind: 'unavailable',
+        reason: 'invalid-output',
+      });
+    }
     expect(parseShellEnvironment('incomplete')).toEqual({
       kind: 'unavailable',
       reason: 'invalid-output',

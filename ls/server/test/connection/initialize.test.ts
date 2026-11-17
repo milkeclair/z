@@ -5,17 +5,16 @@ import { pathToFileURL } from 'node:url';
 import { afterEach, describe, expect, test } from 'vitest';
 import { zInitialize } from '../../src/connection/initialize';
 import type { InitializeParams } from '../../src/vscode_type';
+import { createTemporaryDirectories } from '../support/tempDirectories';
 
-const roots: string[] = [];
+const temporaryDirectories = createTemporaryDirectories();
 function createProviderFixture(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-initialize-'));
-  roots.push(root);
+  temporaryDirectories.track(root);
   return root;
 }
 afterEach(() => {
-  for (const root of roots.splice(0)) {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
+  temporaryDirectories.cleanup();
 });
 function initialize(params: Partial<InitializeParams>) {
   return zInitialize({ processId: null, rootUri: null, capabilities: {}, ...params });

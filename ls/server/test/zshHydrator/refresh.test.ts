@@ -10,18 +10,17 @@ import {
   documentationOf,
   refreshZshHydrator,
 } from '../../src/zshHydrator';
+import { createTemporaryDirectories } from '../support/tempDirectories';
 
-const roots: string[] = [];
+const temporaryDirectories = createTemporaryDirectories();
 function createHydrationFixture(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-hydrator-test-'));
-  roots.push(root);
+  temporaryDirectories.track(root);
   return root;
 }
 afterEach(() => {
   vi.restoreAllMocks();
-  for (const root of roots.splice(0)) {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
+  temporaryDirectories.cleanup();
 });
 function document(root: string, name: string, version: number, content: string) {
   return TextDocument.create(
@@ -38,18 +37,19 @@ describe('zshHydrator@refresh', () => {
     const file = path.join(root, 'sample.zsh');
     fs.writeFileSync(file, 'helper() { : }\n');
     const originalRead = fs.readFileSync;
-    let replaced = false;
+    const replaceFile = vi.fn(() => {
+      fs.unlinkSync(file);
+      fs.mkdirSync(file);
+    });
     vi.spyOn(fs, 'readFileSync').mockImplementation((...args) => {
-      if (!replaced && args[0] === file) {
-        fs.unlinkSync(file);
-        fs.mkdirSync(file);
-        replaced = true;
+      if (args[0] === file && replaceFile.mock.calls.length === 0) {
+        replaceFile();
       }
       return originalRead(...args);
     });
 
     const result = createZshHydrator(root);
-    expect(replaced).toBe(true);
+    expect(replaceFile).toHaveBeenCalledOnce();
     expect(result.files.size).toBe(0);
   });
   test('読み取り権限などのI/Oエラーを呼び出し元へ返す', () => {
@@ -82,23 +82,24 @@ describe('zshHydrator@refresh', () => {
       fs.writeFileSync(firstFile, 'first() { : }\n');
       fs.writeFileSync(removedFile, 'removed() { : }\n');
       const originalStat = fs.statSync;
-      let removed = false;
+      const removeFile = vi.fn(() => {
+        fs.unlinkSync(removedFile);
+        if (replaceParent) {
+          fs.rmdirSync(parent);
+          fs.writeFileSync(parent, 'replaced');
+        } else if (change === 'directoryReplaced') {
+          fs.mkdirSync(removedFile);
+        }
+      });
       vi.spyOn(fs, 'statSync').mockImplementation((...args) => {
-        if (!removed && args[0] === firstFile) {
-          fs.unlinkSync(removedFile);
-          if (replaceParent) {
-            fs.rmdirSync(parent);
-            fs.writeFileSync(parent, 'replaced');
-          } else if (change === 'directoryReplaced') {
-            fs.mkdirSync(removedFile);
-          }
-          removed = true;
+        if (args[0] === firstFile && removeFile.mock.calls.length === 0) {
+          removeFile();
         }
         return originalStat(...args);
       });
 
       const result = createZshHydrator(root);
-      expect(removed).toBe(true);
+      expect(removeFile).toHaveBeenCalledOnce();
       expect([...result.files.keys()]).toEqual(['a.zsh']);
       expect(result.files.get('a.zsh')?.functions[0].name).toBe('first');
     },
@@ -153,7 +154,7 @@ describe('zshHydrator@refresh', () => {
       path.join(root, 'node_modules', 'ignored.zsh'),
       'dependency_ignored() { : }\n',
     );
-    expect([...createZshHydrator(root).files.keys()].sort()).toEqual([
+    expect([...createZshHydrator(root).files.keys()].toSorted()).toEqual([
       '.config/sample.zsh',
       '.hidden.zsh',
     ]);
@@ -246,7 +247,7 @@ describe('zshHydrator@refresh', () => {
         document(path.dirname(root), 'outside.zsh', 1, 'outside() { : }\n'),
       ],
     });
-    expect([...result.files.keys()].sort()).toEqual(['..helper.zsh', 'new.zsh']);
+    expect([...result.files.keys()].toSorted()).toEqual(['..helper.zsh', 'new.zsh']);
   });
 
   test('解釈設定の変更でdiskとbufferの付加情報を再生成する', () => {

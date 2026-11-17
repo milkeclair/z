@@ -1,4 +1,5 @@
-import { describe, expect, test } from 'vitest';
+import { Range } from 'immutable';
+import { describe, expect, test, vi } from 'vitest';
 import type { AstNode, CommandNode, FileNode, GroupCommandNode } from '../../../src/zshParser/ast';
 import { createQueryContext, findAll, locate, mapAst, walk } from '../../../src/zshParser/ast';
 import { commandFromItem, parse } from './helper';
@@ -25,18 +26,12 @@ describe('ast@traversal', () => {
 
   test('構文と関連参照を区別し、共有ノードを一回だけ訪問する', () => {
     const file = parse('source config.zsh\n# docs\nhelper() { print "$name" }\n').ast;
-    const syntax: AstNode[] = [];
-    const related: AstNode[] = [];
-    walk(file, (node) => {
-      syntax.push(node);
-    });
-    walk(
-      file,
-      (node) => {
-        related.push(node);
-      },
-      { includeRelated: true },
-    );
+    const syntaxObserver = vi.fn<(node: AstNode) => void>();
+    const relatedObserver = vi.fn<(node: AstNode) => void>();
+    walk(file, syntaxObserver);
+    walk(file, relatedObserver, { includeRelated: true });
+    const syntax = syntaxObserver.mock.calls.map(([node]) => node);
+    const related = relatedObserver.mock.calls.map(([node]) => node);
     expect(syntax.filter((node) => node.kind === 'comment')).toEqual([]);
     expect(
       related.filter((node) => node.kind === 'word' && node.raw === 'config.zsh'),
@@ -72,22 +67,19 @@ describe('ast@traversal', () => {
 
   test('skipとstopで探索範囲を制御する', () => {
     const file = parse('helper() { print inner }\nprint outer\n').ast;
-    const values: string[] = [];
+    const observed = vi.fn<(value: string) => void>();
     walk(file, (node) => {
       if (node.kind === 'functionDefinition') {
         return 'skip';
       }
       if (node.kind === 'word') {
-        values.push(node.raw);
+        observed(node.raw);
       }
     });
-    expect(values).toEqual(['print', 'outer']);
-    let visited = 0;
-    walk(file, () => {
-      visited += 1;
-      return 'stop';
-    });
-    expect(visited).toBe(1);
+    expect(observed.mock.calls.map(([value]) => value)).toEqual(['print', 'outer']);
+    const visitor = vi.fn<() => 'stop'>(() => 'stop');
+    walk(file, visitor);
+    expect(visitor).toHaveBeenCalledTimes(1);
   });
 
   test('変換は元ASTを保持し、semanticの共有参照も更新する', () => {
@@ -120,9 +112,9 @@ describe('ast@traversal', () => {
     if (first.sublist.kind !== 'sublist') {
       throw new Error('sublist required');
     }
-    let command: CommandNode = first.sublist.first.first;
-    const range = command.range;
-    for (let depth = 0; depth < 10000; depth += 1) {
+    const initialCommand: CommandNode = first.sublist.first.first;
+    const range = initialCommand.range;
+    const command = Range(0, 10000).reduce<CommandNode>((previous) => {
       const group: GroupCommandNode = {
         kind: 'groupCommand',
         range,
@@ -148,15 +140,15 @@ describe('ast@traversal', () => {
                   timing: null,
                   modifier: null,
                   rest: [],
-                  first: command,
+                  first: previous,
                 },
               },
             },
           ],
         },
       };
-      command = group;
-    }
+      return group;
+    }, initialCommand);
     const file: FileNode = {
       ...sample,
       body: {

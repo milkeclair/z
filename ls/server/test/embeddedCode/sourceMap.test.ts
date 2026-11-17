@@ -1,3 +1,4 @@
+import { Range } from 'immutable';
 import { describe, expect, test } from 'vitest';
 import { decodeLiteral, literalValue } from '../../src/embeddedCode/literal';
 import {
@@ -14,29 +15,34 @@ import { findAll } from '../../src/zshParser/ast';
 describe('embedded source map composition', () => {
   test('複数段の引用を平坦なmapへ合成する', () => {
     const quote = (value: string) => "'" + value.split("'").join("'\\''") + "'";
-    let text = 'missing-command';
-    for (let level = 0; level < 4; level++) {
-      text = 'run code=' + quote(text);
-    }
+    const text = Range(0, 4).reduce((text) => 'run code=' + quote(text), 'missing-command');
     const physical = 'print 😀;\r\n' + text + '\r\n';
-    let file = createZshFileHydration({ sourceFile: 'x', file: 'x', content: physical });
-    let source: ReturnType<typeof createCodeSourceMap> | undefined;
-    for (let level = 0; level < 4; level++) {
-      const call = findAll(file.ast, 'simpleCommand').find(
+    type Layer = {
+      readonly file: ReturnType<typeof createZshFileHydration>;
+      readonly source: ReturnType<typeof createCodeSourceMap> | undefined;
+    };
+    const initial: Layer = {
+      file: createZshFileHydration({ sourceFile: 'x', file: 'x', content: physical }),
+      source: undefined,
+    };
+    const { file, source } = Range(0, 4).reduce<Layer>((previous) => {
+      const call = findAll(previous.file.ast, 'simpleCommand').find(
         (command) => command.commandName?.word.raw === 'run',
       );
       if (!call) {
         throw new Error('run expected');
       }
-      const word = call.arguments[0];
-      const decoded = decodeLiteral(word);
+      const word = call.arguments[0],
+        decoded = decodeLiteral(word);
       if (!decoded) {
         throw new Error('literal expected');
       }
       const value = literalValue(decoded, 5);
-      source = createCodeSourceMap(word, value, source);
-      file = createZshFileHydration({ sourceFile: 'x', file: 'x', content: value.text });
-    }
+      return {
+        source: createCodeSourceMap(word, value, previous.source),
+        file: createZshFileHydration({ sourceFile: 'x', file: 'x', content: value.text }),
+      };
+    }, initial);
     if (!source) {
       throw new Error('source map expected');
     }

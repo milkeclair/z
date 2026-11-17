@@ -11,7 +11,7 @@ const files = globSync('**/*.zsh', {
   cwd: repoRoot,
   nodir: true,
   ignore: ['.git/**', 'ls/node_modules/**'],
-}).sort();
+}).toSorted();
 
 describe('parse@allZFiles', () => {
   test('検証対象のzshファイルが存在する', () => {

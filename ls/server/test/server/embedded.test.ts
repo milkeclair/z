@@ -76,23 +76,23 @@ describe('実サーバー: embedded', () => {
         full: true,
         legend: { tokenTypes: expect.arrayContaining(['function', 'variable', 'keyword']) },
       });
-      let content = "run_code code='gr'\n";
-      await client.open(uri, content);
-      const items = await client.items(uri, content.indexOf('gr') + 2);
+      const initialContent = "run_code code='gr'\n";
+      await client.open(uri, initialContent);
+      const items = await client.items(uri, initialContent.indexOf('gr') + 2);
       const item = items.find((item) => item.label === 'greet');
       expect(item).toMatchObject({
         textEdit: {
           newText: 'greet',
           range: {
-            start: { line: 0, character: content.indexOf('gr') },
-            end: { line: 0, character: content.indexOf('gr') + 2 },
+            start: { line: 0, character: initialContent.indexOf('gr') },
+            end: { line: 0, character: initialContent.indexOf('gr') + 2 },
           },
         },
       });
 
-      content = "run_code code='greet value'\n";
-      await client.edit(uri, content, 2);
-      const position = { line: 0, character: content.indexOf('greet') + 2 };
+      const argumentContent = "run_code code='greet value'\n";
+      await client.edit(uri, argumentContent, 2);
+      const position = { line: 0, character: argumentContent.indexOf('greet') + 2 };
       expect(
         await withRequestTimeout(
           client.connection.sendRequest(HoverRequest.type, { textDocument: { uri }, position }),
@@ -110,7 +110,7 @@ describe('実サーバー: embedded', () => {
         await withRequestTimeout(
           client.connection.sendRequest(SignatureHelpRequest.type, {
             textDocument: { uri },
-            position: { line: 0, character: content.indexOf('value') + 1 },
+            position: { line: 0, character: argumentContent.indexOf('value') + 1 },
           }),
         ),
       ).toMatchObject({ signatures: [{ label: 'greet $1' }], activeParameter: 0 });
@@ -118,7 +118,7 @@ describe('実サーバー: embedded', () => {
         await withRequestTimeout(
           client.connection.sendRequest(HoverRequest.type, {
             textDocument: { uri },
-            position: { line: 0, character: content.indexOf('code=') + 1 },
+            position: { line: 0, character: argumentContent.indexOf('code=') + 1 },
           }),
         ),
       ).toMatchObject({ contents: { value: expect.stringContaining("[code | 'noop']") } });
@@ -143,9 +143,9 @@ describe('実サーバー: embedded', () => {
         ),
       ).toEqual({ data: [] });
 
-      content = "run_code code='inner() { : }; inner'\ninner\n";
-      await client.edit(uri, content, 6);
-      const innerPosition = { line: 0, character: content.lastIndexOf("inner'") + 2 };
+      const localContent = "run_code code='inner() { : }; inner'\ninner\n";
+      await client.edit(uri, localContent, 6);
+      const innerPosition = { line: 0, character: localContent.lastIndexOf("inner'") + 2 };
       const localItems = await withRequestTimeout(
         client.connection.sendRequest(CompletionRequest.type, {
           textDocument: { uri },
@@ -169,7 +169,10 @@ describe('実サーバー: embedded', () => {
             position: innerPosition,
           }),
         ),
-      ).toMatchObject({ uri, range: { start: { line: 0, character: content.indexOf('inner') } } });
+      ).toMatchObject({
+        uri,
+        range: { start: { line: 0, character: localContent.indexOf('inner') } },
+      });
       const outside = await withRequestTimeout(
         client.connection.sendRequest(CompletionRequest.type, {
           textDocument: { uri },

@@ -16,6 +16,8 @@ import {
   RegistrationRequest,
   ShutdownRequest,
 } from 'vscode-languageserver/node';
+import { createIOState } from '../../src/util/ioState';
+import { createTemporaryDirectories } from '../support/tempDirectories';
 
 type LspClientOptions = {
   env?: NodeJS.ProcessEnv;
@@ -27,29 +29,23 @@ type InitializeClientOptions = {
   supportsRefresh: boolean;
   useWorkspace?: boolean;
 };
-const roots: string[] = [];
+const temporaryDirectories = createTemporaryDirectories();
 
 export function createProjectDirectory(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-lsp-stdio-'));
-  roots.push(root);
+  temporaryDirectories.track(root);
   return root;
 }
 
 afterEach(() => {
-  for (const root of roots.splice(0)) {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
+  temporaryDirectories.cleanup();
 });
 
 export async function withRequestTimeout<T>(promise: Promise<T>): Promise<T> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = Promise.withResolvers<never>();
+  const timer = setTimeout(() => deadline.reject(new Error('LSP request timed out')), 5000);
   try {
-    return await Promise.race([
-      promise,
-      new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error('LSP request timed out')), 5000);
-      }),
-    ]);
+    return await Promise.race([promise, deadline.promise]);
   } finally {
     clearTimeout(timer);
   }
@@ -72,30 +68,45 @@ export function createLspClient({
       env,
     },
   );
-  let stderr = '';
+  const trace = createIOState<{
+    readonly stderr: string;
+    readonly registrations: readonly string[];
+    readonly refreshRequests: readonly string[];
+  }>({ stderr: '', registrations: [], refreshRequests: [] });
   child.stderr.on('data', (data: Buffer) => {
-    stderr += data.toString();
+    trace.update((previous) => ({ ...previous, stderr: previous.stderr + data.toString() }));
   });
   const exited = new Promise<number | null>((resolve) => {
     child.once('exit', (code) => resolve(code));
   });
   const connection = createProtocolConnection(child.stdout, child.stdin);
-  const registrations: string[] = [];
-  const refreshRequests: string[] = [];
   connection.onRequest(RegistrationRequest.type, (params) => {
-    registrations.push(...params.registrations.map((registration) => registration.method));
+    trace.update((previous) => ({
+      ...previous,
+      registrations: [
+        ...previous.registrations,
+        ...params.registrations.map((registration) => registration.method),
+      ],
+    }));
     if (rejectWatchRegistration) {
       throw new Error('watch registration rejected by client');
     }
   });
   connection.onRequest('workspace/diagnostic/refresh', () => {
-    refreshRequests.push('refresh');
+    trace.update((previous) => ({
+      ...previous,
+      refreshRequests: [...previous.refreshRequests, 'refresh'],
+    }));
   });
   connection.listen();
   return {
     connection,
-    registrations,
-    refreshRequests,
+    get registrations() {
+      return trace.read().registrations;
+    },
+    get refreshRequests() {
+      return trace.read().refreshRequests;
+    },
     async initialize({
       projectRoot: root,
       supportsRefresh: refreshSupport,
@@ -146,6 +157,7 @@ export function createLspClient({
           await connection.sendNotification(ExitNotification.type);
         }
         const code = await withRequestTimeout(exited);
+        const stderr = trace.read().stderr;
         expect(code, stderr).toBe(0);
         expect(stderr).toBe('');
       } finally {
@@ -160,9 +172,9 @@ export function createLspClient({
 }
 
 export function createObservedLspClient(root: string) {
-  const filename = path.join(root, 'parsed.json');
+  const filename = path.join(root, 'parsed.jsonl');
   const preload = path.join(root, 'observe.cjs');
-  fs.writeFileSync(filename, '[]');
+  fs.writeFileSync(filename, '');
   fs.writeFileSync(
     preload,
     [
@@ -171,18 +183,18 @@ export function createObservedLspClient(root: string) {
         JSON.stringify(path.resolve(__dirname, '../../dist/zshHydrator/fileHydration.js')) +
         ');',
       'const original = hydration.createZshFileHydration;',
-      'const parsed = [];',
       'hydration.createZshFileHydration = input => {',
       '  const result = original(input);',
-      '  parsed.push({ sourceFile: input.sourceFile, content: input.content });',
-      '  fs.writeFileSync(' + JSON.stringify(filename) + ', JSON.stringify(parsed));',
+      '  fs.appendFileSync(' +
+        JSON.stringify(filename) +
+        ', JSON.stringify({ sourceFile: input.sourceFile, content: input.content }) + "\\n");',
       '  return result;',
       '};',
     ].join('\n'),
   );
   return {
     client: createLspClient({ rejectWatchRegistration: false, preload: preload }),
-    parsed: () => fs.readFileSync(filename, 'utf8'),
+    parsed: () => fs.readFileSync(filename, 'utf8').split('\n').filter(Boolean),
   };
 }
 

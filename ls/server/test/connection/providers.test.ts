@@ -1,3 +1,4 @@
+import { Range } from 'immutable';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -11,8 +12,9 @@ import { zHover } from '../../src/connection/hover';
 import { zSignatureHelp } from '../../src/connection/signatureHelp';
 import { refreshFunctionSnapshot } from '../../src/refreshFunctions/main';
 import { Lexer } from '../../src/zshParser/lexer';
+import { createTemporaryDirectories } from '../support/tempDirectories';
 
-const roots: string[] = [];
+const temporaryDirectories = createTemporaryDirectories();
 const definition = [
   '# Greeting',
   '# $1: first',
@@ -25,7 +27,7 @@ const definition = [
 ].join('\n');
 function createProviderFixture(source: string, definitions = definition) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-provider-'));
-  roots.push(root);
+  temporaryDirectories.track(root);
   const definitionUri = pathToFileURL(path.join(root, '日本語 name.zsh')).href;
   fs.writeFileSync(path.join(root, '日本語 name.zsh'), definitions);
   const offset = source.indexOf('¦');
@@ -54,9 +56,7 @@ function createProviderFixture(source: string, definitions = definition) {
 }
 afterEach(() => {
   vi.restoreAllMocks();
-  for (const root of roots.splice(0)) {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
+  temporaryDirectories.cleanup();
 });
 
 describe('completion@AST', () => {
@@ -256,7 +256,7 @@ describe('provider snapshot reuse', () => {
   test('要求処理は文書を再解析せず、同じsnapshotを参照する', () => {
     const scenario = createProviderFixture('gr¦eet');
     const spy = vi.spyOn(Lexer, 'tokenize');
-    for (let request = 0; request < 10; request += 1) {
+    for (const request of Range(0, 10)) {
       const item = scenario.complete()?.[0];
       expect(scenario.definition()?.uri).toBe(scenario.definitionUri);
       expect(scenario.hover()).not.toBeNull();

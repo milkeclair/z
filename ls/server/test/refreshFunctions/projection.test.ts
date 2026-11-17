@@ -1,3 +1,4 @@
+import { Range } from 'immutable';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -5,11 +6,12 @@ import { pathToFileURL } from 'node:url';
 import { afterEach, describe, expect, test } from 'vitest';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { refreshFunctionSnapshot } from '../../src/refreshFunctions/main';
+import { createTemporaryDirectories } from '../support/tempDirectories';
 
-const roots: string[] = [];
+const temporaryDirectories = createTemporaryDirectories();
 function createSnapshotFixture(files: Readonly<Record<string, string>>): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-file-projection-'));
-  roots.push(root);
+  temporaryDirectories.track(root);
   for (const [file, content] of Object.entries(files)) {
     fs.writeFileSync(path.join(root, file), content);
   }
@@ -24,9 +26,7 @@ function document(root: string, file: string, version: number, content: string) 
   );
 }
 afterEach(() => {
-  for (const root of roots.splice(0)) {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
+  temporaryDirectories.cleanup();
 });
 
 describe('function file projections', () => {
@@ -189,8 +189,8 @@ describe('function file projections', () => {
 
   test('連続編集でも現在のhydrationだけをキャッシュに保持する', () => {
     const root = createSnapshotFixture({ 'a.zsh': 'helper() { : }\n' });
-    let previous = refreshFunctionSnapshot({ projectRoot: root, documents: [] });
-    for (let version = 1; version <= 20; version++) {
+    const initial = refreshFunctionSnapshot({ projectRoot: root, documents: [] });
+    Range(1, 21).reduce((previous, version) => {
       const next = refreshFunctionSnapshot({
         projectRoot: root,
         previous,
@@ -203,8 +203,8 @@ describe('function file projections', () => {
         [...previous.fileProjections.keys()][0],
       );
       expect(previous.fileProjections.size).toBe(1);
-      previous = next;
-    }
+      return next;
+    }, initial);
   });
 
   test('同じ相対パスのroot切替とproject解除で古い投影を解放する', () => {

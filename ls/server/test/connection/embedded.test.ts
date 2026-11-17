@@ -1,3 +1,4 @@
+import { Range } from 'immutable';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -18,13 +19,12 @@ import { literalWord } from '../../src/refreshFunctions/word';
 import { createZshFileHydration } from '../../src/zshHydrator';
 import { findAll } from '../../src/zshParser/ast';
 import { Lexer } from '../../src/zshParser/lexer';
+import { createTemporaryDirectories } from '../support/tempDirectories';
 
-const roots: string[] = [];
+const temporaryDirectories = createTemporaryDirectories();
 afterEach(() => {
   vi.restoreAllMocks();
-  for (const root of roots.splice(0)) {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
+  temporaryDirectories.cleanup();
 });
 
 const definitions = [
@@ -43,7 +43,7 @@ function createProviderFixture(
   extraDefinitions: readonly string[] = [],
 ) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-code-provider-'));
-  roots.push(root);
+  temporaryDirectories.track(root);
   const definitionUri = pathToFileURL(path.join(root, 'definition.zsh')).href;
   fs.writeFileSync(path.join(root, 'definition.zsh'), definitions + extraDefinitions.join('\n'));
   const offset = source.indexOf('¦');
@@ -185,7 +185,7 @@ describe('code argument providers', () => {
   test('編集中の要求で同じ埋め込みASTを再利用する', () => {
     const scenario = createProviderFixture("run_code code='gr¦eet value'");
     const spy = vi.spyOn(Lexer, 'tokenize');
-    for (let i = 0; i < 5; i++) {
+    for (const i of Range(0, 5)) {
       scenario.complete();
       scenario.hover();
       scenario.definition();
@@ -228,17 +228,17 @@ test('複数段の引用でも特殊文字を実行可能な展開へ変えず�
     if (!item?.textEdit || !('range' in item.textEdit)) {
       throw new Error('edit expected: ' + name);
     }
-    let text = TextDocument.applyEdits(scenario.document, [item.textEdit]);
-    for (let level = 0; level < 2; level++) {
-      const file = createZshFileHydration({ sourceFile: 'x', file: 'x', content: text });
+    const initial = TextDocument.applyEdits(scenario.document, [item.textEdit]);
+    const text = Range(0, 2).reduce((previous) => {
+      const file = createZshFileHydration({ sourceFile: 'x', file: 'x', content: previous });
       expect(file.lexerDiagnostics).toEqual([]);
-      const argument = findAll(file.ast, 'simpleCommand')[0].arguments[0];
-      const decoded = decodeLiteral(argument);
+      const argument = findAll(file.ast, 'simpleCommand')[0].arguments[0],
+        decoded = decodeLiteral(argument);
       if (!decoded) {
         throw new Error('outer expansion introduced: ' + name);
       }
-      text = literalValue(decoded, 5).text;
-    }
+      return literalValue(decoded, 5).text;
+    }, initial);
     const file = createZshFileHydration({ sourceFile: 'x', file: 'x', content: text });
     const word = findAll(file.ast, 'simpleCommand')[0].commandName?.word;
     if (!word) {

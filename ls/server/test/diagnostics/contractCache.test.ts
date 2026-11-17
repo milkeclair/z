@@ -13,27 +13,29 @@ import type { DiagnosticSnapshot } from '../../src/diagnostics/snapshot';
 import { refreshDiagnosticSnapshot } from '../../src/diagnostics/snapshot';
 import type { FunctionSnapshot } from '../../src/refreshFunctions/main';
 import { refreshFunctionSnapshot } from '../../src/refreshFunctions/main';
+import { createIOState } from '../../src/util/ioState';
+import { createTemporaryDirectories } from '../support/tempDirectories';
 
-const roots: string[] = [];
+const temporaryDirectories = createTemporaryDirectories();
 const shellRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'z-contract-shell-'));
-let environment: ShellEnvironment = emptyShellEnvironment();
+const environmentReference = createIOState<ShellEnvironment>(emptyShellEnvironment());
 beforeAll(async () => {
   fs.writeFileSync(path.join(shellRoot, '.zshrc'), '');
-  environment = await readShellEnvironment({ env: { ...process.env, ZDOTDIR: shellRoot } });
-  expect(environment.kind).toBe('available');
+  environmentReference.replace(
+    await readShellEnvironment({ env: { ...process.env, ZDOTDIR: shellRoot } }),
+  );
+  expect(environmentReference.read().kind).toBe('available');
 });
 afterAll(() => fs.rmSync(shellRoot, { recursive: true, force: true }));
 afterEach(() => {
   vi.restoreAllMocks();
-  for (const root of roots.splice(0)) {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
+  temporaryDirectories.cleanup();
 });
 const original =
   '# Original docs\n# $1: first\n# $2: second\ngreet() { print "$1" "$2" }\nsecond() { : }\n';
 function createDiagnosticFixture(definitions = original, caller = 'greet one\n') {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-contract-cache-'));
-  roots.push(root);
+  temporaryDirectories.track(root);
   const filename = path.join(root, 'definitions.zsh');
   fs.writeFileSync(filename, definitions);
   const uri = pathToFileURL(filename).href;
@@ -44,7 +46,10 @@ function createDiagnosticFixture(definitions = original, caller = 'greet one\n')
     caller,
   );
   const snapshot = refreshFunctionSnapshot({ projectRoot: root, documents: [document] });
-  const diagnostics = refreshDiagnosticSnapshot({ snapshot, environment });
+  const diagnostics = refreshDiagnosticSnapshot({
+    snapshot,
+    environment: environmentReference.read(),
+  });
   return { root, filename, uri, document, snapshot, diagnostics };
 }
 type State = { readonly snapshot: FunctionSnapshot; readonly diagnostics: DiagnosticSnapshot };
@@ -64,13 +69,16 @@ function update(
     snapshot,
     diagnostics: refreshDiagnosticSnapshot({
       snapshot,
-      environment,
+      environment: environmentReference.read(),
       previous: previous.diagnostics,
     }),
   };
 }
 function parity(state: State): void {
-  const fresh = refreshDiagnosticSnapshot({ snapshot: state.snapshot, environment });
+  const fresh = refreshDiagnosticSnapshot({
+    snapshot: state.snapshot,
+    environment: environmentReference.read(),
+  });
   expect([...state.diagnostics.files.keys()]).toEqual([...fresh.files.keys()]);
   for (const [uri, report] of state.diagnostics.files) {
     expect(report.items).toEqual(fresh.files.get(uri)?.items);
@@ -194,6 +202,8 @@ describe('diagnostic call contract cache', () => {
   });
 
   test('定義ファイルの移動でグローバル候補が変わる場合を検出する', () => {
+    const environment = environmentReference.read();
+
     const scenario = createDiagnosticFixture('# $1: first\ngreet() { print "$1" }\n');
     fs.writeFileSync(
       path.join(scenario.root, 'later.zsh'),
@@ -228,6 +238,8 @@ describe('diagnostic call contract cache', () => {
   });
 
   test('引数仕様が同じでも候補URIの変更では再診断する', () => {
+    const environment = environmentReference.read();
+
     const scenario = createDiagnosticFixture();
     fs.renameSync(scenario.filename, path.join(scenario.root, 'moved.zsh'));
     const snapshot = refreshFunctionSnapshot({

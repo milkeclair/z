@@ -10,18 +10,17 @@ import {
   refreshFunctionSnapshot,
 } from '../../src/refreshFunctions/main';
 import { Lexer } from '../../src/zshParser/lexer';
+import { createTemporaryDirectories } from '../support/tempDirectories';
 
-const roots: string[] = [];
+const temporaryDirectories = createTemporaryDirectories();
 function createSnapshotFixture(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-function-snapshot-'));
-  roots.push(root);
+  temporaryDirectories.track(root);
   return root;
 }
 afterEach(() => {
   vi.restoreAllMocks();
-  for (const root of roots.splice(0)) {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
+  temporaryDirectories.cleanup();
 });
 function document(root: string, file: string, version: number, content: string) {
   return TextDocument.create(

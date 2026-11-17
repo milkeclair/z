@@ -11,10 +11,12 @@ import { validateTextDocument } from '../../src/diagnostics/main';
 import { refreshDiagnosticSnapshot } from '../../src/diagnostics/snapshot';
 import { workspaceDiagnostics } from '../../src/diagnostics/workspace';
 import { refreshFunctionSnapshot } from '../../src/refreshFunctions/main';
+import { createIOState } from '../../src/util/ioState';
+import { createTemporaryDirectories } from '../support/tempDirectories';
 
-const roots: string[] = [];
+const temporaryDirectories = createTemporaryDirectories();
 const environmentRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'z-diag-shell-'));
-let environment: ShellEnvironment = emptyShellEnvironment();
+const environmentReference = createIOState<ShellEnvironment>(emptyShellEnvironment());
 beforeAll(async () => {
   fs.writeFileSync(
     path.join(environmentRoot, '.zshrc'),
@@ -26,20 +28,24 @@ beforeAll(async () => {
       'autoload -Uz fixture-shell-autoload',
     ].join('\n'),
   );
-  environment = await readShellEnvironment({ env: { ...process.env, ZDOTDIR: environmentRoot } });
-  expect(environment.kind).toBe('available');
+  environmentReference.replace(
+    await readShellEnvironment({ env: { ...process.env, ZDOTDIR: environmentRoot } }),
+  );
+  expect(environmentReference.read().kind).toBe('available');
 });
 afterAll(() => fs.rmSync(environmentRoot, { recursive: true, force: true }));
 afterEach(() => {
   vi.restoreAllMocks();
-  for (const root of roots.splice(0)) {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
+  temporaryDirectories.cleanup();
 });
 const definition = '# $1: first\n# $2: second\ngreet() { print "$1" "$2" }\n';
-function createDiagnosticFixture(content: string, definitions = definition, shell = environment) {
+function createDiagnosticFixture(
+  content: string,
+  definitions = definition,
+  shell = environmentReference.read(),
+) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-diag-'));
-  roots.push(root);
+  temporaryDirectories.track(root);
   const definitionUri = pathToFileURL(path.join(root, 'definition.zsh')).href;
   fs.writeFileSync(path.join(root, 'definition.zsh'), definitions);
   const document = TextDocument.create(
@@ -242,6 +248,8 @@ describe('command resolution', () => {
     }
   });
   test('module builtinでもbuiltinとcommandの解決規則を維持する', () => {
+    const environment = environmentReference.read();
+
     const declaration = 'zmodload zsh/zpty\n';
     expect(semantic(createDiagnosticFixture(declaration + 'builtin zpty\n').items)).toEqual([]);
     expect(semantic(createDiagnosticFixture(declaration + 'command zpty\n').items)).toMatchObject([
@@ -271,6 +279,8 @@ describe('command resolution', () => {
     ]);
   });
   test('絶対パス・workspaceからの相対パスは実行権限も確認する', () => {
+    const environment = environmentReference.read();
+
     const scenario = createDiagnosticFixture('./tool\n');
     fs.writeFileSync(path.join(scenario.root, 'tool'), '#!/bin/sh\nexit 0\n', { mode: 0o755 });
     const next = refreshDiagnosticSnapshot({ snapshot: scenario.snapshot, environment });
@@ -397,6 +407,8 @@ describe('hydrated controls and diagnostics cache', () => {
     expect(scenario.diagnostics.files.get(scenario.document.uri)?.items).toEqual([]);
   });
   test('変更のない解析結果を再利用し、呼び出し編集では他ファイルを再走査しない', () => {
+    const environment = environmentReference.read();
+
     const scenario = createDiagnosticFixture('greet one two\n');
     const spy = vi.spyOn(facts, 'collectFileFacts');
     expect(
@@ -429,6 +441,8 @@ describe('hydrated controls and diagnostics cache', () => {
     );
   });
   test('workspace外のaliasはその文書へ適用し、projectへ混ぜない', () => {
+    const environment = environmentReference.read();
+
     const scenario = createDiagnosticFixture('fixture-outside-alias\n');
     const outside = TextDocument.create(
       pathToFileURL(path.join(path.dirname(scenario.root), 'outside.zsh')).href,
@@ -457,6 +471,8 @@ describe('hydrated controls and diagnostics cache', () => {
     ).toBe(false);
   });
   test('module読み込みの追加・削除で未編集の呼び出しも再評価する', () => {
+    const environment = environmentReference.read();
+
     const scenario = createDiagnosticFixture('zpty\n', 'zmodload zsh/zpty\n');
     expect(semantic(scenario.items)).toEqual([]);
     const changed = TextDocument.create(scenario.definitionUri, 'shellscript', 1, '');
@@ -497,6 +513,8 @@ describe('hydrated controls and diagnostics cache', () => {
     ).toEqual([]);
   });
   test('workspace外のmodule読み込みはその文書だけへ適用する', () => {
+    const environment = environmentReference.read();
+
     const scenario = createDiagnosticFixture('zpty\n', '');
     const outside = TextDocument.create(
       pathToFileURL(path.join(path.dirname(scenario.root), 'module-outside.zsh')).href,
@@ -518,6 +536,8 @@ describe('hydrated controls and diagnostics cache', () => {
     ).toMatchObject([{ code: 'undefined-command' }]);
   });
   test('workspace外の関数はその文書の診断に使い、projectへ混ぜない', () => {
+    const environment = environmentReference.read();
+
     const scenario = createDiagnosticFixture('fixture-outside-function\n');
     const outside = TextDocument.create(
       pathToFileURL(path.join(path.dirname(scenario.root), 'outside.zsh')).href,
@@ -539,6 +559,8 @@ describe('hydrated controls and diagnostics cache', () => {
     ).toMatchObject([{ code: 'undefined-command' }]);
   });
   test('calleeのドキュメント変更で未編集の呼び出しを再評価する', () => {
+    const environment = environmentReference.read();
+
     const scenario = createDiagnosticFixture('greet one two\n');
     const changed = TextDocument.create(
       scenario.definitionUri,

@@ -6,11 +6,12 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { ZshHydrator } from '../../src/zshHydrator';
 import { createZshHydrator, EmptyZshHydrator, refreshZshHydrator } from '../../src/zshHydrator';
+import { createTemporaryDirectories } from '../support/tempDirectories';
 
-const roots: string[] = [];
+const temporaryDirectories = createTemporaryDirectories();
 function createHydrationFixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-hydrator-diff-'));
-  roots.push(root);
+  temporaryDirectories.track(root);
   return root;
 }
 function write(root: string, file: string, content: string) {
@@ -34,16 +35,14 @@ function parity(state: ZshHydrator, documents: readonly TextDocument[] = []) {
     options: state.options,
   });
   expect([...state.files.keys()]).toEqual([...fresh.files.keys()]);
-  expect([...state.diskPaths].sort()).toEqual([...fresh.diskPaths].sort());
+  expect([...state.diskPaths].toSorted()).toEqual([...fresh.diskPaths].toSorted());
   for (const [filename, entry] of state.files) {
     expect(entry).toEqual(fresh.files.get(filename));
   }
 }
 afterEach(() => {
   vi.restoreAllMocks();
-  for (const root of roots.splice(0)) {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
+  temporaryDirectories.cleanup();
 });
 
 describe('zshHydrator incremental updates', () => {

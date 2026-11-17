@@ -1,3 +1,4 @@
+import { List, Range } from 'immutable';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -8,17 +9,16 @@ import { codeTokenTypes, zSemanticTokens } from '../../src/connection/semanticTo
 import { emptyShellEnvironment } from '../../src/diagnostics/environment';
 import { refreshDiagnosticSnapshot } from '../../src/diagnostics/snapshot';
 import { refreshFunctionSnapshot } from '../../src/refreshFunctions/main';
+import { createTemporaryDirectories } from '../support/tempDirectories';
 
-const roots: string[] = [];
+const temporaryDirectories = createTemporaryDirectories();
 afterEach(() => {
-  for (const root of roots.splice(0)) {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
+  temporaryDirectories.cleanup();
 });
 
 function rawTokens(content: string) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'z-code-colors-'));
-  roots.push(root);
+  temporaryDirectories.track(root);
   fs.writeFileSync(
     path.join(root, 'definition.zsh'),
     "# $code [code | 'noop']: commands\nrun_code() { : }\n",
@@ -37,30 +37,44 @@ function rawTokens(content: string) {
 
 function tokens(content: string) {
   const { document, result } = rawTokens(content);
-  const decoded: { text: string; type: string; line: number; start: number; end: number }[] = [];
-  let line = 0;
-  let character = 0;
-  for (let i = 0; i < result.data.length; i += 5) {
-    line += result.data[i];
-    character = result.data[i] ? result.data[i + 1] : character + result.data[i + 1];
-    const length = result.data[i + 2];
-    const previous = decoded.at(-1);
-    expect(length).toBeGreaterThan(0);
-    if (previous?.line === line) {
-      expect(character).toBeGreaterThanOrEqual(previous.end);
-    }
-    decoded.push({
-      text: document.getText({
-        start: { line, character },
-        end: { line, character: character + length },
-      }),
-      type: codeTokenTypes[result.data[i + 3]],
-      line,
-      start: character,
-      end: character + length,
-    });
-  }
-  return decoded;
+  type Decoded = {
+    readonly text: string;
+    readonly type: string;
+    readonly line: number;
+    readonly start: number;
+    readonly end: number;
+  };
+  return Range(0, result.data.length, 5)
+    .reduce(
+      (previous, index) => {
+        const line = previous.line + result.data[index];
+        const character = result.data[index]
+          ? result.data[index + 1]
+          : previous.character + result.data[index + 1];
+        const length = result.data[index + 2],
+          last = previous.tokens.last();
+        expect(length).toBeGreaterThan(0);
+        if (last?.line === line) {
+          expect(character).toBeGreaterThanOrEqual(last.end);
+        }
+        return {
+          line,
+          character,
+          tokens: previous.tokens.push({
+            text: document.getText({
+              start: { line, character },
+              end: { line, character: character + length },
+            }),
+            type: codeTokenTypes[result.data[index + 3]],
+            line,
+            start: character,
+            end: character + length,
+          }),
+        };
+      },
+      { line: 0, character: 0, tokens: List<Decoded>() },
+    )
+    .tokens.toArray();
 }
 
 describe('semantic tokens for code arguments', () => {
@@ -107,10 +121,7 @@ describe('semantic tokens for code arguments', () => {
 });
 
 test('深いコマンド置換でも色分けを有界に返す', () => {
-  let code = 'greet value';
-  for (let i = 0; i < 1000; i++) {
-    code = 'print "$(' + code + ')"';
-  }
+  const code = Range(0, 1000).reduce((code) => 'print "$(' + code + ')"', 'greet value');
   const result = tokens("run_code code='" + code + "'\n");
   expect(result.length).toBeGreaterThan(0);
   expect(result.length).toBeLessThan(code.length);
