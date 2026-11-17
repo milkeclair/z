@@ -67,6 +67,6 @@ Lexer、Parser、AST、文書索引、診断は、入力から次の値を返す
 
 プロセス、接続、タイマーなどのI/Oはclientとserver、および環境取得・ファイル読込の境界に集めます。イベント間で保持する値はutil/ioState.tsで参照し直し、値の変換は独立した関数に渡します。解析用の状態をこの参照へ持ち込まず、更新前後の値を引数と戻り値で表します。
 
-server/src/server/providers.tsはLSPの要求を各機能へ渡します。ASTの走査はzshParser/ast/traversal、構文の読み取りはzshParser/parser/command、コメントの解析と索引作成はzshHydrator、色分けの範囲収集・重複解消・出力変換はconnection/semanticTokensに分けています。
+server.tsは接続を組み立て、server/state.tsが保持する値、server/analysis.tsが解析の予約と反映、server/lifecycle.tsが初期化・設定・文書イベントを扱います。server/providers.tsはLSPの要求を各機能へ渡します。ASTの走査はzshParser/ast/traversal、構文の読み取りはzshParser/parser/command、コメントの解析と索引作成はzshHydrator、色分けの範囲収集・重複解消・出力変換はconnection/semanticTokensに分けています。
 
-テストは構文や機能ごとに配置します。server/test/serverは実サーバーの起動、診断、編集反映、再走査、埋め込みコードのシナリオを分け、client.tsにプロセスと通信の操作をまとめています。一時ディレクトリはsupport/tempDirectories.tsで登録し、各テストの終了時に削除します。
+テストは対象関数、条件、期待する動作の順に記述します。Vitestでは条件を入れ子のdescribeで表し、各testを固定の宣言で記述します。入力の準備、対象関数の実行、結果の検証を区切ります。リポジトリ全体の構文検証は、一つの固定テスト内で各ファイルを照合します。\n\nテストは構文や機能ごとに配置します。server/test/serverは実サーバーの起動、診断、編集反映、再走査、埋め込みコードのシナリオを分け、client.tsにプロセスと通信の操作をまとめています。一時ディレクトリはsupport/tempDirectories.tsで登録し、各テストの終了時に削除します。
