@@ -9,6 +9,16 @@ describe('parse@opaqueCommand', () => {
     expect(commandFromItem(result.ast.body.items[0])).toMatchObject({ kind: 'opaqueCommand', syntax: 'condition', raw: source });
   });
 
+  test('POSIX文字クラスを新しい条件式として扱わない', () => {
+    const source = '[[ $char == [[:space:]] ]]';
+    const result = parse(source + '; print done');
+    expect(result.diagnostics).toEqual([]);
+    expect(result.ast.body.items).toHaveLength(2);
+    expect(commandFromItem(result.ast.body.items[0])).toMatchObject({
+      kind: 'opaqueCommand', syntax: 'condition', raw: source,
+    });
+  });
+
   test('条件コマンドはunknown診断にせずopaqueCommandとして読む', () => {
     const result = parse('[[ -n $value ]] && echo ok\n');
     const command = commandFromItem(result.ast.body.items[0]);

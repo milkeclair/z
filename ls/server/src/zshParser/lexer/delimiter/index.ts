@@ -86,7 +86,7 @@ export function delimitedEnd(text: string, start: number, kind: DelimiterKind, m
     if (frame.kind === 'arithmetic' && text.startsWith('))', index)) {
       stack.pop(); index += 2; continue;
     }
-    if (text.startsWith('[[', index)) { push('condition', 2); continue; }
+    if (frame.kind !== 'condition' && text.startsWith('[[', index)) { push('condition', 2); continue; }
     if (text.startsWith('((', index) && frame.kind !== 'arithmetic' && frame.kind !== 'patternParen' && frame.kind !== 'arrayParen') { push('arithmetic', 2); continue; }
     const phase = frame.cases[frame.cases.length - 1];
     if (char === '(' && phase !== 'pattern') {
