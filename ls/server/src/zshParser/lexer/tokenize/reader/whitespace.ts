@@ -1,5 +1,5 @@
-import { current, position } from '../../cursor';
 import type { Cursor } from '../../cursor';
+import { current, position } from '../../cursor';
 import type { Token } from '../../token';
 import { createToken } from '../../token';
 import { isHorizontalWhitespace } from '../predicate';

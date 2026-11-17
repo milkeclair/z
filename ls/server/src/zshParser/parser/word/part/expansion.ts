@@ -1,5 +1,5 @@
-import { delimitedEnd } from '../../../lexer/delimiter';
 import type { VariableReferenceNode } from '../../../ast';
+import { delimitedEnd } from '../../../lexer/delimiter';
 import { rangeWithinText } from '../../range';
 import { createExpansionNode } from '../expansionNode';
 import { createVariableNameNode, isNameStart, readNameEnd } from '../variableName';

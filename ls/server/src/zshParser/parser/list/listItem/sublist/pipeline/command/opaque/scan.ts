@@ -1,5 +1,5 @@
-import { delimitedEnd } from '../../../../../../../lexer/delimiter';
 import type { OperatorKind, Token } from '../../../../../../../lexer';
+import { delimitedEnd } from '../../../../../../../lexer/delimiter';
 
 export function findOperatorEndIndex({
   tokens,

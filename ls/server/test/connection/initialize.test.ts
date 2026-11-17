@@ -1,8 +1,8 @@
-import { afterEach, describe, expect, test } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { afterEach, describe, expect, test } from 'vitest';
 import { zInitialize } from '../../src/connection/initialize';
 import type { InitializeParams } from '../../src/vscode_type';
 

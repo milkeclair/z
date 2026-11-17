@@ -1,30 +1,30 @@
-import { delimitedEnd } from '../../../../../../../lexer/delimiter';
-import { isProcessSubstitutionStart } from '../../../../../../word/composite/token';
-import { findOperatorEndIndex, findLineBoundaryIndex } from '../opaque/scan';
-import { parseCommand } from '../index';
 import type {
+  ArithmeticExpansionNode,
+  CaseArmNode,
   CommandNode,
   CompoundCommandNode,
   IfBranchNode,
-  CaseArmNode,
   ListNode,
   WordNode,
-  ArithmeticExpansionNode,
 } from '../../../../../../../ast';
 import type { Token } from '../../../../../../../lexer';
+import { delimitedEnd } from '../../../../../../../lexer/delimiter';
 import type { ParserContext } from '../../../../../../context';
+import { enclosingRange, rangeFromTokens, textForRange } from '../../../../../../range';
+import { readPostCommandRedirects } from '../../../../../../redirect';
 import type { NodeResult, ParseState } from '../../../../../../state';
 import {
+  addDiagnostic,
   advanceState,
   currentToken,
-  skipTrivia,
   skipInlineTrivia,
-  addDiagnostic,
+  skipTrivia,
   tokenSlice,
 } from '../../../../../../state';
-import { rangeFromTokens, enclosingRange, textForRange } from '../../../../../../range';
-import { readPostCommandRedirects } from '../../../../../../redirect';
 import { readWordNode } from '../../../../../../word/composite';
+import { isProcessSubstitutionStart } from '../../../../../../word/composite/token';
+import { parseCommand } from '../index';
+import { findLineBoundaryIndex, findOperatorEndIndex } from '../opaque/scan';
 
 const reserved = ['if', 'while', 'until', 'for', 'select', 'foreach', 'repeat', 'case'];
 

@@ -1,6 +1,6 @@
 import type { TextDocument } from '../vscode_type';
-import type { Diagnostics } from './type';
 import type { DiagnosticSnapshot } from './snapshot';
+import type { Diagnostics } from './type';
 
 export function validateTextDocument({
   diagnostics,

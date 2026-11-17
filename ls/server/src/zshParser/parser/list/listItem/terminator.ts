@@ -1,6 +1,6 @@
 import type { ListTerminatorNode, ListTerminatorType } from '../../../ast';
-import { advanceState, currentToken } from '../../state';
 import type { NodeResult, ParseState } from '../../state';
+import { advanceState, currentToken } from '../../state';
 import { listTerminatorType } from '../listTerminator';
 
 export function readListTerminator(state: ParseState): NodeResult<ListTerminatorNode | null> {

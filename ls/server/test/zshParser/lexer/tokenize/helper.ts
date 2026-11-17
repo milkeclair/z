@@ -1,5 +1,5 @@
-import { Lexer } from '../../../../src/zshParser/lexer';
 import type { TokenizeOptions } from '../../../../src/zshParser/lexer';
+import { Lexer } from '../../../../src/zshParser/lexer';
 
 export const TestSourceFile = 'test.zsh';
 

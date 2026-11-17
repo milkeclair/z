@@ -1,6 +1,6 @@
 import { SpecialCharacters } from '../../../character';
-import { advance, current, eof, position } from '../../../cursor';
 import type { Cursor } from '../../../cursor';
+import { advance, current, eof, position } from '../../../cursor';
 import type { SourcePosition } from '../../../token';
 import { quoteKind } from '../../../token';
 import { readQuote } from '../quote';

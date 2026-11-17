@@ -1,6 +1,6 @@
 import type { Token } from '../../../../../../../lexer';
-import { currentToken } from '../../../../../../state';
 import type { ParseState } from '../../../../../../state';
+import { currentToken } from '../../../../../../state';
 import { isAssignmentPrefix } from '../../../../../../word';
 
 const FunctionKeyword = 'function';

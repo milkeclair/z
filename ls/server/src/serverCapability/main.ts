@@ -1,5 +1,5 @@
 import { codeTokenTypes } from '../connection/semanticTokens';
-import { TextDocumentSyncKind, InitializeResult } from '../vscode_type';
+import { InitializeResult, TextDocumentSyncKind } from '../vscode_type';
 
 export function serverCapability(): InitializeResult {
   return {

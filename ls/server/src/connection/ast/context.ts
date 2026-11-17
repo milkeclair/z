@@ -1,12 +1,12 @@
 import { pathToFileURL } from 'url';
+import type { FuncArg } from '../../getFunctions/type';
 import type { FunctionSnapshot } from '../../refreshFunctions/main';
 import type { FunctionTarget } from '../../refreshFunctions/target';
-import type { FunctionDefinitionNode, WordNode } from '../../zshParser/ast';
-import type { FuncArg } from '../../getFunctions/type';
 import { literalWord } from '../../refreshFunctions/word';
-import { namedKey } from './word';
-import { callAt, functionCommand, inside } from './cursor';
+import type { FunctionDefinitionNode, WordNode } from '../../zshParser/ast';
 import type { Cursor } from './cursor';
+import { callAt, functionCommand, inside } from './cursor';
+import { namedKey } from './word';
 
 function closest(candidates: readonly FunctionTarget[], offset: number): FunctionTarget | null {
   return (

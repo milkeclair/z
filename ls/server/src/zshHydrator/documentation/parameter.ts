@@ -1,8 +1,8 @@
 import type { CommentNode } from '../../zshParser/ast';
 import { rangeWithinText } from '../../zshParser/parser/range';
-import type { ParameterDoc } from './types';
 import { commentPayload } from '../directive';
 import { parseCodeParameterType } from './parameterType';
+import type { ParameterDoc } from './types';
 
 function isDigit(char: string): boolean {
   return char >= '0' && char <= '9';

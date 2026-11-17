@@ -1,6 +1,6 @@
+import { globSync } from 'glob';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { globSync } from 'glob';
 import { describe, expect, test } from 'vitest';
 import { Lexer } from '../../../src/zshParser/lexer';
 import { Parser } from '../../../src/zshParser/parser';

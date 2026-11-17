@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { queueAnalysis, analysisDelay } from '../../src/connection/analysis';
+import { analysisDelay, queueAnalysis } from '../../src/connection/analysis';
 
 describe('pending analysis', () => {
   test('bufferのみの変更を保持し、パスの重複をまとめ、過去状態を変更しない', () => {

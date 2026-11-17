@@ -1,5 +1,5 @@
-import type { ZshFileHydration } from '../zshHydrator';
 import { DiagnosticSeverity } from '../vscode_type';
+import type { ZshFileHydration } from '../zshHydrator';
 import type { Diagnostics } from './type';
 
 export function formatDiagnostics(file: ZshFileHydration): readonly Diagnostics[] {

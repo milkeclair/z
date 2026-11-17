@@ -1,8 +1,8 @@
 import type { ListItemNode } from '../../../ast';
-import { rangeFromTokens, enclosingRange } from '../../range';
-import { skipTrivia, tokenSlice } from '../../state';
-import type { NodeResult, ParseState } from '../../state';
 import type { ParserContext } from '../../context';
+import { enclosingRange, rangeFromTokens } from '../../range';
+import type { NodeResult, ParseState } from '../../state';
+import { skipTrivia, tokenSlice } from '../../state';
 import { parseSublist } from './sublist';
 import { readListTerminator } from './terminator';
 

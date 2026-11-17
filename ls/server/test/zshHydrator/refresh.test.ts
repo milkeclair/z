@@ -1,14 +1,14 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
   createZshHydrator,
-  refreshZshHydrator,
-  documentationOf,
   directivesOf,
+  documentationOf,
+  refreshZshHydrator,
 } from '../../src/zshHydrator';
 
 const roots: string[] = [];

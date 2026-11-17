@@ -1,10 +1,10 @@
-import type { AstNode, SimpleCommandNode, WordNode } from '../../zshParser/ast';
-import { walk } from '../../zshParser/ast';
 import type { FuncArg } from '../../getFunctions/type';
 import type { FunctionTarget } from '../../refreshFunctions/target';
+import { literalWord } from '../../refreshFunctions/word';
+import type { AstNode, SimpleCommandNode, WordNode } from '../../zshParser/ast';
+import { walk } from '../../zshParser/ast';
 import type { Cursor } from './cursor';
 import { inside } from './cursor';
-import { literalWord } from '../../refreshFunctions/word';
 
 function parameterName(raw: string): string | null {
   if (!raw.startsWith('$')) {

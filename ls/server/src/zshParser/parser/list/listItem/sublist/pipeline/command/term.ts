@@ -1,5 +1,5 @@
-import { advanceState, currentToken, skipTrivia } from '../../../../../state';
 import type { ParseState } from '../../../../../state';
+import { advanceState, currentToken, skipTrivia } from '../../../../../state';
 
 export function skipCommandTerm(state: ParseState): ParseState {
   let current = skipTrivia(state);

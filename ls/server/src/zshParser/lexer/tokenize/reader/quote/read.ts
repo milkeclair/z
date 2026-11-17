@@ -1,15 +1,14 @@
-import { SpecialCharacters } from '../../../character';
-import { advance, current, startsWith } from '../../../cursor';
 import type { Cursor } from '../../../cursor';
+import { advance, current, startsWith } from '../../../cursor';
 import { delimitedEnd } from '../../../delimiter';
 import type { ReadResult } from '../result';
+import type { QuoteDefinition, QuoteReadKind } from './definition';
 import {
   BacktickQuoteDefinition,
   DollarSingleQuoteDefinition,
   DoubleQuoteDefinition,
   SingleQuoteDefinition,
 } from './definition';
-import type { QuoteDefinition, QuoteReadKind } from './definition';
 
 type QuotedValue = {
   readonly text: string;

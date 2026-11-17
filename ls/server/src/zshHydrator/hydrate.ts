@@ -6,10 +6,10 @@ import type {
   FunctionDefinitionNode,
 } from '../zshParser/ast';
 import { findAll, mapAst } from '../zshParser/ast';
-import type { FunctionDocumentation } from './documentation';
-import { parseFunctionDocumentation } from './documentation';
 import type { ControlComment, HydrationOptions } from './directive';
 import { parseDirective } from './directive';
+import type { FunctionDocumentation } from './documentation';
+import { parseFunctionDocumentation } from './documentation';
 
 export type HydratedDocBlock = DocBlockNode & { readonly hydration: FunctionDocumentation };
 export type HydratedComment = CommentNode & { readonly hydration: ControlComment };

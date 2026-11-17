@@ -1,16 +1,16 @@
 import { pathToFileURL } from 'url';
-import { literalWord } from './word';
-import type { FunctionTarget, FunctionTargets } from './target';
 import type { Result } from '../document/type';
-import type { Func, FuncArg } from '../getFunctions/type';
 import { NAMED_ARG_POSITION } from '../getFunctions/constant';
-import { documentationOf } from '../zshHydrator';
+import type { Func, FuncArg } from '../getFunctions/type';
 import type {
   FunctionDocumentation,
   ParameterDoc,
   ZshFileHydration,
   ZshHydrator,
 } from '../zshHydrator';
+import { documentationOf } from '../zshHydrator';
+import type { FunctionTarget, FunctionTargets } from './target';
+import { literalWord } from './word';
 
 type FunctionProjection = {
   readonly functions: Func[];

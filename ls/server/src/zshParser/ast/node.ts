@@ -1,5 +1,5 @@
-import type { CompoundCommandNode, IfBranchNode, CaseArmNode } from './compound';
 import type { CommentNode } from './comment';
+import type { CaseArmNode, CompoundCommandNode, IfBranchNode } from './compound';
 import type { DocBlockNode } from './docBlock';
 import type { EofNode } from './eof';
 import type { FileNode } from './file';
@@ -26,18 +26,18 @@ import type {
 } from './file/list/listItem/sublist/pipeline/command/simpleCommand';
 import type { SubshellCommandNode } from './file/list/listItem/sublist/pipeline/command/subshell';
 import type { OptionNode } from './option';
-import type { RedirectNode, HereDocumentNode } from './redirect';
+import type { HereDocumentNode, RedirectNode } from './redirect';
 import type { UnknownNode } from './unknown';
 import type {
   ArithmeticExpansionNode,
   CommandSubstitutionNode,
   ParameterExpansionNode,
+  ProcessSubstitutionNode,
   StringLiteralNode,
   VariableNameNode,
   VariableReferenceNode,
   VariableValueNode,
   WordNode,
-  ProcessSubstitutionNode,
 } from './word';
 
 export type AstNode =

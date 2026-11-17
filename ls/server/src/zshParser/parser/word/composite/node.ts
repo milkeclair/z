@@ -1,8 +1,8 @@
-import type { WordContext } from '../part/types';
 import type { WordNode } from '../../../ast';
 import type { QuoteKind, Token } from '../../../lexer';
 import { rangeFromTokens } from '../../range';
 import { createWordParts } from '../part';
+import type { WordContext } from '../part/types';
 
 export function createCompositeWordNode(
   tokens: readonly Token[],

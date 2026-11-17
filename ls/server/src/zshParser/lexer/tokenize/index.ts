@@ -1,15 +1,14 @@
-import { createLexicalContext } from './context';
-import type { LexicalContext } from './context';
 import { SpecialCharacters } from '../character';
-import { createCursor } from '../cursor';
-import { eof, position } from '../cursor';
+import type { Cursor } from '../cursor';
+import { createCursor, eof, position } from '../cursor';
 import type { LexerDiagnostic } from '../diagnostic';
 import type { Token, TokenizeOptions } from '../token';
 import { createToken } from '../token';
 import { isWordBoundary } from './boundary';
+import type { LexicalContext } from './context';
+import { createLexicalContext } from './context';
 import { Reader } from './reader';
 import { readTokenizeStep } from './step';
-import type { Cursor } from '../cursor';
 
 export type TokenizeState = {
   readonly context: LexicalContext;

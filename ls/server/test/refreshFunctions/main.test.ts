@@ -1,15 +1,15 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { Lexer } from '../../src/zshParser/lexer';
 import {
+  createFunctionSnapshot,
   refreshFunctions,
   refreshFunctionSnapshot,
-  createFunctionSnapshot,
 } from '../../src/refreshFunctions/main';
+import { Lexer } from '../../src/zshParser/lexer';
 
 const roots: string[] = [];
 function fixture(): string {

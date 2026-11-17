@@ -1,7 +1,7 @@
 import type { PipelineModifierNode } from '../../../../../ast';
 import type { Token } from '../../../../../lexer';
-import { addDiagnostic, advanceState, currentToken, skipTrivia } from '../../../../state';
 import type { ParseState } from '../../../../state';
+import { addDiagnostic, advanceState, currentToken, skipTrivia } from '../../../../state';
 
 type PipelineModifierResult = {
   readonly modifier: PipelineModifierNode | null;

@@ -1,9 +1,9 @@
-import { afterEach, describe, expect, test } from 'vitest';
+import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawn } from 'node:child_process';
-import { readShellEnvironment, parseShellEnvironment } from '../../src/diagnostics/environment';
+import { afterEach, describe, expect, test } from 'vitest';
+import { parseShellEnvironment, readShellEnvironment } from '../../src/diagnostics/environment';
 
 const roots: string[] = [];
 function fixture() {

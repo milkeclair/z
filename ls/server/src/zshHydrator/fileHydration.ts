@@ -1,13 +1,12 @@
-import type { FileNode, FunctionDefinitionNode } from '../zshParser/ast';
+import type { FileNode, FunctionDefinitionNode, QueryContext } from '../zshParser/ast';
 import { createQueryContext, findAll } from '../zshParser/ast';
-import type { QueryContext } from '../zshParser/ast';
-import { Lexer } from '../zshParser/lexer';
 import type { LexerDiagnostic, Token } from '../zshParser/lexer';
-import { Parser } from '../zshParser/parser';
+import { Lexer } from '../zshParser/lexer';
 import type { ParserDiagnostic } from '../zshParser/parser';
-import { hydrateAst, documentationOf } from './hydrate';
-import type { HydrationDiagnostic } from './documentation';
+import { Parser } from '../zshParser/parser';
 import type { HydrationOptions } from './directive';
+import type { HydrationDiagnostic } from './documentation';
+import { documentationOf, hydrateAst } from './hydrate';
 
 export type HydratedFunction = {
   readonly name: string;

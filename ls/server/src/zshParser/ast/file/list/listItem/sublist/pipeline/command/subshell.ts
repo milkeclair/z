@@ -1,7 +1,7 @@
+import type { ListNode } from '../../../..';
 import type { SourceRange } from '../../../../../../../lexer';
 import type { BaseNode } from '../../../../../../base';
 import type { RedirectNode } from '../../../../../../redirect';
-import type { ListNode } from '../../../..';
 
 export type SubshellCommandNode = BaseNode<'subshellCommand'> & {
   readonly openParen: SourceRange;

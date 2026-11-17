@@ -1,9 +1,9 @@
+import fs from 'fs';
 import { globSync } from 'glob';
 import path from 'path';
-import fs from 'fs';
+import { extractFunctionArgs } from './argument';
 import { functionRegex } from './regex';
 import { Func, FuncContent } from './type';
-import { extractFunctionArgs } from './argument';
 
 export function extractZFunctions(content: string): FuncContent[] {
   const functions: FuncContent[] = [];

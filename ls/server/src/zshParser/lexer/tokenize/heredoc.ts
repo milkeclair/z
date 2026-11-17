@@ -1,9 +1,9 @@
-import { hereDocEnd } from '../delimiter/heredoc';
 import type { Cursor } from '../cursor';
 import { advance, position } from '../cursor';
-import { createToken } from '../token';
-import type { Token } from '../token';
+import { hereDocEnd } from '../delimiter/heredoc';
 import type { LexerDiagnostic } from '../diagnostic';
+import type { Token } from '../token';
+import { createToken } from '../token';
 
 export type HereDocRequest = {
   readonly operatorOffset: number;

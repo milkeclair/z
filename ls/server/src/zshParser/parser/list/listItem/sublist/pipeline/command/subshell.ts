@@ -1,7 +1,9 @@
 import type { SubshellCommandNode } from '../../../../../../ast';
 import type { Token } from '../../../../../../lexer';
+import type { ParserContext } from '../../../../../context';
+import { enclosingRange, rangeFromTokens } from '../../../../../range';
 import { readPostCommandRedirects } from '../../../../../redirect';
-import { rangeFromTokens, enclosingRange } from '../../../../../range';
+import type { NodeResult, ParseState } from '../../../../../state';
 import {
   addDiagnostic,
   advanceState,
@@ -9,8 +11,6 @@ import {
   skipTrivia,
   tokenSlice,
 } from '../../../../../state';
-import type { NodeResult, ParseState } from '../../../../../state';
-import type { ParserContext } from '../../../../../context';
 
 export function parseSubshellCommand({
   state,

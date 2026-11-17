@@ -1,8 +1,8 @@
-import { DefaultNestingLimit } from './nesting';
-import { createCommentContext } from '../comment';
 import type { SourcePosition, Token } from '../../lexer';
+import { createCommentContext } from '../comment';
 import { ZeroPosition } from '../range';
-import type { ParseStateOptions, ParseState } from './types';
+import { DefaultNestingLimit } from './nesting';
+import type { ParseState, ParseStateOptions } from './types';
 
 const Empty = '';
 

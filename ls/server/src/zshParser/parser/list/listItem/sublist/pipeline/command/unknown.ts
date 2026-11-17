@@ -1,7 +1,7 @@
 import type { UnknownNode } from '../../../../../../ast';
 import type { Token } from '../../../../../../lexer';
-import { addDiagnostic, advanceState } from '../../../../../state';
 import type { NodeResult, ParseState } from '../../../../../state';
+import { addDiagnostic, advanceState } from '../../../../../state';
 
 export function createUnknownCommand(
   state: ParseState,

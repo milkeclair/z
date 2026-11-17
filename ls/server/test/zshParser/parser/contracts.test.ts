@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
+import { mapAst } from '../../../src/zshParser/ast';
 import { Lexer } from '../../../src/zshParser/lexer';
 import { Parser } from '../../../src/zshParser/parser';
-import { mapAst } from '../../../src/zshParser/ast';
 import { astContractViolations } from './contracts';
 
 describe('ast@contracts', () => {

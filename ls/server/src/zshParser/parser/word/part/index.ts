@@ -3,8 +3,8 @@ import { rangeWithinText } from '../../range';
 import { readExpansion } from './expansion';
 import type { WordPartState, WordSegment } from './types';
 
-export type { WordSegment } from './types';
 export { wordSegmentFromToken } from './types';
+export type { WordSegment } from './types';
 
 export function createWordParts(segment: WordSegment): readonly WordPartNode[] {
   let state: WordPartState = {

@@ -1,8 +1,8 @@
-import type { TextDocument } from '../vscode_type';
 import type { CodeProgram } from '../embeddedCode';
-import type { SourceRange } from '../zshParser/lexer';
-import { walk } from '../zshParser/ast';
 import { codeRanges, textPosition } from '../embeddedCode/sourceMap';
+import type { TextDocument } from '../vscode_type';
+import { walk } from '../zshParser/ast';
+import type { SourceRange } from '../zshParser/lexer';
 
 export const codeTokenTypes = [
   'function',

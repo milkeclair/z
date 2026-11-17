@@ -1,8 +1,8 @@
-import type { UnknownNode } from '../../../../../../unknown';
+import type { ListNode } from '../../../..';
 import type { SourceRange } from '../../../../../../../lexer';
 import type { BaseNode } from '../../../../../../base';
 import type { RedirectNode } from '../../../../../../redirect';
-import type { ListNode } from '../../../..';
+import type { UnknownNode } from '../../../../../../unknown';
 
 export type GroupCommandNode = BaseNode<'groupCommand'> & {
   readonly openBrace: SourceRange;

@@ -1,12 +1,12 @@
-import type { FunctionTargets } from '../../refreshFunctions/target';
 import type { CodeProgram } from '../../embeddedCode';
 import { codeOffset } from '../../embeddedCode/sourceMap';
+import type { FunctionSnapshot } from '../../refreshFunctions/main';
+import type { FunctionTargets } from '../../refreshFunctions/target';
 import type { TextDocument } from '../../vscode_type';
+import type { ZshFileHydration } from '../../zshHydrator';
 import type { AstNode, SimpleCommandNode } from '../../zshParser/ast';
 import { locate } from '../../zshParser/ast';
 import type { SourceRange, Token } from '../../zshParser/lexer';
-import type { ZshFileHydration } from '../../zshHydrator';
-import type { FunctionSnapshot } from '../../refreshFunctions/main';
 
 export type Cursor = {
   readonly file: ZshFileHydration;

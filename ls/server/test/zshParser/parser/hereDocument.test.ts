@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
+import { createQueryContext, findAll, locate } from '../../../src/zshParser/ast';
 import { Lexer } from '../../../src/zshParser/lexer';
 import { astContractViolations } from './contracts';
-import { locate, createQueryContext, findAll } from '../../../src/zshParser/ast';
 import { parse, simpleCommandFromItem } from './helper';
 
 describe('parse@hereDocument', () => {

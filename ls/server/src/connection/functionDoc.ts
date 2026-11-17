@@ -1,6 +1,6 @@
-import { MarkupKind } from '../vscode_type';
 import type { Result } from '../document/type';
 import type { Func, FuncArg } from '../getFunctions/type';
+import { MarkupKind } from '../vscode_type';
 
 export function argumentName(arg: FuncArg): string {
   if (arg.isNamed) {

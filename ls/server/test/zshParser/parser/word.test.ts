@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { findAll } from '../../../src/zshParser/ast';
 import type { WordPartNode } from '../../../src/zshParser/ast';
+import { findAll } from '../../../src/zshParser/ast';
 import { tokensInRange } from '../../../src/zshParser/parser';
 import { parse, simpleCommandFromItem, sublistFromItem } from './helper';
 

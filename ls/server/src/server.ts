@@ -1,33 +1,25 @@
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
+import type { PendingAnalysis } from './connection/analysis';
+import { analysisDelay, queueAnalysis } from './connection/analysis';
+import { projectRootFromSettings } from './connection/projectRoot';
+import { startPeriodicRescan } from './connection/rescan';
+import { emptyShellEnvironment, readShellEnvironment } from './diagnostics/environment';
+import { createDiagnosticSnapshot, refreshDiagnosticSnapshot } from './diagnostics/snapshot';
 import {
-  createConnection,
-  TextDocuments,
-  TextDocument,
-  ProposedFeatures,
-  DocumentDiagnosticReportKind,
-  DidChangeWatchedFilesNotification,
-} from './vscode_type';
-import {
-  refreshFunctionSnapshot,
   createFunctionSnapshot,
-  validateTextDocument,
-  workspaceDiagnostics,
+  refreshFunctionSnapshot,
   zInitialize,
   zSettingsFromConfigurationNotification,
-  zCompletion,
-  zCompletionResolve,
-  zHover,
-  zDefinition,
-  zSignatureHelp,
 } from './main';
-import { createDiagnosticSnapshot, refreshDiagnosticSnapshot } from './diagnostics/snapshot';
-import { readShellEnvironment, emptyShellEnvironment } from './diagnostics/environment';
-import { projectRootFromSettings } from './connection/projectRoot';
-import { queueAnalysis, analysisDelay } from './connection/analysis';
-import type { PendingAnalysis } from './connection/analysis';
-import { startPeriodicRescan } from './connection/rescan';
-import { zSemanticTokens } from './connection/semanticTokens';
+import { registerLanguageFeatures } from './server/providers';
+import {
+  createConnection,
+  DidChangeWatchedFilesNotification,
+  ProposedFeatures,
+  TextDocument,
+  TextDocuments,
+} from './vscode_type';
 
 function startServer(): void {
   const conn = createConnection(ProposedFeatures.all);
@@ -190,81 +182,13 @@ function startServer(): void {
     flushAnalysis();
   });
 
-  conn.onCompletion((params) => {
-    flushAnalysis();
-    return zCompletion({
-      params,
-      documents,
-      snapshot,
-      showPrivateFunctions,
-      programs: diagnosticSnapshot.files.get(params.textDocument.uri)?.codePrograms,
-    });
-  });
-  conn.onCompletionResolve((result) => {
-    flushAnalysis();
-    const data: unknown = result.data;
-    const uri =
-      typeof data === 'object' && data !== null && 'uri' in data && typeof data.uri === 'string'
-        ? data.uri
-        : '';
-    return zCompletionResolve(result, snapshot, diagnosticSnapshot.files.get(uri)?.codePrograms);
-  });
-  conn.onHover((params) => {
-    flushAnalysis();
-    return zHover({
-      params,
-      documents,
-      snapshot,
-      programs: diagnosticSnapshot.files.get(params.textDocument.uri)?.codePrograms,
-    });
-  });
-  conn.onSignatureHelp((params) => {
-    flushAnalysis();
-    return zSignatureHelp({
-      params,
-      documents,
-      snapshot,
-      programs: diagnosticSnapshot.files.get(params.textDocument.uri)?.codePrograms,
-    });
-  });
-  conn.onDefinition((params) => {
-    flushAnalysis();
-    return zDefinition({
-      params,
-      documents,
-      snapshot,
-      programs: diagnosticSnapshot.files.get(params.textDocument.uri)?.codePrograms,
-    });
-  });
-
-  conn.languages.semanticTokens.on((params) => {
-    flushAnalysis();
-    const document = documents.get(params.textDocument.uri);
-    return document
-      ? zSemanticTokens({
-          document,
-          programs: diagnosticSnapshot.files.get(document.uri)?.codePrograms ?? [],
-        })
-      : { data: [] };
-  });
-
-  conn.languages.diagnostics.on((params) => {
-    flushAnalysis();
-    const document = documents.get(params.textDocument.uri);
-    return {
-      kind: DocumentDiagnosticReportKind.Full,
-      resultId: document ? diagnosticSnapshot.files.get(document.uri)?.resultId : undefined,
-      items: document
-        ? validateTextDocument({ diagnostics: diagnosticSnapshot, textDocument: document })
-        : [],
-    };
-  });
-  conn.languages.diagnostics.onWorkspace((params) => {
-    flushAnalysis();
-    return workspaceDiagnostics({
-      diagnostics: diagnosticSnapshot,
-      previousResultIds: params.previousResultIds,
-    });
+  registerLanguageFeatures({
+    connection: conn,
+    documents,
+    currentState() {
+      flushAnalysis();
+      return { snapshot, diagnosticSnapshot, showPrivateFunctions };
+    },
   });
 
   conn.onShutdown(() => {

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
+import { findAll } from '../../../src/zshParser/ast';
 import { Lexer } from '../../../src/zshParser/lexer';
 import { Parser } from '../../../src/zshParser/parser';
-import { findAll } from '../../../src/zshParser/ast';
 import { astContractViolations } from './contracts';
 
 describe('parenthesized glob words', () => {

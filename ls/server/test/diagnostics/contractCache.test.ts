@@ -1,18 +1,18 @@
-import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { refreshFunctionSnapshot } from '../../src/refreshFunctions/main';
-import type { FunctionSnapshot } from '../../src/refreshFunctions/main';
-import { refreshDiagnosticSnapshot } from '../../src/diagnostics/snapshot';
-import type { DiagnosticSnapshot } from '../../src/diagnostics/snapshot';
-import { readShellEnvironment, emptyShellEnvironment } from '../../src/diagnostics/environment';
-import type { ShellEnvironment } from '../../src/diagnostics/environment';
-import * as calls from '../../src/diagnostics/calls';
-import { zHover } from '../../src/connection/hover';
 import { zDefinition } from '../../src/connection/definition';
+import { zHover } from '../../src/connection/hover';
+import * as calls from '../../src/diagnostics/calls';
+import type { ShellEnvironment } from '../../src/diagnostics/environment';
+import { emptyShellEnvironment, readShellEnvironment } from '../../src/diagnostics/environment';
+import type { DiagnosticSnapshot } from '../../src/diagnostics/snapshot';
+import { refreshDiagnosticSnapshot } from '../../src/diagnostics/snapshot';
+import type { FunctionSnapshot } from '../../src/refreshFunctions/main';
+import { refreshFunctionSnapshot } from '../../src/refreshFunctions/main';
 
 const roots: string[] = [];
 const shellRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'z-contract-shell-'));

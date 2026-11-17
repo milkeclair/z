@@ -1,6 +1,6 @@
 import type { PipelineTimingNode } from '../../../../../ast';
-import { advanceState, currentToken, skipTrivia } from '../../../../state';
 import type { ParseState } from '../../../../state';
+import { advanceState, currentToken, skipTrivia } from '../../../../state';
 
 const Time = 'time';
 

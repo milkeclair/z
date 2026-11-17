@@ -1,11 +1,11 @@
-import type { FunctionDefinitionNode, SimpleCommandNode, WordNode } from '../zshParser/ast';
-import { documentationOf } from '../zshHydrator';
 import { namedKey } from '../connection/ast/word';
-import type { ParameterDoc } from '../zshHydrator/documentation';
 import type { ResolutionContext } from '../diagnostics/calls';
 import { uncertainWord } from '../diagnostics/calls';
-import { decodeLiteral, literalValue } from './literal';
+import { documentationOf } from '../zshHydrator';
+import type { ParameterDoc } from '../zshHydrator/documentation';
+import type { FunctionDefinitionNode, SimpleCommandNode, WordNode } from '../zshParser/ast';
 import type { DecodedLiteral } from './literal';
+import { decodeLiteral, literalValue } from './literal';
 
 export type CodeArgument =
   | {

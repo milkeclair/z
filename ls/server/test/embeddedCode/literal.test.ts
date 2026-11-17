@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { findAll } from '../../src/zshParser/ast';
-import { createZshFileHydration } from '../../src/zshHydrator';
 import { decodeLiteral, literalValue } from '../../src/embeddedCode/literal';
 import { codeRange, createCodeSourceMap } from '../../src/embeddedCode/sourceMap';
+import { createZshFileHydration } from '../../src/zshHydrator';
+import { findAll } from '../../src/zshParser/ast';
 
 function word(argument: string, prefix = 'run ') {
   const content = prefix + argument + '\n';

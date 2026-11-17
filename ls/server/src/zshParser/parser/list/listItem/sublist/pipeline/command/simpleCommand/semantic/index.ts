@@ -1,7 +1,7 @@
 import type { SimpleCommandSemantic } from '../../../../../../../../ast';
+import type { SimpleCommandSemanticInput } from '../types';
 import { createDeclarationSemantic } from './declaration';
 import { createSourceSemantic } from './source';
-import type { SimpleCommandSemanticInput } from '../types';
 
 export function createSimpleCommandSemantic(
   parts: SimpleCommandSemanticInput,

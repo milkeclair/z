@@ -1,11 +1,11 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { createZshHydrator, refreshZshHydrator, EmptyZshHydrator } from '../../src/zshHydrator';
 import type { ZshHydrator } from '../../src/zshHydrator';
+import { createZshHydrator, EmptyZshHydrator, refreshZshHydrator } from '../../src/zshHydrator';
 
 const roots: string[] = [];
 function fixture() {

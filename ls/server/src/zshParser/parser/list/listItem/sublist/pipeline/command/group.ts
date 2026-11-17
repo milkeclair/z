@@ -1,8 +1,9 @@
-import { parseCommand } from './index';
 import type { AlwaysClauseNode, GroupCommandNode } from '../../../../../../ast';
 import type { Token } from '../../../../../../lexer';
+import type { ParserContext } from '../../../../../context';
+import { enclosingRange, rangeFromTokens } from '../../../../../range';
 import { readPostCommandRedirects } from '../../../../../redirect';
-import { rangeFromTokens, enclosingRange } from '../../../../../range';
+import type { NodeResult, ParseState } from '../../../../../state';
 import {
   addDiagnostic,
   advanceState,
@@ -11,8 +12,7 @@ import {
   skipTrivia,
   tokenSlice,
 } from '../../../../../state';
-import type { NodeResult, ParseState } from '../../../../../state';
-import type { ParserContext } from '../../../../../context';
+import { parseCommand } from './index';
 import { skipCommandTerm } from './term';
 
 export function parseGroupCommand({

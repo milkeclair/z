@@ -1,23 +1,23 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { refreshFunctionSnapshot } from '../../src/refreshFunctions/main';
-import { refreshDiagnosticSnapshot } from '../../src/diagnostics/snapshot';
-import { emptyShellEnvironment } from '../../src/diagnostics/environment';
+import { commandInsertion } from '../../src/connection/ast/word';
 import { zCompletion } from '../../src/connection/completion';
 import { zCompletionResolve } from '../../src/connection/completionResolve';
-import { zHover } from '../../src/connection/hover';
 import { zDefinition } from '../../src/connection/definition';
+import { zHover } from '../../src/connection/hover';
 import { zSignatureHelp } from '../../src/connection/signatureHelp';
-import { Lexer } from '../../src/zshParser/lexer';
+import { emptyShellEnvironment } from '../../src/diagnostics/environment';
+import { refreshDiagnosticSnapshot } from '../../src/diagnostics/snapshot';
+import { decodeLiteral, literalValue } from '../../src/embeddedCode/literal';
+import { refreshFunctionSnapshot } from '../../src/refreshFunctions/main';
+import { literalWord } from '../../src/refreshFunctions/word';
 import { createZshFileHydration } from '../../src/zshHydrator';
 import { findAll } from '../../src/zshParser/ast';
-import { decodeLiteral, literalValue } from '../../src/embeddedCode/literal';
-import { commandInsertion } from '../../src/connection/ast/word';
-import { literalWord } from '../../src/refreshFunctions/word';
+import { Lexer } from '../../src/zshParser/lexer';
 
 const roots: string[] = [];
 afterEach(() => {

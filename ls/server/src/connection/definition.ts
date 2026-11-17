@@ -1,21 +1,15 @@
 import { targetRange } from '../refreshFunctions/target';
-import type { CodeProgram } from '../embeddedCode';
-import { DefinitionParams, TextDocuments, TextDocument, Location } from '../vscode_type';
-import type { FunctionSnapshot } from '../refreshFunctions/main';
-import { cursorAt, protocolRange } from './ast/cursor';
+import { DefinitionParams, Location } from '../vscode_type';
 import { targetAtName } from './ast/context';
+import { cursorAt, protocolRange } from './ast/cursor';
+import type { LanguageFeatureRequest } from './type';
 
 export function zDefinition({
   params,
   documents,
   snapshot,
   programs,
-}: {
-  params: DefinitionParams;
-  documents: Pick<TextDocuments<TextDocument>, 'get'>;
-  snapshot: FunctionSnapshot;
-  programs?: readonly CodeProgram[];
-}): Location | null {
+}: LanguageFeatureRequest<DefinitionParams>): Location | null {
   const document = documents.get(params.textDocument.uri);
   if (!document) {
     return null;

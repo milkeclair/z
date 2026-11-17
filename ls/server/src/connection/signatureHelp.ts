@@ -1,20 +1,17 @@
-import type { CodeProgram } from '../embeddedCode';
+import type { Result } from '../document/type';
+import type { FuncArg } from '../getFunctions/type';
+import type { FunctionTarget } from '../refreshFunctions/target';
 import {
   MarkupKind,
   ParameterInformation,
   SignatureHelp,
   SignatureHelpParams,
   SignatureInformation,
-  TextDocument,
-  TextDocuments,
 } from '../vscode_type';
-import type { Result } from '../document/type';
-import type { FuncArg } from '../getFunctions/type';
-import type { FunctionSnapshot } from '../refreshFunctions/main';
-import type { FunctionTarget } from '../refreshFunctions/target';
+import { activeArgument, calledFunction } from './ast/context';
 import { cursorAt } from './ast/cursor';
-import { calledFunction, activeArgument } from './ast/context';
 import { argumentDescription, argumentDisplay, markdownDocumentation } from './functionDoc';
+import type { LanguageFeatureRequest } from './type';
 
 function signatureToken(arg: FuncArg): string {
   const token = argumentDisplay(arg);
@@ -43,12 +40,7 @@ export function zSignatureHelp({
   documents,
   snapshot,
   programs,
-}: {
-  params: SignatureHelpParams;
-  documents: Pick<TextDocuments<TextDocument>, 'get'>;
-  snapshot: FunctionSnapshot;
-  programs?: readonly CodeProgram[];
-}): SignatureHelp | null {
+}: LanguageFeatureRequest<SignatureHelpParams>): SignatureHelp | null {
   const document = documents.get(params.textDocument.uri);
   if (!document) {
     return null;

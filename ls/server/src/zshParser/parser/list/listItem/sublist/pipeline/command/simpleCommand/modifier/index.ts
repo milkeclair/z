@@ -5,8 +5,8 @@ import type {
 } from '../../../../../../../../ast';
 import type { Token } from '../../../../../../../../lexer';
 import { createOptionNodeFromToken } from '../../../../../../../option';
-import { advanceState, currentToken, skipInlineTrivia } from '../../../../../../../state';
 import type { NodeResult, ParseState } from '../../../../../../../state';
+import { advanceState, currentToken, skipInlineTrivia } from '../../../../../../../state';
 import { readWordNode } from '../../../../../../../word/composite';
 import { isProcessSubstitutionStart } from '../../../../../../../word/composite/token';
 

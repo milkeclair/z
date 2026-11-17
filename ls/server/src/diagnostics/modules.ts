@@ -1,5 +1,5 @@
-import type { SimpleCommandNode } from '../zshParser/ast';
 import { literalWord } from '../refreshFunctions/word';
+import type { SimpleCommandNode } from '../zshParser/ast';
 
 const BUILTINS: ReadonlyMap<string, readonly string[]> = new Map([
   ['zsh/datetime', ['strftime']],

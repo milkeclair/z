@@ -1,10 +1,10 @@
-import { enterNesting } from '../../../../../state/nesting';
-import { isCompoundStart, parseCompoundCommand } from './compound';
 import type { CommandNode } from '../../../../../../ast';
 import { isCommandBoundary } from '../../../../../boundary';
-import { addDiagnostic, currentToken, skipTrivia } from '../../../../../state';
-import type { NodeResult, ParseState } from '../../../../../state';
 import type { ParserContext } from '../../../../../context';
+import type { NodeResult, ParseState } from '../../../../../state';
+import { addDiagnostic, currentToken, skipTrivia } from '../../../../../state';
+import { enterNesting } from '../../../../../state/nesting';
+import { isCompoundStart, parseCompoundCommand } from './compound';
 import { isFunctionDefinitionStart, parseFunctionDefinition } from './functionDefinition';
 import { parseGroupCommand } from './group';
 import { parseOpaqueCommandIfStart } from './opaque';

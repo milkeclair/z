@@ -1,7 +1,7 @@
-import type { NestingState } from './nesting';
-import type { CommentContext } from '../comment';
 import type { Token } from '../../lexer';
+import type { CommentContext } from '../comment';
 import type { ParserDiagnostic } from '../diagnostic';
+import type { NestingState } from './nesting';
 
 export type ParseOptions = {
   readonly sourceFile?: string;

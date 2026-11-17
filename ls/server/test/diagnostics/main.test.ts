@@ -1,16 +1,16 @@
-import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { refreshFunctionSnapshot } from '../../src/refreshFunctions/main';
-import { refreshDiagnosticSnapshot } from '../../src/diagnostics/snapshot';
-import { readShellEnvironment, emptyShellEnvironment } from '../../src/diagnostics/environment';
 import type { ShellEnvironment } from '../../src/diagnostics/environment';
-import { validateTextDocument } from '../../src/diagnostics/main';
-import { workspaceDiagnostics } from '../../src/diagnostics/workspace';
+import { emptyShellEnvironment, readShellEnvironment } from '../../src/diagnostics/environment';
 import * as facts from '../../src/diagnostics/facts';
+import { validateTextDocument } from '../../src/diagnostics/main';
+import { refreshDiagnosticSnapshot } from '../../src/diagnostics/snapshot';
+import { workspaceDiagnostics } from '../../src/diagnostics/workspace';
+import { refreshFunctionSnapshot } from '../../src/refreshFunctions/main';
 
 const roots: string[] = [];
 const environmentRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'z-diag-shell-'));

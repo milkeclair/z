@@ -1,5 +1,4 @@
 import type { BaseNode } from '../../../../../../../base';
-import type { OptionNode } from '../../../../../../../option';
 import type { RedirectNode } from '../../../../../../../redirect';
 import type { WordNode } from '../../../../../../../word';
 import type { AssignNode } from './assign';

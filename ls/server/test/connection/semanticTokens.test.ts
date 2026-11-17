@@ -1,13 +1,13 @@
-import { afterEach, describe, expect, test } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { afterEach, describe, expect, test } from 'vitest';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { refreshFunctionSnapshot } from '../../src/refreshFunctions/main';
-import { refreshDiagnosticSnapshot } from '../../src/diagnostics/snapshot';
+import { codeTokenTypes, zSemanticTokens } from '../../src/connection/semanticTokens';
 import { emptyShellEnvironment } from '../../src/diagnostics/environment';
-import { zSemanticTokens, codeTokenTypes } from '../../src/connection/semanticTokens';
+import { refreshDiagnosticSnapshot } from '../../src/diagnostics/snapshot';
+import { refreshFunctionSnapshot } from '../../src/refreshFunctions/main';
 
 const roots: string[] = [];
 afterEach(() => {

@@ -1,8 +1,8 @@
 import type { OpaqueCommandNode } from '../../../../../../../ast';
+import { enclosingRange, rangeFromTokens, textForRange } from '../../../../../../range';
 import { readPostCommandRedirects } from '../../../../../../redirect';
-import { rangeFromTokens, enclosingRange, textForRange } from '../../../../../../range';
-import { addDiagnostic, advanceState, currentToken, tokenSlice } from '../../../../../../state';
 import type { NodeResult, ParseState } from '../../../../../../state';
+import { addDiagnostic, advanceState, currentToken, tokenSlice } from '../../../../../../state';
 import { findLineBoundaryIndex, findOperatorEndIndex } from './scan';
 
 export function parseOpaqueCommandIfStart({

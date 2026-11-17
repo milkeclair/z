@@ -1,14 +1,14 @@
 import fs from 'fs';
+import { globSync } from 'glob';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { globSync } from 'glob';
 import type { TextDocument, TextDocuments } from '../vscode_type';
+import type { HydrationOptions } from './directive';
 import {
   createZshFileHydration,
-  type ZshFileHydration,
   type HydratedFunction,
+  type ZshFileHydration,
 } from './fileHydration';
-import type { HydrationOptions } from './directive';
 
 type DiskFingerprint = {
   readonly kind: 'disk';

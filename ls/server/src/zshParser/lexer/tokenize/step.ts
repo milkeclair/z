@@ -1,19 +1,18 @@
-import { delimitedEnd, hereDocHeader } from '../delimiter';
-import { advance } from '../cursor';
-import { readHereDocuments } from './heredoc';
 import type { OperatorDefinition } from '../character';
-import type { LexicalContext } from './context';
-import { advanceLexicalContext, isDollarOpen, isProcessOpen } from './context';
 import { SpecialCharacters } from '../character';
-import { current, position } from '../cursor';
 import type { Cursor } from '../cursor';
+import { advance, current, position } from '../cursor';
+import { delimitedEnd, hereDocHeader } from '../delimiter';
 import type { LexerDiagnostic } from '../diagnostic';
 import type { Token } from '../token';
 import { createToken } from '../token';
+import type { LexicalContext } from './context';
+import { advanceLexicalContext, isDollarOpen, isProcessOpen } from './context';
+import { readHereDocuments } from './heredoc';
+import type { TokenizeState } from './index';
 import { findOperator, isContinuation, isHorizontalWhitespace, isNewline } from './predicate';
 import { Reader } from './reader';
 import type { ReadResult } from './reader/result';
-import type { TokenizeState } from './index';
 
 type TokenizeStepValue = {
   readonly tokens: readonly Token[];

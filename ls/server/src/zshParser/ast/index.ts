@@ -1,7 +1,24 @@
 export type { BaseNode } from './base';
+export type { CommentNode } from './comment';
+export type {
+  CaseArmNode,
+  CaseCommandNode,
+  CompoundCommandNode,
+  ForCommandNode,
+  ForeachCommandNode,
+  IfBranchNode,
+  IfCommandNode,
+  RepeatCommandNode,
+  SelectCommandNode,
+  UntilCommandNode,
+  WhileCommandNode,
+} from './compound';
+export type { ParserDiagnosticKind } from './diagnostic';
+export type { DocBlockNode } from './docBlock';
+export type { EofNode } from './eof';
 export type { FileNode } from './file';
-export type { ListItemNode, ListTerminatorNode, ListTerminatorType } from './file/list/listItem';
 export type { ListNode } from './file/list';
+export type { ListItemNode, ListTerminatorNode, ListTerminatorType } from './file/list/listItem';
 export type {
   LogicalOperatorNode,
   SublistContinuation,
@@ -28,7 +45,6 @@ export type {
   OpaqueCommandNode,
   OpaqueCommandSyntax,
 } from './file/list/listItem/sublist/pipeline/command/opaque';
-export type { SubshellCommandNode } from './file/list/listItem/sublist/pipeline/command/subshell';
 export type {
   AssignNode,
   CommandNameNode,
@@ -41,48 +57,32 @@ export type {
   SimpleCommandSemantic,
   SourceInfo,
 } from './file/list/listItem/sublist/pipeline/command/simpleCommand';
+export type { SubshellCommandNode } from './file/list/listItem/sublist/pipeline/command/subshell';
+export type { AstNode, AstNodeKind } from './node';
 export type { OptionNode } from './option';
-export type { CommentNode } from './comment';
-export type { DocBlockNode } from './docBlock';
-export type { EofNode } from './eof';
-export type { ParserDiagnosticKind } from './diagnostic';
-export type { RedirectNode, HereDocumentNode } from './redirect';
+export type { HereDocumentNode, RedirectNode } from './redirect';
+export {
+  commentAt,
+  createQueryContext,
+  findAll,
+  forEachChild,
+  locate,
+  syntaxChildren,
+  walk,
+  withRelatedChildren,
+} from './traversal';
+export type { AstLocation, QueryContext, WalkControl, WalkOptions } from './traversal';
+export { mapAst } from './traversal/map';
 export type { UnknownNode } from './unknown';
 export type {
   ArithmeticExpansionNode,
   CommandSubstitutionNode,
   ParameterExpansionNode,
+  ProcessSubstitutionNode,
   StringLiteralNode,
   VariableNameNode,
   VariableReferenceNode,
   VariableValueNode,
   WordNode,
   WordPartNode,
-  ProcessSubstitutionNode,
 } from './word';
-export type { AstNode, AstNodeKind } from './node';
-export type {
-  CompoundCommandNode,
-  IfCommandNode,
-  IfBranchNode,
-  WhileCommandNode,
-  UntilCommandNode,
-  ForCommandNode,
-  SelectCommandNode,
-  ForeachCommandNode,
-  RepeatCommandNode,
-  CaseCommandNode,
-  CaseArmNode,
-} from './compound';
-export {
-  syntaxChildren,
-  forEachChild,
-  withRelatedChildren,
-  walk,
-  findAll,
-  createQueryContext,
-  locate,
-  commentAt,
-} from './traversal';
-export type { WalkControl, WalkOptions, QueryContext, AstLocation } from './traversal';
-export { mapAst } from './traversal/map';

@@ -1,7 +1,7 @@
-import { MarkupKind } from '../vscode_type';
 import type { FunctionSnapshot } from '../refreshFunctions/main';
+import { MarkupKind } from '../vscode_type';
+import { activeArgument, argumentAt, calledFunction, ownerFunction } from './ast/context';
 import type { Cursor } from './ast/cursor';
-import { argumentAt, calledFunction, activeArgument, ownerFunction } from './ast/context';
 import { parameterArgument } from './ast/parameter';
 import { argumentMarkdown } from './functionDoc';
 

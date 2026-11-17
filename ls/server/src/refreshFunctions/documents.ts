@@ -1,10 +1,10 @@
-import { projectFileFunctions } from './projection';
-import type { FunctionTargets } from './target';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { createZshFileHydration } from '../zshHydrator';
-import type { ZshFileHydration, ZshHydrator } from '../zshHydrator';
 import type { TextDocument } from '../vscode_type';
+import type { ZshFileHydration, ZshHydrator } from '../zshHydrator';
+import { createZshFileHydration } from '../zshHydrator';
+import { projectFileFunctions } from './projection';
+import type { FunctionTargets } from './target';
 
 export type DocumentSnapshot = {
   readonly version: number;

@@ -1,23 +1,17 @@
-import type { CodeProgram } from '../embeddedCode';
-import { HoverParams, TextDocuments, TextDocument, MarkupKind } from '../vscode_type';
-import type { FunctionSnapshot } from '../refreshFunctions/main';
-import { commentToMarkDown } from './hook';
-import { HoverContent } from './type';
-import { cursorAt } from './ast/cursor';
-import { targetAtName } from './ast/context';
+import { HoverParams, MarkupKind } from '../vscode_type';
 import { zArgumentHover } from './argumentHover';
+import { targetAtName } from './ast/context';
+import { cursorAt } from './ast/cursor';
+import { commentToMarkDown } from './hook';
+import type { LanguageFeatureRequest } from './type';
+import { HoverContent } from './type';
 
 export function zHover({
   params,
   documents,
   snapshot,
   programs,
-}: {
-  params: HoverParams;
-  documents: Pick<TextDocuments<TextDocument>, 'get'>;
-  snapshot: FunctionSnapshot;
-  programs?: readonly CodeProgram[];
-}): HoverContent | null {
+}: LanguageFeatureRequest<HoverParams>): HoverContent | null {
   const document = documents.get(params.textDocument.uri);
   if (!document) {
     return null;

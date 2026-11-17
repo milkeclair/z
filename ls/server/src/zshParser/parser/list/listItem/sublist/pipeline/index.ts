@@ -1,5 +1,7 @@
 import type { PipelineNode } from '../../../../../ast';
-import { rangeFromTokens, enclosingRange } from '../../../../range';
+import type { ParserContext } from '../../../../context';
+import { enclosingRange, rangeFromTokens } from '../../../../range';
+import type { NodeResult, ParseState } from '../../../../state';
 import {
   advanceState,
   currentToken,
@@ -7,8 +9,6 @@ import {
   skipTrivia,
   tokenSlice,
 } from '../../../../state';
-import type { NodeResult, ParseState } from '../../../../state';
-import type { ParserContext } from '../../../../context';
 import { parseCommand } from './command';
 import { readPipelineModifier } from './modifier';
 import { createPipelineOperatorNode, pipelineOperatorType } from './operator';

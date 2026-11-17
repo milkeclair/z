@@ -1,6 +1,6 @@
 import { DocumentDiagnosticReportKind } from '../vscode_type';
-import type { workspaceDiagnosticsReport } from './type';
 import type { DiagnosticSnapshot } from './snapshot';
+import type { workspaceDiagnosticsReport } from './type';
 
 export function workspaceDiagnostics({
   diagnostics,

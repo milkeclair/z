@@ -1,7 +1,7 @@
-import { FuncArg } from '../getFunctions/type';
 import { NAMED_ARG_POSITION } from '../getFunctions/constant';
-import { positionalArgRegex, specialArgRegex, namedArgRegex } from './regex';
+import { FuncArg } from '../getFunctions/type';
 import { COMMENT_CHAR } from './constant';
+import { namedArgRegex, positionalArgRegex, specialArgRegex } from './regex';
 
 function parsePositionalArg(line: string): FuncArg | null {
   const match = line.match(positionalArgRegex);

@@ -5,13 +5,13 @@ import type {
   UnknownNode,
 } from '../../../../../../../ast';
 import type { Token } from '../../../../../../../lexer';
+import { enclosingRange, rangeFromTokens } from '../../../../../../range';
 import { readPostCommandRedirects } from '../../../../../../redirect';
-import { rangeFromTokens, enclosingRange } from '../../../../../../range';
-import { addDiagnostic, currentToken, skipTrivia, tokenSlice } from '../../../../../../state';
 import type { NodeResult, ParseState } from '../../../../../../state';
+import { addDiagnostic, currentToken, skipTrivia, tokenSlice } from '../../../../../../state';
 import { skipCommandTerm } from '../term';
-import { createLeadingDocBlock } from './docBlock';
 import { isFunctionDefinitionStart } from './detect';
+import { createLeadingDocBlock } from './docBlock';
 import { readFunctionHeader } from './header';
 
 type ParseCommand = (state: ParseState) => NodeResult<CommandNode>;

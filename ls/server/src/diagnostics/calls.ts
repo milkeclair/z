@@ -1,21 +1,21 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { resolveFunction } from '../connection/ast/context';
+import { functionCommand, protocolRange } from '../connection/ast/cursor';
+import { namedKey } from '../connection/ast/word';
 import type { FunctionSnapshot } from '../refreshFunctions/main';
-import type { FunctionDefinitionNode, SimpleCommandNode, WordNode } from '../zshParser/ast';
+import { literalWord } from '../refreshFunctions/word';
+import { DiagnosticSeverity } from '../vscode_type';
 import type { ZshFileHydration } from '../zshHydrator';
 import { documentationOf } from '../zshHydrator';
-import { literalWord } from '../refreshFunctions/word';
-import { namedKey } from '../connection/ast/word';
-import { protocolRange, functionCommand } from '../connection/ast/cursor';
-import { resolveFunction } from '../connection/ast/context';
-import { DiagnosticSeverity } from '../vscode_type';
-import type { Diagnostics } from './type';
+import type { FunctionDefinitionNode, SimpleCommandNode, WordNode } from '../zshParser/ast';
 import type { SourceRange } from '../zshParser/lexer';
 import type { IgnoreControls } from './controls';
 import { ignored } from './controls';
 import type { ShellEnvironment } from './environment';
 import type { Declarations } from './facts';
 import { simpleParameter } from './facts';
+import type { Diagnostics } from './type';
 
 export type ResolutionContext = Declarations & {
   readonly environment: ShellEnvironment;

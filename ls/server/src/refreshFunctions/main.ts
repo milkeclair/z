@@ -1,11 +1,11 @@
-import type { TextDocuments, TextDocument } from '../vscode_type';
 import type { Func } from '../getFunctions/type';
-import { EmptyZshHydrator, refreshZshHydrator } from '../zshHydrator';
+import type { TextDocument, TextDocuments } from '../vscode_type';
 import type { ZshHydrator } from '../zshHydrator';
-import { projectFunctions } from './projection';
-import type { FileFunctionProjections } from './projection';
-import { documentSnapshots } from './documents';
+import { EmptyZshHydrator, refreshZshHydrator } from '../zshHydrator';
 import type { DocumentSnapshots } from './documents';
+import { documentSnapshots } from './documents';
+import type { FileFunctionProjections } from './projection';
+import { projectFunctions } from './projection';
 import type { FunctionTargets } from './target';
 
 export type FunctionSnapshot = {

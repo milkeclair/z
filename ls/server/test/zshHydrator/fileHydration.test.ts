@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import { findAll, locate } from '../../src/zshParser/ast';
 import {
   createZshFileHydration,
-  documentationOf,
   directivesOf,
+  documentationOf,
   hydrateAst,
 } from '../../src/zshHydrator';
+import { findAll, locate } from '../../src/zshParser/ast';
 
 describe('zshHydrator@file', () => {
   test('タブで区切った引数コメントを元の範囲とともに付加する', () => {

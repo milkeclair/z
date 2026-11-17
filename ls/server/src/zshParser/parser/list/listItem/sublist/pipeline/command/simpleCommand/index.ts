@@ -1,17 +1,14 @@
-import {
-  isProcessSubstitutionStart,
-  isParenthesizedWordStart,
-} from '../../../../../../word/composite/token';
 import type {
-  SimpleCommandNode,
-  WordNode,
   AssignNode,
   RedirectNode,
+  SimpleCommandNode,
+  WordNode,
 } from '../../../../../../../ast';
 import type { Token } from '../../../../../../../lexer';
 import { isCommandBoundary } from '../../../../../../boundary';
-import { rangeFromTokens, enclosingRange } from '../../../../../../range';
+import { enclosingRange, rangeFromTokens } from '../../../../../../range';
 import { isRedirectStart, readRedirectNode } from '../../../../../../redirect';
+import type { NodeResult, ParseState } from '../../../../../../state';
 import {
   addDiagnostic,
   advanceState,
@@ -20,7 +17,10 @@ import {
   skipTrivia,
   tokenSlice,
 } from '../../../../../../state';
-import type { NodeResult, ParseState } from '../../../../../../state';
+import {
+  isParenthesizedWordStart,
+  isProcessSubstitutionStart,
+} from '../../../../../../word/composite/token';
 import { createSimpleCommandSemantic } from './semantic';
 import type { SimpleCommandAccumulator } from './types';
 import { readSimpleCommandWord } from './word';

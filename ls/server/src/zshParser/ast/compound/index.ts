@@ -1,8 +1,8 @@
-import type { BaseNode } from '../base';
 import type { SourceRange } from '../../lexer';
+import type { BaseNode } from '../base';
 import type { ListNode } from '../file/list';
-import type { WordNode, ArithmeticExpansionNode } from '../word';
 import type { RedirectNode } from '../redirect';
+import type { ArithmeticExpansionNode, WordNode } from '../word';
 
 type CompoundNode<Kind extends string> = BaseNode<Kind> & {
   readonly raw: string;

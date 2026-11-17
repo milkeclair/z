@@ -1,12 +1,12 @@
 import type { ListNode, WordNode } from '../../../ast';
+import type { SourceRange } from '../../../lexer';
 import { Lexer } from '../../../lexer';
+import { mergeComments } from '../../comment';
 import type { ParserDiagnostic } from '../../diagnostic';
 import { parseWithContext } from '../../parse';
-import { mergeComments } from '../../comment';
 import { rangeWithinText } from '../../range';
-import type { SourceRange } from '../../../lexer';
-import { advanceState } from '../../state';
 import type { NodeResult, ParseState } from '../../state';
+import { advanceState } from '../../state';
 import { createWordNode } from '../index';
 import { createCompositeWordNode } from './node';
 import { readWordTokens } from './token';

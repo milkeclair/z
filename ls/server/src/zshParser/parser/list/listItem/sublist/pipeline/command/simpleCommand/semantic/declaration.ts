@@ -8,8 +8,8 @@ import type {
   VariableNameNode,
   WordNode,
 } from '../../../../../../../../ast';
-import { rangeWithinText } from '../../../../../../../range';
 import { createOptionNodeFromWord } from '../../../../../../../option';
+import { rangeWithinText } from '../../../../../../../range';
 import { createVariableNameNode, isVariableName } from '../../../../../../../word';
 import { createAssignNodeFromWord } from '../assign';
 import type { SimpleCommandSemanticInput } from '../types';

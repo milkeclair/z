@@ -1,19 +1,19 @@
+export type { ControlComment, Directive, DirectiveArgument, HydrationOptions } from './directive';
+export type * from './documentation';
+export { createZshFileHydration } from './fileHydration';
+export type { HydratedFunction, ZshFileHydration } from './fileHydration';
 export {
-  createZshHydrator,
+  directivesOf,
+  documentationOf,
+  hydrateAst,
+  isHydratedComment,
+  isHydratedDocBlock,
+} from './hydrate';
+export type { HydratedComment, HydratedDocBlock } from './hydrate';
+export {
   EmptyZshHydrator,
+  createZshHydrator,
   functionsFromZshHydrator,
   refreshZshHydrator,
 } from './hydrator';
 export type { ZshHydrator } from './hydrator';
-export { createZshFileHydration } from './fileHydration';
-export type { ZshFileHydration, HydratedFunction } from './fileHydration';
-export {
-  hydrateAst,
-  documentationOf,
-  directivesOf,
-  isHydratedDocBlock,
-  isHydratedComment,
-} from './hydrate';
-export type { HydratedDocBlock, HydratedComment } from './hydrate';
-export type * from './documentation';
-export type { Directive, DirectiveArgument, ControlComment, HydrationOptions } from './directive';

@@ -1,20 +1,20 @@
+import { protocolRange } from '../connection/ast/cursor';
+import type { CallScope, ResolutionContext } from '../diagnostics/calls';
+import { analyzeCalls } from '../diagnostics/calls';
+import { collectIgnoreControls, ignored } from '../diagnostics/controls';
+import { collectFileFacts } from '../diagnostics/facts';
+import type { Diagnostics } from '../diagnostics/type';
 import type { FunctionSnapshot } from '../refreshFunctions/main';
 import { projectFileFunctions } from '../refreshFunctions/projection';
 import type { FunctionTargets } from '../refreshFunctions/target';
+import { DiagnosticSeverity } from '../vscode_type';
 import type { ZshFileHydration } from '../zshHydrator';
 import { createZshFileHydration } from '../zshHydrator';
 import type { SimpleCommandNode, WordNode } from '../zshParser/ast';
-import type { Diagnostics } from '../diagnostics/type';
-import type { ResolutionContext, CallScope } from '../diagnostics/calls';
-import { analyzeCalls } from '../diagnostics/calls';
-import { collectFileFacts } from '../diagnostics/facts';
-import { DiagnosticSeverity } from '../vscode_type';
-import { protocolRange } from '../connection/ast/cursor';
 import { codeArguments } from './arguments';
-import { collectIgnoreControls, ignored } from '../diagnostics/controls';
-import { createCodeSourceMap, codeRange, textLineStarts } from './sourceMap';
-import type { CodeSourceMap } from './sourceMap';
 import type { DecodedLiteral } from './literal';
+import type { CodeSourceMap } from './sourceMap';
+import { codeRange, createCodeSourceMap, textLineStarts } from './sourceMap';
 
 export type CodeProgram = {
   readonly file: ZshFileHydration;

@@ -1,6 +1,6 @@
 import { SpecialCharacters } from '../../character';
-import { advance, current, startsWith } from '../../cursor';
 import type { Cursor } from '../../cursor';
+import { advance, current, startsWith } from '../../cursor';
 import type { ReadResult } from './result';
 
 export function readNewline(cursor: Cursor): ReadResult<string> {

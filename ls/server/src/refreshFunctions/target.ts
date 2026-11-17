@@ -1,8 +1,8 @@
-import { codeRange } from '../embeddedCode/sourceMap';
-import type { CodeSourceMap } from '../embeddedCode/sourceMap';
-import type { FunctionDefinitionNode, WordNode } from '../zshParser/ast';
-import type { Func } from '../getFunctions/type';
 import type { Result } from '../document/type';
+import type { CodeSourceMap } from '../embeddedCode/sourceMap';
+import { codeRange } from '../embeddedCode/sourceMap';
+import type { Func } from '../getFunctions/type';
+import type { FunctionDefinitionNode, WordNode } from '../zshParser/ast';
 
 export type FunctionTarget = {
   readonly name: string;

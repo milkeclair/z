@@ -1,8 +1,8 @@
-import { InitializeParams } from '../vscode_type';
 import { Func } from '../getFunctions/type';
 import { refreshFunctionSnapshot, type FunctionSnapshot } from '../refreshFunctions/main';
-import { projectRootFromSettings, workspaceProjectRoot } from './projectRoot';
 import { serverCapability } from '../serverCapability/main';
+import { InitializeParams } from '../vscode_type';
+import { projectRootFromSettings, workspaceProjectRoot } from './projectRoot';
 
 export type ZLsSettings = {
   zPath: string;

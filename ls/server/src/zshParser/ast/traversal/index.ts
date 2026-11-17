@@ -1,4 +1,4 @@
-import type { AstNode, FileNode, CommentNode, DocBlockNode, FunctionDefinitionNode } from '..';
+import type { AstNode, CommentNode, DocBlockNode, FileNode, FunctionDefinitionNode } from '..';
 
 export function* syntaxChildren(node: AstNode): Generator<AstNode> {
   switch (node.kind) {

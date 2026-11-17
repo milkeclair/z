@@ -1,5 +1,5 @@
-import type { DelimiterKind } from '../../../lexer/delimiter';
 import type { Token } from '../../../lexer';
+import type { DelimiterKind } from '../../../lexer/delimiter';
 import { delimitedEnd } from '../../../lexer/delimiter';
 import { areAdjacentTokens } from '../../range';
 import type { ExpansionNodeKind } from '../expansionNode';

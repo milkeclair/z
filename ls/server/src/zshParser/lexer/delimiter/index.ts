@@ -1,4 +1,4 @@
-import { removeHereDocQuotes, hereDocEnd, doubleEscape } from './heredoc';
+import { doubleEscape, hereDocEnd, removeHereDocQuotes } from './heredoc';
 
 export type DelimiterKind =
   | 'single'

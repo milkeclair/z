@@ -4,5 +4,5 @@ export const Parser = {
   parse,
 };
 
+export type { ParseOptions, ParserDiagnostic, ParseResult } from './parse';
 export { tokenAtOffset, tokensInRange } from './tokenTable';
-export type { ParseOptions, ParseResult, ParserDiagnostic } from './parse';

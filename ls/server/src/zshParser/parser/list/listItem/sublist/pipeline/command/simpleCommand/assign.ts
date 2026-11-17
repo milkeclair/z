@@ -1,8 +1,8 @@
 import type { AssignNode, VariableValueNode, WordNode } from '../../../../../../../ast';
 import { rangeWithinText } from '../../../../../../range';
 import {
-  createWordNodeFromWordSlice,
   createVariableNameNode,
+  createWordNodeFromWordSlice,
   readAssignmentSyntax,
 } from '../../../../../../word';
 

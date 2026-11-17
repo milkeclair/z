@@ -1,6 +1,6 @@
+import { sectionExtractRegexes, sectionRegexes } from './regex';
 import { Result } from './type';
 import { useCurrentSection } from './useCurrentSection';
-import { sectionRegexes, sectionExtractRegexes } from './regex';
 
 export function Document(commentText: string): Result {
   const lines = commentText.split('\n');

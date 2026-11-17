@@ -1,13 +1,13 @@
-import type { FunctionDefinitionNode, SimpleCommandNode, WordNode } from '../zshParser/ast';
-import { walk } from '../zshParser/ast';
-import type { ZshFileHydration } from '../zshHydrator';
-import { documentationOf } from '../zshHydrator';
-import { DiagnosticSeverity } from '../vscode_type';
-import type { Diagnostics } from './type';
 import { protocolRange } from '../connection/ast/cursor';
 import { literalWord } from '../refreshFunctions/word';
+import { DiagnosticSeverity } from '../vscode_type';
+import type { ZshFileHydration } from '../zshHydrator';
+import { documentationOf } from '../zshHydrator';
+import type { FunctionDefinitionNode, SimpleCommandNode, WordNode } from '../zshParser/ast';
+import { walk } from '../zshParser/ast';
 import { formatDiagnostics } from './format';
 import { moduleBuiltins } from './modules';
+import type { Diagnostics } from './type';
 
 export type Declarations = {
   readonly aliases: ReadonlySet<string>;

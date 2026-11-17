@@ -1,16 +1,16 @@
 import { pathToFileURL } from 'node:url';
+import type { CodeProgram } from '../embeddedCode';
+import { analyzeEmbeddedCode } from '../embeddedCode';
 import type { FunctionSnapshot } from '../refreshFunctions/main';
 import type { FunctionTargets } from '../refreshFunctions/target';
 import type { ZshFileHydration } from '../zshHydrator';
+import type { ResolutionContext } from './calls';
+import { sameCallContracts } from './contracts';
 import { collectIgnoreControls, ignored } from './controls';
 import type { ShellEnvironment } from './environment';
 import { emptyShellEnvironment } from './environment';
+import type { Declarations, FileFacts } from './facts';
 import { collectFileFacts } from './facts';
-import type { FileFacts, Declarations } from './facts';
-import { analyzeEmbeddedCode } from '../embeddedCode';
-import type { CodeProgram } from '../embeddedCode';
-import { sameCallContracts } from './contracts';
-import type { ResolutionContext } from './calls';
 import type { Diagnostics } from './type';
 
 export type FileDiagnostics = {

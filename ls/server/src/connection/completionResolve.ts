@@ -1,7 +1,7 @@
 import type { CodeProgram } from '../embeddedCode';
+import type { FunctionSnapshot } from '../refreshFunctions/main';
 import { targetRange } from '../refreshFunctions/target';
 import { CompletionItem, MarkupKind } from '../vscode_type';
-import type { FunctionSnapshot } from '../refreshFunctions/main';
 import { commentToMarkDown } from './hook';
 
 export function zCompletionResolve(
