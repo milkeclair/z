@@ -27,7 +27,10 @@ z.completion.cache._dump() {
     lines+=("z_completion_docs+=(${(qqq)key} ${(qqq)value})")
   done
 
-  for function_name in ${(ko)z_completion_argument_specs}; do
+  z.hash.keys z_completion_argument_specs
+  z.arr.sort "${REPLY[@]}"
+  local spec_names=("${REPLY[@]}")
+  for function_name in "${spec_names[@]}"; do
     local specs=${z_completion_argument_specs[$function_name]}
     lines+=("z_completion_argument_specs+=(${(qqq)function_name} ${(qqq)specs})")
   done

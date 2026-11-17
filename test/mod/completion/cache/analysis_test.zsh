@@ -77,7 +77,8 @@ z.t.describe "z.completion.cache._dump code仕様"; {
     z_completion_argument_specs=()
     source "$cache_file"
     local restored=$z_completion_argument_specs[z.t.mock]
-    z.completion.argument._select "$restored" 2 z.t.mock behavior=print
+    local example_words=(z.t.mock behavior=print)
+    z.completion.argument._select "specs=$restored" current=2 words=example_words
     local choices=("${REPLY[@]}")
 
     z.t.expect "$restored" "$record"

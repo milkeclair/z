@@ -60,8 +60,11 @@ z.completion.complete._functions() {
 
   z.completion.function._candidates "$current_word" || return 1
   local candidates=("${(@f)REPLY}")
-  local suffix_options=()
-  z.is.eq "$current_word" z. && suffix_options=(-S "")
+  if z.is.eq "$current_word" z. || z.int.is.positive "${z_completion_command_depth:-0}"; then
+    local suffix_options=(-S "")
+  else
+    local suffix_options=()
+  fi
   _describe -t z-functions "z functions" candidates -l "${suffix_options[@]}"
 }
 

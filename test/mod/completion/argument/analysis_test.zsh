@@ -47,7 +47,18 @@ z.t.describe "z.completion.argument._docs"; {
     local docs=$'$name: name\n$behavior? [code | \'call_original\']: commands\nexample:\n  $ghost [code]: not a parameter'
     z.completion.argument._docs "$docs"
 
-    z.t.expect.reply $'named name plain\nnamed behavior code call_original'
+    local rows=("${(@f)REPLY}")
+    z.completion.argument.record._decode "$rows[1]"
+    z.t.expect.reply.is.arr named name plain
+
+    z.completion.argument.record._decode "$rows[2]"
+    z.t.expect.reply.is.arr named behavior code call_original
+  }
+
+  z.t.it "使用例だけにあるcode表記を引数仕様にしない"; {
+    z.completion.argument._docs $'$name: name\nexample:\n  $ghost [code]: example'
+
+    z.t.expect.reply.is.null
   }
 
   z.t.it "code引数がない場合は余分なメタデータを作らない"; {
@@ -59,28 +70,38 @@ z.t.describe "z.completion.argument._docs"; {
 
 z.t.describe "z.completion.argument._select"; {
   z.t.it "名前付きコードの接頭辞と許可値を返す"; {
-    z.completion.argument._select $'named name plain\nnamed behavior code call_original' 3 run_code name=test behavior=print
+    local example_words=(run_code name=test behavior=print)
+    local specs=$'named name plain\nnamed behavior code call_original'
+    z.completion.argument._select "specs=$specs" current=3 words=example_words
 
     z.t.expect.reply.is.arr behavior= call_original
   }
 
   z.t.it "名前付き引数を除いて位置引数を数える"; {
-    z.completion.argument._select $'named name plain\npositional 1 code' 3 run_code name=test print
+    local example_words=(run_code name=test print)
+    local specs=$'named name plain\npositional 1 code'
+    z.completion.argument._select "specs=$specs" current=3 words=example_words
 
     z.t.expect.reply.is.arr ""
   }
 
   z.t.it "位置指定より後の引数へrest型を適用する"; {
-    z.completion.argument._select $'positional 1 plain\nrest @ code' 3 run_code first print
+    local example_words=(run_code first print)
+    local specs=$'positional 1 plain\nrest @ code'
+    z.completion.argument._select "specs=$specs" current=3 words=example_words
 
     z.t.expect.reply.is.arr ""
   }
 
   z.t.it "通常の引数と不足したキャッシュでは失敗する"; {
-    z.completion.argument._select $'named name plain\nnamed behavior code' 2 run_code name=test
+    local example_words=(run_code name=test)
+    local specs=$'named name plain\nnamed behavior code'
+    z.completion.argument._select "specs=$specs" current=2 words=example_words
     z.t.expect.status.is.false
 
-    z.completion.argument._select "" 2 run_code value
+    local example_words=(run_code value)
+    local specs=""
+    z.completion.argument._select "specs=$specs" current=2 words=example_words
     z.t.expect.status.is.false
   }
 }

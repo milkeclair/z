@@ -148,7 +148,12 @@ z.t.describe "z.completion.cache.build.docs._from_file code仕様"; {
     z.completion.cache.build.docs._from_file "$fixture_file"
     local specs=$z_completion_argument_specs[z.fixture.cached_code]
 
-    z.t.expect "$specs" $'named name plain\nnamed code code call_original'
+    local rows=("${(@f)specs}")
+    z.completion.argument.record._decode "$rows[1]"
+    z.t.expect.reply.is.arr named name plain
+
+    z.completion.argument.record._decode "$rows[2]"
+    z.t.expect.reply.is.arr named code code call_original
     z.file.write path="$fixture_file" content=$'# $name: name\n# $code?: commands\nz.fixture.cached_code() {'
     z.completion.cache.build.docs._from_file "$fixture_file"
     local after=$z_completion_argument_specs[z.fixture.cached_code]

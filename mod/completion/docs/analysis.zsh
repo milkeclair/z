@@ -51,7 +51,7 @@ z.completion.docs._format() {
       continue
     fi
 
-    if [[ $line == '$'* ]] && z.completion.argument._parse "$line"; then
+    if z.str.start_with "$line" '$' && z.completion.argument._parse "$line"; then
       local column=$REPLY[4]
       local label=${line[1,$((column - 1))]}
       local detail=${line[$((column + 1)),-1]}
@@ -69,5 +69,5 @@ z.completion.docs._format() {
     fi
   done
 
-  REPLY="${(F)formatted}"
+  z.arr.join.line "${formatted[@]}"
 }

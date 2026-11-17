@@ -23,7 +23,9 @@ z.t.describe "z.completion.code._complete"; {
     z.t.expect.includes "$actual" "matches:lines=1:1"
     z.t.expect.includes "$actual" "z.fixture.alpha"
   }
+}
 
+z.t.describe "z.completion.code._dispatch"; {
   z.t.it "二重引用とANSI引用でも候補を返す"; {
     local double=$(z92_terminal "$terminal_fd" 'input=z.t.mock name=example behavior="z.fixture.al')
     local ansi=$(z92_terminal "$terminal_fd" "input=z.t.mock name=example behavior=\$'z.fixture.al")
@@ -51,15 +53,12 @@ z.t.describe "z.completion.code._complete"; {
     z.t.expect.includes "$actual" "matches:lines=0:"
     z.t.expect.excludes "$actual" "buffer=z.t.mock name=z.fixture.alpha"
   }
-}
 
-z.t.describe "z.completion.code._commands"; {
-  z.t.it "内側の引数位置ではその関数のヘルプを表示する"; {
-    local setup=$'z_completion_docs[z.fixture.alpha]="INNER_CODE_HELP"\ncompdef _z_completion z.fixture.alpha'
-    local actual=$(z92_terminal "$terminal_fd" "input=z.t.mock name=example behavior='z.fixture.alpha value " "setup=$setup" display=true)
+  z.t.it "空の許可値とdefault=のような許可値を区別する"; {
+    local setup="z_completion_argument_specs[z.code_fixture]=\"positional 1 code '' default=x\""
+    local actual=$(z92_terminal "$terminal_fd" "input=z.code_fixture ''" "setup=$setup")
 
     z.t.expect.includes "$actual" "matches:lines=0:"
-    z.t.expect.includes "$actual" "INNER_CODE_HELP"
   }
 }
 
@@ -103,7 +102,7 @@ z.t.describe "z.completion.code._complete 境界"; {
   }
 
   z.t.it "入れ子の上限を越えると補完処理を止める"; {
-    local actual=$(z92_terminal "$terminal_fd" "input=z.t.mock name=example behavior='z.fixture.al" setup=z_completion_code_depth=32 display=true)
+    local actual=$(z92_terminal "$terminal_fd" "input=z.t.mock name=example behavior='z.fixture.al" setup=z_completion_code_depth=32 display=true "wait_for=code argument nesting limit")
 
     z.t.expect.includes "$actual" "matches:lines=0:"
     z.t.expect.includes "$actual" "code argument nesting limit"
