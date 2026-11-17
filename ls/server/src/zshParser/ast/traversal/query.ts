@@ -1,7 +1,8 @@
 import { List } from 'immutable';
-import { loop, again, done } from '../../../util/loop';
-import { lowerBound } from '../../../util/search';
 import type { AstNode, CommentNode, DocBlockNode, FileNode, FunctionDefinitionNode } from '..';
+import { again, done, loop } from '../../../util/loop';
+import { lowerBound } from '../../../util/search';
+import { pushStack, type Stack } from '../../../util/stack';
 import { syntaxChildCursor } from './children';
 import { findAll, type TraversalFrame } from './walk';
 
@@ -216,18 +217,22 @@ export function locate(query: QueryContext, offset: number): AstLocation | null 
     parent: null,
     score: positionScore(file, offset),
   };
-  const initial = { stack: List([first]), best: first };
+  const initial: { readonly stack: Stack<PositionFrame> | null; readonly best: PositionFrame } = {
+    stack: pushStack(first),
+    best: first,
+  };
   const best = loop<typeof initial, PositionFrame>(initial, (progress) => {
-    const parent = progress.stack.last();
-    if (!parent) {
+    const stack = progress.stack;
+    if (!stack) {
       return done(progress.best);
     }
+    const parent = stack.value;
     const candidate = parent.children;
     if (!candidate) {
-      return again({ ...progress, stack: progress.stack.pop() });
+      return again({ ...progress, stack: stack.next });
     }
     const advanced = { ...parent, children: candidate.tail() };
-    const remaining = progress.stack.set(-1, advanced);
+    const remaining = pushStack(advanced, stack.next);
     if (!contains(candidate.node, offset)) {
       return again({ ...progress, stack: remaining });
     }
@@ -245,7 +250,7 @@ export function locate(query: QueryContext, offset: number): AstLocation | null 
       score: inherited ? { ...score, owned: true } : score,
     };
     return again({
-      stack: remaining.push(child),
+      stack: pushStack(child, remaining),
       best: betterPosition(child, progress.best) ? child : progress.best,
     });
   });

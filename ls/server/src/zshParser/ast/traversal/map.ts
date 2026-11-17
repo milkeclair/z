@@ -1,13 +1,14 @@
-import { List, Map as PersistentMap, Set as PersistentSet } from 'immutable';
+import { Map as PersistentMap, Set as PersistentSet } from 'immutable';
 import type { AstNode, FileNode } from '..';
-import { loop, again, done } from '../../../util/loop';
+import { again, done, loop } from '../../../util/loop';
+import { pushStack, type Stack } from '../../../util/stack';
 import { relatedChildCursor, someChild, type ChildCursor } from './children';
 type NodeMap = PersistentMap<AstNode, AstNode>;
 type Frame = { readonly node: AstNode; readonly children: ChildCursor | null };
 type Progress = {
   readonly mapped: NodeMap;
   readonly active: PersistentSet<AstNode>;
-  readonly frames: List<Frame>;
+  readonly frames: Stack<Frame> | null;
 };
 function ofKind<K extends AstNode['kind']>(
   node: AstNode,
@@ -31,25 +32,29 @@ export function mapAst(file: FileNode, transform: (node: AstNode) => AstNode): F
   const initial: Progress = {
     mapped: PersistentMap(),
     active: PersistentSet([file]),
-    frames: List([{ node: file, children: relatedChildCursor(file) }]),
+    frames: pushStack({ node: file, children: relatedChildCursor(file) }),
   };
   return loop<Progress, FileNode>(initial, (state) => {
-    const frame = state.frames.last();
-    if (!frame) {
+    const stack = state.frames;
+    if (!stack) {
       return done(getMappedNode(state.mapped, file, 'file'));
     }
+    const frame = stack.value;
     const child = frame.children;
     if (child) {
       if (state.active.has(child.node)) {
         throw new Error('Cyclic AST ownership');
       }
-      const frames = state.frames.set(-1, { ...frame, children: child.tail() });
+      const frames = pushStack({ ...frame, children: child.tail() }, stack.next);
       return state.mapped.has(child.node)
         ? again({ ...state, frames })
         : again({
             ...state,
             active: state.active.add(child.node),
-            frames: frames.push({ node: child.node, children: relatedChildCursor(child.node) }),
+            frames: pushStack(
+              { node: child.node, children: relatedChildCursor(child.node) },
+              frames,
+            ),
           });
     }
     const changed = someChild(
@@ -64,7 +69,7 @@ export function mapAst(file: FileNode, transform: (node: AstNode) => AstNode): F
     return again({
       mapped: state.mapped.set(frame.node, result),
       active: state.active.delete(frame.node),
-      frames: state.frames.pop(),
+      frames: stack.next,
     });
   });
 }

@@ -1,7 +1,8 @@
 import { List, Set as PersistentSet } from 'immutable';
 import type { AstNode } from '..';
-import { loop, again, done } from '../../../util/loop';
-import { syntaxChildCursor, relatedChildCursor, type ChildCursor } from './children';
+import { again, done, loop } from '../../../util/loop';
+import { pushStack, type Stack } from '../../../util/stack';
+import { relatedChildCursor, syntaxChildCursor, type ChildCursor } from './children';
 
 export type WalkControl = void | 'skip' | 'stop';
 export type WalkOptions = { readonly includeRelated?: boolean };
@@ -16,7 +17,7 @@ type Task =
 export type FoldStep<State> = { readonly state: State; readonly control?: WalkControl };
 type FoldProgress<State> = {
   readonly result: State;
-  readonly tasks: List<Task>;
+  readonly tasks: Stack<Task> | null;
   readonly seen: PersistentSet<AstNode> | null;
 };
 
@@ -29,23 +30,27 @@ export function foldAst<State>(
   const childCursor = options.includeRelated ? relatedChildCursor : syntaxChildCursor;
   const progress: FoldProgress<State> = {
     result: initial,
-    tasks: List([{ kind: 'node', node: root, depth: 0 }]),
+    tasks: pushStack({ kind: 'node', node: root, depth: 0 }),
     seen: options.includeRelated ? PersistentSet<AstNode>() : null,
   };
   return loop<FoldProgress<State>, State>(progress, (state) => {
-    const task = state.tasks.last();
-    if (!task) {
+    const stack = state.tasks;
+    if (!stack) {
       return done(state.result);
     }
-    const remaining = state.tasks.pop();
+    const task = stack.value;
+    const remaining = stack.next;
     if (task.kind === 'children') {
       const cursor = task.cursor;
       return cursor
         ? again({
             ...state,
-            tasks: remaining.push(
-              { kind: 'children', cursor: cursor.tail(), depth: task.depth },
+            tasks: pushStack<Task>(
               { kind: 'node', node: cursor.node, depth: task.depth },
+              pushStack<Task>(
+                { kind: 'children', cursor: cursor.tail(), depth: task.depth },
+                remaining,
+              ),
             ),
           })
         : again({ ...state, tasks: remaining });
@@ -63,11 +68,14 @@ export function foldAst<State>(
       tasks:
         result.control === 'skip'
           ? remaining
-          : remaining.push({
-              kind: 'children',
-              cursor: childCursor(task.node),
-              depth: task.depth + 1,
-            }),
+          : pushStack<Task>(
+              {
+                kind: 'children',
+                cursor: childCursor(task.node),
+                depth: task.depth + 1,
+              },
+              remaining,
+            ),
     });
   });
 }
