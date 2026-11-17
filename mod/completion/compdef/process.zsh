@@ -1,4 +1,4 @@
-# 専用の補完関数があればそれを使い、他のz関数には共通の補完を登録する
+# z関数の補完を登録し、候補が複数あるときに矢印キーで選択できるようにする
 #
 # REPLY: null
 # return: 0|1
@@ -20,6 +20,12 @@ z.completion.compdef._register() {
   if z.is.not.eq "${_comps[-command-]}" z.completion.complete._command; then
     z_completion_command_function=${_comps[-command-]}
     compdef z.completion.complete._command -command- || return 1
+  fi
+
+  local menu_context=':completion:*:*:*:*:z-functions'
+  local -a menu_style=()
+  if zmodload -i zsh/complist 2>/dev/null && ! zstyle -g menu_style "$menu_context" menu; then
+    zstyle "$menu_context" menu yes=2 select=2
   fi
 
   for function_name in "${z_completion_function_names[@]}"; do
