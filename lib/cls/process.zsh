@@ -222,7 +222,7 @@ z.cls.new() {
 
   local z_cls_id="z_cls_${$}_$z_cls_next_id"
 
-  z.cls.instance._commands "$z_cls_class" "$z_cls_binding" "$z_cls_id"
+  z.cls.instance._commands "$z_cls_class" "$z_cls_id"
 
   local -a z_cls_wrappers=("${(@)REPLY}")
 

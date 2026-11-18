@@ -20,7 +20,7 @@ z.t.describe "z.cls.gc._collect"; {
         } || return 1
       done
       local instances=${#z_cls_instances}
-      counter.count.get
+      $counter.count.get
       z.t.expect.reply 10
       z.int.is.lt "$instances" 70
       z.t.expect.status.is.true

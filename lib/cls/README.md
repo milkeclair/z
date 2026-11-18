@@ -26,20 +26,20 @@ z.cls.draw Counter
 z.cls.drew
 ```
 
-実体を作成すると、メソッドと属性の取得・更新用コマンドを呼び出せます。
+実体を作成すると、変数を展開してメソッドや属性の取得・更新を呼び出せます。
 
 ```zsh
 source ./counter.zsh
 typeset counter=""
 z.cls.new Counter counter
 
-counter.increment
-counter.add count=4
-counter.count.get
+$counter.increment
+$counter.add count=4
+$counter.count.get
 print -r -- "$REPLY"  # 5
 
-counter.count.set 10
-counter.increment
+$counter.count.set 10
+$counter.increment
 print -r -- "$REPLY"  # 11
 
 z.cls.delete counter
@@ -72,18 +72,18 @@ setterが成功すると、その時点で保存値へ反映します。直後�
 ```zsh
 typeset counter=""
 z.cls.new Counter counter
-counter.count.set 10
+$counter.count.set 10
 
 example() {
   local counter=""
   z.cls.new Counter counter
-  counter.increment
+  $counter.increment
   print -r -- "$REPLY"  # 1
   z.cls.delete counter
 }
 
 example
-counter.count.get
+$counter.count.get
 print -r -- "$REPLY"  # 10
 ```
 
@@ -97,8 +97,7 @@ typeset -r other=$counter
 print -r -- "$REPLY"  # 11
 ```
 
-短い形式の`counter.increment`は、呼出し時に見えるcounter変数から実体を解決します。
-`"$other.increment"`は、コピー済みの参照から直接呼び出します。
+`$counter.increment`と`$other.increment`は、それぞれの変数に保存した実体参照を展開して呼び出します。
 新しい実体には、内側のスコープで宣言した同名localなど、新しい代入先が必要です。
 コピーした参照も再代入から保護する場合は、`typeset -r`または`local -r`を使います。
 
@@ -114,7 +113,7 @@ print -r -- "$REPLY"  # 11
 prepare_counter() {
   local counter=""
   z.cls.new Counter counter || return 1
-  counter.count.set 5
+  $counter.count.set 5
   z.cls.owner.move from=counter "to=$1"
 }
 

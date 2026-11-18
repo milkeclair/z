@@ -2,14 +2,14 @@ source ${z_main}
 
 z.t.describe "z.cls.instance._commands"; {
   z.t.context "属性とメソッドがある場合"; {
-    z.t.it "両方の接頭辞のコマンドを列挙する"; {
+    z.t.it "実体ID付きのコマンドだけを列挙する"; {
       z.cls.store._ensure
       z_cls_class_methods[CommandList]='increment '
       z_cls_class_attrs[CommandList]='count '
 
-      z.cls.instance._commands CommandList object ref
+      z.cls.instance._commands CommandList ref
 
-      z.t.expect.reply.is.arr object.increment object.count.get object.count.set ref.increment ref.count.get ref.count.set
+      z.t.expect.reply.is.arr ref.increment ref.count.get ref.count.set
     }
   }
 
@@ -19,7 +19,7 @@ z.t.describe "z.cls.instance._commands"; {
       z_cls_class_methods[EmptyCommandList]=''
       z_cls_class_attrs[EmptyCommandList]=''
 
-      z.cls.instance._commands EmptyCommandList object ref
+      z.cls.instance._commands EmptyCommandList ref
 
       local reply_type=${(t)REPLY}
       local reply_count=${#REPLY}

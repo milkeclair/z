@@ -98,7 +98,7 @@ z.t.describe "z.cls.new._validate"; {
 
         z.t.expect.status.is.true
 
-        object.count.get
+        $object.count.get
 
         z.t.expect.reply 3
 
