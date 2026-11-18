@@ -467,6 +467,7 @@ z.t.describe "z.cls.new"; {
         REPLY=original
       }
 
+      local first=""
       z.cls.new TestCounter first 2>/dev/null
 
       z.t.expect.status.is.false
@@ -602,15 +603,16 @@ z.t.describe "z.cls.delete"; {
         local index
 
         for (( index=1; index<=72; index++ )); do
+          local "owner_$index="
           () {
             local object=""
+            z.cls.new TestCounter object || return 1
 
-            z.cls.new TestCounter object
-
-            z.t.expect.status.is.true
-
+            z.cls.owner.move from=object "to=owner_$index" || return 1
             saved_refs+=("$object")
           }
+
+          z.t.expect.status.is.true
         done
 
         local reference

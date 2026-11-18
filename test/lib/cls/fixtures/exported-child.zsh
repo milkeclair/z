@@ -2,6 +2,7 @@
 unset z_mode
 source "$Z_ROOT/main.zsh"
 source "$Z_ROOT/test/lib/cls/fixtures/counter.zsh"
+local child_instance=""
 z.cls.new TestCounter child_instance || exit 1
 child_instance.increment
 print -r -- "$REPLY"

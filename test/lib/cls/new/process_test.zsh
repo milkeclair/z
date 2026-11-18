@@ -109,4 +109,22 @@ z.t.describe "z.cls.new._validate"; {
     }
   }
 
+
+  z.t.context "代入先が宣言されていない場合"; {
+    z.t.it "実体もグローバル変数も作らない"; {
+      () {
+        z.cls.draw UndeclaredNew
+        z.cls.drew
+        z.t.mock name=z.io.error
+
+        z.cls.new UndeclaredNew missing_gc_binding
+
+        z.t.expect.status.is.false
+        z.var.exists missing_gc_binding
+        z.t.expect.status.is.false
+        z.hash.count z_cls_instances
+        z.t.expect.reply 0
+      }
+    }
+  }
 }
