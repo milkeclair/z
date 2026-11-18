@@ -211,6 +211,33 @@ z.t.describe "z.cls.capture._debug"; {
       z.t.expect "$output[2]" :
     }
 
+    z.t.it "メソッド内のdrawとdrewは呼び出すまで実行しない"; {
+      local -a output=()
+      output=("${(@f)$(
+        z.cls.draw MarkerOuter
+          z.cls.fn build
+            z.cls.draw MarkerInner
+              z.cls.attr value default=ready
+            z.cls.drew
+          z.cls.fn.done
+        z.cls.drew
+
+        print -r -- "${+z_cls_classes[MarkerInner]}"
+        local outer=""
+        z.cls.new MarkerOuter outer
+        outer.build
+
+        local inner=""
+        z.cls.new MarkerInner inner
+        inner.value.get
+        print -r -- "$REPLY"
+      )}")
+
+      z.t.expect "${#output}" 2
+      z.t.expect "$output[1]" 0
+      z.t.expect "$output[2]" ready
+    }
+
     z.t.it "パイプ、ヒアドキュメント、条件付きコマンドを保存する"; {
       local -a output=()
       output=("${(@f)$(
@@ -396,49 +423,4 @@ z.t.describe "z.cls.capture._watch"; {
     }
   }
 
-  z.t.context "実体を操作する際のオプションを変更する場合"; {
-    z.t.it "nounset下でコピーした参照の状態共有と削除ができる"; {
-      local -a output=()
-      output=("${(@f)$(
-        setopt nounset
-        source "$z_root/test/lib/cls/fixtures/counter.zsh"
-        local counter=""
-        z.cls.new TestCounter counter
-        local -r other=$counter
-        "$other.increment"
-        counter.count.get
-        print -rl -- "$REPLY"
-        counter.add 4
-        "$other.value"
-        print -rl -- "$REPLY"
-        z.cls.delete other
-        print -rl -- "${+functions[$counter.value]}"
-      )}")
-
-      z.t.expect.status.is.true
-      z.t.expect "${#output}" 3
-      z.t.expect "$output[1]" 1
-      z.t.expect "$output[2]" 5
-      z.t.expect "$output[3]" 0
-    }
-
-    z.t.it "errexit下で生成した関数と状態を削除する"; {
-      local -a output=()
-      output=("${(@f)$(
-        setopt errexit
-        source "$z_root/test/lib/cls/fixtures/counter.zsh"
-        local counter=""
-        z.cls.new TestCounter counter
-        counter.increment
-        z.cls.delete counter
-        print -rl -- "${#z_cls_instances}" "${+functions[counter.increment]}"
-      )}")
-
-      z.t.expect.status.is.true
-      z.t.expect "${#output}" 2
-      z.t.expect "$output[1]" 0
-      z.t.expect "$output[2]" 0
-    }
-
-  }
 }

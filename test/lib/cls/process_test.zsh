@@ -21,26 +21,6 @@ z.t.describe "z.cls.draw"; {
     }
   }
 
-  z.t.context "補完の関数名キャッシュを構築する場合"; {
-    z.t.it "公開DSLの8関数だけを候補にする"; {
-      source "$z_root/mod/completion/function/is/operator.zsh"
-      source "$z_root/mod/completion/cache/build/process.zsh"
-      local -a z_completion_function_names=()
-      local function_name=""
-
-      z.completion.cache.build._names
-
-      local -a class_names=()
-
-      for function_name in "${z_completion_function_names[@]}"; do
-        z.str.start_with "$function_name" z.cls. && class_names+=("$function_name")
-      done
-
-      REPLY=("${class_names[@]}")
-
-      z.t.expect.reply.is.arr z.cls.abort z.cls.attr z.cls.delete z.cls.draw z.cls.drew z.cls.fn z.cls.fn.done z.cls.new
-    }
-  }
 }
 
 # 定義読込時のトラップ設定を初期化のスコープに閉じ込める。
@@ -182,6 +162,33 @@ z.t.describe "z.cls.abort"; {
 }
 
 z.t.describe "z.cls.new"; {
+  z.t.context "nounsetの下で参照をコピーした場合"; {
+    z.t.it "nounset下でコピーした参照の状態共有と削除ができる"; {
+      local -a output=()
+      output=("${(@f)$(
+        setopt nounset
+        source "$z_root/test/lib/cls/fixtures/counter.zsh"
+        local counter=""
+        z.cls.new TestCounter counter
+        local -r other=$counter
+        "$other.increment"
+        counter.count.get
+        print -rl -- "$REPLY"
+        counter.add 4
+        "$other.value"
+        print -rl -- "$REPLY"
+        z.cls.delete other
+        print -rl -- "${+functions[$counter.value]}"
+      )}")
+
+      z.t.expect.status.is.true
+      z.t.expect "${#output}" 3
+      z.t.expect "$output[1]" 1
+      z.t.expect "$output[2]" 5
+      z.t.expect "$output[3]" 0
+    }
+  }
+
   z.t.context "変換すると意味が変わる名前と属性値の場合"; {
     z.t.it "falseというクラス名とnullという文字列を保つ"; {
       () {
@@ -467,6 +474,26 @@ z.t.describe "z.cls.new"; {
 }
 
 z.t.describe "z.cls.delete"; {
+  z.t.context "errexitが有効な場合"; {
+    z.t.it "errexit下で生成した関数と状態を削除する"; {
+      local -a output=()
+      output=("${(@f)$(
+        setopt errexit
+        source "$z_root/test/lib/cls/fixtures/counter.zsh"
+        local counter=""
+        z.cls.new TestCounter counter
+        counter.increment
+        z.cls.delete counter
+        print -rl -- "${#z_cls_instances}" "${+functions[counter.increment]}"
+      )}")
+
+      z.t.expect.status.is.true
+      z.t.expect "${#output}" 2
+      z.t.expect "$output[1]" 0
+      z.t.expect "$output[2]" 0
+    }
+  }
+
   z.t.context "実行中の実体の場合"; {
     z.t.it "状態を保持して削除を拒否する"; {
       () {

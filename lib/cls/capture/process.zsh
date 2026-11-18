@@ -87,8 +87,17 @@ z.cls.capture._stop() {
     eval "$z_cls_debug_trap"
   fi
 
-  z.is.eq "$z_cls_debug_before" on || unsetopt debugbeforecmd
-  z.is.eq "$z_cls_debug_localtraps" off || setopt localtraps
+  if [[ $z_cls_debug_before == on ]]; then
+    setopt debugbeforecmd
+  else
+    unsetopt debugbeforecmd
+  fi
+
+  if [[ $z_cls_debug_localtraps == on ]]; then
+    setopt localtraps
+  else
+    unsetopt localtraps
+  fi
 
   return 0
 }
@@ -105,6 +114,7 @@ z.cls.capture._stop() {
 #  z.cls.capture._debug 'REPLY=ready'
 #  # 変更後: 本体にREPLY=readyを追記し、その場での実行を抑止
 z.cls.capture._debug() {
+  local REPLY=""
   local z_cls_stack=${(j:|:)funcstack[3,-1]}
 
   if (( ${z_cls_reject_depth:-0} )); then
@@ -132,7 +142,10 @@ z.cls.capture._debug() {
   fi
 
   if [[ -n $z_cls_drawing && -n $z_cls_draw_stack && "|$z_cls_stack" != *"|$z_cls_draw_stack" ]]; then
+    local z_cls_abandoned=$z_cls_drawing
+
     z.cls.abort
+    z.io.error "Unfinished class definition $z_cls_abandoned. Definition discarded."
   fi
 }
 
