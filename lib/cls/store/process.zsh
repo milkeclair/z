@@ -10,7 +10,8 @@
 #  # 変更後: z_cls_instances=()とz_cls_values=()を初期化済み
 z.cls.store._ensure() {
   if z.is.eq "${z_cls_store_ready:-0}" 1 &&
-      z.var.exists z_cls_dispatch_programs && z.var.exists z_cls_owner_markers; then
+      z.var.exists z_cls_dispatch_programs && z.var.exists z_cls_owner_markers &&
+      z.var.exists z_cls_scalars; then
     return 0
   fi
 
@@ -21,6 +22,7 @@ z.cls.store._ensure() {
   z.var.exists z_cls_defaults || typeset -gA z_cls_defaults
   z.var.exists z_cls_bodies || typeset -gA z_cls_bodies
   z.var.exists z_cls_instances || typeset -gA z_cls_instances
+  z.var.exists z_cls_scalars || typeset -gA z_cls_scalars
   z.var.exists z_cls_values || typeset -gA z_cls_values
   z.var.exists z_cls_members || typeset -gA z_cls_members
   z.var.exists z_cls_wrapper_refs || typeset -gA z_cls_wrapper_refs
@@ -36,24 +38,21 @@ z.cls.store._ensure() {
   typeset -gi +x z_cls_store_ready=1
 }
 
-# 通常のスカラーと十進整数を、復元可能な宣言へ引用して保存する。
+# 実体のスカラー属性を文字列として保存する。
 #
 # $1: 実体参照
 # $2: 属性名
 # $3: 保存する値
-# $4?: 宣言フラグ（既定: --、整数は-i）
 # REPLY: null
 # return: 0
 #
 # example:
-#  # 前提: z.cls.store._ensureで保存領域を初期化している
 #  z.cls.store._scalar object label "two words"
 #  # return: 0
-#  # 変更後: z_cls_values[object:label]="typeset -- label='two words'"
+#  # 変更後: z_cls_scalars[object:label]="two words"
 z.cls.store._scalar() {
-  local z_cls_declaration_flag=${4:---}
-
-  z_cls_values[$1:$2]="typeset $z_cls_declaration_flag $2=${(qq)3}"
+  z_cls_scalars[$1:$2]=$3
+  unset "z_cls_values[$1:$2]"
 }
 
 # クラスのメソッド一覧と、対応する本体を保存する。

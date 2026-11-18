@@ -57,8 +57,7 @@ z.cls.instance._execute() {
   } "$@"
 }
 
-# 復元済みの属性を、同じ型で再作成できる宣言として保存する。
-# 通常の値はパラメータ展開を使い、特殊な属性フラグだけtypesetで取得する。
+# 復元済みの属性を保存する。通常のスカラーは文字列、型付き属性は宣言として保持する。
 #
 # $1: 実体参照
 # $2: 属性名
@@ -75,24 +74,26 @@ z.cls.instance._snapshot() {
   local z_cls_snapshot_name=$2
 
   if ! z.var.exists "$z_cls_snapshot_name"; then
+    unset "z_cls_scalars[$z_cls_snapshot_key]"
     z_cls_values[$z_cls_snapshot_key]="typeset -- $z_cls_snapshot_name; unset $z_cls_snapshot_name"
     return 0
   fi
 
   local z_cls_snapshot_type=${(tP)z_cls_snapshot_name}
 
-  case $z_cls_snapshot_type in
-    scalar|scalar-local)
-      local z_cls_snapshot_value=${(P)z_cls_snapshot_name}
+  if [[ $z_cls_snapshot_type == scalar || $z_cls_snapshot_type == scalar-local ]]; then
+    z.cls.store._scalar "$1" "$z_cls_snapshot_name" "${(P)z_cls_snapshot_name}"
+    return 0
+  fi
 
-      z.cls.store._scalar "$1" "$z_cls_snapshot_name" "$z_cls_snapshot_value"
-      return 0
-      ;;
+  unset "z_cls_scalars[$z_cls_snapshot_key]"
+
+  case $z_cls_snapshot_type in
     integer|integer-local)
       local z_cls_snapshot_value=${(P)z_cls_snapshot_name}
 
       if z.int.is.match "$z_cls_snapshot_value"; then
-        z.cls.store._scalar "$1" "$z_cls_snapshot_name" "$z_cls_snapshot_value" -i
+        z_cls_values[$z_cls_snapshot_key]="typeset -i $z_cls_snapshot_name=$z_cls_snapshot_value"
         return 0
       fi
 
@@ -148,7 +149,7 @@ z.cls.instance._release() {
   local z_cls_attribute
 
   for z_cls_attribute in ${=z_cls_class_attrs[${z_cls_instances[$z_cls_id]}]}; do
-    unset "z_cls_values[$z_cls_id:$z_cls_attribute]"
+    unset "z_cls_scalars[$z_cls_id:$z_cls_attribute]" "z_cls_values[$z_cls_id:$z_cls_attribute]"
   done
 
   # 未設定のactive要素も管理ノードを残すため、一緒に削除する。
@@ -157,6 +158,7 @@ z.cls.instance._release() {
   if z.int.is.zero "${#z_cls_instances}"; then
     # 最後の実体を片付けたら、空のテーブルの容量も解放する。
     z_cls_instances=()
+    z_cls_scalars=()
     z_cls_values=()
     z_cls_members=()
     z_cls_active=()

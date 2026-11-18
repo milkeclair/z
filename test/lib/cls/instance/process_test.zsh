@@ -63,18 +63,18 @@ z.t.describe "z.cls.instance._execute"; {
 
 z.t.describe "z.cls.instance._snapshot"; {
   z.t.context "リテラル文字列の場合"; {
-    z.t.it "保存後に同じ値を復元できる"; {
+    z.t.it "保存後に変更しても値を保持する"; {
       () {
         z.cls.store._ensure
         local literal=null
 
         z.cls.instance._snapshot snapshot_ref literal
         literal=changed
-        eval "$z_cls_values[snapshot_ref:literal]"
 
-        z.t.expect "$literal" null
+        z.t.expect "$z_cls_scalars[snapshot_ref:literal]" null
+        z.t.expect "$literal" changed
 
-        unset 'z_cls_values[snapshot_ref:literal]'
+        unset 'z_cls_scalars[snapshot_ref:literal]'
       }
     }
   }

@@ -54,44 +54,48 @@ z.cls.instance.call._access() {
   local z_cls_instance=$1
   local z_cls_operation=$2
   local z_cls_member=$3
-  local z_cls_declaration=$z_cls_values[$1:$3]
-  local z_cls_value_type=""
-
-  if z.str.start_with "$z_cls_declaration" "typeset -- $z_cls_member="; then
-    z_cls_value_type=scalar
-  elif z.str.start_with "$z_cls_declaration" "typeset -i $z_cls_member="; then
-    z_cls_value_type=integer
-  fi
+  local z_cls_key="$1:$3"
 
   shift 3
 
-  case "$z_cls_operation:$z_cls_value_type" in
-    get:scalar|get:integer)
-      z.int.is.zero $# || return 1
-
-      local z_cls_literal=${z_cls_declaration#*=}
-
-      z.str.unquote "$z_cls_literal"
-      return $?
-      ;;
-    set:scalar)
-      z.int.is.eq $# 1 || return 1
-      z.cls.store._scalar "$z_cls_instance" "$z_cls_member" "$1"
-      return 0
-      ;;
-    set:integer)
-      z.int.is.eq $# 1 || return 1
-
-      if z.int.is.match "$1"; then
-        local -i z_cls_numeric=0
-
-        (( z_cls_numeric = $1, 1 )) || return 1
-
-        z.cls.store._scalar "$z_cls_instance" "$z_cls_member" "$z_cls_numeric" -i
+  if (( ! ${+z_cls_values[$z_cls_key]} )); then
+    case $z_cls_operation in
+      get)
+        z.int.is.zero $# || return 1
+        REPLY=$z_cls_scalars[$z_cls_key]
         return 0
-      fi
-      ;;
-  esac
+        ;;
+      set)
+        z.int.is.eq $# 1 || return 1
+        z.cls.store._scalar "$z_cls_instance" "$z_cls_member" "$1"
+        return 0
+        ;;
+    esac
+  fi
+
+  local z_cls_declaration=$z_cls_values[$z_cls_key]
+
+  if z.str.start_with "$z_cls_declaration" "typeset -i $z_cls_member="; then
+    case $z_cls_operation in
+      get)
+        z.int.is.zero $# || return 1
+        z.str.unquote "${z_cls_declaration#*=}"
+        return $?
+        ;;
+      set)
+        z.int.is.eq $# 1 || return 1
+
+        if z.int.is.match "$1"; then
+          local -i z_cls_numeric=0
+
+          (( z_cls_numeric = $1, 1 )) || return 1
+
+          z_cls_values[$z_cls_key]="typeset -i $z_cls_member=$z_cls_numeric"
+          return 0
+        fi
+        ;;
+    esac
+  fi
 
   z.cls.instance.call._access_typed "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
 }
@@ -124,9 +128,15 @@ z.cls.instance.call._access_typed() {
   fi
 
   local z_cls_attribute
+  local z_cls_key
 
   for z_cls_attribute in "${z_cls_attributes[@]}"; do
-    eval "$z_cls_values[$z_cls_instance:$z_cls_attribute]"
+    z_cls_key="$z_cls_instance:$z_cls_attribute"
+    if (( ${+z_cls_values[$z_cls_key]} )); then
+      eval "$z_cls_values[$z_cls_key]"
+    else
+      local -- "$z_cls_attribute=${z_cls_scalars[$z_cls_key]}"
+    fi
   done
 
   case $z_cls_operation in
