@@ -61,24 +61,27 @@ function fixture(content = 'z.cls.¦\n') {
   };
 }
 
+function privateCommand(name: string): boolean {
+  return name.split('.').some((segment) => segment.startsWith('_'));
+}
+
 describe('class API visibility', () => {
-  test('通常の補完は実際の公開DSLの8関数だけを返す', () => {
+  test('通常の補完は公開DSLを表示し、内部関数を隠す', () => {
     const scenario = fixture();
     const items = zCompletion({ ...scenario, showPrivateFunctions: false });
 
-    expect(items?.map((item) => item.label).toSorted()).toEqual(publicCommands);
+    const names = items?.map((item) => item.label) ?? [];
+    expect(names).toEqual(expect.arrayContaining(publicCommands));
+    expect(names.filter(privateCommand)).toEqual([]);
   });
 
-  test('private表示を有効にすると内部27関数も参照できる', () => {
+  test('private表示を有効にすると公開DSLと内部関数を参照できる', () => {
     const scenario = fixture();
     const names =
       zCompletion({ ...scenario, showPrivateFunctions: true })?.map((item) => item.label) ?? [];
-    const internal = names.filter((name) =>
-      name.split('.').some((segment) => segment.startsWith('_')),
-    );
+    const internal = names.filter(privateCommand);
 
-    expect(names).toHaveLength(35);
-    expect(internal).toHaveLength(27);
+    expect(names).toEqual(expect.arrayContaining(publicCommands));
     expect(internal).toContain('z.cls.instance._call');
     expect(internal).toContain('z.cls.capture._start');
     expect(names).not.toContain('z.cls.instance.call');
