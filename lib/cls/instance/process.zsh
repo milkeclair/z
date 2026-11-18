@@ -98,15 +98,17 @@ z.cls.instance._snapshot() {
 
       ;;
     array|array-local)
-      local -a z_cls_snapshot_values=("${(@P)z_cls_snapshot_name}")
+      local -a REPLY=()
+      z.arr.quote style=single "${(@P)z_cls_snapshot_name}"
 
-      z_cls_values[$z_cls_snapshot_key]="typeset -a $z_cls_snapshot_name=( ${(j: :)${(@qq)z_cls_snapshot_values}} )"
+      z_cls_values[$z_cls_snapshot_key]="typeset -a $z_cls_snapshot_name=( ${(j: :)REPLY} )"
       return 0
       ;;
     association|association-local)
-      local -a z_cls_snapshot_values=("${(@Pkv)z_cls_snapshot_name}")
+      local -a REPLY=()
+      z.arr.quote style=single "${(@Pkv)z_cls_snapshot_name}"
 
-      z_cls_values[$z_cls_snapshot_key]="typeset -A $z_cls_snapshot_name=( ${(j: :)${(@qq)z_cls_snapshot_values}} )"
+      z_cls_values[$z_cls_snapshot_key]="typeset -A $z_cls_snapshot_name=( ${(j: :)REPLY} )"
       return 0
       ;;
   esac

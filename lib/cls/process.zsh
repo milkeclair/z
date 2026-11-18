@@ -62,7 +62,7 @@ z.cls.attr() {
   if ! z.int.is.eq $# 2 || z.is.null "$z_cls_drawing" || ! z.cls.is._attribute "${1:-}" ||
       ! z.str.start_with "${2:-}" default=; then
     z.io.error "Expected an active class, an ordinary attribute name, and default=."
-    [[ -n $z_cls_drawing ]] && z_cls_draw_failed=1
+    z.is.not.null "$z_cls_drawing" && z_cls_draw_failed=1
     return 1
   fi
 
@@ -138,7 +138,7 @@ z.cls.drew() {
   if (( ${z_cls_reject_result:-0} )); then
     unset z_cls_reject_result
     unsetopt localoptions
-    [[ -n $z_cls_drawing ]] || z.cls.capture._stop
+    z.is.not.null "$z_cls_drawing" || z.cls.capture._stop
     return 1
   fi
 
