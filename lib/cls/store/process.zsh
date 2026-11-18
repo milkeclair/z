@@ -7,7 +7,7 @@
 #  # 前提: 保存領域は未初期化
 #  z.cls.store._ensure
 #  # return: 0
-#  # 変更後: z_cls_instances=()とz_cls_values=()を初期化済み
+#  # 変更後: z_cls_instances、z_cls_scalars、z_cls_valuesを空の連想配列で初期化
 z.cls.store._ensure() {
   if z.is.eq "${z_cls_store_ready:-0}" 1 &&
       z.var.exists z_cls_dispatch_programs && z.var.exists z_cls_owner_markers &&
@@ -47,6 +47,7 @@ z.cls.store._ensure() {
 # return: 0
 #
 # example:
+#  # 前提: z.cls.store._ensureで保存領域を初期化している
 #  z.cls.store._scalar object label "two words"
 #  # return: 0
 #  # 変更後: z_cls_scalars[object:label]="two words"
