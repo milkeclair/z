@@ -1,6 +1,6 @@
-z.cls.draw TestCounter; {
-  z.cls.attr count 0
-  z.cls.attr label default
+z.cls.draw TestCounter
+  z.cls.attr count default=0
+  z.cls.attr label default=default
 
   z.cls.fn increment
     (( ++count ))
@@ -36,5 +36,4 @@ z.cls.draw TestCounter; {
     fi
   z.cls.fn.done
 
-  z.cls.drew
-}
+z.cls.drew

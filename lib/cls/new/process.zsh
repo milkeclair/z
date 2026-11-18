@@ -1,9 +1,15 @@
 # 実体の作成前に、引数と呼出元の代入先変数を検証する。
 #
 # $1: 公開済みのクラス名
-# $2: 書込み可能な通常のスカラー変数名
+# $2: readonly・型変換・桁揃えのない通常のスカラー変数名
 # REPLY: null
 # return: 0|1
+#
+# example:
+#  # 前提: Counterを公開済みで、objectをlocal -uで宣言している
+#  z.cls.new._validate Counter object
+#  # return: 1
+#  # 変更後: objectと実体の登録は元のまま
 z.cls.new._validate() {
   if ! z.int.is.eq $# 2 || z.is.null "${z_cls_classes[$1]:-}" || ! z.cls.is._attribute "$2"; then
     z.io.error "Expected an existing class and an ordinary instance variable name."
@@ -13,14 +19,12 @@ z.cls.new._validate() {
   local z_cls_binding=$2
   local z_cls_binding_type=${parameters[$z_cls_binding]:-}
 
-  if z.str.includes "$z_cls_binding_type" readonly ||
-      z.str.includes "$z_cls_binding_type" array ||
-      z.str.includes "$z_cls_binding_type" association ||
-      z.str.includes "$z_cls_binding_type" integer ||
-      z.str.includes "$z_cls_binding_type" float; then
-    z.io.error "Instance variable $z_cls_binding must be a writable scalar."
-    return 1
-  fi
+  case $z_cls_binding_type in
+    *readonly*|*array*|*association*|*integer*|*float*|*tied*|*upper*|*lower*|*left*|*right_blanks*|*right_zeros*)
+      z.io.error "Instance variable $z_cls_binding must be an ordinary writable scalar."
+      return 1
+      ;;
+  esac
 
   if z.is.not.null "${z_cls_instances[${(P)z_cls_binding:-}]:-}"; then
     z.io.error "Instance variable $z_cls_binding already holds a reference."

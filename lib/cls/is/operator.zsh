@@ -3,6 +3,12 @@
 # $1: 識別子
 # REPLY: null
 # return: 0|1
+#
+# example:
+#  z.cls.is._name Counter
+#  # return: 0
+#  z.cls.is._name bad-name
+#  # return: 1
 z.cls.is._name() {
   local name=${1:-}
   local pattern='^[A-Za-z_][A-Za-z0-9_]*$'
@@ -16,6 +22,12 @@ z.cls.is._name() {
 # $1: 属性名
 # REPLY: null
 # return: 0|1
+#
+# example:
+#  z.cls.is._attribute count
+#  # return: 0
+#  z.cls.is._attribute REPLY
+#  # return: 1
 z.cls.is._attribute() {
   z.cls.is._name "${1:-}" &&
     z.is.not.eq "$1" REPLY &&

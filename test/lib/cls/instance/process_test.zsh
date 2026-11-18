@@ -4,11 +4,10 @@ z.t.describe "z.cls.instance._call"; {
   z.t.context "既存の実体を参照する場合"; {
     z.t.it "メソッドの更新と結果を保存する"; {
       () {
-        z.cls.draw DirectCall; {
-          z.cls.attr count 0
+        z.cls.draw DirectCall
+          z.cls.attr count default=0
           z.cls.fn add '(( count += $1 )); REPLY=$count'
-          z.cls.drew
-        }
+        z.cls.drew
 
         local object=""
         z.cls.new DirectCall object
@@ -104,14 +103,24 @@ z.t.describe "z.cls.instance._snapshot"; {
   }
 
   z.t.context "基数付き整数の場合"; {
-    z.t.it "typesetの宣言取得が必要であると返す"; {
+    z.t.it "属性の基数を保存して同じスコープへ復元できる"; {
       () {
         z.cls.store._ensure
         local -i 16 number=255
 
         z.cls.instance._snapshot snapshot_ref number
 
-        z.t.expect.status.is.false
+        z.t.expect.status.is.true
+
+        number=0
+        eval "$z_cls_values[snapshot_ref:number]"
+
+        (( number == 255 ))
+
+        z.t.expect.status.is.true
+        z.t.expect.includes "$number" "16#"
+
+        unset 'z_cls_values[snapshot_ref:number]'
       }
     }
   }
@@ -121,10 +130,9 @@ z.t.describe "z.cls.instance._release"; {
   z.t.context "他の実体が残る場合"; {
     z.t.it "対象だけを解放して生存中の状態を保つ"; {
       () {
-        z.cls.draw DirectRelease; {
-          z.cls.attr count 3
-          z.cls.drew
-        }
+        z.cls.draw DirectRelease
+          z.cls.attr count default=3
+        z.cls.drew
 
         local first=""
         z.cls.new DirectRelease first

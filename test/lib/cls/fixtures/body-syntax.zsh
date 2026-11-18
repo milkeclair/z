@@ -1,5 +1,5 @@
-z.cls.draw SyntaxBox; {
-  z.cls.attr value initial
+z.cls.draw SyntaxBox
+  z.cls.attr value default=initial
 
   z.cls.fn run
     false || value="value:$1"
@@ -11,5 +11,4 @@ TEXT
     return 9
   z.cls.fn.done
 
-  z.cls.drew
-}
+z.cls.drew

@@ -1,6 +1,27 @@
 source ${z_main}
 
 z.t.describe "z.completion.cache.build._names"; {
+  z.t.context "補完の関数名キャッシュを構築する場合"; {
+    z.t.it "公開DSLの8関数だけを候補にする"; {
+      source "$z_root/mod/completion/function/is/operator.zsh"
+      source "$z_root/mod/completion/cache/build/process.zsh"
+      local -a z_completion_function_names=()
+      local function_name=""
+
+      z.completion.cache.build._names
+
+      local -a class_names=()
+
+      for function_name in "${z_completion_function_names[@]}"; do
+        z.str.start_with "$function_name" z.cls. && class_names+=("$function_name")
+      done
+
+      REPLY=("${class_names[@]}")
+
+      z.t.expect.reply.is.arr z.cls.abort z.cls.attr z.cls.delete z.cls.draw z.cls.drew z.cls.fn z.cls.fn.done z.cls.new
+    }
+  }
+
   z.t.context "呼び出された場合"; {
     z.t.it "publicだけをcacheする"; {
       z_completion_function_names=(stale.function)

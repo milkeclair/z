@@ -1,4 +1,5 @@
 # 現在のシェルでクラス定義を開始する。
+# 開始を拒否した定義は、対応するz.cls.drewまで実行を抑止する。
 #
 # $1: クラス名
 # REPLY: null
@@ -12,38 +13,52 @@
 z.cls.draw() {
   z.cls.store._ensure
 
-  if ! z.int.is.eq $# 1 || ! z.cls.is._name "$1"; then
+  if ! z.int.is.eq $# 1 || ! z.cls.is._name "${1:-}"; then
     z.io.error "Expected a valid class name."
-    return 1
-  fi
-
-  if z.is.not.null "$z_cls_drawing" || z.is.not.null "${z_cls_classes[$1]:-}"; then
+  elif z.is.not.null "$z_cls_drawing" || z.is.not.null "${z_cls_classes[$1]:-}"; then
     z.io.error "Class $1 already exists or a definition is active."
-    return 1
+  else
+    z_cls_class_attrs[$1]=''
+    z_cls_class_methods[$1]=''
+    z_cls_drawing=$1
+    typeset -g +x z_cls_draw_stack=${(j:|:)funcstack[2,-1]}
+    typeset -gi +x z_cls_draw_failed=0
+
+    unsetopt localoptions
+    z.cls.capture._watch
+    return 0
   fi
 
-  z_cls_class_attrs[$1]=''
-  z_cls_class_methods[$1]=''
-  z_cls_drawing=$1
+  typeset -gi +x z_cls_reject_depth=1 z_cls_reject_method=0
+  typeset -g +x z_cls_reject_stack=${(j:|:)funcstack[2,-1]}
+  unsetopt localoptions
+  z.cls.capture._watch
+  return 1
 }
 
 # 定義中のクラスにスカラー属性と初期値を登録する。
 #
 # $1: 属性名
-# $2: 空文字列を含む属性の初期値
+# $default: 空文字列を含む属性の初期値
 # REPLY: null
 # return: 0|1
 #
 # example:
 #  # 前提: z.cls.draw Counterで定義を開始している
-#  z.cls.attr count 0
+#  z.cls.attr count default=0
 #  # return: 0
 #  # 変更後: Counterの属性countの初期値は0
 z.cls.attr() {
   z.cls.store._ensure
 
-  if ! z.int.is.eq $# 2 || z.is.null "$z_cls_drawing" || ! z.cls.is._attribute "$1"; then
-    z.io.error "Expected an active class, an ordinary attribute name, and a default."
+  if (( $# == 2 )) && z.str.start_with "$1" default=; then
+    set -- "$2" "$1"
+  fi
+
+  if ! z.int.is.eq $# 2 || z.is.null "$z_cls_drawing" || ! z.cls.is._attribute "${1:-}" ||
+      ! z.str.start_with "${2:-}" default=; then
+    z.io.error "Expected an active class, an ordinary attribute name, and default=."
+    [[ -n $z_cls_drawing ]] && z_cls_draw_failed=1
     return 1
   fi
 
@@ -51,10 +66,11 @@ z.cls.attr() {
 
   if z.var.exists "z_cls_defaults[$key]"; then
     z.io.error "Attribute $1 already exists."
+    z_cls_draw_failed=1
     return 1
   fi
 
-  z_cls_defaults[$key]=$2
+  z_cls_defaults[$key]=${2#default=}
   z_cls_class_attrs[$z_cls_drawing]+="$1 "
 }
 
@@ -100,6 +116,7 @@ z.cls.fn() {
 }
 
 # メソッドの収集を終えたクラスを公開する。
+# 拒否された定義の終端や属性の登録に失敗した定義では1を返す。
 #
 # REPLY: null
 # return: 0|1
@@ -112,11 +129,25 @@ z.cls.fn() {
 z.cls.drew() {
   z.cls.store._ensure
 
+  if (( ${z_cls_reject_result:-0} )); then
+    unset z_cls_reject_result
+    unsetopt localoptions
+    [[ -n $z_cls_drawing ]] || z.cls.capture._stop
+    return 1
+  fi
+
   if z.is.null "$z_cls_drawing"; then
     z.io.error "No class definition is active."
     return 1
   fi
 
+  unsetopt localoptions
+  if (( z_cls_draw_failed )); then
+    z.cls.abort
+    return 1
+  fi
+
+  z.cls.capture._stop
   z_cls_classes[$z_cls_drawing]=1
   z_cls_drawing=''
 }
@@ -133,6 +164,7 @@ z.cls.drew() {
 #  # 変更後: Counterの未公開定義を破棄し、元のDEBUGトラップを復元済み
 z.cls.abort() {
   z.cls.store._ensure
+  unsetopt localoptions
   z.cls.capture._stop
 
   local REPLY=""
@@ -192,7 +224,7 @@ z.cls.new() {
   local z_cls_member
 
   for z_cls_member in ${=z_cls_class_attrs[$z_cls_class]}; do
-    z_cls_values[$z_cls_id:$z_cls_member]="typeset -- $z_cls_member=${(qq)z_cls_defaults[$z_cls_class:$z_cls_member]}"
+    z.cls.store._scalar "$z_cls_id" "$z_cls_member" "$z_cls_defaults[$z_cls_class:$z_cls_member]"
   done
 
   z.cls.instance.commands._install "${z_cls_wrappers[@]}"
@@ -242,7 +274,6 @@ z.cls.delete() {
     z_cls_members=()
     z_cls_active=()
     z_cls_wrapper_refs=()
-    z_cls_wrapper_bodies=()
   fi
 
   return 0
