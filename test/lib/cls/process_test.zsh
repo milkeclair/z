@@ -60,6 +60,7 @@ z.t.describe "z.cls.attr"; {
     z.t.it "空の初期値は受け付け、初期値を省略したクラスは公開しない"; {
       z.cls.draw EmptyDefault
         z.cls.attr default default=
+        z.cls.attr default=0 count
       z.cls.drew
 
       () {
@@ -68,6 +69,13 @@ z.t.describe "z.cls.attr"; {
         object.default.get
 
         z.t.expect.reply.is.null
+
+        object.count.get
+        local reply_kind=${(t)REPLY}
+        local count_value=$REPLY
+
+        z.t.expect "$reply_kind" scalar
+        z.t.expect "$count_value" 0
         z.cls.delete object
       }
 
@@ -167,7 +175,6 @@ z.t.describe "z.cls.new"; {
       local -a output=()
       output=("${(@f)$(
         setopt nounset
-        source "$z_root/test/lib/cls/fixtures/counter.zsh"
         local counter=""
         z.cls.new TestCounter counter
         local -r other=$counter
@@ -479,7 +486,6 @@ z.t.describe "z.cls.delete"; {
       local -a output=()
       output=("${(@f)$(
         setopt errexit
-        source "$z_root/test/lib/cls/fixtures/counter.zsh"
         local counter=""
         z.cls.new TestCounter counter
         counter.increment

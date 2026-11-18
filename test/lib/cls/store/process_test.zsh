@@ -46,3 +46,31 @@ z.t.describe "z.cls.store._ensure"; {
     }
   }
 }
+
+
+z.t.describe "z.cls.store._scalar"; {
+  z.t.context "空白と空値を保存する場合"; {
+    z.t.it "引用して復元でき、呼出元のREPLYを保持する"; {
+      () {
+        z.cls.store._ensure
+        local label=old
+        REPLY=before
+
+        z.cls.store._scalar declaration_ref label "two words"
+
+        z.t.expect.reply before
+
+        eval "$z_cls_values[declaration_ref:label]"
+
+        z.t.expect "$label" "two words"
+
+        z.cls.store._scalar declaration_ref label ""
+        eval "$z_cls_values[declaration_ref:label]"
+
+        z.t.expect.is.null "$label"
+
+        unset 'z_cls_values[declaration_ref:label]'
+      }
+    }
+  }
+}

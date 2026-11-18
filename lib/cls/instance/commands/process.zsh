@@ -3,6 +3,11 @@
 # $@: 生成するコマンド名
 # REPLY: null
 # return: 全ての名前が利用可能または所有済みなら0、それ以外はエラーを表示して1
+#
+# example:
+#  # 前提: counter.incrementというコマンドや別名は未登録
+#  z.cls.instance.commands._validate counter.increment
+#  # return: 0
 z.cls.instance.commands._validate() {
   local REPLY=""
   local z_cls_command
@@ -32,6 +37,12 @@ z.cls.instance.commands._validate() {
 # $@: 検証済みのコマンド名
 # REPLY: null
 # return: 0
+#
+# example:
+#  # 前提: 保存領域を初期化し、counter.incrementの名前を検証済み
+#  z.cls.instance.commands._install counter.increment
+#  # return: 0
+#  # 変更後: counter.incrementを登録し、参照数は1
 z.cls.instance.commands._install() {
   local z_cls_command
 
@@ -52,7 +63,6 @@ z.cls.instance.commands._install() {
     fi
 
     functions -c "$z_cls_template" "$z_cls_command"
-    unset "z_cls_wrapper_bodies[$z_cls_command]"
     (( z_cls_wrapper_refs[$z_cls_command] += 1 ))
   done
 

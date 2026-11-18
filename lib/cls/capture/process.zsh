@@ -15,11 +15,11 @@
 z.cls.capture._start() {
   z.cls.capture._watch
 
-  typeset -g z_cls_capture_discard=${4:-0}
-  typeset -g z_cls_capture_done_result=0
-  typeset -g z_cls_capture_stack=$2
-  typeset -g z_cls_capture_file=$3
-  typeset -g z_cls_capture_body=''
+  typeset -g +x z_cls_capture_discard=${4:-0}
+  typeset -g +x z_cls_capture_done_result=0
+  typeset -g +x z_cls_capture_stack=$2
+  typeset -g +x z_cls_capture_file=$3
+  typeset -g +x z_cls_capture_body=''
   z_cls_capture_method=$1
 }
 
@@ -39,11 +39,11 @@ z.cls.capture._watch() {
 
   local REPLY=""
 
-  typeset -g z_cls_debug_function="${functions[TRAPDEBUG]-}"
-  typeset -g z_cls_debug_has_function=${+functions[TRAPDEBUG]}
-  typeset -g z_cls_debug_trap=''
-  typeset -g z_cls_debug_before=$options[debugbeforecmd]
-  typeset -g z_cls_debug_localtraps=$options[localtraps]
+  typeset -g +x z_cls_debug_function="${functions[TRAPDEBUG]-}"
+  typeset -g +x z_cls_debug_has_function=${+functions[TRAPDEBUG]}
+  typeset -g +x z_cls_debug_trap=''
+  typeset -g +x z_cls_debug_before=$options[debugbeforecmd]
+  typeset -g +x z_cls_debug_localtraps=$options[localtraps]
 
   local trap_line
 
@@ -60,7 +60,7 @@ z.cls.capture._watch() {
   unsetopt localoptions localtraps
   setopt debugbeforecmd
   functions[TRAPDEBUG]='unsetopt localoptions; z.cls.capture._debug "$ZSH_DEBUG_CMD"'
-  typeset -g z_cls_debug_watching=1
+  typeset -g +x z_cls_debug_watching=1
 }
 
 # 元のDEBUGトラップと実行タイミングの設定を復元する。
@@ -171,7 +171,7 @@ z.cls.capture._skip() {
     (( --z_cls_reject_depth ))
     if (( ! z_cls_reject_depth )); then
       unset z_cls_reject_depth z_cls_reject_method z_cls_reject_stack
-      typeset -g z_cls_reject_result=1
+      typeset -g +x z_cls_reject_result=1
       return 0
     fi
   fi

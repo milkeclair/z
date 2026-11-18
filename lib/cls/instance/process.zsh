@@ -7,6 +7,12 @@
 # $@?: 処理に渡す引数
 # REPLY: 処理の結果
 # return: 処理の終了コード
+#
+# example:
+#  # 前提: objectは初期値0のcountとincrementを持つCounterの参照変数
+#  z.cls.instance._call object method increment
+#  # REPLY: 1
+#  # return: 0
 z.cls.instance._call() {
   local z_cls_instance=${(P)1:-}
   local z_cls_operation=$2
@@ -34,6 +40,12 @@ z.cls.instance._call() {
 # $@?: 処理に渡す引数
 # REPLY: 処理の結果
 # return: 処理の終了コード
+#
+# example:
+#  # 前提: 呼出元でlocal count=4を宣言している
+#  z.cls.instance._execute unused get count
+#  # REPLY: 4
+#  # return: 0
 z.cls.instance._execute() {
   local z_cls_instance=$1
   local z_cls_operation=$2
@@ -59,13 +71,19 @@ z.cls.instance._execute() {
   esac
 }
 
-# 通常の値ではサブシェルを作らず、復元済みの属性を1つ保存する。
-# 特殊な属性フラグでは1を返し、属性を所有する呼出元で宣言を取得する。
+# 復元済みの属性を、同じ型で再作成できる宣言として保存する。
+# 通常の値はパラメータ展開を使い、特殊な属性フラグだけtypesetで取得する。
 #
 # $1: 実体参照
 # $2: 属性名
 # REPLY: null
-# return: 保存できた場合は0、typesetの出力が必要な場合は1
+# return: 0
+#
+# example:
+#  # 前提: 呼出元でlocal -i 16 number=255を宣言している
+#  z.cls.instance._snapshot object number
+#  # return: 0
+#  # 変更後: z_cls_values[object:number]に基数16を保つ宣言を保存済み
 z.cls.instance._snapshot() {
   local z_cls_snapshot_key="$1:$2"
   local z_cls_snapshot_name=$2
@@ -81,29 +99,35 @@ z.cls.instance._snapshot() {
     scalar|scalar-local)
       local z_cls_snapshot_value=${(P)z_cls_snapshot_name}
 
-      z_cls_values[$z_cls_snapshot_key]="typeset -- $z_cls_snapshot_name=${(qq)z_cls_snapshot_value}"
+      z.cls.store._scalar "$1" "$z_cls_snapshot_name" "$z_cls_snapshot_value"
+      return 0
       ;;
     integer|integer-local)
       local z_cls_snapshot_value=${(P)z_cls_snapshot_name}
 
-      z.int.is.match "$z_cls_snapshot_value" || return 1
+      if z.int.is.match "$z_cls_snapshot_value"; then
+        z.cls.store._scalar "$1" "$z_cls_snapshot_name" "$z_cls_snapshot_value" -i
+        return 0
+      fi
 
-      z_cls_values[$z_cls_snapshot_key]="typeset -i $z_cls_snapshot_name=${(qq)z_cls_snapshot_value}"
       ;;
     array|array-local)
       local -a z_cls_snapshot_values=("${(@P)z_cls_snapshot_name}")
 
       z_cls_values[$z_cls_snapshot_key]="typeset -a $z_cls_snapshot_name=( ${(j: :)${(@qq)z_cls_snapshot_values}} )"
+      return 0
       ;;
     association|association-local)
       local -a z_cls_snapshot_values=("${(@Pkv)z_cls_snapshot_name}")
 
       z_cls_values[$z_cls_snapshot_key]="typeset -A $z_cls_snapshot_name=( ${(j: :)${(@qq)z_cls_snapshot_values}} )"
-      ;;
-    *)
-      return 1
+      return 0
       ;;
   esac
+
+  local z_cls_snapshot_declaration="$(typeset -p "$z_cls_snapshot_name")"
+
+  z_cls_values[$z_cls_snapshot_key]=${z_cls_snapshot_declaration/#typeset -g /typeset }
 }
 
 # 検証済みの実体について、生成したコマンドと保存済みの属性を解放する。
@@ -111,6 +135,12 @@ z.cls.instance._snapshot() {
 # $1: 存在する非実行中の実体参照
 # REPLY: null
 # return: 0
+#
+# example:
+#  # 前提: objectは非実行中のCounterの実体参照
+#  z.cls.instance._release "$object"
+#  # return: 0
+#  # 変更後: 実体と、参照がなくなった生成コマンドを解放済み
 z.cls.instance._release() {
   local z_cls_id=$1
   local z_cls_command
@@ -124,7 +154,7 @@ z.cls.instance._release() {
       unfunction "$z_cls_command"
     fi
 
-    unset "z_cls_wrapper_refs[$z_cls_command]" "z_cls_wrapper_bodies[$z_cls_command]"
+    unset "z_cls_wrapper_refs[$z_cls_command]"
   done
 
   local z_cls_attribute

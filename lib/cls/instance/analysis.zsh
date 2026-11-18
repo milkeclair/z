@@ -5,6 +5,12 @@
 # $3: 実体参照
 # REPLY: コマンド名の配列。メンバーがない場合は空配列
 # return: 0
+#
+# example:
+#  # 前提: Counterは属性countだけを持つ
+#  z.cls.instance._commands Counter counter ref
+#  # REPLY: ("counter.count.get" "counter.count.set" "ref.count.get" "ref.count.set")
+#  # return: 0
 z.cls.instance._commands() {
   local z_cls_class=$1
   local z_cls_binding=$2

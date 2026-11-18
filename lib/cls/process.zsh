@@ -21,16 +21,16 @@ z.cls.draw() {
     z_cls_class_attrs[$1]=''
     z_cls_class_methods[$1]=''
     z_cls_drawing=$1
-    typeset -g z_cls_draw_stack=${(j:|:)funcstack[2,-1]}
-    typeset -gi z_cls_draw_failed=0
+    typeset -g +x z_cls_draw_stack=${(j:|:)funcstack[2,-1]}
+    typeset -gi +x z_cls_draw_failed=0
 
     unsetopt localoptions
     z.cls.capture._watch
     return 0
   fi
 
-  typeset -gi z_cls_reject_depth=1 z_cls_reject_method=0
-  typeset -g z_cls_reject_stack=${(j:|:)funcstack[2,-1]}
+  typeset -gi +x z_cls_reject_depth=1 z_cls_reject_method=0
+  typeset -g +x z_cls_reject_stack=${(j:|:)funcstack[2,-1]}
   unsetopt localoptions
   z.cls.capture._watch
   return 1
@@ -224,7 +224,7 @@ z.cls.new() {
   local z_cls_member
 
   for z_cls_member in ${=z_cls_class_attrs[$z_cls_class]}; do
-    z_cls_values[$z_cls_id:$z_cls_member]="typeset -- $z_cls_member=${(qq)z_cls_defaults[$z_cls_class:$z_cls_member]}"
+    z.cls.store._scalar "$z_cls_id" "$z_cls_member" "$z_cls_defaults[$z_cls_class:$z_cls_member]"
   done
 
   z.cls.instance.commands._install "${z_cls_wrappers[@]}"
@@ -274,7 +274,6 @@ z.cls.delete() {
     z_cls_members=()
     z_cls_active=()
     z_cls_wrapper_refs=()
-    z_cls_wrapper_bodies=()
   fi
 
   return 0

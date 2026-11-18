@@ -316,3 +316,50 @@ z.t.describe "z.cls.instance.call._run"; {
     }
   }
 }
+
+
+z.t.describe "z.cls.instance.callの失敗処理"; {
+  z.t.context "数値setterの式が途中で失敗する場合"; {
+    z.t.it "他の属性と保存済みの宣言を変更せず失敗する"; {
+      () {
+        z.cls.draw FailedSetter
+          z.cls.attr count default=4
+          z.cls.attr other default=13
+          z.cls.fn prepare 'typeset -gi count=4'
+        z.cls.drew
+        local object=""
+        z.cls.new FailedSetter object
+        object.prepare
+        local original_count=$z_cls_values[$object:count]
+        local original_other=$z_cls_values[$object:other]
+
+        z.cls.instance.call._access "$object" set count '(other=9) +' 2>/dev/null
+
+        z.t.expect.status.is.false
+        z.t.expect "$z_cls_values[$object:count]" "$original_count"
+        z.t.expect "$z_cls_values[$object:other]" "$original_other"
+
+        object.count.get
+
+        z.t.expect.reply 4
+
+        object.other.get
+
+        z.t.expect.reply 13
+
+        z.cls.delete object
+      }
+    }
+  }
+
+  z.t.context "errexitが有効な裸のメソッド呼出しの場合"; {
+    z.t.it "失敗の後続を実行せず通常のZshと同じ終了コードを返す"; {
+      local output=""
+
+      output=$(zsh -f "$z_root/test/lib/cls/fixtures/method-errexit.zsh")
+
+      z.t.expect.status.is.false
+      z.t.expect.is.null "$output"
+    }
+  }
+}

@@ -6,6 +6,11 @@
 # $4: エラーに表示する、元の変数名または参照
 # REPLY: null
 # return: 0|1
+#
+# example:
+#  # 前提: objectは非実行中で、countを持つ実体の参照変数
+#  z.cls.instance.call._validate "$object" get count object
+#  # return: 0
 z.cls.instance.call._validate() {
   local z_cls_instance=$1
 
@@ -39,6 +44,12 @@ z.cls.instance.call._validate() {
 # $@?: 取得・更新に渡す引数
 # REPLY: 取得・更新の結果
 # return: 取得・更新の終了コード
+#
+# example:
+#  # 前提: objectは初期値0のcountを持つ非実行中の実体の参照変数
+#  z.cls.instance.call._access "$object" get count
+#  # REPLY: 0
+#  # return: 0
 z.cls.instance.call._access() {
   local z_cls_instance=$1
   local z_cls_operation=$2
@@ -63,14 +74,16 @@ z.cls.instance.call._access() {
     z.int.is.eq $# 1 || return 1
 
     if z.str.start_with "$z_cls_declaration" "$z_cls_scalar_prefix"; then
-      z_cls_values[$z_cls_instance:$z_cls_member]="$z_cls_scalar_prefix${(qq)1}"
+      z.cls.store._scalar "$z_cls_instance" "$z_cls_member" "$1"
       return 0
     fi
 
     if z.int.is.match "$1"; then
-      local -i z_cls_numeric=$1
+      local -i z_cls_numeric=0
 
-      z_cls_values[$z_cls_instance:$z_cls_member]="$z_cls_integer_prefix${(qq)z_cls_numeric}"
+      (( z_cls_numeric = $1, 1 )) || return 1
+
+      z.cls.store._scalar "$z_cls_instance" "$z_cls_member" "$z_cls_numeric" -i
       return 0
     fi
   fi
@@ -86,6 +99,12 @@ z.cls.instance.call._access() {
 # $@?: 処理に渡す引数
 # REPLY: 処理の結果
 # return: 処理の終了コード
+#
+# example:
+#  # 前提: objectがcountを4へ更新しreturn 7するfailメソッドを持つ
+#  z.cls.instance.call._run "$object" method fail
+#  # return: 7
+#  # 変更後: countの更新を保存し、実行中フラグを解除済み
 z.cls.instance.call._run() {
   local z_cls_instance=$1
   local z_cls_operation=$2
@@ -106,17 +125,14 @@ z.cls.instance.call._run() {
 
   z_cls_active[$z_cls_instance]=1
   {
-    if z.cls.instance._execute "$@"; then
-      z_cls_result=0
-    else
-      z_cls_result=$?
-    fi
+    z.cls.instance._execute "$@"
   } always {
-    if z.is.not.eq "$z_cls_operation" get; then
+    z_cls_result=$?
+
+    if z.is.eq "$z_cls_operation" method ||
+        { z.is.eq "$z_cls_operation" set && z.int.is.zero $z_cls_result; }; then
       for z_cls_attribute in "${z_cls_attributes[@]}"; do
-        if ! z.cls.instance._snapshot "$z_cls_instance" "$z_cls_attribute"; then
-          z_cls_values[$z_cls_instance:$z_cls_attribute]="$(typeset -p "$z_cls_attribute")"
-        fi
+        z.cls.instance._snapshot "$z_cls_instance" "$z_cls_attribute"
       done
     fi
 

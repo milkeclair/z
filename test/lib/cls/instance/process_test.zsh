@@ -103,14 +103,24 @@ z.t.describe "z.cls.instance._snapshot"; {
   }
 
   z.t.context "基数付き整数の場合"; {
-    z.t.it "typesetの宣言取得が必要であると返す"; {
+    z.t.it "属性の基数を保存して同じスコープへ復元できる"; {
       () {
         z.cls.store._ensure
         local -i 16 number=255
 
         z.cls.instance._snapshot snapshot_ref number
 
-        z.t.expect.status.is.false
+        z.t.expect.status.is.true
+
+        number=0
+        eval "$z_cls_values[snapshot_ref:number]"
+
+        (( number == 255 ))
+
+        z.t.expect.status.is.true
+        z.t.expect.includes "$number" "16#"
+
+        unset 'z_cls_values[snapshot_ref:number]'
       }
     }
   }
