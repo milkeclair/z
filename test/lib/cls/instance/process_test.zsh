@@ -6,7 +6,7 @@ z.t.describe "z.cls.instance._call"; {
       () {
         z.cls.draw DirectCall
           z.cls.attr count default=0
-          z.cls.fn add '(( count += $1 )); REPLY=$count'
+          z.cls.fn add '$self.count.get || return 1; $self.count.set "$(( REPLY + $1 ))" || return 1; $self.count.get'
         z.cls.drew
 
         local object=""
