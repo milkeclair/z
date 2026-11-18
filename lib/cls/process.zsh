@@ -13,6 +13,9 @@
 z.cls.draw() {
   z.cls.store._ensure
 
+  local z_cls_stack=${(j:|:)funcstack[2,-1]}
+  local z_cls_result=1
+
   if ! z.int.is.eq $# 1 || ! z.cls.is._name "${1:-}"; then
     z.io.error "Expected a valid class name."
   elif z.is.not.null "$z_cls_drawing" || z.is.not.null "${z_cls_classes[$1]:-}"; then
@@ -21,19 +24,20 @@ z.cls.draw() {
     z_cls_class_attrs[$1]=''
     z_cls_class_methods[$1]=''
     z_cls_drawing=$1
-    typeset -g +x z_cls_draw_stack=${(j:|:)funcstack[2,-1]}
+    typeset -g +x z_cls_draw_stack=$z_cls_stack
     typeset -gi +x z_cls_draw_failed=0
-
-    unsetopt localoptions
-    z.cls.capture._watch
-    return 0
+    z_cls_result=0
   fi
 
-  typeset -gi +x z_cls_reject_depth=1 z_cls_reject_method=0
-  typeset -g +x z_cls_reject_stack=${(j:|:)funcstack[2,-1]}
+  if z.int.is.not.zero $z_cls_result; then
+    typeset -gi +x z_cls_reject_depth=1 z_cls_reject_method=0
+    typeset -g +x z_cls_reject_stack=$z_cls_stack
+  fi
+
   unsetopt localoptions
   z.cls.capture._watch
-  return 1
+
+  return $z_cls_result
 }
 
 # 定義中のクラスにスカラー属性と初期値を登録する。
@@ -51,7 +55,7 @@ z.cls.draw() {
 z.cls.attr() {
   z.cls.store._ensure
 
-  if (( $# == 2 )) && z.str.start_with "$1" default=; then
+  if z.int.is.eq $# 2 && z.str.start_with "$1" default=; then
     set -- "$2" "$1"
   fi
 
@@ -70,7 +74,9 @@ z.cls.attr() {
     return 1
   fi
 
-  z_cls_defaults[$key]=${2#default=}
+  local REPLY=""
+  z.str.remove.prefix "$2" default=
+  z_cls_defaults[$key]=$REPLY
   z_cls_class_attrs[$z_cls_drawing]+="$1 "
 }
 
@@ -107,8 +113,7 @@ z.cls.fn() {
 
   if z.int.is.gteq $# 2; then
     z.int.is.zero $invalid || return 1
-    z_cls_bodies[$key]=$2
-    z_cls_class_methods[$z_cls_drawing]+="$1 "
+    z.cls.store._method "$z_cls_drawing" "$1" "$2"
     return 0
   fi
 

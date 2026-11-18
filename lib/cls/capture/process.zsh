@@ -35,7 +35,7 @@ z.cls.capture._start() {
 #  # 変更後: z_cls_debug_watching=1
 #  z.cls.capture._stop
 z.cls.capture._watch() {
-  [[ ${z_cls_debug_watching:-0} == 1 ]] && return 0
+  z.is.eq "${z_cls_debug_watching:-0}" 1 && return 0
 
   local REPLY=""
 
@@ -74,7 +74,7 @@ z.cls.capture._watch() {
 #  # return: 0
 #  # 変更後: trap ': original' DEBUGを復元し、収集中のメソッド名を空にする
 z.cls.capture._stop() {
-  [[ ${z_cls_debug_watching:-0} == 1 ]] || return 0
+  z.is.eq "${z_cls_debug_watching:-0}" 1 || return 0
 
   z_cls_capture_method=''
   unset z_cls_debug_watching z_cls_reject_depth z_cls_reject_method z_cls_reject_stack
@@ -123,7 +123,7 @@ z.cls.capture._debug() {
       return 0
     fi
 
-    if [[ -z $z_cls_reject_stack || "|$z_cls_stack" == *"|$z_cls_reject_stack" ]]; then
+    if z.cls.capture._within_scope "$z_cls_stack" "$z_cls_reject_stack"; then
       return 0
     fi
 
@@ -135,13 +135,14 @@ z.cls.capture._debug() {
   fi
 
   if [[ -n ${z_cls_capture_method:-} ]]; then
-    if [[ $z_cls_stack == "$z_cls_capture_stack" || ( -n $z_cls_capture_stack && "|$z_cls_stack" != *"|$z_cls_capture_stack" ) ]]; then
+    if [[ $z_cls_stack == "$z_cls_capture_stack" ]] ||
+        ! z.cls.capture._within_scope "$z_cls_stack" "$z_cls_capture_stack"; then
       z.cls.capture._method "$1" "$z_cls_stack"
     fi
     return 0
   fi
 
-  if [[ -n $z_cls_drawing && -n $z_cls_draw_stack && "|$z_cls_stack" != *"|$z_cls_draw_stack" ]]; then
+  if z.is.not.null "$z_cls_drawing" && ! z.cls.capture._within_scope "$z_cls_stack" "$z_cls_draw_stack"; then
     local z_cls_abandoned=$z_cls_drawing
 
     z.cls.abort
@@ -164,7 +165,7 @@ z.cls.capture._skip() {
     [[ $1 == z.cls.fn.done ]] && z_cls_reject_method=0
   elif [[ $1 == z.cls.fn || $1 == 'z.cls.fn '* ]]; then
     local -a z_cls_words=(${(z)1})
-    (( ${#z_cls_words} <= 2 )) && z_cls_reject_method=1
+    z.int.is.lteq "${#z_cls_words}" 2 && z_cls_reject_method=1
   elif [[ $1 == z.cls.draw || $1 == 'z.cls.draw '* ]]; then
     (( ++z_cls_reject_depth ))
   elif [[ $1 == z.cls.drew ]]; then
@@ -209,8 +210,7 @@ z.cls.capture._method() {
     return 0
   fi
 
-  z_cls_bodies[$z_cls_drawing:$z_cls_capture_method]=$z_cls_capture_body
-  z_cls_class_methods[$z_cls_drawing]+="$z_cls_capture_method "
+  z.cls.store._method "$z_cls_drawing" "$z_cls_capture_method" "$z_cls_capture_body"
   z_cls_capture_method=''
   [[ -n $z_cls_drawing ]] || z.cls.capture._stop
 }

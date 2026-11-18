@@ -30,7 +30,6 @@ z.cls.store._ensure() {
   typeset -gi +x z_cls_store_ready=1
 }
 
-
 # 通常のスカラーと十進整数を、復元可能な宣言へ引用して保存する。
 #
 # $1: 実体参照
@@ -49,4 +48,22 @@ z.cls.store._scalar() {
   local z_cls_declaration_flag=${4:---}
 
   z_cls_values[$1:$2]="typeset $z_cls_declaration_flag $2=${(qq)3}"
+}
+
+# クラスのメソッド一覧と、対応する本体を保存する。
+#
+# $1: 定義中のクラス名
+# $2: メソッド名
+# $3: メソッド本体
+# REPLY: null
+# return: 0
+#
+# example:
+#  # 前提: Counterを定義中
+#  z.cls.store._method Counter value 'REPLY=0'
+#  # return: 0
+#  # 変更後: Counterのメソッド一覧にvalueを加え、本体にREPLY=0を保存
+z.cls.store._method() {
+  z_cls_bodies[$1:$2]=$3
+  z_cls_class_methods[$1]+="$2 "
 }
