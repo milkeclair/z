@@ -4,9 +4,8 @@ z.t.describe "z.cls.new._validate"; {
   z.t.context "書き込み可能な呼出元の変数の場合"; {
     z.t.it "検証だけでは参照を代入しない"; {
       () {
-        z.cls.draw NewValidate; {
-          z.cls.drew
-        }
+        z.cls.draw NewValidate
+        z.cls.drew
 
         local object=""
 
@@ -32,9 +31,8 @@ z.t.describe "z.cls.new._validate"; {
   z.t.context "readonly参照がある場合"; {
     z.t.it "元の実体を保持する"; {
       () {
-        z.cls.draw NewValidateReadonly; {
-          z.cls.drew
-        }
+        z.cls.draw NewValidateReadonly
+        z.cls.drew
 
         local object=""
         z.cls.new NewValidateReadonly object

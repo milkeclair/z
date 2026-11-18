@@ -6,8 +6,8 @@
 次の定義を`counter.zsh`へ保存します。
 
 ```zsh
-z.cls.draw Counter; {
-  z.cls.attr count 0
+z.cls.draw Counter
+  z.cls.attr count default=0
 
   z.cls.fn increment
     (( ++count ))
@@ -19,8 +19,7 @@ z.cls.draw Counter; {
     REPLY=$count
   z.cls.fn.done
 
-  z.cls.drew
-}
+z.cls.drew
 ```
 
 実体を作成すると、メソッドと属性の取得・更新用コマンドを呼び出せます。
@@ -100,6 +99,9 @@ print -r -- "$REPLY"  # 11
 - `z.cls.fn name`と`z.cls.fn.done`は、独立した無条件の文として記述します。
   本体内の引用、コメント、ヒアドキュメント、パイプ、条件分岐、通常のループはZshの構文です。
 - `z.cls.fn name 'body'`で短い本体を引数として登録することもできます。
+- クラスの境界は`z.cls.draw`と`z.cls.drew`、メソッド本体の境界は`z.cls.fn`と`z.cls.fn.done`です。字下げは読みやすさのために使います。
+- 属性は`z.cls.attr name default=value`で宣言します。`default=0`は文字列`0`、`default=`は空文字列です。`default`の省略や重複した属性は定義エラーになり、`z.cls.drew`で1を返します。
+- `z.cls.draw`が定義を拒否すると、対応する`z.cls.drew`までコマンドを読み飛ばします。その`z.cls.drew`は1を返し、定義中だった外側のクラスは続けられます。
 - `z.cls.drew`でクラスを公開し、`z.cls.abort`で未完了の定義を破棄します。
   メソッドの終了前に定義元の実行コンテキストを抜けた場合も、未完了の定義を破棄します。
 - 引数、標準出力・標準エラー、`REPLY`、終了コードをそのまま渡します。

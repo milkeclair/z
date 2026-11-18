@@ -1,10 +1,10 @@
-z.cls.draw TypedState; {
-  z.cls.attr table initial
-  z.cls.attr number 0
-  z.cls.attr fraction 0
-  z.cls.attr values initial
-  z.cls.attr missing initial
-  z.cls.attr plain initial
+z.cls.draw TypedState
+  z.cls.attr table default=initial
+  z.cls.attr number default=0
+  z.cls.attr fraction default=0
+  z.cls.attr values default=initial
+  z.cls.attr missing default=initial
+  z.cls.attr plain default=initial
 
   z.cls.fn fill
     unset table
@@ -29,5 +29,4 @@ z.cls.draw TypedState; {
     REPLY=preserved
   z.cls.fn.done
 
-  z.cls.drew
-}
+z.cls.drew

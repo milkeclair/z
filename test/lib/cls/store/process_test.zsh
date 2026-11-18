@@ -1,6 +1,25 @@
 source ${z_main}
 
 z.t.describe "z.cls.store._ensure"; {
+  z.t.context "親がallexportを設定している場合"; {
+    z.t.it "allexport下で初期化しても子のZshは独立して初期化する"; {
+      local -a output=()
+      output=("${(@f)$(
+        setopt allexport
+        print -rl -- "${+z_cls_store_ready}"
+        source "$z_root/test/lib/cls/fixtures/counter.zsh"
+        local parent_instance=""
+        z.cls.new TestCounter parent_instance
+        zsh -f "$z_root/test/lib/cls/fixtures/exported-child.zsh"
+      )}")
+
+      z.t.expect.status.is.true
+      z.t.expect "${#output}" 2
+      z.t.expect "$output[1]" 0
+      z.t.expect "$output[2]" 1
+    }
+  }
+
   z.t.context "初期化済みの場合"; {
     z.t.it "既存のクラスと状態を保持する"; {
       z.cls.store._ensure
