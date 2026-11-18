@@ -7,7 +7,9 @@
 # example:
 #  # 前提: Counterを定義中で、属性countを登録している
 #  z.cls.fn increment
-#    (( ++count ))
+#    $self.count.get || return 1
+#    $self.count.set "$(( REPLY + 1 ))" || return 1
+#    $self.count.get
 #  z.cls.fn.done
 #  # return: 0
 #  # 変更後: incrementの本体を登録し、収集を終了

@@ -3,7 +3,7 @@ z.cls.draw ArithmeticSetter
   z.cls.attr other default=13
 
   z.cls.fn prepare
-    typeset -gi count=1
+    $self.count.set 1
   z.cls.fn.done
 
 z.cls.drew

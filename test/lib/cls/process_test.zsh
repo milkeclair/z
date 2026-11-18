@@ -152,7 +152,7 @@ z.t.describe "z.cls.abort"; {
     z.t.it "初期値と本体を破棄する"; {
       z.cls.draw DirectAbort
         z.cls.attr count default=0
-        z.cls.fn value 'REPLY=$count'
+        z.cls.fn value '$self.count.get'
 
       z.cls.abort
 
@@ -181,7 +181,7 @@ z.t.describe "z.cls.new"; {
         "$other.increment"
         counter.count.get
         print -rl -- "$REPLY"
-        counter.add 4
+        counter.add count=4
         "$other.value"
         print -rl -- "$REPLY"
         z.cls.delete other
@@ -222,7 +222,7 @@ z.t.describe "z.cls.new"; {
         local -r z_cls_class=caller_class
         z.cls.draw ScopedInternals
           z.cls.attr count default=0
-          z.cls.fn increment '(( ++count )); REPLY=$count'
+          z.cls.fn increment '$self.count.get || return 1; $self.count.set "$(( REPLY + 1 ))" || return 1; $self.count.get'
         z.cls.drew
 
         local object=""
@@ -247,7 +247,7 @@ z.t.describe "z.cls.new"; {
       () {
         z.cls.draw FormerPrefix
           z.cls.attr __z_cls_value default=0
-          z.cls.fn increment '(( ++__z_cls_value )); REPLY=$__z_cls_value'
+          z.cls.fn increment '$self.__z_cls_value.get || return 1; $self.__z_cls_value.set "$(( REPLY + 1 ))" || return 1; $self.__z_cls_value.get'
         z.cls.drew
 
         local object=""
@@ -402,6 +402,10 @@ z.t.describe "z.cls.new"; {
 
           z.t.expect.status.is.true
 
+          () {
+            local -a items=()
+            z.cls.instance._snapshot "$counter" items
+          }
           counter.fill
           counter.items.get
           local item_count=${#REPLY}

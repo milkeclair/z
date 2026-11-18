@@ -1,5 +1,4 @@
-# 実体の属性を復元して処理を実行し、変更を保存する。
-# 同じ実体への入れ子の呼出しでは、実行中のローカルスコープを再利用する。
+# 実体の参照からメソッドまたは属性への操作を呼び出す。
 #
 # $1: 実体の変数名または参照
 # $2: method、get、setのいずれか
@@ -23,16 +22,14 @@ z.cls.instance._call() {
 
   shift 3
 
-  if z.is.not.null "${z_cls_active[$z_cls_instance]:-}"; then
-    z.cls.instance._execute "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
-  elif z.is.eq "$z_cls_operation" method; then
+  if z.is.eq "$z_cls_operation" method; then
     z.cls.instance.call._run "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
   else
     z.cls.instance.call._access "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
   fi
 }
 
-# メソッド本体と終了トラップの引数を保ち、復元済みの属性を取得・更新する。
+# メソッドにreadonlyのselfと引数を渡すか、復元済みの属性を取得・更新する。
 #
 # $1: 実体の参照
 # $2: method、get、setのいずれか
@@ -59,6 +56,8 @@ z.cls.instance._execute() {
 
       # EXITトラップもメソッド引数で動くよう、本体専用のスコープを作る。
       () {
+        local -r self=$z_cls_instance
+
         eval "$z_cls_body"
       } "$@"
       ;;

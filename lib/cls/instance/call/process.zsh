@@ -38,7 +38,7 @@ z.cls.instance.call._validate() {
 
 # 保存済みの通常スカラーを直接扱い、それ以外は属性のスコープを復元して処理する。
 #
-# $1: 非実行中の実体参照
+# $1: 実体参照
 # $2: getまたはset
 # $3: 属性名
 # $@?: 取得・更新に渡す引数
@@ -46,7 +46,7 @@ z.cls.instance.call._validate() {
 # return: 取得・更新の終了コード
 #
 # example:
-#  # 前提: objectは初期値0のcountを持つ非実行中の実体の参照変数
+#  # 前提: objectは初期値0のcountを持つ実体の参照変数
 #  z.cls.instance.call._access "$object" get count
 #  # REPLY: 0
 #  # return: 0
@@ -91,9 +91,9 @@ z.cls.instance.call._access() {
   z.cls.instance.call._run "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
 }
 
-# 処理の実行、属性の保存、実行中フラグの解除まで、復元した属性を同じスコープに保つ。
+# メソッドの実行中フラグを管理する。属性操作では、保管している型と値を一時的に復元する。
 #
-# $1: 非実行中の実体参照
+# $1: 実体参照
 # $2: method、get、setのいずれか
 # $3: メンバー名
 # $@?: 処理に渡す引数
@@ -101,16 +101,38 @@ z.cls.instance.call._access() {
 # return: 処理の終了コード
 #
 # example:
-#  # 前提: objectがcountを4へ更新しreturn 7するfailメソッドを持つ
+#  # 前提: objectが$self.count.set 4を実行してreturn 7するfailメソッドを持つ
 #  z.cls.instance.call._run "$object" method fail
 #  # return: 7
-#  # 変更後: countの更新を保存し、実行中フラグを解除済み
+#  # 変更後: countは4、実行中フラグは解除済み
 z.cls.instance.call._run() {
   local z_cls_instance=$1
   local z_cls_operation=$2
+
+  if z.is.eq "$z_cls_operation" method; then
+    if z.is.not.null "${z_cls_active[$z_cls_instance]:-}"; then
+      z.cls.instance._execute "$@"
+      return $?
+    fi
+
+    local z_cls_current_instance=$z_cls_instance
+    local z_cls_result=0
+
+    z_cls_active[$z_cls_instance]=1
+    {
+      z.cls.instance._execute "$@"
+    } always {
+      z_cls_result=$?
+      unset "z_cls_active[$z_cls_instance]"
+    }
+
+    return $z_cls_result
+  fi
+
   local -a z_cls_attributes=("$3")
 
-  if z.is.not.eq "$z_cls_operation" get; then
+  if z.is.eq "$z_cls_operation" set; then
+    # 数値式は、同じ実体の他の属性を参照できる。
     z_cls_attributes=(${=z_cls_class_attrs[${z_cls_instances[$z_cls_instance]}]})
   fi
 
@@ -120,24 +142,11 @@ z.cls.instance.call._run() {
     eval "$z_cls_values[$z_cls_instance:$z_cls_attribute]"
   done
 
-  local z_cls_current_instance=$z_cls_instance
-  local z_cls_result=0
+  z.cls.instance._execute "$@" || return $?
 
-  z_cls_active[$z_cls_instance]=1
-  {
-    z.cls.instance._execute "$@"
-  } always {
-    z_cls_result=$?
+  if z.is.eq "$z_cls_operation" set; then
+    z.cls.instance._snapshot "$z_cls_instance" "$3"
+  fi
 
-    if z.is.eq "$z_cls_operation" method ||
-        { z.is.eq "$z_cls_operation" set && z.int.is.zero $z_cls_result; }; then
-      for z_cls_attribute in "${z_cls_attributes[@]}"; do
-        z.cls.instance._snapshot "$z_cls_instance" "$z_cls_attribute"
-      done
-    fi
-
-    unset "z_cls_active[$z_cls_instance]"
-  }
-
-  return $z_cls_result
+  return 0
 }
