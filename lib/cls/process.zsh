@@ -229,12 +229,6 @@ z.cls.new() {
   z.cls.instance.commands._validate "${z_cls_wrappers[@]}" || return 1
   z.cls.owner._bind "$z_cls_id" "$z_cls_binding" || return 1
 
-  local z_cls_member
-
-  for z_cls_member in ${=z_cls_class_attrs[$z_cls_class]}; do
-    z.cls.store._scalar "$z_cls_id" "$z_cls_member" "$z_cls_defaults[$z_cls_class:$z_cls_member]"
-  done
-
   z.cls.instance.commands._install "${z_cls_wrappers[@]}"
 
   z_cls_members[$z_cls_id]="${(j: :)z_cls_wrappers}"

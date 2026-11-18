@@ -48,9 +48,16 @@ z.cls.instance.call._get() {
   fi
 
   z.int.is.eq $# 2 || return 1
-  (( ${+z_cls_scalars[$z_cls_key]} )) || return 1
 
-  REPLY=$z_cls_scalars[$z_cls_key]
+  if (( ${+z_cls_scalars[$z_cls_key]} )); then
+    REPLY=$z_cls_scalars[$z_cls_key]
+    return 0
+  fi
+
+  local z_cls_default_key="${z_cls_instances[$1]}:$2"
+  (( ${+z_cls_defaults[$z_cls_default_key]} )) || return 1
+
+  REPLY=$z_cls_defaults[$z_cls_default_key]
 }
 
 # 実体IDから属性を更新する。
@@ -76,7 +83,9 @@ z.cls.instance.call._set() {
   fi
 
   z.int.is.eq $# 3 || return 1
-  (( ${+z_cls_scalars[$z_cls_key]} )) || return 1
+
+  local z_cls_default_key="${z_cls_instances[$1]}:$2"
+  (( ${+z_cls_defaults[$z_cls_default_key]} )) || return 1
 
   z_cls_scalars[$z_cls_key]=$3
 }
@@ -148,13 +157,14 @@ z.cls.instance.call._access_typed() {
   local z_cls_instance=$1
   local z_cls_operation=$2
   local z_cls_member=$3
+  local z_cls_class=$z_cls_instances[$z_cls_instance]
   local -a z_cls_attributes=("$z_cls_member")
 
   shift 3
 
   if z.is.eq "$z_cls_operation" set; then
     # 数値式は、同じ実体の他の属性を参照できる。
-    z_cls_attributes=(${=z_cls_class_attrs[${z_cls_instances[$z_cls_instance]}]})
+    z_cls_attributes=(${=z_cls_class_attrs[$z_cls_class]})
   fi
 
   local z_cls_attribute
@@ -165,7 +175,7 @@ z.cls.instance.call._access_typed() {
     if (( ${+z_cls_values[$z_cls_key]} )); then
       eval "$z_cls_values[$z_cls_key]"
     else
-      local -- "$z_cls_attribute=${z_cls_scalars[$z_cls_key]}"
+      local -- "$z_cls_attribute=${z_cls_scalars[$z_cls_key]-${z_cls_defaults[$z_cls_class:$z_cls_attribute]}}"
     fi
   done
 

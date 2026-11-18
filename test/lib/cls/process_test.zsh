@@ -170,6 +170,42 @@ z.t.describe "z.cls.abort"; {
 }
 
 z.t.describe "z.cls.new"; {
+  z.t.context "既定値を共有する場合"; {
+    z.t.it "未変更の属性を保持せず、明示した空文字だけを実体に保存する"; {
+      () {
+        z.cls.draw SharedDefaults
+          z.cls.attr label default=initial
+        z.cls.drew
+
+        local first="" second=""
+        z.cls.new SharedDefaults first
+        z.cls.new SharedDefaults second
+
+        $first.label.get
+
+        z.t.expect.reply initial
+        z.t.expect "${+z_cls_scalars[${first}:label]}" 0
+        z.t.expect "${+z_cls_values[${first}:label]}" 0
+
+        $first.label.set ""
+        $first.label.get
+
+        z.t.expect.reply.is.null
+        z.t.expect "${+z_cls_scalars[${first}:label]}" 1
+
+        $second.label.get
+
+        z.t.expect.reply initial
+        z.t.expect "${+z_cls_scalars[${second}:label]}" 0
+
+        z.cls.delete first
+
+        z.t.expect "${+z_cls_scalars[${first}:label]}" 0
+        z.cls.delete second
+      }
+    }
+  }
+
   z.t.context "nounsetの下で参照をコピーした場合"; {
     z.t.it "nounset下でコピーした参照の状態共有と削除ができる"; {
       local -a output=()
