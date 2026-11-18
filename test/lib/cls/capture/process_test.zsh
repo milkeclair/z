@@ -66,7 +66,7 @@ z.t.describe "z.cls.capture._stop"; {
         local calls=$trap_calls
         local first=""
         z.cls.new TestCounter first
-        first.increment
+        $first.increment
         local call_reply=$REPLY
         unfunction TRAPDEBUG
         print -rl -- "${(qqqq)before}" "${(qqqq)after}" "$calls" "$call_reply"
@@ -91,7 +91,7 @@ z.t.describe "z.cls.capture._stop"; {
         local after=$(trap)
         local first=""
         z.cls.new TestCounter first
-        first.increment
+        $first.increment
         local call_reply=$REPLY
         trap - DEBUG
         print -rl -- "${(qqqq)before}" "${(qqqq)after}" "$call_reply"
@@ -152,7 +152,7 @@ z.t.describe "z.cls.capture._debug"; {
         local first=""
         z.cls.new TestCounter first
         print -rl -- "$?"
-        first.loop
+        $first.loop
         print -rl -- "$REPLY" "$count"
       )}")
 
@@ -225,11 +225,11 @@ z.t.describe "z.cls.capture._debug"; {
         print -r -- "${+z_cls_classes[MarkerInner]}"
         local outer=""
         z.cls.new MarkerOuter outer
-        outer.build
+        $outer.build
 
         local inner=""
         z.cls.new MarkerInner inner
-        inner.value.get
+        $inner.value.get
         print -r -- "$REPLY"
       )}")
 
@@ -244,7 +244,7 @@ z.t.describe "z.cls.capture._debug"; {
         source "$z_root/test/lib/cls/fixtures/body-syntax.zsh"
         local first=""
         z.cls.new SyntaxBox first
-        first.run test
+        $first.run test
         local call_status=$?
         local call_reply=$REPLY
         print -rl -- "$call_status" "$call_reply"
@@ -280,9 +280,9 @@ z.t.describe "z.cls.capture._skip"; {
 
         local object=""
         z.cls.new Outer object
-        object.kept.get
+        $object.kept.get
         print -r -- "$REPLY"
-        object.added.get
+        $object.added.get
         print -r -- "$REPLY"
         print -r -- "${+z_cls_classes[Rejected]}" "${+z_cls_classes[Deeper]}" "${+z_cls_classes[InMethod]}"
       )}")
@@ -309,7 +309,7 @@ z.t.describe "z.cls.capture._skip"; {
         print -r -- "$?"
         local object=""
         z.cls.new Rejected object
-        object.kept.get
+        $object.kept.get
         print -r -- "$REPLY"
       )}")
 
@@ -331,7 +331,7 @@ z.t.describe "z.cls.capture._watch"; {
         print -rl -- "$?" "$before" "$options[localoptions]:$options[localtraps]:$options[debugbeforecmd]:$options[functionargzero]"
         local first=""
         z.cls.new TestCounter first
-        first.increment
+        $first.increment
         print -rl -- "$REPLY"
       )}")
 
@@ -351,7 +351,7 @@ z.t.describe "z.cls.capture._watch"; {
         print -rl -- "$?" "$before" "$options[localoptions]:$options[localtraps]:$options[debugbeforecmd]:$options[functionargzero]"
         local first=""
         z.cls.new TestCounter first
-        first.increment
+        $first.increment
         print -rl -- "$REPLY"
       )}")
 
@@ -371,7 +371,7 @@ z.t.describe "z.cls.capture._watch"; {
         print -rl -- "$?" "$before" "$options[localoptions]:$options[localtraps]:$options[debugbeforecmd]:$options[functionargzero]"
         local first=""
         z.cls.new TestCounter first
-        first.increment
+        $first.increment
         print -rl -- "$REPLY"
       )}")
 
@@ -391,7 +391,7 @@ z.t.describe "z.cls.capture._watch"; {
         print -rl -- "$?" "$before" "$options[localoptions]:$options[localtraps]:$options[debugbeforecmd]:$options[functionargzero]"
         local first=""
         z.cls.new TestCounter first
-        first.increment
+        $first.increment
         print -rl -- "$REPLY"
       )}")
 
@@ -411,7 +411,7 @@ z.t.describe "z.cls.capture._watch"; {
         print -rl -- "$?" "$before" "$options[localoptions]:$options[localtraps]:$options[debugbeforecmd]:$options[functionargzero]"
         local first=""
         z.cls.new TestCounter first
-        first.increment
+        $first.increment
         print -rl -- "$REPLY"
       )}")
 

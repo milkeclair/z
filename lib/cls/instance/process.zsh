@@ -152,5 +152,16 @@ z.cls.instance._release() {
   done
 
   # 未設定のactive要素も管理ノードを残すため、一緒に削除する。
-  unset "z_cls_instances[$z_cls_id]" "z_cls_members[$z_cls_id]" "z_cls_active[$z_cls_id]"
+  unset "z_cls_instances[$z_cls_id]" "z_cls_members[$z_cls_id]" "z_cls_active[$z_cls_id]" "z_cls_owner_markers[$z_cls_id]"
+
+  if z.int.is.zero "${#z_cls_instances}"; then
+    # 最後の実体を片付けたら、空のテーブルの容量も解放する。
+    z_cls_instances=()
+    z_cls_values=()
+    z_cls_members=()
+    z_cls_active=()
+    z_cls_wrapper_refs=()
+    z_cls_owner_markers=()
+    z_cls_gc_allocations=0
+  fi
 }

@@ -26,19 +26,20 @@ z.cls.draw Counter
 z.cls.drew
 ```
 
-実体を作成すると、メソッドと属性の取得・更新用コマンドを呼び出せます。
+実体を作成すると、変数を展開してメソッドや属性の取得・更新を呼び出せます。
 
 ```zsh
 source ./counter.zsh
+typeset counter=""
 z.cls.new Counter counter
 
-counter.increment
-counter.add count=4
-counter.count.get
+$counter.increment
+$counter.add count=4
+$counter.count.get
 print -r -- "$REPLY"  # 5
 
-counter.count.set 10
-counter.increment
+$counter.count.set 10
+$counter.increment
 print -r -- "$REPLY"  # 11
 
 z.cls.delete counter
@@ -62,30 +63,31 @@ setterが成功すると、その時点で保存値へ反映します。直後�
 ## 参照と変数のスコープ
 
 `z.cls.new Class variable`は、指定した変数と`REPLY`へ実体参照を代入し、
-指定した変数をreadonlyにします。参照を持つ変数は通常のZshのスコープに従います。
+指定した変数をreadonlyにし、実体の唯一の所有変数として登録します。変数は呼出元で先に宣言します。
 同じ変数への再代入や、同じ変数を使った実体の再生成は拒否されます。
 
 以下の例は、それぞれの前の実行例とは独立したシェルで、Counterの定義を
 読み込んだ状態から実行します。ローカルな参照を作る場合は、呼出元で変数をlocal宣言します。
 
 ```zsh
+typeset counter=""
 z.cls.new Counter counter
-counter.count.set 10
+$counter.count.set 10
 
 example() {
   local counter=""
   z.cls.new Counter counter
-  counter.increment
+  $counter.increment
   print -r -- "$REPLY"  # 1
   z.cls.delete counter
 }
 
 example
-counter.count.get
+$counter.count.get
 print -r -- "$REPLY"  # 10
 ```
 
-続けて参照をコピーすると、同じ実体の状態を共有できます。
+続けて参照をコピーすると、同じ実体の状態を共有できます。コピーは借用参照で、実体の寿命を延ばしません。
 参照を展開したコマンド名は、その参照を持つ変数からメソッドや属性を呼び出します。
 
 ```zsh
@@ -95,14 +97,35 @@ typeset -r other=$counter
 print -r -- "$REPLY"  # 11
 ```
 
-短い形式の`counter.increment`は、呼出し時に見えるcounter変数から実体を解決します。
-`"$other.increment"`は、コピー済みの参照から直接呼び出します。
+`$counter.increment`と`$other.increment`は、それぞれの変数に保存した実体参照を展開して呼び出します。
 新しい実体には、内側のスコープで宣言した同名localなど、新しい代入先が必要です。
 コピーした参照も再代入から保護する場合は、`typeset -r`または`local -r`を使います。
 
 `z.cls.delete variable`または`z.cls.delete "$reference"`で実体を解放します。
 削除後も参照変数の値とreadonly属性は残りますが、その実体への参照は全て無効になります。
-変数のスコープを抜けるだけでは実体の状態を解放しないため、使い終わったら明示的に削除します。
+所有変数のスコープを抜けた実体は、前回の回収から64件生成された後の次のnewで自動回収します。
+実行中の実体は、メソッドが終了した後に回収できます。
+属性や配列に入れた実体IDも借用参照で、実体の寿命は所有変数に従います。
+
+実体を呼出元に渡す場合は、所有権を宣言済みの変数へ移します。
+
+```zsh
+prepare_counter() {
+  local counter=""
+  z.cls.new Counter counter || return 1
+  $counter.count.set 5
+  z.cls.owner.move from=counter "to=$1"
+}
+
+example() {
+  local saved=""
+  prepare_counter saved || return 1
+  $saved.count.get
+  # REPLY: 5
+}
+```
+
+移動元に残る値は借用参照です。移動先からは実体IDを展開して呼び出します。
 
 ## 定義と呼出しの規則
 
@@ -133,7 +156,7 @@ print -r -- "$REPLY"  # 11
 
 ## 公開APIと内部関数
 
-公開APIはdraw、attr、fn、fn.done、drew、abort、new、deleteの8関数です。
+公開APIはdraw、attr、fn、fn.done、drew、abort、new、owner.move、deleteの9関数です。
 内部の補助関数は、zの既存規約に従い、関数名の最後の区切りをアンダースコアから始めます。
 シェル補完とz-lsは通常、この補助関数を候補から除外します。
 z-lsではshowPrivateFunctions設定で表示できます。この規約は、Zshからの直接呼出しを制限するものではありません。

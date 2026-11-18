@@ -9,7 +9,10 @@
 #  # return: 0
 #  # 変更後: z_cls_instances=()とz_cls_values=()を初期化済み
 z.cls.store._ensure() {
-  z.is.eq "${z_cls_store_ready:-0}" 1 && z.var.exists z_cls_dispatch_programs && return 0
+  if z.is.eq "${z_cls_store_ready:-0}" 1 &&
+      z.var.exists z_cls_dispatch_programs && z.var.exists z_cls_owner_markers; then
+    return 0
+  fi
 
   zmodload zsh/parameter
   z.var.exists z_cls_classes || typeset -gA z_cls_classes
@@ -23,6 +26,9 @@ z.cls.store._ensure() {
   z.var.exists z_cls_wrapper_refs || typeset -gA z_cls_wrapper_refs
   z.var.exists z_cls_dispatch_programs || typeset -gA z_cls_dispatch_programs
   z.var.exists z_cls_next_id || typeset -gi z_cls_next_id=0
+  z.var.exists z_cls_owner_markers || typeset -gA z_cls_owner_markers
+  z.var.exists z_cls_next_owner_id || typeset -gi +x z_cls_next_owner_id=0
+  z.var.exists z_cls_gc_allocations || typeset -gi +x z_cls_gc_allocations=0
   z.var.exists z_cls_active || typeset -gA z_cls_active
   z.var.exists z_cls_drawing || typeset -g +x z_cls_drawing=''
   z.var.exists z_cls_capture_method || typeset -g +x z_cls_capture_method=''

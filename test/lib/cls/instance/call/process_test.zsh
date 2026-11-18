@@ -60,12 +60,12 @@ z.t.describe "z.cls.instance.call._access"; {
         z_cls_values[${object}:count]='typeset -i count=0'
 
         z.cls.instance.call._access "$object" set count +7
-        object.count.get
+        $object.count.get
 
         z.t.expect.reply 7
 
         z.cls.instance.call._access "$object" set count -3
-        object.count.get
+        $object.count.get
 
         z.t.expect.reply -3
 
@@ -112,7 +112,7 @@ z.t.describe "z.cls.instance.call._access"; {
         z_cls_values[${object}:count]='typeset -i count=1'
 
         z.cls.instance.call._access "$object" set count 'other+1'
-        object.count.get
+        $object.count.get
 
         z.t.expect.reply 14
 
@@ -137,7 +137,7 @@ z.t.describe "z.cls.instance.call._access"; {
           local -i count=4
           z.cls.instance._snapshot "$object" count
         }
-        object.prepare
+        $object.prepare
         local original_count=$z_cls_values[${object}:count]
         local original_other=$z_cls_values[${object}:other]
 
@@ -147,11 +147,11 @@ z.t.describe "z.cls.instance.call._access"; {
         z.t.expect "$z_cls_values[${object}:count]" "$original_count"
         z.t.expect "$z_cls_values[${object}:other]" "$original_other"
 
-        object.count.get
+        $object.count.get
 
         z.t.expect.reply 4
 
-        object.other.get
+        $object.other.get
 
         z.t.expect.reply 13
 
@@ -231,7 +231,7 @@ z.t.describe "z.cls.instance.call._run"; {
 
         z.t.expect.status.is.false
 
-        object.count.get
+        $object.count.get
 
         z.t.expect.reply 4
 
@@ -256,29 +256,29 @@ z.t.describe "z.cls.instance.call._run"; {
         local second=""
         z.cls.new TestCounter first
         z.cls.new TestCounter second
-        first.increment
-        first.add count=4
+        $first.increment
+        $first.add count=4
 
         z.t.expect.reply 5
 
-        second.count.get
+        $second.count.get
 
         z.t.expect.reply 0
 
-        first.count.set 10
-        first.increment
-        first.value
+        $first.count.set 10
+        $first.increment
+        $first.value
 
         z.t.expect.reply 11
 
         local literal=$'space "quote" \\ slash\n$(print SHOULD_NOT_RUN)'
-        first.label.set "$literal"
-        first.label.get
+        $first.label.set "$literal"
+        $first.label.get
 
         z.t.expect.reply "$literal"
 
-        first.label.set ""
-        first.label.get
+        $first.label.set ""
+        $first.label.get
 
         z.t.expect.reply.is.null
 
@@ -293,8 +293,8 @@ z.t.describe "z.cls.instance.call._run"; {
       () {
         local first=""
         z.cls.new TestCounter first
-        first.twice
-        first.value
+        $first.twice
+        $first.value
 
         z.t.expect.reply 2
 
@@ -308,14 +308,14 @@ z.t.describe "z.cls.instance.call._run"; {
       () {
         local first=""
         z.cls.new TestCounter first
-        first.fail reason
+        $first.fail reason
         local call_status=$?
         local call_reply=$REPLY
 
         z.t.expect "$call_status" 7
         z.t.expect "$call_reply" failure:reason
 
-        first.value
+        $first.value
 
         z.t.expect.reply 1
 
@@ -333,8 +333,8 @@ z.t.describe "z.cls.instance.call._run"; {
           local -a items=()
           z.cls.instance._snapshot "$first" items
         }
-        first.fill
-        first.items.get
+        $first.fill
+        $first.items.get
         local -a initial_items=("${REPLY[@]}")
 
         z.t.expect "${#initial_items}" 3
@@ -342,16 +342,16 @@ z.t.describe "z.cls.instance.call._run"; {
         z.t.expect "$initial_items[2]" "two words"
         z.t.expect "$initial_items[3]" last
 
-        first.items.set "" replaced
-        first.items.get
+        $first.items.set "" replaced
+        $first.items.get
         local -a updated_items=("${REPLY[@]}")
 
         z.t.expect "${#updated_items}" 2
         z.t.expect.is.null "$updated_items[1]"
         z.t.expect "$updated_items[2]" replaced
 
-        first.items.set
-        first.items.get
+        $first.items.set
+        $first.items.get
         local empty_count=${#REPLY}
 
         z.t.expect "$empty_count" 0
@@ -382,8 +382,8 @@ z.t.describe "z.cls.instance.call._run"; {
           z.cls.instance._snapshot "$typed" values
           z.cls.instance._snapshot "$typed" missing
         }
-        typed.fill
-        typed.verify
+        $typed.fill
+        $typed.verify
 
         z.t.expect.status.is.true
 
@@ -431,16 +431,16 @@ z.t.describe "z.cls.instance.call._run"; {
         local saved_values=$z_cls_values[${typed}:values]
         local saved_missing=$z_cls_values[${typed}:missing]
 
-        typed.table.set odd
+        $typed.table.set odd
 
         z.t.expect.status.is.false
         z.t.expect "$z_cls_values[${typed}:table]" "$saved_table"
 
-        typed.plain.get
+        $typed.plain.get
 
         z.t.expect.reply $'quote\' slash\\ newline\n$(print SHOULD_NOT_RUN)'
 
-        typed.verify
+        $typed.verify
 
         z.t.expect.status.is.true
         z.t.expect "$z_cls_values[${typed}:table]" "$saved_table"
@@ -466,9 +466,9 @@ z.t.describe "z.cls.instance.call._run"; {
           local -i count=0
           z.cls.instance._snapshot "$arithmetic" count
         }
-        arithmetic.prepare
-        arithmetic.count.set 'other+1'
-        arithmetic.count.get
+        $arithmetic.prepare
+        $arithmetic.count.set 'other+1'
+        $arithmetic.count.get
 
         z.t.expect.reply 14
 
@@ -494,9 +494,9 @@ z.t.describe "z.cls.instance.call._run"; {
         local count=3
         local counter=""
         z.cls.new TestCounter counter
-        counter.count.set 10
+        $counter.count.set 10
 
-        counter.add count=3
+        $counter.add count=3
         local add_status=$?
         local add_result=$REPLY
 
@@ -504,7 +504,7 @@ z.t.describe "z.cls.instance.call._run"; {
         z.t.expect "$add_result" 13
         z.t.expect "$count" 3
 
-        counter.count.get
+        $counter.count.get
 
         z.t.expect.reply 13
 
@@ -532,7 +532,7 @@ z.t.describe "z.cls.instance.call._run"; {
         local object=""
         z.cls.new SameSelf object
 
-        object.nested
+        $object.nested
         local result=("${REPLY[@]}")
 
         z.t.expect "${#result}" 4
@@ -566,7 +566,7 @@ z.t.describe "z.cls.instance.call._run"; {
         z.cls.new DifferentSelf first
         z.cls.new DifferentSelf second
 
-        first.bounce "$second"
+        $first.bounce "$second"
         local result=("${REPLY[@]}")
 
         z.t.expect "${#result}" 4
@@ -596,7 +596,7 @@ z.t.describe "z.cls.instance.call._run"; {
         local object=""
         z.cls.new ReadonlySelf object
 
-        object.inspect
+        $object.inspect
         local result=("${REPLY[@]}")
 
         z.t.expect "${#result}" 4

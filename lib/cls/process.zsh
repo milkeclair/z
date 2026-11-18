@@ -198,7 +198,7 @@ z.cls.abort() {
 # 独立した実体を作成し、参照をreadonly変数へ代入する。
 #
 # $1: 公開済みのクラス名
-# $2: 実体参照を受け取る変数名。必要に応じて呼出元でlocal宣言する
+# $2: 実体を所有する、呼出元で宣言済みの変数名
 # REPLY: 実体参照
 # return: 0|1
 #
@@ -213,6 +213,7 @@ z.cls.new() {
   z.cls.store._ensure
 
   z.cls.new._validate "$@" || return 1
+  z.cls.gc._collect
 
   local z_cls_class=$1
   local z_cls_binding=$2
@@ -221,11 +222,12 @@ z.cls.new() {
 
   local z_cls_id="z_cls_${$}_$z_cls_next_id"
 
-  z.cls.instance._commands "$z_cls_class" "$z_cls_binding" "$z_cls_id"
+  z.cls.instance._commands "$z_cls_class" "$z_cls_id"
 
   local -a z_cls_wrappers=("${(@)REPLY}")
 
   z.cls.instance.commands._validate "${z_cls_wrappers[@]}" || return 1
+  z.cls.owner._bind "$z_cls_id" "$z_cls_binding" || return 1
 
   local z_cls_member
 
@@ -237,8 +239,7 @@ z.cls.new() {
 
   z_cls_members[$z_cls_id]="${(j: :)z_cls_wrappers}"
   z_cls_instances[$z_cls_id]=$z_cls_class
-  : ${(P)z_cls_binding::=$z_cls_id}
-  typeset -gr -- "$z_cls_binding"
+  (( ++z_cls_gc_allocations ))
 
   REPLY=$z_cls_id
 }
@@ -271,16 +272,6 @@ z.cls.delete() {
   fi
 
   z.cls.instance._release "$z_cls_id"
-
-  z.hash.count z_cls_instances
-  if z.int.is.zero $REPLY; then
-    # 全実体の削除後に空テーブルを作り直し、バケットと未設定ノードを解放する。
-    z_cls_instances=()
-    z_cls_values=()
-    z_cls_members=()
-    z_cls_active=()
-    z_cls_wrapper_refs=()
-  fi
 
   return 0
 }

@@ -12,7 +12,8 @@ z.cls.draw StopEarly
   z.cls.fn.done
 z.cls.drew
 
+local object=""
 z.cls.new StopEarly object
 setopt errexit
-object.run
+$object.run
 print -r -- SHOULD_NOT_RUN
