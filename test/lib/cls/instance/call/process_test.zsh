@@ -120,6 +120,45 @@ z.t.describe "z.cls.instance.call._access"; {
       }
     }
   }
+
+  z.t.context "数値setterの式が途中で失敗する場合"; {
+    z.t.it "他の属性と保存済みの宣言を変更せず失敗する"; {
+      () {
+        z.cls.draw FailedSetter
+          z.cls.attr count default=4
+          z.cls.attr other default=13
+          z.cls.fn prepare
+            $self.count.set 4
+          z.cls.fn.done
+        z.cls.drew
+        local object=""
+        z.cls.new FailedSetter object
+        () {
+          local -i count=4
+          z.cls.instance._snapshot "$object" count
+        }
+        object.prepare
+        local original_count=$z_cls_values[${object}:count]
+        local original_other=$z_cls_values[${object}:other]
+
+        z.cls.instance.call._access "$object" set count '(other=9) +' 2>/dev/null
+
+        z.t.expect.status.is.false
+        z.t.expect "$z_cls_values[${object}:count]" "$original_count"
+        z.t.expect "$z_cls_values[${object}:other]" "$original_other"
+
+        object.count.get
+
+        z.t.expect.reply 4
+
+        object.other.get
+
+        z.t.expect.reply 13
+
+        z.cls.delete object
+      }
+    }
+  }
 }
 
 z.t.describe "z.cls.instance.call._run"; {
@@ -128,7 +167,12 @@ z.t.describe "z.cls.instance.call._run"; {
       () {
         z.cls.draw DirectRunScope
           z.cls.attr count default=0
-          z.cls.fn fail '$self.count.set 4 || return 1; $self.count.get || return 1; REPLY="failed:$REPLY"; return 7'
+          z.cls.fn fail
+            $self.count.set 4 || return 1
+            $self.count.get || return 1
+            REPLY="failed:$REPLY"
+            return 7
+          z.cls.fn.done
         z.cls.drew
 
         local object=""
@@ -390,50 +434,7 @@ z.t.describe "z.cls.instance.call._run"; {
       }
     }
   }
-}
 
-
-z.t.describe "z.cls.instance.call._access"; {
-  z.t.context "数値setterの式が途中で失敗する場合"; {
-    z.t.it "他の属性と保存済みの宣言を変更せず失敗する"; {
-      () {
-        z.cls.draw FailedSetter
-          z.cls.attr count default=4
-          z.cls.attr other default=13
-          z.cls.fn prepare '$self.count.set 4'
-        z.cls.drew
-        local object=""
-        z.cls.new FailedSetter object
-        () {
-          local -i count=4
-          z.cls.instance._snapshot "$object" count
-        }
-        object.prepare
-        local original_count=$z_cls_values[${object}:count]
-        local original_other=$z_cls_values[${object}:other]
-
-        z.cls.instance.call._access "$object" set count '(other=9) +' 2>/dev/null
-
-        z.t.expect.status.is.false
-        z.t.expect "$z_cls_values[${object}:count]" "$original_count"
-        z.t.expect "$z_cls_values[${object}:other]" "$original_other"
-
-        object.count.get
-
-        z.t.expect.reply 4
-
-        object.other.get
-
-        z.t.expect.reply 13
-
-        z.cls.delete object
-      }
-    }
-  }
-
-}
-
-z.t.describe "z.cls.instance.call._run"; {
   z.t.context "errexitが有効な裸のメソッド呼出しの場合"; {
     z.t.it "失敗の後続を実行せず通常のZshと同じ終了コードを返す"; {
       local output=""
@@ -444,25 +445,26 @@ z.t.describe "z.cls.instance.call._run"; {
       z.t.expect.is.null "$output"
     }
   }
-}
 
-
-z.t.describe "z.cls.instance.call._run"; {
   z.t.context "属性と同名の引数がある場合"; {
     z.t.it "named引数と呼出元のcountを属性から独立して扱う"; {
       () {
-        local -r count=100
+        local count=3
         local counter=""
         z.cls.new TestCounter counter
+        counter.count.set 10
 
         counter.add count=3
+        local add_status=$?
+        local add_result=$REPLY
 
-        z.t.expect.reply 3
-        z.t.expect "$count" 100
+        z.t.expect "$add_status" 0
+        z.t.expect "$add_result" 13
+        z.t.expect "$count" 3
 
         counter.count.get
 
-        z.t.expect.reply 3
+        z.t.expect.reply 13
 
         z.cls.delete counter
       }
@@ -473,7 +475,9 @@ z.t.describe "z.cls.instance.call._run"; {
     z.t.it "selfを同じIDに保ち、外側の実行中フラグも保持する"; {
       () {
         z.cls.draw SameSelf
-          z.cls.fn identity 'REPLY=$self'
+          z.cls.fn identity
+            REPLY=$self
+          z.cls.fn.done
           z.cls.fn nested
             local before=$self
             $self.identity || return 1
@@ -504,7 +508,9 @@ z.t.describe "z.cls.instance.call._run"; {
     z.t.it "内側だけselfを切り替え、戻った後は外側のIDを使う"; {
       () {
         z.cls.draw DifferentSelf
-          z.cls.fn identity 'REPLY=$self'
+          z.cls.fn identity
+            REPLY=$self
+          z.cls.fn.done
           z.cls.fn bounce
             local before=$self
             $1.identity || return 1
