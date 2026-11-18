@@ -38,18 +38,6 @@ z.t.describe "z.cls.instance._call"; {
 }
 
 z.t.describe "z.cls.instance._execute"; {
-  z.t.context "復元済みのスカラーの場合"; {
-    z.t.it "変換せず取得する"; {
-      () {
-        local literal=false
-
-        z.cls.instance._execute unused get literal
-
-        z.t.expect.reply false
-      }
-    }
-  }
-
   z.t.context "メソッドが0以外で戻る場合"; {
     z.t.it "終了トラップの引数と戻り値を保ち、local変数を漏らさない"; {
       z.cls.store._ensure
@@ -58,7 +46,7 @@ z.t.describe "z.cls.instance._execute"; {
       local literal=outer
       local exit_arg=""
 
-      z.cls.instance._execute execute_ref method fail argument
+      z.cls.instance._execute execute_ref fail argument
       local call_status=$?
       local call_reply=$REPLY
 
@@ -71,17 +59,6 @@ z.t.describe "z.cls.instance._execute"; {
     }
   }
 
-  z.t.context "復元済みのスカラーを更新する場合"; {
-    z.t.it "値を代入する"; {
-      () {
-        local literal=old
-
-        z.cls.instance._execute unused set literal null
-
-        z.t.expect "$literal" null
-      }
-    }
-  }
 }
 
 z.t.describe "z.cls.instance._snapshot"; {

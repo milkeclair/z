@@ -23,51 +23,38 @@ z.cls.instance._call() {
   shift 3
 
   if z.is.eq "$z_cls_operation" method; then
-    z.cls.instance.call._run "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
+    z.cls.instance.call._run "$z_cls_instance" "$z_cls_member" "$@"
   else
     z.cls.instance.call._access "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
   fi
 }
 
-# メソッドにreadonlyのselfと引数を渡すか、復元済みの属性を取得・更新する。
+# メソッド本体を、readonlyのselfとメソッド引数を持つ関数スコープで実行する。
 #
 # $1: 実体の参照
-# $2: method、get、setのいずれか
-# $3: メソッド名または属性名
-# $@?: 処理に渡す引数
-# REPLY: 処理の結果
-# return: 処理の終了コード
+# $2: メソッド名
+# $@?: メソッドに渡す引数
+# REPLY: メソッドの結果
+# return: メソッドの終了コード
 #
 # example:
-#  # 前提: 呼出元でlocal count=4を宣言している
-#  z.cls.instance._execute unused get count
-#  # REPLY: 4
+#  # 前提: objectがREPLY=$selfを実行するidentityメソッドを持つ
+#  z.cls.instance._execute "$object" identity
+#  # REPLY: objectと同じ実体参照
 #  # return: 0
 z.cls.instance._execute() {
   local z_cls_instance=$1
-  local z_cls_operation=$2
-  local z_cls_member=$3
+  local z_cls_member=$2
+  local z_cls_body=$z_cls_bodies[${z_cls_instances[$z_cls_instance]}:$z_cls_member]
 
-  shift 3
+  shift 2
 
-  case $z_cls_operation in
-    method)
-      local z_cls_body=$z_cls_bodies[${z_cls_instances[$z_cls_instance]}:$z_cls_member]
+  # EXITトラップもメソッド引数で動くよう、本体専用のスコープを作る。
+  () {
+    local -r self=$z_cls_instance
 
-      # EXITトラップもメソッド引数で動くよう、本体専用のスコープを作る。
-      () {
-        local -r self=$z_cls_instance
-
-        eval "$z_cls_body"
-      } "$@"
-      ;;
-    get)
-      z.cls.instance.execute._get "$z_cls_member" "$@"
-      ;;
-    set)
-      z.cls.instance.execute._set "$z_cls_member" "$@"
-      ;;
-  esac
+    eval "$z_cls_body"
+  } "$@"
 }
 
 # 復元済みの属性を、同じ型で再作成できる宣言として保存する。

@@ -161,6 +161,48 @@ z.t.describe "z.cls.instance.call._access"; {
   }
 }
 
+z.t.describe "z.cls.instance.call._access_typed"; {
+  z.t.context "復元済みのスカラーを取得する場合"; {
+    z.t.it "保存値を変換せず取得し、呼出元の同名localを保持する"; {
+      () {
+        z.cls.store._ensure
+        local literal=caller
+        z_cls_values[typed_get_ref:literal]="typeset -- literal='false'"
+
+        z.cls.instance.call._access_typed typed_get_ref get literal
+
+        z.t.expect.reply false
+        z.t.expect "$literal" caller
+
+        unset 'z_cls_values[typed_get_ref:literal]'
+      }
+    }
+  }
+
+  z.t.context "復元済みのスカラーを更新する場合"; {
+    z.t.it "呼出元のlocalを変えず、更新を保存して取得できる"; {
+      () {
+        z.cls.store._ensure
+        local literal=caller
+        z_cls_instances[typed_set_ref]=TypedSet
+        z_cls_class_attrs[TypedSet]='literal '
+        z_cls_values[typed_set_ref:literal]="typeset -- literal='old'"
+
+        z.cls.instance.call._access_typed typed_set_ref set literal null
+
+        z.t.expect.status.is.true
+
+        z.cls.instance.call._access_typed typed_set_ref get literal
+
+        z.t.expect.reply null
+        z.t.expect "$literal" caller
+
+        unset 'z_cls_instances[typed_set_ref]' 'z_cls_class_attrs[TypedSet]' 'z_cls_values[typed_set_ref:literal]'
+      }
+    }
+  }
+}
+
 z.t.describe "z.cls.instance.call._run"; {
   z.t.context "メソッドが0以外で戻る場合"; {
     z.t.it "更新とREPLYを保ちactive状態を解放する"; {
@@ -178,7 +220,7 @@ z.t.describe "z.cls.instance.call._run"; {
         local object=""
         z.cls.new DirectRunScope object
 
-        z.cls.instance.call._run "$object" method fail
+        z.cls.instance.call._run "$object" fail
         local call_status=$?
         local call_reply=$REPLY
 
