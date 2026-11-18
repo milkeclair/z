@@ -22,6 +22,7 @@ import { isAliasReference, isKnownShellCommand, type ResolutionContext } from '.
 import type { IgnoreControls } from './controls';
 import { ignored } from './controls';
 import { simpleParameter } from './facts';
+import { resolveSelfCommand } from './self';
 import type { Diagnostics } from './type';
 
 export type { ResolutionContext } from './commandResolution';
@@ -203,14 +204,36 @@ export function analyzeCalls(
   };
   const result = commands.reduce((previous, command) => {
     const word = command.commandName?.word;
-    const name = word && literalWord(word);
+    if (!word) return previous;
 
-    if (
-      !word ||
-      !name ||
-      (!word.quoted && word.raw.startsWith('=')) ||
-      uncertainWord(word, context)
-    ) {
+    const self = functionCommand(command)
+      ? resolveSelfCommand(file, word, options.scopes ?? [])
+      : null;
+    if (self) {
+      if (self.target) {
+        return {
+          ...previous,
+          classTargets: setEntry(previous.classTargets, command, [self.target]),
+        };
+      }
+
+      return options.ignores && ignored(options.ignores, word.range.start.line, 'undefined-command')
+        ? previous
+        : {
+            ...previous,
+            diagnostics: appendItems(previous.diagnostics, {
+              severity: DiagnosticSeverity.Error,
+              code: 'undefined-command',
+              range: protocolRange(mapRange(word.range)),
+              source: 'z-ls',
+              message: self.name + ' is not defined in class ' + self.definition.name + '.',
+            }),
+          };
+    }
+
+    const name = literalWord(word);
+
+    if (!name || (!word.quoted && word.raw.startsWith('=')) || uncertainWord(word, context)) {
       return previous;
     }
 

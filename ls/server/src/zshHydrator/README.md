@@ -120,3 +120,28 @@ hydrateAstを再適用すると、元のASTを変えずに意味情報を作り�
 定義中のクラスへの入れ子や、同じ構文スコープで公開済みの名前による`draw`は拒否した範囲として分離します。
 拒否した範囲のメンバーと終端を外側へ混ぜず、対応する`drew`の後に外側の収集を続けます。
 メソッド本体は同じ深さの独立した`fn.done`まで保持し、本体内の`draw`や`drew`、論理演算・パイプ・非同期実行中の`fn.done`で収集を終了しません。
+
+## メソッド内のself参照
+
+メソッドの実行時には、現在の実体参照を持つreadonly変数`self`を使えます。
+`"$self.increment"`、`"$self.count.get"`、`"$self.count.set" 3`は、
+付加済みASTの所有メソッドと通常の関数スコープから、そのクラスのメンバー宣言へ解決します。
+`self`という属性名も利用でき、`"$self.self.get"`でその値を取得します。
+
+引数で渡す本体も共通のコード解析結果と元の単語の位置から所有関係を調べます。
+通常の関数を越える所属や、別の`self`の宣言、変動するメンバー名、メソッド外の`$self`は推測で確定しません。
+実行時の本体を書き換えず、通常の構文と元の範囲を保持します。
+
+```zsh
+z.cls.draw Counter
+  z.cls.attr count default=0
+  z.cls.fn increment
+    "$self.count.get"
+    local next=$(( REPLY + 1 ))
+    "$self.count.set" "$next"
+    REPLY=$next
+  z.cls.fn.done
+  z.cls.drew
+```
+
+この定義は、countを1増やして結果を返すCounter.incrementを公開します。

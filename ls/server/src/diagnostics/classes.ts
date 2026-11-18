@@ -10,7 +10,8 @@ import type {
 
 export type ClassCommandTarget = {
   readonly definition: ClassDefinition;
-  readonly instance: ClassInstance;
+  // selfは所有クラスを確定できても、呼び出す実体は実行時に決まる。
+  readonly instance: ClassInstance | null;
   readonly member: ClassMethod | ClassAttribute;
   readonly operation: 'method' | 'get' | 'set';
 };
