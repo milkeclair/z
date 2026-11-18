@@ -131,7 +131,7 @@ describe('class DSL command diagnostics', () => {
 
   test('メソッドの編集で未編集の呼出元を再診断する', () => {
     const scenario = fixture(
-      'z.cls.new Counter counter\ncounter.increment\n',
+      'z.cls.new Counter counter\n$counter.increment\n',
       classApi + counterClass,
     );
 
@@ -356,6 +356,63 @@ describe('hydrated class command targets', () => {
     expect(targets).toHaveLength(1);
     expect(targets[0].member).toMatchObject({ kind: 'classMethod', name: 'increment' });
     expect(targets[0].member.declaration.commandName?.word.raw).toBe('z.cls.fn');
+  });
+
+  test('実体IDを展開する呼び出しがメソッドと属性を解決する', () => {
+    const scenario = fixture(
+      [
+        'z.cls.new Counter counter && $counter.increment',
+        '"$counter.increment"',
+        '${counter}.count.get',
+        '"$counter.count.set" 3',
+        '$counter.missing',
+        '$unknown.missing',
+        '${counter:-other}.missing',
+        '$counter.$member',
+        '',
+      ].join('\n'),
+      classApi + counterClass,
+    );
+    const report = scenario.diagnostics.files.get(scenario.document.uri);
+    if (!report) throw new Error('Expected caller diagnostics');
+    const analysis = analyzeCalls(
+      scenario.snapshot,
+      report.file,
+      report.facts.calls,
+      scenario.diagnostics.context,
+    );
+    const targets = [...analysis.classTargets.values()].flat();
+
+    expect(
+      targets.map(({ instance, member, operation }) => [instance?.name, member.name, operation]),
+    ).toEqual([
+      ['counter', 'increment', 'method'],
+      ['counter', 'increment', 'method'],
+      ['counter', 'count', 'get'],
+      ['counter', 'count', 'set'],
+    ]);
+    expect(semantic(scenario.items)).toMatchObject([
+      {
+        message: '$counter.missing is not defined in class Counter.',
+        range: { start: { line: 4 } },
+      },
+    ]);
+  });
+
+  test('初期化より前や別の関数の同名変数から実体を推測しない', () => {
+    const scenario = fixture(
+      [
+        '$counter.unknown',
+        'z.cls.new Counter counter',
+        'other() { local counter=some_command; $counter.unknown; }',
+        'if false; then z.cls.new Counter conditional; fi',
+        '$conditional.unknown',
+        '',
+      ].join('\n'),
+      classApi + counterClass,
+    );
+
+    expect(semantic(scenario.items)).toEqual([]);
   });
 
   test('コード引数内の実体は外側のクラスを使い、外側へ漏れない', () => {

@@ -17,7 +17,7 @@ import type { ZshFileHydration } from '../zshHydrator';
 import { documentationOf } from '../zshHydrator';
 import type { FunctionDefinitionNode, SimpleCommandNode, WordNode } from '../zshParser/ast';
 import type { SourceRange } from '../zshParser/lexer';
-import type { ClassCommandTarget } from './classes';
+import { classMemberReference, resolveInstanceCommand, type ClassCommandTarget } from './classes';
 import { isAliasReference, isKnownShellCommand, type ResolutionContext } from './commandResolution';
 import type { IgnoreControls } from './controls';
 import { ignored } from './controls';
@@ -206,12 +206,18 @@ export function analyzeCalls(
     const word = command.commandName?.word;
     if (!word) return previous;
 
-    const self = functionCommand(command) ? resolveSelfCommand(file, word, scopes) : null;
-    if (self) {
-      if (self.target) {
+    const reference = functionCommand(command) ? classMemberReference(word) : null;
+    const member = reference
+      ? (resolveInstanceCommand(file, word, reference, context.classFiles) ??
+        (reference.binding === 'self'
+          ? resolveSelfCommand(file, word, reference.member, scopes)
+          : null))
+      : null;
+    if (member) {
+      if (member.target) {
         return {
           ...previous,
-          classTargets: setEntry(previous.classTargets, command, [self.target]),
+          classTargets: setEntry(previous.classTargets, command, [member.target]),
         };
       }
 
@@ -224,7 +230,7 @@ export function analyzeCalls(
               code: 'undefined-command',
               range: protocolRange(mapRange(word.range)),
               source: 'z-ls',
-              message: self.name + ' is not defined in class ' + self.definition.name + '.',
+              message: member.name + ' is not defined in class ' + member.definition.name + '.',
             }),
           };
     }

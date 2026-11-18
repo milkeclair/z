@@ -1,4 +1,7 @@
 import { castDraft } from 'immer';
+import { decodeLiteral } from '../embeddedCode/literal';
+import { classMethodAt, type ZshFileHydration } from '../zshHydrator';
+import { locate, type WordNode, type WordPartNode } from '../zshParser/ast';
 import { makeMap, produce } from '../util/collections';
 import type {
   ClassAttribute,
@@ -48,6 +51,108 @@ export function classCommands(files: readonly ClassFileHydration[]): ClassComman
       }
     }
   });
+}
+
+function staticText(word: WordNode, parts: readonly WordPartNode[]): string | null {
+  return parts.reduce<string | null>((text, part) => {
+    if (text === null || part.kind !== 'stringLiteral') return null;
+
+    const segment: WordNode = { ...word, range: part.range, raw: part.value, parts: [part] };
+    const value = decodeLiteral(segment, true)?.text;
+    return value === undefined ? null : text + value;
+  }, '');
+}
+
+/** 実体IDを展開する変数と、リテラルで書かれたメンバー名を取得する。 */
+export function classMemberReference(
+  word: WordNode,
+): { readonly binding: string; readonly member: string } | null {
+  const index = word.parts.findIndex((part) => part.kind !== 'stringLiteral');
+  const part = word.parts[index];
+  if (!part || staticText(word, word.parts.slice(0, index)) !== '') return null;
+
+  const binding =
+    part.kind === 'variableReference'
+      ? part.name.value
+      : part.kind === 'parameterExpansion'
+        ? /^\$\{([A-Za-z_][A-Za-z0-9_]*)\}$/.exec(part.raw)?.[1]
+        : undefined;
+  if (!binding) return null;
+
+  const suffix = staticText(word, word.parts.slice(index + 1));
+  return suffix && /^\.[A-Za-z0-9_.]+$/.test(suffix) ? { binding, member: suffix.slice(1) } : null;
+}
+
+export function memberTarget(
+  definition: ClassDefinition,
+  name: string,
+  instance: ClassInstance | null,
+): ClassCommandTarget | null {
+  const method = definition.methods.find((candidate) => candidate.name === name);
+  if (method) return { definition, instance, member: method, operation: 'method' };
+
+  const operation = name.endsWith('.get') ? 'get' : name.endsWith('.set') ? 'set' : null;
+  if (!operation) return null;
+
+  const attributeName = name.slice(0, -operation.length - 1);
+  const attribute = definition.attributes.find((candidate) => candidate.name === attributeName);
+  return attribute ? { definition, instance, member: attribute, operation } : null;
+}
+
+/** 呼び出しに先行する同一スコープの束縛を解決する。 */
+export function resolveInstanceCommand(
+  file: ZshFileHydration,
+  word: WordNode,
+  reference: NonNullable<ReturnType<typeof classMemberReference>>,
+  files: readonly ClassFileHydration[],
+): {
+  readonly definition: ClassDefinition;
+  readonly name: string;
+  readonly target: ClassCommandTarget | null;
+} | null {
+  const offset = word.range.start.offset;
+  const candidates = file.classes.instances.filter(
+    (instance) =>
+      instance.name === reference.binding && instance.declaration.range.end.offset <= offset,
+  );
+  if (candidates.length === 0) return null;
+
+  const location = locate(file.query, offset);
+  if (location?.kind !== 'syntax') return null;
+
+  const scope = location.path.findLast((node) => node.kind === 'functionDefinition') ?? null;
+  const method = classMethodAt(file.classes, scope, offset);
+  const scoped = candidates.filter(({ scope: instanceScope }) => {
+    if (method)
+      return (
+        instanceScope.kind === 'classMethod' && instanceScope.declaration === method.declaration
+      );
+    if (scope) return instanceScope.kind === 'function' && instanceScope.declaration === scope;
+    return instanceScope.kind === 'file';
+  });
+  if (scoped.length !== 1) return null;
+
+  const [instance] = scoped;
+  const declaration = locate(file.query, instance.declaration.range.start.offset);
+  if (declaration?.kind !== 'syntax') return null;
+
+  const list = declaration.path.findLast((node) => node.kind === 'list');
+  if (!list || !location.path.includes(list)) return null;
+
+  for (let index = files.length - 1; index >= 0; index--) {
+    const definition = files[index].definitions.findLast(
+      (candidate) => candidate.name === instance.className && candidate.state === 'published',
+    );
+    if (definition) {
+      return {
+        definition,
+        name: '$' + reference.binding + '.' + reference.member,
+        target: memberTarget(definition, reference.member, instance),
+      };
+    }
+  }
+
+  return null;
 }
 
 /** クラス宣言と実体の束縛が同じノードを参照する間だけ、解決コンテキストを再利用する。 */
