@@ -1,3 +1,4 @@
+import { classesFromAst, type ClassFileHydration } from './classes';
 import type { FileNode, FunctionDefinitionNode, QueryContext } from '../zshParser/ast';
 import { createQueryContext, findAll } from '../zshParser/ast';
 import type { LexerDiagnostic, Token } from '../zshParser/lexer';
@@ -19,6 +20,7 @@ export type ZshFileHydration = {
   readonly ast: FileNode;
   readonly tokens: readonly Token[];
   readonly functions: readonly HydratedFunction[];
+  readonly classes: ClassFileHydration;
   readonly query: QueryContext;
   readonly lexerDiagnostics: readonly LexerDiagnostic[];
   readonly parserDiagnostics: readonly ParserDiagnostic[];
@@ -47,6 +49,7 @@ export function createZshFileHydration({
     file,
     ast,
     tokens: parsed.tokens,
+    classes: classesFromAst(ast, definitions),
     query: createQueryContext(ast, definitions),
     functions: definitions.flatMap((definition) =>
       definition.names.map((word) => ({ name: word.raw, definition })),

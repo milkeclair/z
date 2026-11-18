@@ -1,3 +1,4 @@
+import { hydrateClasses } from './classes';
 import { lowerBound } from '../util/search';
 import type {
   AstNode,
@@ -72,7 +73,7 @@ export function hydrateAst(
     documents.size === 0 &&
     !ast.comments.some((comment) => isHydratedComment(comment) || parseDirective(comment, options))
   ) {
-    return ast;
+    return hydrateClasses(ast);
   }
 
   // 先行コメントの位置ではなく、構文の範囲に含まれる関数定義の位置で絞り込む。
@@ -80,7 +81,7 @@ export function hydrateAst(
     .map(({ definition }) => definition.range.start.offset)
     .toSorted((left, right) => left - right);
 
-  return mapAst(
+  const documentedAst = mapAst(
     ast,
     (node: AstNode): AstNode => {
       if (node.kind === 'docBlock') {
@@ -125,4 +126,6 @@ export function hydrateAst(
       return first < offsets.length && offsets[first] < end.offset;
     },
   );
+
+  return hydrateClasses(documentedAst);
 }

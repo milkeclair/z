@@ -17,10 +17,12 @@ import type { ZshFileHydration } from '../zshHydrator';
 import { documentationOf } from '../zshHydrator';
 import type { FunctionDefinitionNode, SimpleCommandNode, WordNode } from '../zshParser/ast';
 import type { SourceRange } from '../zshParser/lexer';
+import { classMemberReference, resolveInstanceCommand, type ClassCommandTarget } from './classes';
 import { isAliasReference, isKnownShellCommand, type ResolutionContext } from './commandResolution';
 import type { IgnoreControls } from './controls';
 import { ignored } from './controls';
 import { simpleParameter } from './facts';
+import { resolveSelfCommand } from './self';
 import type { Diagnostics } from './type';
 
 export type { ResolutionContext } from './commandResolution';
@@ -135,6 +137,7 @@ export type CallAnalysisOptions = {
 export type CallAnalysis = {
   readonly diagnostics: readonly Diagnostics[];
   readonly targets: ReadonlyMap<SimpleCommandNode, FunctionDefinitionNode>;
+  readonly classTargets: ReadonlyMap<SimpleCommandNode, readonly ClassCommandTarget[]>;
 };
 
 /** 埋め込みコードやworkspace外の定義はローカルに保ち、workspaceの参照先には追加しない。 */
@@ -197,17 +200,44 @@ export function analyzeCalls(
   const initial = {
     diagnostics: collectArray<Diagnostics>(),
     targets: makeMap<SimpleCommandNode, FunctionDefinitionNode>(),
+    classTargets: makeMap<SimpleCommandNode, readonly ClassCommandTarget[]>(),
   };
   const result = commands.reduce((previous, command) => {
     const word = command.commandName?.word;
-    const name = word && literalWord(word);
+    if (!word) return previous;
 
-    if (
-      !word ||
-      !name ||
-      (!word.quoted && word.raw.startsWith('=')) ||
-      uncertainWord(word, context)
-    ) {
+    const reference = functionCommand(command) ? classMemberReference(word) : null;
+    const member = reference
+      ? (resolveInstanceCommand(file, word, reference, context.classFiles) ??
+        (reference.binding === 'self'
+          ? resolveSelfCommand(file, word, reference.member, scopes)
+          : null))
+      : null;
+    if (member) {
+      if (member.target) {
+        return {
+          ...previous,
+          classTargets: setEntry(previous.classTargets, command, [member.target]),
+        };
+      }
+
+      return options.ignores && ignored(options.ignores, word.range.start.line, 'undefined-command')
+        ? previous
+        : {
+            ...previous,
+            diagnostics: appendItems(previous.diagnostics, {
+              severity: DiagnosticSeverity.Error,
+              code: 'undefined-command',
+              range: protocolRange(mapRange(word.range)),
+              source: 'z-ls',
+              message: member.name + ' is not defined in class ' + member.definition.name + '.',
+            }),
+          };
+    }
+
+    const name = literalWord(word);
+
+    if (!name || (!word.quoted && word.raw.startsWith('=')) || uncertainWord(word, context)) {
       return previous;
     }
 
@@ -244,7 +274,11 @@ export function analyzeCalls(
             ),
           );
 
-      return { diagnostics, targets: setEntry(previous.targets, command, target) };
+      return {
+        ...previous,
+        diagnostics,
+        targets: setEntry(previous.targets, command, target),
+      };
     }
 
     if (context.autoloads.has(name) && functionCommand(command)) {
@@ -269,7 +303,11 @@ export function analyzeCalls(
       : previous;
   }, initial);
 
-  return { diagnostics: result.diagnostics, targets: new Map(result.targets) };
+  return {
+    diagnostics: result.diagnostics,
+    targets: new Map(result.targets),
+    classTargets: new Map(result.classTargets),
+  };
 }
 
 /** 関数の参照先を必要としない呼び出し元向けに、既存の診断のみを返すAPIを保つ。 */

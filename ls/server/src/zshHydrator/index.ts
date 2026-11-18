@@ -17,3 +17,19 @@ export {
   refreshZshHydrator,
 } from './hydrator';
 export type { ZshHydrator } from './hydrator';
+export {
+  hydrateClasses,
+  classesFromAst,
+  classInformationOf,
+  isHydratedClassCommand,
+  classMethodAt,
+} from './classes';
+export type {
+  ClassInformation,
+  HydratedClassCommand,
+  ClassFileHydration,
+  ClassDefinition,
+  ClassMethod,
+  ClassAttribute,
+  ClassInstance,
+} from './classes';

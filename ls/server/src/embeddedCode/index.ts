@@ -12,7 +12,7 @@ import { projectFileFunctions } from '../refreshFunctions/projection';
 import type { FunctionTargets } from '../refreshFunctions/target';
 import { again, done, loop } from '../util/loop';
 import { DiagnosticSeverity } from '../vscode_type';
-import type { ZshFileHydration } from '../zshHydrator';
+import type { ClassFileHydration, ZshFileHydration } from '../zshHydrator';
 import { createZshFileHydration } from '../zshHydrator';
 import type { SimpleCommandNode, WordNode } from '../zshParser/ast';
 import type { CodeArgument } from './arguments';
@@ -120,9 +120,16 @@ function embeddedSyntax(program: CodeProgram): readonly Diagnostics[] {
 function inheritedContext(
   parent: ResolutionContext,
   declarations: Declarations,
+  classes: ClassFileHydration,
 ): ResolutionContext {
+  const hasClassDeclarations = classes.definitions.length > 0 || classes.instances.length > 0;
+  const classFiles = hasClassDeclarations
+    ? appendItems(parent.classFiles, classes)
+    : parent.classFiles;
+
   return {
     ...parent,
+    classFiles,
     aliases: declarations.aliases.size
       ? new Set([...parent.aliases, ...declarations.aliases])
       : parent.aliases,
@@ -195,7 +202,7 @@ function expandArgument(
   const pending: Pending = {
     file: child,
     calls: facts.calls,
-    context: inheritedContext(current.context, facts.declarations),
+    context: inheritedContext(current.context, facts.declarations, child.classes),
     program,
     scopes: [{ file: current.file, offset: argument.word.range.start.offset }, ...current.scopes],
     depth: current.depth + 1,

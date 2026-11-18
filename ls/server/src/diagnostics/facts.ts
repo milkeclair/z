@@ -11,8 +11,8 @@ import { protocolRange } from '../connection/ast/cursor';
 import { literalWord } from '../refreshFunctions/word';
 import { again, done, loop } from '../util/loop';
 import { DiagnosticSeverity } from '../vscode_type';
-import type { ZshFileHydration } from '../zshHydrator';
-import { documentationOf } from '../zshHydrator';
+import type { ClassFileHydration, ZshFileHydration } from '../zshHydrator';
+import { classMethodAt, documentationOf } from '../zshHydrator';
 import type {
   AstNode,
   FunctionDefinitionNode,
@@ -36,6 +36,7 @@ export type FileFacts = {
   readonly calls: readonly SimpleCommandNode[];
   readonly base: readonly Diagnostics[];
   readonly declarations: Declarations;
+  readonly classes: ClassFileHydration;
 };
 
 type DeclarationSets = {
@@ -312,7 +313,9 @@ function collectNodeFacts(
       : scoped;
   const usage = current && declared.usages.get(current.definition);
 
-  if (!usage) return declared;
+  if (!usage || classMethodAt(file.classes, usage.definition, node.range.start.offset)) {
+    return declared;
+  }
 
   return {
     ...declared,
@@ -375,6 +378,7 @@ export function collectFileFacts(file: ZshFileHydration): FileFacts {
   return {
     calls: facts.calls,
     base,
+    classes: file.classes,
     declarations: {
       aliases: new Set(sets.aliases),
       globalAliases: new Set(sets.globalAliases),
