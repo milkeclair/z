@@ -13,6 +13,11 @@
 #  # REPLY: 1
 #  # return: 0
 z.cls.instance._call() {
+  # 再読込前に生成したコマンドも、新しい保存領域を使って属性を更新する。
+  if (( ! ${+z_cls_scalars} )); then
+    z.cls.store._ensure
+  fi
+
   local z_cls_instance=${(P)1:-}
   local z_cls_operation=$2
   local z_cls_member=$3

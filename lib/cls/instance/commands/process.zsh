@@ -48,7 +48,7 @@ z.cls.instance.commands._install() {
 
   for z_cls_command in "$@"; do
     local z_cls_member=${z_cls_command#*.}
-    local z_cls_operation=run
+    local z_cls_operation=method
 
     if z.str.includes "$z_cls_member" .; then
       z_cls_operation=${z_cls_member##*.}
@@ -58,7 +58,10 @@ z.cls.instance.commands._install() {
     local z_cls_template="z_cls_dispatch_${z_cls_operation}_$z_cls_member"
 
     if ! z.var.exists "functions[$z_cls_template]"; then
-      functions[$z_cls_template]='z.cls.instance.call._'"$z_cls_operation"' "${funcstack[1]%%.*}" '"${(q)z_cls_member}"' "$@"'
+      local z_cls_handler=$z_cls_operation
+      z.is.eq "$z_cls_operation" method && z_cls_handler=run
+
+      functions[$z_cls_template]='z.cls.instance.call._'"$z_cls_handler"' "${funcstack[1]%%.*}" '"${(q)z_cls_member}"' "$@"'
       z_cls_dispatch_programs[${z_cls_command#*.}]=$functions[$z_cls_template]
     fi
 
