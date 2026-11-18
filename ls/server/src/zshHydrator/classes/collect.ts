@@ -1,11 +1,17 @@
 import { castDraft } from 'immer';
-import { appendItems, makeMap, produce, setEntry } from '../../util/collections';
+import { addValue, appendItems, makeMap, makeSet, produce, setEntry } from '../../util/collections';
 import { again, done, loop } from '../../util/loop';
 import { pushStack, type Stack } from '../../util/stack';
-import type { FileNode, FunctionDefinitionNode, SimpleCommandNode } from '../../zshParser/ast';
+import type {
+  FileNode,
+  FunctionDefinitionNode,
+  ListItemNode,
+  SimpleCommandNode,
+} from '../../zshParser/ast';
 import { foldAst } from '../../zshParser/ast';
 import { literalWord } from '../../zshParser/ast/word/literal';
 import type { SourceRange } from '../../zshParser/lexer';
+import { attributeArguments } from './attribute';
 import type {
   ClassDefinition,
   ClassDefinitionScopeLocation,
@@ -21,6 +27,7 @@ type Definition = {
   readonly node: SimpleCommandNode;
   readonly name: string;
   readonly members: readonly Member[];
+  readonly failed: boolean;
 };
 type Capture =
   | {
@@ -33,10 +40,16 @@ type Capture =
       readonly node: SimpleCommandNode;
       readonly name: string;
       readonly depth: number;
+    }
+  | {
+      readonly kind: 'rejected';
+      readonly outer: Capture | undefined;
+      readonly methodDepth: number | null;
     };
 type State = {
   readonly captures: ReadonlyMap<FunctionDefinitionNode | undefined, Capture>;
   readonly information: ReadonlyMap<number, ClassInformation | null>;
+  readonly published: ReadonlyMap<FunctionDefinitionNode | undefined, ReadonlySet<string>>;
 };
 
 type ClassDirective = {
@@ -45,6 +58,7 @@ type ClassDirective = {
   readonly args: readonly (string | null)[];
   readonly depth: number;
   readonly scope: FunctionDefinitionNode | undefined;
+  readonly standalone: boolean;
 };
 
 /** 実行時に予約した名前を、静的なクラスの識別子から除外する。 */
@@ -122,7 +136,7 @@ function blockMethodFromCapture(
 function finishDefinition(
   state: State,
   scope: FunctionDefinitionNode | undefined,
-  capture: Capture,
+  capture: Extract<Capture, { kind: 'definition' | 'method' }>,
   end: SourceRange,
   status: ClassDefinition['state'],
 ): State {
@@ -145,7 +159,16 @@ function finishDefinition(
     }
   });
 
-  return { ...withCapture(state, scope, null), information };
+  const published =
+    status === 'published'
+      ? setEntry(
+          state.published,
+          scope,
+          addValue(state.published.get(scope) ?? makeSet<string>(), definition.name),
+        )
+      : state.published;
+
+  return { ...withCapture(state, scope, null), information, published };
 }
 
 /** 引数を実行せず、通常の構文から静的な宣言を1つ読む。 */
@@ -153,6 +176,7 @@ function readClassDirective(
   command: SimpleCommandNode,
   depth: number,
   scope: FunctionDefinitionNode | undefined,
+  standalone: boolean,
 ): ClassDirective | null {
   const external = command.precommandModifiers.some(
     (modifier) => modifier.type === 'builtin' || modifier.type === 'command',
@@ -173,7 +197,14 @@ function readClassDirective(
   ];
   if (!names.includes(name)) return null;
 
-  return { command, name, args: command.arguments.map((word) => literalWord(word)), depth, scope };
+  return {
+    command,
+    name,
+    args: command.arguments.map((word) => literalWord(word)),
+    depth,
+    scope,
+    standalone,
+  };
 }
 
 /** 通常の関数または収集中のメソッドのスコープに、実体の束縛を記録する。 */
@@ -207,7 +238,7 @@ function applyMethodDirective(
   capture: Extract<Capture, { kind: 'method' }>,
   state: State,
 ): State {
-  if (directive.depth !== capture.depth) return state;
+  if (directive.depth !== capture.depth || !directive.standalone) return state;
 
   if (directive.name === 'z.cls.fn.done' && directive.args.length === 0) {
     return withMember(
@@ -218,22 +249,22 @@ function applyMethodDirective(
     );
   }
 
-  if (directive.name === 'z.cls.abort' || directive.name === 'z.cls.drew') {
-    return finishDefinition(state, directive.scope, capture, directive.command.range, 'aborted');
-  }
-
   return state;
 }
 
 /** クラス内で最初に現れた有効な属性宣言を保持する。 */
 function declareAttribute(directive: ClassDirective, definition: Definition, state: State): State {
-  const name = directive.args[0];
-  if (directive.args.length !== 2 || !identifier(name)) return state;
-
+  const attribute = attributeArguments(directive.command);
+  const name = attribute && literalWord(attribute.nameNode);
   const duplicate = definition.members.some(
     (member) => member.information.kind === 'classAttribute' && member.information.name === name,
   );
-  if (duplicate) return state;
+  if (!attribute || !identifier(name) || duplicate) {
+    return withCapture(state, directive.scope, {
+      kind: 'definition',
+      definition: { ...definition, failed: true },
+    });
+  }
 
   return withMember(state, directive.scope, definition, {
     node: directive.command,
@@ -298,7 +329,13 @@ function applyDefinitionDirective(
       return declareMethod(directive, capture, state);
     case 'z.cls.drew':
       return directive.args.length === 0
-        ? finishDefinition(state, directive.scope, capture, directive.command.range, 'published')
+        ? finishDefinition(
+            state,
+            directive.scope,
+            capture,
+            directive.command.range,
+            capture.definition.failed ? 'aborted' : 'published',
+          )
         : state;
     case 'z.cls.abort':
       return finishDefinition(state, directive.scope, capture, directive.command.range, 'aborted');
@@ -307,30 +344,69 @@ function applyDefinitionDirective(
   }
 }
 
+/** 拒否した定義のメンバーや終端を、外側で収集中のクラスへ混ぜない。 */
+function applyRejectedDirective(
+  directive: ClassDirective,
+  capture: Extract<Capture, { kind: 'rejected' }>,
+  state: State,
+): State {
+  if (!directive.standalone) return state;
+
+  if (capture.methodDepth !== null) {
+    return directive.name === 'z.cls.fn.done' &&
+      directive.args.length === 0 &&
+      directive.depth === capture.methodDepth
+      ? withCapture(state, directive.scope, { ...capture, methodDepth: null })
+      : state;
+  }
+
+  if (directive.name === 'z.cls.draw') {
+    return withCapture(state, directive.scope, {
+      kind: 'rejected',
+      outer: capture,
+      methodDepth: null,
+    });
+  }
+
+  if (directive.name === 'z.cls.drew' && directive.args.length === 0) {
+    return withCapture(state, directive.scope, capture.outer ?? null);
+  }
+
+  return directive.name === 'z.cls.fn' && directive.args.length === 1
+    ? withCapture(state, directive.scope, { ...capture, methodDepth: directive.depth })
+    : state;
+}
+
 /** 現在の構文スコープの収集状態に応じて宣言を処理する。 */
 function collectCommand(
   command: SimpleCommandNode,
   depth: number,
   scope: FunctionDefinitionNode | undefined,
+  standalone: boolean,
   state: State,
 ): State {
-  const directive = readClassDirective(command, depth, scope);
+  const directive = readClassDirective(command, depth, scope, standalone);
   if (!directive) return state;
 
   const capture = state.captures.get(scope);
+  if (capture?.kind === 'rejected') return applyRejectedDirective(directive, capture, state);
   if (directive.name === 'z.cls.new') return declareInstance(directive, capture, state);
   if (capture?.kind === 'method') return applyMethodDirective(directive, capture, state);
 
-  if (
-    directive.name === 'z.cls.draw' &&
-    directive.args.length === 1 &&
-    identifier(directive.args[0]) &&
-    !capture
-  ) {
-    return withCapture(state, scope, {
-      kind: 'definition',
-      definition: { node: command, name: directive.args[0], members: [] },
-    });
+  if (directive.name === 'z.cls.draw') {
+    if (
+      directive.args.length === 1 &&
+      identifier(directive.args[0]) &&
+      !capture &&
+      !state.published.get(scope)?.has(directive.args[0])
+    ) {
+      return withCapture(state, scope, {
+        kind: 'definition',
+        definition: { node: command, name: directive.args[0], members: [], failed: false },
+      });
+    }
+
+    return withCapture(state, scope, { kind: 'rejected', outer: capture, methodDepth: null });
   }
 
   return capture ? applyDefinitionDirective(directive, capture, state) : state;
@@ -343,26 +419,63 @@ type FunctionScope = {
 type CollectionProgress = {
   readonly collected: State;
   readonly functionScopes: Stack<FunctionScope> | null;
+  readonly standaloneCommand: SimpleCommandNode | null;
 };
+
+function standaloneCommand(item: ListItemNode): SimpleCommandNode | null {
+  if (item.sublist.kind !== 'sublist') return null;
+
+  const pipeline = item.sublist.first;
+  const command = pipeline.first;
+  const foreground =
+    !item.terminator || item.terminator.type === 'newline' || item.terminator.type === 'semicolon';
+
+  return foreground &&
+    item.sublist.rest.length === 0 &&
+    pipeline.rest.length === 0 &&
+    !pipeline.timing &&
+    !pipeline.modifier &&
+    command.kind === 'simpleCommand' &&
+    command.precommandModifiers.length === 0
+    ? command
+    : null;
+}
 
 /** 通常の関数スコープごとに独立して、構文上のコマンドからクラス宣言を解釈する。 */
 export function collectClassInformation(
   ast: FileNode,
 ): ReadonlyMap<number, ClassInformation | null> {
   const initial: CollectionProgress = {
-    collected: { captures: makeMap(), information: makeMap() },
+    collected: { captures: makeMap(), information: makeMap(), published: makeMap() },
     functionScopes: null,
+    standaloneCommand: null,
   };
   const progress = foldAst(ast, initial, (previous, node, depth) => {
     const active = loop<Stack<FunctionScope> | null, Stack<FunctionScope> | null>(
       previous.functionScopes,
       (scopes) => (scopes && scopes.value.depth >= depth ? again(scopes.next) : done(scopes)),
     );
+    const rejected = previous.collected.captures.get(active?.value.node)?.kind === 'rejected';
+    if (
+      rejected &&
+      (node.kind === 'functionDefinition' ||
+        node.kind === 'commandSubstitution' ||
+        node.kind === 'processSubstitution' ||
+        node.kind === 'subshellCommand')
+    ) {
+      return {
+        state: { ...previous, functionScopes: active },
+        control: 'skip',
+      };
+    }
+
     const functionScopes =
       node.kind === 'functionDefinition' ? pushStack({ node, depth }, active) : active;
+    const standalone =
+      node.kind === 'listItem' ? standaloneCommand(node) : previous.standaloneCommand;
 
     if (node.kind !== 'simpleCommand') {
-      return { state: { ...previous, functionScopes } };
+      return { state: { ...previous, functionScopes, standaloneCommand: standalone } };
     }
 
     const collected =
@@ -375,15 +488,27 @@ export function collectClassInformation(
 
     return {
       state: {
-        collected: collectCommand(node, depth, functionScopes?.value.node, collected),
+        collected: collectCommand(
+          node,
+          depth,
+          functionScopes?.value.node,
+          standalone === node,
+          collected,
+        ),
         functionScopes,
+        standaloneCommand: standalone,
       },
     };
   });
 
   return [...progress.collected.captures].reduce((state, [scope, capture]) => {
-    const end = scope?.range.end ?? ast.range.end;
+    const active = loop<
+      Capture | undefined,
+      Extract<Capture, { kind: 'definition' | 'method' }> | undefined
+    >(capture, (current) => (current?.kind === 'rejected' ? again(current.outer) : done(current)));
+    if (!active) return state;
 
-    return finishDefinition(state, scope, capture, { start: end, end }, 'incomplete');
+    const end = scope?.range.end ?? ast.range.end;
+    return finishDefinition(state, scope, active, { start: end, end }, 'incomplete');
   }, progress.collected).information;
 }

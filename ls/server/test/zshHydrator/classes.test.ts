@@ -12,15 +12,14 @@ import {
 import { astContractViolations } from '../zshParser/parser/contracts';
 
 const source = [
-  'z.cls.draw Counter; {',
-  '  z.cls.attr count 0',
+  'z.cls.draw Counter',
+  '  z.cls.attr count default=0',
   '  z.cls.fn increment',
   '    (( ++count ))',
   '    print "$1"',
   '  z.cls.fn.done',
   "  z.cls.fn value 'REPLY=$count'",
   '  z.cls.drew',
-  '}',
   'z.cls.new Counter object',
   '',
 ].join('\n');
@@ -71,21 +70,21 @@ describe('class hydration', () => {
     expect(method.body.value.raw).toBe("'print first'");
   });
 
-  test('重複した属性は元の初期値を保持する', () => {
+  test('重複した属性は元の初期値を保持しクラスを破棄する', () => {
     const file = fixture(
       [
         'z.cls.draw Duplicate',
-        '  z.cls.attr value first',
-        '  z.cls.attr value second',
+        '  z.cls.attr value default=first',
+        '  z.cls.attr value default=second',
         '  z.cls.drew',
         '',
       ].join('\n'),
     );
     const definition = file.classes.definitions[0];
 
-    expect(definition.state).toBe('published');
+    expect(definition.state).toBe('aborted');
     expect(definition.attributes).toHaveLength(1);
-    expect(definition.attributes[0].defaultValue.raw).toBe('first');
+    expect(definition.attributes[0].defaultValue.raw).toBe('default=first');
   });
 
   test('索引の再構築が既存索引を変更せず返却ASTの参照を保持する', () => {
@@ -104,7 +103,9 @@ describe('class hydration', () => {
 
   test('実行時と同じ予約接頭辞だけを除外する', () => {
     const file = fixture(
-      ['z.cls.draw __z_cls_Box', '  z.cls.attr __z_cls_value 0', '  z.cls.drew', ''].join('\n'),
+      ['z.cls.draw __z_cls_Box', '  z.cls.attr __z_cls_value default=0', '  z.cls.drew', ''].join(
+        '\n',
+      ),
     );
 
     expect(file.classes.definitions[0].name).toBe('__z_cls_Box');
@@ -185,7 +186,7 @@ describe('class hydration', () => {
     const file = fixture(
       [
         'z.cls.draw Holder',
-        '  z.cls.attr value "$(z.cls.new Other inside)"',
+        '  z.cls.attr value default="$(z.cls.new Other inside)"',
         '  z.cls.drew',
         '',
       ].join('\n'),
@@ -299,7 +300,7 @@ describe('class hydration', () => {
       end: null,
     });
     const aborted = fixture(
-      ['z.cls.draw Discarded', '  z.cls.attr count 0', '  z.cls.abort', ''].join('\n'),
+      ['z.cls.draw Discarded', '  z.cls.attr count default=0', '  z.cls.abort', ''].join('\n'),
     );
 
     expect(aborted.classes.definitions[0]).toMatchObject({ name: 'Discarded', state: 'aborted' });
@@ -317,15 +318,14 @@ describe('class hydration', () => {
   test('通常の関数ごとのクラスを独立して解釈し、本体内の引数スコープを保持する', () => {
     const text = [
       'load() {',
-      '  z.cls.draw Counter; {',
-      '    z.cls.attr count 0',
+      '  z.cls.draw Counter',
+      '    z.cls.attr count default=0',
       '    z.cls.fn increment',
       '      (( ++count ))',
       '      print "$1"',
       '    z.cls.fn.done',
       "    z.cls.fn value 'REPLY=$count'",
       '    z.cls.drew',
-      '  }',
       '}',
       '',
     ].join('\n');
@@ -379,5 +379,292 @@ describe('class hydration', () => {
     expect(file.classes.definitions.find((definition) => definition.name === 'Inner')?.scope).toBe(
       file.functions[0].definition,
     );
+  });
+  test('defaultという属性名と名前付き初期値を区別する', () => {
+    const text = [
+      'z.cls.draw BusinessValue',
+      '  z.cls.attr default default=0',
+      '  z.cls.drew',
+      '',
+    ].join('\n');
+    const file = fixture(text);
+    const attribute = file.classes.definitions[0].attributes[0];
+
+    expect(attribute.name).toBe('default');
+    expect(attribute.nameNode).toBe(attribute.declaration.arguments[0]);
+    expect(attribute.defaultValue).toBe(attribute.declaration.arguments[1]);
+    expect(
+      text.slice(attribute.defaultValueRange.start.offset, attribute.defaultValueRange.end.offset),
+    ).toBe('0');
+  });
+
+  test('先に指定したdefault引数も元の単語へ結び付ける', () => {
+    const file = fixture(
+      ['z.cls.draw Reversed', '  z.cls.attr default=0 price', '  z.cls.drew', ''].join('\n'),
+    );
+    const attribute = file.classes.definitions[0].attributes[0];
+
+    expect(attribute.name).toBe('price');
+    expect(attribute.nameNode).toBe(attribute.declaration.arguments[1]);
+    expect(attribute.defaultValue).toBe(attribute.declaration.arguments[0]);
+    expect(attribute.defaultValueRange.start.offset).toBe(
+      attribute.defaultValue.range.start.offset + 'default='.length,
+    );
+  });
+
+  test('明示した空のdefault値を長さ0の範囲で保持する', () => {
+    const file = fixture(
+      ['z.cls.draw EmptyDefault', '  z.cls.attr value default=', '  z.cls.drew', ''].join('\n'),
+    );
+    const attribute = file.classes.definitions[0].attributes[0];
+
+    expect(file.classes.definitions[0].state).toBe('published');
+    expect(attribute.defaultValue.raw).toBe('default=');
+    expect(attribute.defaultValueRange).toEqual({
+      start: attribute.defaultValue.range.end,
+      end: attribute.defaultValue.range.end,
+    });
+  });
+
+  test('引用した空のdefault値も長さ0の範囲で保持する', () => {
+    const file = fixture(
+      ['z.cls.draw QuotedEmpty', '  z.cls.attr value default=""', '  z.cls.drew', ''].join('\n'),
+    );
+    const attribute = file.classes.definitions[0].attributes[0];
+
+    expect(attribute.defaultValue).toBe(attribute.declaration.arguments[1]);
+    expect(attribute.defaultValueRange).toEqual({
+      start: attribute.defaultValue.range.end,
+      end: attribute.defaultValue.range.end,
+    });
+  });
+
+  test('引用した日本語の初期値を元ソースの値の位置へ結び付ける', () => {
+    const text = [
+      'z.cls.draw QuotedDefault',
+      '  z.cls.attr label default="日本語の値"',
+      '  z.cls.drew',
+      '',
+    ].join('\n');
+    const file = fixture(text);
+    const attribute = file.classes.definitions[0].attributes[0];
+
+    expect(attribute.defaultValue).toBe(attribute.declaration.arguments[1]);
+    expect(attribute.defaultValueRange.start).toEqual({
+      offset: text.indexOf('日本語の値'),
+      line: 1,
+      character: '  z.cls.attr label default="'.length,
+    });
+    expect(
+      text.slice(attribute.defaultValueRange.start.offset, attribute.defaultValueRange.end.offset),
+    ).toBe('日本語の値');
+  });
+
+  test('引用内に名前付き引数を記述しても値の範囲を保持する', () => {
+    const text = [
+      'z.cls.draw QuotedArgument',
+      "  z.cls.attr value 'default=two words'",
+      '  z.cls.drew',
+      '',
+    ].join('\n');
+    const file = fixture(text);
+    const attribute = file.classes.definitions[0].attributes[0];
+
+    expect(attribute.defaultValue).toBe(attribute.declaration.arguments[1]);
+    expect(
+      text.slice(attribute.defaultValueRange.start.offset, attribute.defaultValueRange.end.offset),
+    ).toBe('two words');
+  });
+
+  test('展開を含むdefault値の構文と値の位置を保持する', () => {
+    const text = [
+      'z.cls.draw DynamicDefault',
+      '  z.cls.attr value default="$(print text)"',
+      '  z.cls.drew',
+      '',
+    ].join('\n');
+    const file = fixture(text);
+    const attribute = file.classes.definitions[0].attributes[0];
+
+    expect(attribute.defaultValue).toBe(attribute.declaration.arguments[1]);
+    expect(findAll(attribute.defaultValue, 'commandSubstitution')).toHaveLength(1);
+    expect(
+      text.slice(attribute.defaultValueRange.start.offset, attribute.defaultValueRange.end.offset),
+    ).toBe('$(print text)');
+  });
+
+  test('defaultを省略した属性があるクラスを公開しない', () => {
+    const file = fixture(
+      ['z.cls.draw MissingDefault', '  z.cls.attr price', '  z.cls.drew', ''].join('\n'),
+    );
+
+    expect(file.classes.definitions[0].state).toBe('aborted');
+    expect(file.classes.definitions[0].attributes).toEqual([]);
+  });
+
+  test('位置引数の初期値を名前付きdefaultとして扱わない', () => {
+    const file = fixture(
+      ['z.cls.draw PositionalDefault', '  z.cls.attr price 0', '  z.cls.drew', ''].join('\n'),
+    );
+
+    expect(file.classes.definitions[0].state).toBe('aborted');
+    expect(file.classes.definitions[0].attributes).toEqual([]);
+  });
+
+  test('defaultを重複指定したクラスを公開しない', () => {
+    const file = fixture(
+      [
+        'z.cls.draw DuplicateDefault',
+        '  z.cls.attr price default=0 default=1',
+        '  z.cls.drew',
+        '',
+      ].join('\n'),
+    );
+
+    expect(file.classes.definitions[0].state).toBe('aborted');
+    expect(file.classes.definitions[0].attributes).toEqual([]);
+  });
+
+  test('拒否した入れ子のクラスのメンバーと終端を外側へ混ぜない', () => {
+    const file = fixture(
+      [
+        'z.cls.draw Outer',
+        '  z.cls.attr kept default=0',
+        '  z.cls.draw Inner',
+        '    z.cls.attr leaked default=1',
+        '    z.cls.drew',
+        '  z.cls.attr tail default=2',
+        '  z.cls.drew',
+        '',
+      ].join('\n'),
+    );
+
+    expect(file.classes.definitions.map((definition) => definition.name)).toEqual(['Outer']);
+    expect(file.classes.definitions[0].state).toBe('published');
+    expect(file.classes.definitions[0].attributes.map((attribute) => attribute.name)).toEqual([
+      'kept',
+      'tail',
+    ]);
+  });
+
+  test('拒否した定義のメソッド内のマーカーで外側を閉じない', () => {
+    const file = fixture(
+      [
+        'z.cls.draw Outer',
+        '  z.cls.draw Rejected',
+        '    z.cls.fn run',
+        '      z.cls.draw Business',
+        '      z.cls.drew',
+        '      z.cls.abort',
+        '    z.cls.fn.done',
+        '    z.cls.abort',
+        '    z.cls.drew',
+        '  z.cls.attr kept default=0',
+        '  z.cls.drew',
+        '',
+      ].join('\n'),
+    );
+
+    expect(file.classes.definitions.map((definition) => definition.name)).toEqual(['Outer']);
+    expect(file.classes.definitions[0].state).toBe('published');
+    expect(file.classes.definitions[0].attributes.map((attribute) => attribute.name)).toEqual([
+      'kept',
+    ]);
+  });
+
+  test('拒否した定義内の関数と置換のクラスを外へ混ぜない', () => {
+    const file = fixture(
+      [
+        'z.cls.draw Outer',
+        '  z.cls.draw Rejected',
+        '    helper() { z.cls.draw Hidden; z.cls.drew }',
+        '    z.cls.attr ignored default="$(z.cls.drew)"',
+        '    z.cls.drew',
+        '  z.cls.attr kept default=0',
+        '  z.cls.drew',
+        '',
+      ].join('\n'),
+    );
+
+    expect(file.classes.definitions.map((definition) => definition.name)).toEqual(['Outer']);
+    expect(file.classes.definitions[0].attributes.map((attribute) => attribute.name)).toEqual([
+      'kept',
+    ]);
+    expect(file.functions.map((fn) => fn.name)).toContain('helper');
+  });
+
+  test('同じスコープで公開済みのクラス名を上書きしない', () => {
+    const file = fixture(
+      [
+        'z.cls.draw Duplicate',
+        '  z.cls.attr first default=0',
+        '  z.cls.drew',
+        'z.cls.draw Duplicate',
+        '  z.cls.attr leaked default=1',
+        '  z.cls.drew',
+        '',
+      ].join('\n'),
+    );
+
+    expect(file.classes.definitions).toHaveLength(1);
+    expect(file.classes.definitions[0].attributes.map((attribute) => attribute.name)).toEqual([
+      'first',
+    ]);
+  });
+
+  test('メソッド本体のdrawとdrewを終了マーカーとして扱わない', () => {
+    const text = [
+      'z.cls.draw MethodMarkers',
+      '  z.cls.fn run',
+      '    z.cls.draw Business',
+      '    z.cls.drew',
+      '  z.cls.fn.done',
+      '  z.cls.drew',
+      '',
+    ].join('\n');
+    const file = fixture(text);
+    const method = file.classes.definitions[0].methods[0];
+
+    expect(file.classes.definitions[0].state).toBe('published');
+    expect(method.body.kind).toBe('block');
+    if (method.body.kind !== 'block') throw new Error('Expected a block method');
+
+    expect(text.slice(method.body.range.start.offset, method.body.range.end.offset)).toContain(
+      'z.cls.drew',
+    );
+    expect(method.body.end?.start.offset).toBe(text.indexOf('z.cls.fn.done'));
+  });
+
+  test('論理演算・パイプ・非同期実行中のfn.doneでメソッドを閉じない', () => {
+    const text = [
+      'z.cls.draw MethodBoundary',
+      '  z.cls.fn run',
+      '    true && z.cls.fn.done',
+      '    print value | z.cls.fn.done',
+      '    z.cls.fn.done &',
+      '    print tail',
+      '  z.cls.fn.done',
+      '  z.cls.drew',
+      '',
+    ].join('\n');
+    const file = fixture(text);
+    const method = file.classes.definitions[0].methods[0];
+
+    expect(method.body.kind).toBe('block');
+    if (method.body.kind !== 'block') throw new Error('Expected a block method');
+
+    expect(method.body.end?.start.offset).toBe(text.lastIndexOf('z.cls.fn.done'));
+    expect(classMethodAt(file.classes, null, text.indexOf('print tail'))).toBe(method);
+  });
+
+  test('通常のZshグループ内でもクラスを定義できる', () => {
+    const file = fixture(
+      ['z.cls.draw Grouped; {', '  z.cls.attr price default=0', '  z.cls.drew', '}', ''].join('\n'),
+    );
+
+    expect(file.classes.definitions[0].state).toBe('published');
+    expect(file.classes.definitions[0].attributes.map((attribute) => attribute.name)).toEqual([
+      'price',
+    ]);
   });
 });

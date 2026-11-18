@@ -1,5 +1,6 @@
 import { castDraft } from 'immer';
 import { makeMap, produce } from '../../util/collections';
+import { attributeArguments, attributeValueRange } from './attribute';
 import type { FileNode, FunctionDefinitionNode, SimpleCommandNode } from '../../zshParser/ast';
 import type {
   ClassAttribute,
@@ -29,13 +30,21 @@ function memberFromCommand(command: HydratedClassCommand): LocatedMember | null 
 
   const base = { name: information.name, declaration: command, nameNode };
   switch (information.kind) {
-    case 'classAttribute':
-      if (!value) return null;
+    case 'classAttribute': {
+      const attribute = attributeArguments(command);
+      if (!attribute) return null;
 
       return {
         classOffset: information.classOffset,
-        member: { ...base, kind: 'classAttribute', defaultValue: value },
+        member: {
+          ...base,
+          nameNode: attribute.nameNode,
+          kind: 'classAttribute',
+          defaultValue: attribute.defaultValue,
+          defaultValueRange: attributeValueRange(attribute.defaultValue),
+        },
       };
+    }
     case 'classMethod':
       if (information.body.kind === 'inline') {
         if (!value) return null;

@@ -67,6 +67,7 @@ export type ClassAttribute = {
   readonly declaration: SimpleCommandNode;
   readonly nameNode: WordNode;
   readonly defaultValue: WordNode;
+  readonly defaultValueRange: SourceRange;
 };
 
 export type ClassMethod = {

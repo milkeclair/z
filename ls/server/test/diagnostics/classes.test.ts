@@ -62,7 +62,9 @@ const semantic = (items: Readonly<ReturnType<typeof validateTextDocument>>) =>
 const classApi =
   [
     'z.cls.draw() { : }',
-    'z.cls.attr() { : }',
+    '# $1: attribute name',
+    '# $default: initial value',
+    'z.cls.attr() { : "$@" }',
     '# $1: method name',
     '# $2? [code]: inline body',
     'z.cls.fn() { : "$@" }',
@@ -71,13 +73,12 @@ const classApi =
     'z.cls.new() { : }',
   ].join('\n') + '\n';
 const counterClass = [
-  'z.cls.draw Counter; {',
-  '  z.cls.attr count 0',
+  'z.cls.draw Counter',
+  '  z.cls.attr count default=0',
   '  z.cls.fn increment',
   '    (( ++count ))',
   '  z.cls.fn.done',
   '  z.cls.drew',
-  '}',
   '',
 ].join('\n');
 
@@ -95,7 +96,7 @@ describe('class DSL command diagnostics', () => {
 
     expect(diagnostics).toHaveLength(1);
     expect(diagnostics[0].message).toContain('missing_inline_method');
-    expect(diagnostics[0].range.start.line).toBe(10);
+    expect(diagnostics[0].range.start.line).toBe(12);
   });
 
   test('別ファイルのクラスから生成されるメソッドと属性を認識し、タイプミスは診断する', () => {
@@ -123,7 +124,7 @@ describe('class DSL command diagnostics', () => {
     ).toMatchObject([
       {
         code: 'undefined-command',
-        range: { start: { line: 11, character: 4 } },
+        range: { start: { line: 13, character: 4 } },
       },
     ]);
   });
@@ -177,12 +178,11 @@ describe('class DSL command diagnostics', () => {
 describe('scoped class references', () => {
   test('スコープによって異なるクラスを指す同名変数の呼出を認識する', () => {
     const arrayClass = [
-      'z.cls.draw ArrayBox; {',
+      'z.cls.draw ArrayBox',
       '  z.cls.fn fill',
       '    :',
       '  z.cls.fn.done',
       '  z.cls.drew',
-      '}',
       '',
     ].join('\n');
     const source = [
@@ -245,13 +245,12 @@ describe('scoped class references', () => {
     const source = [
       '# $1: loader argument',
       'load() {',
-      '  z.cls.draw Counter; {',
-      '    z.cls.attr count 0',
+      '  z.cls.draw Counter',
+      '    z.cls.attr count default=0',
       '    z.cls.fn increment',
       '      print "$1"',
       '    z.cls.fn.done',
       '    z.cls.drew',
-      '  }',
       '}',
       '',
     ].join('\n');
@@ -268,13 +267,12 @@ describe('scoped class references', () => {
     const source = [
       '# $option: loader option',
       'load() {',
-      '  z.cls.draw Counter; {',
-      '    z.cls.attr count 0',
+      '  z.cls.draw Counter',
+      '    z.cls.attr count default=0',
       '    z.cls.fn increment',
       '      z.arg.named option "$@"',
       '    z.cls.fn.done',
       '    z.cls.drew',
-      '  }',
       '}',
       '',
     ].join('\n');
@@ -317,7 +315,8 @@ describe('hydrated class command targets', () => {
       const file = createZshFileHydration({
         sourceFile: 'x',
         file: 'x',
-        content: 'z.cls.draw Open\n  z.cls.attr count 0\n' + ending + 'z.cls.new Open object\n',
+        content:
+          'z.cls.draw Open\n  z.cls.attr count default=0\n' + ending + 'z.cls.new Open object\n',
       });
 
       expect(classCommands([file.classes]).size).toBe(0);
@@ -400,5 +399,45 @@ describe('hydrated class command targets', () => {
       'local_object',
     ]);
     expect(program?.root).toBe(report?.file);
+  });
+  test('defaultを省略した属性を通常の必須引数診断で報告する', () => {
+    const scenario = fixture(
+      '',
+      classApi + ['z.cls.draw MissingDefault', '  z.cls.attr price', '  z.cls.drew', ''].join('\n'),
+    );
+    const items = scenario.diagnostics.files.get(scenario.definitionUri)?.items ?? [];
+
+    expect(semantic(items)).toMatchObject([
+      {
+        code: 'missing-named-argument',
+        message: 'Missing required named argument: default',
+      },
+    ]);
+    expect(
+      scenario.snapshot.hydrator.files.get('definition.zsh')?.classes.definitions[0].state,
+    ).toBe('aborted');
+  });
+
+  test('拒否した定義の属性コマンドを生成せず外側の属性を解決する', () => {
+    const definitions = [
+      'z.cls.draw Outer',
+      '  z.cls.draw Rejected',
+      '    z.cls.attr leaked default=0',
+      '    z.cls.drew',
+      '  z.cls.attr kept default=1',
+      '  z.cls.drew',
+      '',
+    ].join('\n');
+    const scenario = fixture(
+      ['z.cls.new Outer object', 'object.kept.get', 'object.leaked.get', ''].join('\n'),
+      classApi + definitions,
+    );
+
+    expect(semantic(scenario.items)).toMatchObject([
+      {
+        code: 'undefined-command',
+        message: 'object.leaked.get is not defined in the project or shell environment.',
+      },
+    ]);
   });
 });

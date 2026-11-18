@@ -69,7 +69,7 @@ describe('class API visibility', () => {
     expect(items?.map((item) => item.label).toSorted()).toEqual(publicCommands);
   });
 
-  test('private表示を有効にすると内部20関数も参照できる', () => {
+  test('private表示を有効にすると内部24関数も参照できる', () => {
     const scenario = fixture();
     const names =
       zCompletion({ ...scenario, showPrivateFunctions: true })?.map((item) => item.label) ?? [];
@@ -77,8 +77,8 @@ describe('class API visibility', () => {
       name.split('.').some((segment) => segment.startsWith('_')),
     );
 
-    expect(names).toHaveLength(28);
-    expect(internal).toHaveLength(20);
+    expect(names).toHaveLength(32);
+    expect(internal).toHaveLength(24);
     expect(internal).toContain('z.cls.instance._call');
     expect(internal).toContain('z.cls.capture._start');
     expect(names).not.toContain('z.cls.instance.call');
@@ -93,5 +93,22 @@ describe('class API visibility', () => {
 
     expect(validateTextDocument({ diagnostics, textDocument: scenario.document })).toEqual([]);
     expect(zDefinition(scenario)?.uri).toBe(scenario.definitionUri);
+  });
+  test('実際の属性APIがdefaultの省略を必須引数として診断する', () => {
+    const scenario = fixture(
+      ['z.cls.draw MissingDefault', '  z.cls.attr price¦', '  z.cls.drew', ''].join('\n'),
+    );
+    const diagnostics = refreshDiagnosticSnapshot({
+      snapshot: scenario.snapshot,
+      environment: emptyShellEnvironment(),
+    });
+    const items = validateTextDocument({ diagnostics, textDocument: scenario.document });
+
+    expect(items.filter((item) => item.code === 'missing-named-argument')).toMatchObject([
+      {
+        code: 'missing-named-argument',
+        message: 'Missing required named argument: default',
+      },
+    ]);
   });
 });
