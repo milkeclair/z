@@ -123,12 +123,15 @@ function inheritedContext(
   declarations: Declarations,
   classes: ClassFileHydration,
 ): ResolutionContext {
-  const classFiles = [...parent.classFiles, classes];
+  const hasClassDeclarations = classes.definitions.length > 0 || classes.instances.length > 0;
+  const classFiles = hasClassDeclarations
+    ? appendItems(parent.classFiles, classes)
+    : parent.classFiles;
 
   return {
     ...parent,
     classFiles,
-    classCommands: classCommands(classFiles),
+    classCommands: hasClassDeclarations ? classCommands(classFiles) : parent.classCommands,
     aliases: declarations.aliases.size
       ? new Set([...parent.aliases, ...declarations.aliases])
       : parent.aliases,

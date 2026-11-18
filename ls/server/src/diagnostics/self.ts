@@ -1,5 +1,10 @@
 import { decodeLiteral } from '../embeddedCode/literal';
-import type { ClassDefinition, ZshFileHydration } from '../zshHydrator';
+import type {
+  ClassDefinition,
+  ClassFileHydration,
+  ClassMethod,
+  ZshFileHydration,
+} from '../zshHydrator';
 import { classMethodAt } from '../zshHydrator';
 import type { AstNode, FunctionDefinitionNode, WordNode, WordPartNode } from '../zshParser/ast';
 import { locate } from '../zshParser/ast';
@@ -70,7 +75,33 @@ function shadowsSelf(path: readonly AstNode[], offset: number, start: number): b
   );
 }
 
-function ownerAt(
+function methodOwnerAt(
+  classes: ClassFileHydration,
+  scope: FunctionDefinitionNode | null,
+  offset: number,
+): {
+  readonly definition: ClassDefinition;
+  readonly method: ClassMethod;
+} | null {
+  const block = classMethodAt(classes, scope, offset);
+
+  for (const definition of classes.definitions) {
+    if (definition.state !== 'published' || definition.scope !== scope) continue;
+
+    const method = definition.methods.find(
+      (candidate) =>
+        candidate === block ||
+        (candidate.body.kind === 'inline' &&
+          candidate.body.value.range.start.offset <= offset &&
+          offset < candidate.body.value.range.end.offset),
+    );
+    if (method) return { definition, method };
+  }
+
+  return null;
+}
+
+function selfScopeAt(
   file: ZshFileHydration,
   offset: number,
 ): {
@@ -78,43 +109,18 @@ function ownerAt(
   readonly blocked: boolean;
 } {
   const location = locate(file.query, offset);
+  const path = location?.kind === 'syntax' ? location.path : [];
   const scope =
-    location?.kind === 'syntax'
-      ? (location.path
-          .toReversed()
-          .find((node): node is FunctionDefinitionNode => node.kind === 'functionDefinition') ??
-        null)
-      : null;
-  const block = classMethodAt(file.classes, scope, offset);
-  const definition = file.classes.definitions.find(
-    (candidate) =>
-      candidate.state === 'published' &&
-      candidate.scope === scope &&
-      candidate.methods.some(
-        (method) =>
-          method === block ||
-          (method.body.kind === 'inline' &&
-            method.body.value.range.start.offset <= offset &&
-            offset < method.body.value.range.end.offset),
-      ),
-  );
-
-  const method = definition?.methods.find(
-    (candidate) =>
-      candidate === block ||
-      (candidate.body.kind === 'inline' &&
-        candidate.body.value.range.start.offset <= offset &&
-        offset < candidate.body.value.range.end.offset),
-  );
-  const start = method
-    ? method.body.kind === 'block'
-      ? method.body.range.start.offset
-      : method.body.value.range.start.offset
-    : 0;
-  const shadowed = location?.kind === 'syntax' && shadowsSelf(location.path, offset, start);
+    path
+      .toReversed()
+      .find((node): node is FunctionDefinitionNode => node.kind === 'functionDefinition') ?? null;
+  const owner = methodOwnerAt(file.classes, scope, offset);
+  const body = owner?.method.body;
+  const start = body ? (body.kind === 'block' ? body.range : body.value.range).start.offset : 0;
+  const shadowed = shadowsSelf(path, offset, start);
 
   return {
-    definition: shadowed ? null : (definition ?? null),
+    definition: shadowed ? null : (owner?.definition ?? null),
     blocked: scope !== null || shadowed,
   };
 }
@@ -125,11 +131,11 @@ function owningClass(
   word: WordNode,
   scopes: readonly CallScope[],
 ): ClassDefinition | null {
-  const current = ownerAt(file, word.range.start.offset);
+  const current = selfScopeAt(file, word.range.start.offset);
   if (current.definition || current.blocked) return current.definition;
 
   for (const scope of scopes) {
-    const owner = ownerAt(scope.file, scope.offset);
+    const owner = selfScopeAt(scope.file, scope.offset);
     if (owner.definition || owner.blocked) return owner.definition;
   }
 

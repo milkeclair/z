@@ -206,9 +206,7 @@ export function analyzeCalls(
     const word = command.commandName?.word;
     if (!word) return previous;
 
-    const self = functionCommand(command)
-      ? resolveSelfCommand(file, word, options.scopes ?? [])
-      : null;
+    const self = functionCommand(command) ? resolveSelfCommand(file, word, scopes) : null;
     if (self) {
       if (self.target) {
         return {

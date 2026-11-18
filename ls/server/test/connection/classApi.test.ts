@@ -69,7 +69,7 @@ describe('class API visibility', () => {
     expect(items?.map((item) => item.label).toSorted()).toEqual(publicCommands);
   });
 
-  test('private表示を有効にすると内部24関数も参照できる', () => {
+  test('private表示を有効にすると内部27関数も参照できる', () => {
     const scenario = fixture();
     const names =
       zCompletion({ ...scenario, showPrivateFunctions: true })?.map((item) => item.label) ?? [];
@@ -77,8 +77,8 @@ describe('class API visibility', () => {
       name.split('.').some((segment) => segment.startsWith('_')),
     );
 
-    expect(names).toHaveLength(32);
-    expect(internal).toHaveLength(24);
+    expect(names).toHaveLength(35);
+    expect(internal).toHaveLength(27);
     expect(internal).toContain('z.cls.instance._call');
     expect(internal).toContain('z.cls.capture._start');
     expect(names).not.toContain('z.cls.instance.call');

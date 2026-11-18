@@ -3,12 +3,14 @@ import { addValue, appendItems, makeMap, makeSet, produce, setEntry } from '../.
 import { again, done, loop } from '../../util/loop';
 import { pushStack, type Stack } from '../../util/stack';
 import type {
+  AstNode,
   FileNode,
   FunctionDefinitionNode,
   ListItemNode,
   SimpleCommandNode,
 } from '../../zshParser/ast';
 import { foldAst } from '../../zshParser/ast';
+import type { FoldStep } from '../../zshParser/ast/traversal/walk';
 import { literalWord } from '../../zshParser/ast/word/literal';
 import type { SourceRange } from '../../zshParser/lexer';
 import { attributeArguments } from './attribute';
@@ -232,24 +234,29 @@ function declareInstance(
   };
 }
 
+function isMethodEnd(directive: ClassDirective, depth: number): boolean {
+  return (
+    directive.depth === depth &&
+    directive.standalone &&
+    directive.name === 'z.cls.fn.done' &&
+    directive.args.length === 0
+  );
+}
+
 /** メソッド開始時と同じ構文の深さにある終了マーカーだけを処理する。 */
 function applyMethodDirective(
   directive: ClassDirective,
   capture: Extract<Capture, { kind: 'method' }>,
   state: State,
 ): State {
-  if (directive.depth !== capture.depth || !directive.standalone) return state;
-
-  if (directive.name === 'z.cls.fn.done' && directive.args.length === 0) {
-    return withMember(
-      state,
-      directive.scope,
-      capture.definition,
-      blockMethodFromCapture(capture, directive.command.range, true),
-    );
-  }
-
-  return state;
+  return isMethodEnd(directive, capture.depth)
+    ? withMember(
+        state,
+        directive.scope,
+        capture.definition,
+        blockMethodFromCapture(capture, directive.command.range, true),
+      )
+    : state;
 }
 
 /** クラス内で最初に現れた有効な属性宣言を保持する。 */
@@ -353,9 +360,7 @@ function applyRejectedDirective(
   if (!directive.standalone) return state;
 
   if (capture.methodDepth !== null) {
-    return directive.name === 'z.cls.fn.done' &&
-      directive.args.length === 0 &&
-      directive.depth === capture.methodDepth
+    return isMethodEnd(directive, capture.methodDepth)
       ? withCapture(state, directive.scope, { ...capture, methodDepth: null })
       : state;
   }
@@ -441,6 +446,76 @@ function standaloneCommand(item: ListItemNode): SimpleCommandNode | null {
     : null;
 }
 
+/** 構文スコープを進め、1ノード分の収集状態と探索制御を返す。 */
+function collectNode(
+  previous: CollectionProgress,
+  node: AstNode,
+  depth: number,
+): FoldStep<CollectionProgress> {
+  const active = loop<Stack<FunctionScope> | null, Stack<FunctionScope> | null>(
+    previous.functionScopes,
+    (scopes) => (scopes && scopes.value.depth >= depth ? again(scopes.next) : done(scopes)),
+  );
+  const rejected = previous.collected.captures.get(active?.value.node)?.kind === 'rejected';
+  if (
+    rejected &&
+    (node.kind === 'functionDefinition' ||
+      node.kind === 'commandSubstitution' ||
+      node.kind === 'processSubstitution' ||
+      node.kind === 'subshellCommand')
+  ) {
+    return {
+      state: { ...previous, functionScopes: active },
+      control: 'skip',
+    };
+  }
+
+  const functionScopes =
+    node.kind === 'functionDefinition' ? pushStack({ node, depth }, active) : active;
+  const standalone =
+    node.kind === 'listItem' ? standaloneCommand(node) : previous.standaloneCommand;
+
+  if (node.kind !== 'simpleCommand') {
+    return { state: { ...previous, functionScopes, standaloneCommand: standalone } };
+  }
+
+  const collected =
+    'hydration' in node
+      ? {
+          ...previous.collected,
+          information: setEntry(previous.collected.information, node.range.start.offset, null),
+        }
+      : previous.collected;
+
+  return {
+    state: {
+      collected: collectCommand(
+        node,
+        depth,
+        functionScopes?.value.node,
+        standalone === node,
+        collected,
+      ),
+      functionScopes,
+      standaloneCommand: standalone,
+    },
+  };
+}
+
+/** 終端のない定義を、それぞれの所有スコープの末尾で確定する。 */
+function finishOpenDefinitions(ast: FileNode, collected: State): State {
+  return [...collected.captures].reduce((state, [scope, capture]) => {
+    const active = loop<
+      Capture | undefined,
+      Extract<Capture, { kind: 'definition' | 'method' }> | undefined
+    >(capture, (current) => (current?.kind === 'rejected' ? again(current.outer) : done(current)));
+    if (!active) return state;
+
+    const end = scope?.range.end ?? ast.range.end;
+    return finishDefinition(state, scope, active, { start: end, end }, 'incomplete');
+  }, collected);
+}
+
 /** 通常の関数スコープごとに独立して、構文上のコマンドからクラス宣言を解釈する。 */
 export function collectClassInformation(
   ast: FileNode,
@@ -450,65 +525,6 @@ export function collectClassInformation(
     functionScopes: null,
     standaloneCommand: null,
   };
-  const progress = foldAst(ast, initial, (previous, node, depth) => {
-    const active = loop<Stack<FunctionScope> | null, Stack<FunctionScope> | null>(
-      previous.functionScopes,
-      (scopes) => (scopes && scopes.value.depth >= depth ? again(scopes.next) : done(scopes)),
-    );
-    const rejected = previous.collected.captures.get(active?.value.node)?.kind === 'rejected';
-    if (
-      rejected &&
-      (node.kind === 'functionDefinition' ||
-        node.kind === 'commandSubstitution' ||
-        node.kind === 'processSubstitution' ||
-        node.kind === 'subshellCommand')
-    ) {
-      return {
-        state: { ...previous, functionScopes: active },
-        control: 'skip',
-      };
-    }
-
-    const functionScopes =
-      node.kind === 'functionDefinition' ? pushStack({ node, depth }, active) : active;
-    const standalone =
-      node.kind === 'listItem' ? standaloneCommand(node) : previous.standaloneCommand;
-
-    if (node.kind !== 'simpleCommand') {
-      return { state: { ...previous, functionScopes, standaloneCommand: standalone } };
-    }
-
-    const collected =
-      'hydration' in node
-        ? {
-            ...previous.collected,
-            information: setEntry(previous.collected.information, node.range.start.offset, null),
-          }
-        : previous.collected;
-
-    return {
-      state: {
-        collected: collectCommand(
-          node,
-          depth,
-          functionScopes?.value.node,
-          standalone === node,
-          collected,
-        ),
-        functionScopes,
-        standaloneCommand: standalone,
-      },
-    };
-  });
-
-  return [...progress.collected.captures].reduce((state, [scope, capture]) => {
-    const active = loop<
-      Capture | undefined,
-      Extract<Capture, { kind: 'definition' | 'method' }> | undefined
-    >(capture, (current) => (current?.kind === 'rejected' ? again(current.outer) : done(current)));
-    if (!active) return state;
-
-    const end = scope?.range.end ?? ast.range.end;
-    return finishDefinition(state, scope, active, { start: end, end }, 'incomplete');
-  }, progress.collected).information;
+  const progress = foldAst(ast, initial, collectNode);
+  return finishOpenDefinitions(ast, progress.collected).information;
 }
