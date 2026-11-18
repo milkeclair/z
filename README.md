@@ -122,6 +122,8 @@ lib配下では次の規則を使います。
   - join、split、uniqueなど
 - common
   - eq、is.null、guardなど
+- cls
+  - sourceで読み込めるクラス定義、スコープに従う実体参照、メソッドと属性。[クラス](lib/cls/README.md)を参照。
 - debug
   - 対話形式のデバッグ
 - dir
