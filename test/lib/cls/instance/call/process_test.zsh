@@ -1,17 +1,16 @@
 source ${z_main}
 
 z.t.describe "z.cls.instance.call._validate"; {
-  z.t.context "公開済みのメソッドの場合"; {
+  z.t.context "生存中の実体の場合"; {
     z.t.it "実行を許可する"; {
       z.cls.store._ensure
       z_cls_instances[validate_ref]=ValidateCall
-      z_cls_bodies[ValidateCall:run]=':'
 
-      z.cls.instance.call._validate validate_ref method run object
+      z.cls.instance.call._validate validate_ref
 
       z.t.expect.status.is.true
 
-      unset 'z_cls_instances[validate_ref]' 'z_cls_bodies[ValidateCall:run]'
+      unset 'z_cls_instances[validate_ref]'
     }
   }
 
@@ -20,7 +19,7 @@ z.t.describe "z.cls.instance.call._validate"; {
       z.cls.store._ensure
       z.t.mock name=z.io.error
 
-      z.cls.instance.call._validate "" method run missing
+      z.cls.instance.call._validate "" missing
 
       z.t.expect.status.is.false
     }
@@ -30,19 +29,69 @@ z.t.describe "z.cls.instance.call._validate"; {
     z.t.it "実行中の実体を保護する"; {
       z.cls.store._ensure
       z_cls_instances[reentry_ref]=ValidateReentry
-      z_cls_bodies[ValidateReentry:run]=':'
       z_cls_active[reentry_ref]=1
       z.t.mock name=z.io.error
 
       () {
         local z_cls_current_instance=another_ref
 
-        z.cls.instance.call._validate reentry_ref method run object
+        z.cls.instance.call._validate reentry_ref
 
         z.t.expect.status.is.false
       }
 
-      unset 'z_cls_instances[reentry_ref]' 'z_cls_bodies[ValidateReentry:run]' 'z_cls_active[reentry_ref]'
+      unset 'z_cls_instances[reentry_ref]' 'z_cls_active[reentry_ref]'
+    }
+  }
+}
+
+z.t.describe "z.cls.instance.call._get"; {
+  z.t.context "スカラーを取得する場合"; {
+    z.t.it "シェル構文を含む文字列をそのまま返す"; {
+      () {
+        z.cls.draw DirectGet
+          z.cls.attr label default=old
+        z.cls.drew
+        local object=""
+        z.cls.new DirectGet object
+
+        local literal=$'one \'two\'\n$(print -r -- expanded) "three" *'
+        $object.label.set "$literal"
+        z.cls.instance.call._get "$object" label
+
+        z.t.expect.reply "$literal"
+
+        z.cls.instance.call._get "$object" label extra
+
+        z.t.expect.status.is.false
+        z.cls.delete object
+      }
+    }
+  }
+}
+
+z.t.describe "z.cls.instance.call._set"; {
+  z.t.context "スカラーを更新する場合"; {
+    z.t.it "空文字を保存し、余分な引数がある更新を拒否する"; {
+      () {
+        z.cls.draw DirectSet
+          z.cls.attr label default=old
+        z.cls.drew
+        local object=""
+        z.cls.new DirectSet object
+
+        z.cls.instance.call._set "$object" label ""
+
+        z.t.expect.status.is.true
+
+        z.cls.instance.call._set "$object" label new extra
+
+        z.t.expect.status.is.false
+        $object.label.get
+        z.t.expect.reply.is.null
+
+        z.cls.delete object
+      }
     }
   }
 }

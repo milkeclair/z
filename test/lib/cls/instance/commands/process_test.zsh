@@ -36,14 +36,14 @@ z.t.describe "z.cls.instance.commands._install"; {
   z.t.context "検証済みのメソッド名の場合"; {
     z.t.it "呼び出し先と引数を渡す"; {
       z.cls.store._ensure
-      z.t.mock name=z.cls.instance._call
+      z.t.mock name=z.cls.instance.call._run
 
       z.cls.instance.commands._install installed_cls.run
       installed_cls.run one two
 
-      z.t.mock.result name=z.cls.instance._call
+      z.t.mock.result name=z.cls.instance.call._run
 
-      z.t.expect.reply.is.arr installed_cls method run one two
+      z.t.expect.reply.is.arr installed_cls run one two
 
       unfunction installed_cls.run
       unset 'z_cls_wrapper_refs[installed_cls.run]'

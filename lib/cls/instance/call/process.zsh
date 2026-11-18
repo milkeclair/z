@@ -1,30 +1,20 @@
-# 呼出しや属性の復元に進む前に、解決済みの処理を検証する。
+# 生存中の実体かを確認し、他の実体の呼び出しからの再入を拒否する。
 #
 # $1: 解決済みの実体参照
-# $2: method、get、setのいずれか
-# $3: メンバー名
-# $4: エラーに表示する、元の変数名または参照
+# $2?: エラーに表示する元の変数名
 # REPLY: null
 # return: 0|1
 #
 # example:
 #  # 前提: objectは非実行中で、countを持つ実体の参照変数
-#  z.cls.instance.call._validate "$object" get count object
+#  z.cls.instance.call._validate "$object"
 #  # return: 0
 z.cls.instance.call._validate() {
   local z_cls_instance=$1
 
   if z.is.null "${z_cls_instances[$z_cls_instance]:-}"; then
-    z.io.error "Instance reference $4 is not available in this scope."
+    z.io.error "Instance reference ${2:-$1} is not available in this scope."
     return 1
-  fi
-
-  local z_cls_key="${z_cls_instances[$z_cls_instance]}:$3"
-
-  if z.is.eq "$2" method; then
-    z.var.exists "z_cls_bodies[$z_cls_key]" || return 1
-  else
-    z.var.exists "z_cls_defaults[$z_cls_key]" || return 1
   fi
 
   if z.is.not.null "${z_cls_active[$z_cls_instance]:-}" &&
@@ -36,7 +26,62 @@ z.cls.instance.call._validate() {
   return 0
 }
 
-# 保存済みの通常スカラーを直接扱い、それ以外は属性のスコープを復元して処理する。
+# 実体IDから属性を読み、値をREPLYへ返す。
+#
+# $1: 実体参照
+# $2: 属性名
+# REPLY: 属性値
+# return: 0|1
+#
+# example:
+#  # 前提: objectはlabelの値がhelloである実体の参照変数
+#  z.cls.instance.call._get "$object" label
+#  # REPLY: hello
+#  # return: 0
+z.cls.instance.call._get() {
+  z.cls.instance.call._validate "$1" || return 1
+
+  local z_cls_key="$1:$2"
+  if (( ${+z_cls_values[$z_cls_key]} )); then
+    z.cls.instance.call._access "$1" get "$2" "${@:3}"
+    return $?
+  fi
+
+  z.int.is.eq $# 2 || return 1
+  (( ${+z_cls_scalars[$z_cls_key]} )) || return 1
+
+  REPLY=$z_cls_scalars[$z_cls_key]
+}
+
+# 実体IDから属性を更新する。
+#
+# $1: 実体参照
+# $2: 属性名
+# $@?: 新しい値または配列の要素
+# REPLY: null
+# return: 0|1
+#
+# example:
+#  # 前提: objectはlabelを持つ実体の参照変数
+#  z.cls.instance.call._set "$object" label hello
+#  # return: 0
+#  # 変更後: labelの値はhello
+z.cls.instance.call._set() {
+  z.cls.instance.call._validate "$1" || return 1
+
+  local z_cls_key="$1:$2"
+  if (( ${+z_cls_values[$z_cls_key]} )); then
+    z.cls.instance.call._access "$1" set "$2" "${@:3}"
+    return $?
+  fi
+
+  z.int.is.eq $# 3 || return 1
+  (( ${+z_cls_scalars[$z_cls_key]} )) || return 1
+
+  z_cls_scalars[$z_cls_key]=$3
+}
+
+# 十進整数は保存形式から直接処理し、他の宣言は属性を復元して処理する。
 #
 # $1: 実体参照
 # $2: getまたはset
@@ -46,7 +91,7 @@ z.cls.instance.call._validate() {
 # return: 取得・更新の終了コード
 #
 # example:
-#  # 前提: objectは初期値0のcountを持つ実体の参照変数
+#  # 前提: objectはcountを十進整数の0として保存している実体の参照変数
 #  z.cls.instance.call._access "$object" get count
 #  # REPLY: 0
 #  # return: 0
@@ -57,21 +102,6 @@ z.cls.instance.call._access() {
   local z_cls_key="$1:$3"
 
   shift 3
-
-  if (( ! ${+z_cls_values[$z_cls_key]} )); then
-    case $z_cls_operation in
-      get)
-        z.int.is.zero $# || return 1
-        REPLY=$z_cls_scalars[$z_cls_key]
-        return 0
-        ;;
-      set)
-        z.int.is.eq $# 1 || return 1
-        z.cls.store._scalar "$z_cls_instance" "$z_cls_member" "$1"
-        return 0
-        ;;
-    esac
-  fi
 
   local z_cls_declaration=$z_cls_values[$z_cls_key]
 
@@ -164,6 +194,8 @@ z.cls.instance.call._access_typed() {
 #  # return: 7
 #  # 変更後: countは4、実行中フラグは解除済み
 z.cls.instance.call._run() {
+  z.cls.instance.call._validate "$1" || return 1
+
   local z_cls_instance=$1
 
   if z.is.not.null "${z_cls_active[$z_cls_instance]:-}"; then

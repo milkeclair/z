@@ -18,15 +18,19 @@ z.cls.instance._call() {
   local z_cls_member=$3
 
   z.is.not.null "${z_cls_instances[$1]:-}" && z_cls_instance=$1
-  z.cls.instance.call._validate "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$1" || return 1
+  if z.is.null "$z_cls_instance"; then
+    z.cls.instance.call._validate "$z_cls_instance" "$1"
+    return 1
+  fi
 
   shift 3
 
-  if z.is.eq "$z_cls_operation" method; then
-    z.cls.instance.call._run "$z_cls_instance" "$z_cls_member" "$@"
-  else
-    z.cls.instance.call._access "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
-  fi
+  case $z_cls_operation in
+    method) z.cls.instance.call._run "$z_cls_instance" "$z_cls_member" "$@" ;;
+    get) z.cls.instance.call._get "$z_cls_instance" "$z_cls_member" "$@" ;;
+    set) z.cls.instance.call._set "$z_cls_instance" "$z_cls_member" "$@" ;;
+    *) return 1 ;;
+  esac
 }
 
 # メソッド本体を、readonlyのselfとメソッド引数を持つ関数スコープで実行する。
@@ -45,8 +49,11 @@ z.cls.instance._call() {
 z.cls.instance._execute() {
   local z_cls_instance=$1
   local z_cls_member=$2
-  local z_cls_body=$z_cls_bodies[${z_cls_instances[$z_cls_instance]}:$z_cls_member]
+  local z_cls_key="${z_cls_instances[$z_cls_instance]}:$z_cls_member"
 
+  (( ${+z_cls_bodies[$z_cls_key]} )) || return 1
+
+  local z_cls_body=$z_cls_bodies[$z_cls_key]
   shift 2
 
   # EXITトラップもメソッド引数で動くよう、本体専用のスコープを作る。
