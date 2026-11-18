@@ -5,7 +5,7 @@ import type { FunctionSnapshot } from '../refreshFunctions/main';
 import type { FunctionTargets } from '../refreshFunctions/target';
 import type { ZshFileHydration } from '../zshHydrator';
 import type { ResolutionContext } from './calls';
-import { classCommands, sameClassFiles } from './classes';
+import { sameClassFiles } from './classes';
 import { sameCallContracts } from './contracts';
 import { collectIgnoreControls, ignored } from './controls';
 import type { ShellEnvironment } from './environment';
@@ -38,7 +38,6 @@ export function createDiagnosticSnapshot(): DiagnosticSnapshot {
     context: {
       environment: emptyShellEnvironment(),
       projectRoot: '',
-      classCommands: new Map(),
       classFiles: [],
       aliases: new Set(),
       globalAliases: new Set(),
@@ -86,7 +85,6 @@ function resolutionContext(
     ...declarations,
     environment,
     projectRoot,
-    classCommands: classCommands(classFiles),
     classFiles,
   };
 }

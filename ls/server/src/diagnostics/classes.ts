@@ -1,8 +1,6 @@
-import { castDraft } from 'immer';
 import { decodeLiteral } from '../embeddedCode/literal';
 import { classMethodAt, type ZshFileHydration } from '../zshHydrator';
 import { locate, type WordNode, type WordPartNode } from '../zshParser/ast';
-import { makeMap, produce } from '../util/collections';
 import type {
   ClassAttribute,
   ClassDefinition,
@@ -18,41 +16,6 @@ export type ClassCommandTarget = {
   readonly member: ClassMethod | ClassAttribute;
   readonly operation: 'method' | 'get' | 'set';
 };
-export type ClassCommandTargets = ReadonlyMap<string, readonly ClassCommandTarget[]>;
-
-/** 公開済みクラスだけを解決し、宣言ノードとメンバーの定義元を参照先に保持する。 */
-export function classCommands(files: readonly ClassFileHydration[]): ClassCommandTargets {
-  const definitions = makeMap(
-    files.flatMap((file) =>
-      file.definitions
-        .filter((definition) => definition.state === 'published')
-        .map((definition) => [definition.name, definition]),
-    ),
-  );
-  return produce(makeMap<string, readonly ClassCommandTarget[]>(), (draft) => {
-    for (const file of files) {
-      for (const instance of file.instances) {
-        const definition = definitions.get(instance.className);
-        if (!definition) continue;
-
-        for (const member of [...definition.methods, ...definition.attributes]) {
-          const operations: readonly ClassCommandTarget['operation'][] =
-            member.kind === 'classMethod' ? ['method'] : ['get', 'set'];
-
-          for (const operation of operations) {
-            const suffix = operation === 'method' ? '' : '.' + operation;
-            const name = instance.name + '.' + member.name + suffix;
-            const targets = draft.get(name) ?? [];
-
-            targets.push(castDraft({ definition, member, instance, operation }));
-            draft.set(name, targets);
-          }
-        }
-      }
-    }
-  });
-}
-
 function staticText(word: WordNode, parts: readonly WordPartNode[]): string | null {
   return parts.reduce<string | null>((text, part) => {
     if (text === null || part.kind !== 'stringLiteral') return null;

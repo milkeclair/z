@@ -2,7 +2,6 @@ import { appendItems, collectArray } from '../util/collections';
 import { protocolRange } from '../connection/ast/cursor';
 import type { CallScope, ResolutionContext } from '../diagnostics/calls';
 import { analyzeCalls } from '../diagnostics/calls';
-import { classCommands } from '../diagnostics/classes';
 import type { IgnoreControls } from '../diagnostics/controls';
 import { collectIgnoreControls, ignored } from '../diagnostics/controls';
 import type { Declarations } from '../diagnostics/facts';
@@ -131,7 +130,6 @@ function inheritedContext(
   return {
     ...parent,
     classFiles,
-    classCommands: hasClassDeclarations ? classCommands(classFiles) : parent.classCommands,
     aliases: declarations.aliases.size
       ? new Set([...parent.aliases, ...declarations.aliases])
       : parent.aliases,

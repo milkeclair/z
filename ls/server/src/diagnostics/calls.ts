@@ -281,15 +281,6 @@ export function analyzeCalls(
       };
     }
 
-    const generated = functionCommand(command) ? context.classCommands.get(name) : undefined;
-
-    if (generated) {
-      return {
-        ...previous,
-        classTargets: setEntry(previous.classTargets, command, generated),
-      };
-    }
-
     if (context.autoloads.has(name) && functionCommand(command)) {
       return previous;
     }

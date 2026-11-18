@@ -2,14 +2,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { ClassFileHydration } from '../zshHydrator';
 import type { SimpleCommandNode, WordNode } from '../zshParser/ast';
-import type { ClassCommandTargets } from './classes';
 import type { ShellEnvironment } from './environment';
 import type { Declarations } from './facts';
 
 export type ResolutionContext = Declarations & {
   readonly environment: ShellEnvironment;
   readonly projectRoot: string;
-  readonly classCommands: ClassCommandTargets;
   readonly classFiles: readonly ClassFileHydration[];
 };
 
