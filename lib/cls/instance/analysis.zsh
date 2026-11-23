@@ -14,6 +14,14 @@
 z.cls.instance._commands() {
   local z_cls_class=$1
   local z_cls_id=$2
+  local z_cls_key="$z_cls_class:${3:-owner}"
+
+  if (( ${+z_cls_command_suffixes[$z_cls_key]} )); then
+    local -a z_cls_suffixes=(${=z_cls_command_suffixes[$z_cls_key]})
+    REPLY=("${(@)z_cls_suffixes/#/$z_cls_id}")
+    return 0
+  fi
+
   local -a z_cls_wrappers=()
   local z_cls_member
 

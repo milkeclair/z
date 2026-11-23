@@ -173,6 +173,14 @@ z.cls.drew() {
   fi
 
   z.cls.capture._stop
+  () {
+    local REPLY=""
+    z.cls.instance._commands "$z_cls_drawing" ""
+    z_cls_command_suffixes[${z_cls_drawing}:owner]="${(j: :)REPLY}"
+    z.cls.instance._commands "$z_cls_drawing" "" read
+    z_cls_command_suffixes[${z_cls_drawing}:read]="${(j: :)REPLY}"
+  }
+
   z_cls_classes[$z_cls_drawing]=1
   z_cls_drawing=''
 }

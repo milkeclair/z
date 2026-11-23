@@ -12,7 +12,7 @@ z.cls.store._ensure() {
   if z.is.eq "${z_cls_store_ready:-0}" 1 &&
       z.var.exists z_cls_dispatch_programs && z.var.exists z_cls_owner_markers &&
       z.var.exists z_cls_scalars && z.var.exists z_cls_references &&
-      z.var.exists z_cls_method_access; then
+      z.var.exists z_cls_method_access && (( ${+z_cls_command_suffixes} )); then
     return 0
   fi
 
@@ -20,6 +20,7 @@ z.cls.store._ensure() {
   z.var.exists z_cls_classes || typeset -gA z_cls_classes
   z.var.exists z_cls_class_attrs || typeset -gA z_cls_class_attrs
   z.var.exists z_cls_class_methods || typeset -gA z_cls_class_methods
+  z.var.exists z_cls_command_suffixes || typeset -gA z_cls_command_suffixes
   z.var.exists z_cls_defaults || typeset -gA z_cls_defaults
   z.var.exists z_cls_bodies || typeset -gA z_cls_bodies
   z.var.exists z_cls_method_access || typeset -gA z_cls_method_access
