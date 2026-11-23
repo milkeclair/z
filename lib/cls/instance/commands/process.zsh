@@ -89,6 +89,7 @@ z.cls.instance.commands._install() {
 #  z.cls.instance.commands._uninstall z_cls_12345_1.increment
 #  # 変更後: z_cls_12345_1.incrementの生成済みコマンドを削除
 z.cls.instance.commands._uninstall() {
+  local REPLY=""
   local z_cls_command
 
   for z_cls_command in "$@"; do

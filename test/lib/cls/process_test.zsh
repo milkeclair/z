@@ -521,6 +521,72 @@ z.t.describe "z.cls.new"; {
   }
 }
 
+z.t.describe "z.cls.borrow"; {
+  z.t.context "読み取り専用で貸し出す場合"; {
+    z.t.it "借用中だけgetterを使え、所有者側の変更も拒否する"; {
+      () {
+        z.cls.draw ReadOnlyBorrow
+          z.cls.attr count default=5
+          z.cls.fn value '$self.count.get'
+        z.cls.drew
+
+        local owner="" destination="" escaped=""
+        z.cls.new ReadOnlyBorrow owner || return 1
+        read_borrowed_count() {
+          local borrowed=$1
+          escaped=$borrowed
+          local setter=$borrowed.count.set
+          z.t.expect "${+functions[$setter]}" 0
+
+          $owner.count.set 7 2>/dev/null
+          z.t.expect.status.is.false
+          $owner.value 2>/dev/null
+          z.t.expect.status.is.false
+          z.cls.owner.move from=owner to=destination 2>/dev/null
+          z.t.expect.status.is.false
+          z.cls.delete owner 2>/dev/null
+          z.t.expect.status.is.false
+
+          $borrowed.count.get || return 1
+          return 7
+        }
+
+        local result=0
+        z.cls.borrow from=owner read_borrowed_count || result=$?
+        local reply=$REPLY
+        z.t.expect "$result" 7
+        z.t.expect "$reply" 5
+
+        local getter=$escaped.count.get
+        z.t.expect "${+functions[$getter]}" 0
+        z.t.expect "${+z_cls_references[$escaped]}" 0
+
+        $owner.count.set 8
+        $owner.value
+        z.t.expect.reply 8
+        z.cls.delete owner
+        unfunction read_borrowed_count
+      }
+    }
+  }
+
+  z.t.context "コールバックを特定できない場合"; {
+    z.t.it "所有者の更新権限を保ったまま失敗する"; {
+      () {
+        local owner=""
+        z.cls.new TestCounter owner || return 1
+        z.cls.borrow from=owner missing_borrow_callback 2>/dev/null
+        z.t.expect.status.is.false
+
+        $owner.count.set 6
+        $owner.count.get
+        z.t.expect.reply 6
+        z.cls.delete owner
+      }
+    }
+  }
+}
+
 z.t.describe "z.cls.delete"; {
   z.t.context "errexitが有効な場合"; {
     z.t.it "errexit下で生成した関数と状態を削除する"; {

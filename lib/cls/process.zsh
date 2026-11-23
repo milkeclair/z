@@ -240,6 +240,61 @@ z.cls.new() {
   REPLY=$z_cls_id
 }
 
+# 指定した関数の実行中だけ、実体の属性を読み取れる参照を渡す。
+#
+# $from: 現在の所有変数名
+# $1: 借用参照を第一引数で受け取る関数名
+# REPLY: 関数の結果
+# return: 関数の終了コード。借用を開始できない場合は1
+#
+# example:
+#  # 前提: savedはcount=7の実体を所有している
+#  read_count() { local borrowed=$1; $borrowed.count.get }
+#  z.cls.borrow from=saved read_count
+#  # REPLY: 7
+z.cls.borrow() {
+  z.cls.store._ensure
+
+  z.int.is.eq $# 2 || return 1
+  z.arg.named from "$@" && local z_cls_from=$REPLY
+  z.arg.named.shift from "$@"
+  local z_cls_callback=$REPLY[1]
+  if ! z.cls.is._attribute "$z_cls_from" || ! z.var.exists "functions[$z_cls_callback]"; then
+    z.io.error "Expected an owner and a callback function."
+    return 1
+  fi
+
+  local z_cls_owner=${(P)z_cls_from:-}
+  local z_cls_id=${z_cls_references[$z_cls_owner]:-$z_cls_owner}
+  if ! z.cls.owner._is_current "$z_cls_from" "$z_cls_owner" ||
+      [[ -n ${z_cls_active[$z_cls_id]-} ]]; then
+    z.io.error "Expected the owner of an inactive instance."
+    return 1
+  fi
+
+  local z_cls_ref="z_cls_ref_${$}_$(( ++z_cls_next_reference ))"
+  z.cls.instance._commands "$z_cls_instances[$z_cls_id]" "$z_cls_ref" get
+  local -a z_cls_commands=("${(@)REPLY}")
+
+  z.cls.instance.commands._validate "${z_cls_commands[@]}" || return 1
+  z.cls.instance.commands._install "${z_cls_commands[@]}" || return 1
+
+  z_cls_references[$z_cls_ref]=$z_cls_id
+  z_cls_borrow_counts[$z_cls_id]=$(( ${z_cls_borrow_counts[$z_cls_id]:-0} + 1 ))
+  local z_cls_result=0
+  {
+    "$z_cls_callback" "$z_cls_ref"
+  } always {
+    z_cls_result=$?
+    unset "z_cls_references[$z_cls_ref]"
+    z.cls.instance.commands._uninstall "${z_cls_commands[@]}"
+    z_cls_borrow_counts[$z_cls_id]=$(( z_cls_borrow_counts[$z_cls_id] - 1 ))
+    (( z_cls_borrow_counts[$z_cls_id] )) || unset "z_cls_borrow_counts[$z_cls_id]"
+  }
+
+  return $z_cls_result
+}
+
 # 実体、生成したコマンド、保存済みの属性を削除する。
 #
 # $1: 実体の変数名または参照
