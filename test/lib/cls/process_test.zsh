@@ -624,6 +624,67 @@ z.t.describe "z.cls.borrow"; {
     }
   }
 
+  z.t.context "一時参照のコマンド名が途中で衝突する場合"; {
+    z.t.it "既存関数を残し、今回登録した関数と借用状態を片付ける"; {
+      () {
+        z.cls.draw BorrowCollision
+          z.cls.attr count default=0
+          z.cls.fn value '$self.count.get'
+        z.cls.drew
+
+        local owner="" called=0
+        z.cls.new BorrowCollision owner || return 1
+        unused_borrow_callback() { called=1 }
+
+        local candidate="z_cls_ref_${$}_$(( z_cls_next_reference + 1 ))"
+        local occupied=$candidate.count.get
+        local prepared=$candidate.value
+        functions[$occupied]='REPLY=existing'
+        local before=$functions[$occupied]
+
+        z.cls.borrow from=owner unused_borrow_callback 2>/dev/null
+        z.t.expect.status.is.false
+
+        z.t.expect "$called" 0
+        z.t.expect "$functions[$occupied]" "$before"
+        z.t.expect "${+functions[$prepared]}" 0
+        z.t.expect "${+z_cls_references[$candidate]}" 0
+        z.t.expect "${+z_cls_borrow_counts[$owner]}" 0
+
+        unfunction "$occupied" unused_borrow_callback
+        z.cls.delete owner
+      }
+    }
+  }
+
+  z.t.context "コールバックが一時コマンドを置き換えた場合"; {
+    z.t.it "置き換えた関数を残し、元の実体への参照を失効させる"; {
+      () {
+        local owner="" borrowed=""
+        z.cls.new TestCounter owner || return 1
+        replace_borrow_callback() {
+          borrowed=$1
+          local replacement=$borrowed.value
+          functions[$replacement]='REPLY=replaced'
+        }
+
+        z.cls.borrow from=owner replace_borrow_callback
+        z.t.expect.status.is.true
+
+        local replacement=$borrowed.value
+        local getter=$borrowed.count.get
+
+        "$replacement"
+        z.t.expect.reply replaced
+        z.t.expect "${+functions[$getter]}" 0
+        z.t.expect "${+z_cls_references[$borrowed]}" 0
+
+        unfunction "$replacement" replace_borrow_callback
+        z.cls.delete owner
+      }
+    }
+  }
+
   z.t.context "コールバックを特定できない場合"; {
     z.t.it "所有者の更新権限を保ったまま失敗する"; {
       () {
