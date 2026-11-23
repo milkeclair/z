@@ -17,11 +17,16 @@ z.cls.borrow._with() {
   shift 2
 
   local z_cls_ref="z_cls_ref_${$}_$(( ++z_cls_next_reference ))"
-  z.cls.instance._commands "$z_cls_instances[$z_cls_id]" "$z_cls_ref" read
-  local -a z_cls_commands=("${(@)REPLY}")
+  local -a z_cls_commands=()
 
-  z.cls.instance.commands._validate "${z_cls_commands[@]}" || return 1
-  z.cls.instance.commands._install "${z_cls_commands[@]}" || return 1
+  () {
+    local REPLY=""
+    z.cls.instance._commands "$z_cls_instances[$z_cls_id]" "$z_cls_ref" read
+    z_cls_commands=("${(@)REPLY}")
+
+    z.cls.instance.commands._validate "${z_cls_commands[@]}" || return 1
+    z.cls.instance.commands._install "${z_cls_commands[@]}"
+  } || return 1
 
   z_cls_references[$z_cls_ref]=$z_cls_id
   z_cls_borrow_counts[$z_cls_id]=$(( ${z_cls_borrow_counts[$z_cls_id]:-0} + 1 ))

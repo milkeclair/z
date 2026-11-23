@@ -530,6 +530,7 @@ z.t.describe "z.cls.borrow"; {
           z.cls.fn value '$self.count.get'
           z.cls.fn write_value access=write '$self.count.set 6'
           z.cls.fn leak_self 'REPLY=$self'
+          z.cls.fn keep_reply ':'
           z.cls.fn try_write 'z.cls.instance.call._set "$self" count 6'
         z.cls.drew
 
@@ -566,6 +567,10 @@ z.t.describe "z.cls.borrow"; {
         local getter=$escaped.count.get
         z.t.expect "${+functions[$getter]}" 0
         z.t.expect "${+z_cls_references[$escaped]}" 0
+
+        REPLY=(before call)
+        $owner.keep_reply
+        z.t.expect.reply.is.arr before call
 
         $owner.leak_self
         local leaked=$REPLY
