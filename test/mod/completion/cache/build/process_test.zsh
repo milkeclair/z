@@ -2,7 +2,7 @@ source ${z_main}
 
 z.t.describe "z.completion.cache.build._names"; {
   z.t.context "補完の関数名キャッシュを構築する場合"; {
-    z.t.it "公開DSLの8関数だけを候補にする"; {
+    z.t.it "公開DSLだけを候補にする"; {
       source "$z_root/mod/completion/function/is/operator.zsh"
       source "$z_root/mod/completion/cache/build/process.zsh"
       local -a z_completion_function_names=()
@@ -18,7 +18,7 @@ z.t.describe "z.completion.cache.build._names"; {
 
       REPLY=("${class_names[@]}")
 
-      z.t.expect.reply.is.arr z.cls.abort z.cls.attr z.cls.delete z.cls.draw z.cls.drew z.cls.fn z.cls.fn.done z.cls.new z.cls.owner.move
+      z.t.expect.reply.is.arr z.cls.abort z.cls.attr z.cls.borrow z.cls.delete z.cls.draw z.cls.drew z.cls.fn z.cls.fn.done z.cls.new z.cls.owner.move
     }
   }
 
