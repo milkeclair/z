@@ -78,3 +78,7 @@ hydratorが通常の構文コマンドへクラスの意味を付加し、
 未定義のメンバーは`undefined-command`として、元のWordまたはコード引数内の位置へ診断します。
 `ClassCommandTarget.instance`は、具体的な実体が実行時に決まるself参照ではnullです。
 変数展開から実体を特定した場合は、その宣言を参照します。`counter.increment` は通常のコマンド名として解決します。
+
+同一の構文スコープで、宣言済みの変数間の `z.cls.owner.move from=counter to=saved` を追跡します。移動先を元のクラスへ結び付け、移動元でのメンバー呼び出しや削除には `class-reference-moved` を報告します。
+
+同じファイルで `z.cls.borrow from=saved read_count` のクラスと関数を特定できる場合、第1引数とそれを代入した読み取り専用ローカル変数から属性の取得を解決します。借用中の更新、メソッド呼び出し、移動、削除は `class-borrow-readonly` として報告します。条件分岐や動的な呼び出しで関係を絞れない場合は、実行時の検証に委ねます。

@@ -554,3 +554,125 @@ describe('hydrated class command targets', () => {
     ]);
   });
 });
+
+describe('class ownership diagnostics', () => {
+  const ownershipApi = 'z.cls.owner.move() { :; }\nz.cls.borrow() { :; }\n';
+
+  test('移動先を同じクラスに結び付け、古い参照の呼び出しを報告する', () => {
+    const scenario = fixture(
+      [
+        'typeset counter saved final',
+        'z.cls.new Counter counter',
+        'z.cls.owner.move from=counter to=saved',
+        '$counter.increment',
+        '$saved.count.get',
+        'z.cls.owner.move from=saved to=final || return 1',
+        '$saved.increment',
+        '$final.count.set 3',
+        '$final.missing',
+        'z.cls.delete counter',
+        '',
+      ].join('\n'),
+      classApi + ownershipApi + counterClass,
+    );
+
+    expect(scenario.items.map(({ code, range }) => [code, range.start.line])).toEqual([
+      ['class-reference-moved', 3],
+      ['class-reference-moved', 6],
+      ['undefined-command', 8],
+      ['class-reference-moved', 9],
+    ]);
+
+    const report = scenario.diagnostics.files.get(scenario.document.uri);
+    if (!report) throw new Error('Expected caller diagnostics');
+    const analysis = analyzeCalls(
+      scenario.snapshot,
+      report.file,
+      report.facts.calls,
+      scenario.diagnostics.context,
+    );
+    expect([...analysis.classTargets.values()].flat().map((target) => target.operation)).toEqual([
+      'get',
+      'set',
+    ]);
+  });
+
+  test('条件付きの移動や代入先の状態が不明な移動を確定しない', () => {
+    const scenario = fixture(
+      [
+        'typeset counter',
+        'z.cls.new Counter counter',
+        'if false; then',
+        '  typeset saved',
+        '  z.cls.owner.move from=counter to=saved',
+        'fi',
+        'z.cls.owner.move from=counter to=undeclared',
+        '$counter.increment',
+        '',
+      ].join('\n'),
+      classApi + ownershipApi + counterClass,
+    );
+    expect(scenario.items).toEqual([]);
+  });
+
+  test('借用中はgetterを解決し、借用参照と所有者の更新を報告する', () => {
+    const scenario = fixture(
+      [
+        'read_count() {',
+        '  local -r borrowed=$1',
+        '  $borrowed.count.get',
+        '  $1.count.get',
+        '  $borrowed.count.set 8',
+        '  $borrowed.increment',
+        '  $saved.count.set 9',
+        '  z.cls.delete borrowed',
+        '  z.cls.owner.move from=saved to=destination',
+        '}',
+        'typeset counter saved',
+        'z.cls.new Counter counter',
+        'z.cls.owner.move from=counter to=saved',
+        'z.cls.borrow from=saved read_count',
+        '$saved.count.set 10',
+        '',
+      ].join('\n'),
+      classApi + ownershipApi + counterClass,
+    );
+
+    expect(scenario.items.map(({ code, range }) => [code, range.start.line])).toEqual([
+      ['class-borrow-readonly', 4],
+      ['class-borrow-readonly', 5],
+      ['class-borrow-readonly', 6],
+      ['class-borrow-readonly', 7],
+      ['class-borrow-readonly', 8],
+    ]);
+
+    const report = scenario.diagnostics.files.get(scenario.document.uri);
+    if (!report) throw new Error('Expected caller diagnostics');
+    const analysis = analyzeCalls(
+      scenario.snapshot,
+      report.file,
+      report.facts.calls,
+      scenario.diagnostics.context,
+    );
+    expect([...analysis.classTargets.values()].flat().map((target) => target.operation)).toEqual([
+      'get',
+      'get',
+      'set',
+    ]);
+  });
+
+  test('通常の呼び出しがあるコールバックでは引数を借用参照と決めつけない', () => {
+    const scenario = fixture(
+      [
+        'read_count() { local -r borrowed=$1; $borrowed.count.set 8; }',
+        'typeset counter',
+        'z.cls.new Counter counter',
+        'z.cls.borrow from=counter read_count',
+        'read_count "$counter"',
+        '',
+      ].join('\n'),
+      classApi + ownershipApi + counterClass,
+    );
+    expect(scenario.items).toEqual([]);
+  });
+});

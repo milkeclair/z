@@ -23,6 +23,7 @@ import type { IgnoreControls } from './controls';
 import { ignored } from './controls';
 import { simpleParameter } from './facts';
 import { resolveSelfCommand } from './self';
+import { classOwnership, ownershipOperationIssue } from './ownership';
 import type { Diagnostics } from './type';
 
 export type { ResolutionContext } from './commandResolution';
@@ -197,6 +198,7 @@ export function analyzeCalls(
   const origin = scopes.at(-1);
   const mapRange = options.mapRange ?? ((range) => range);
   const incomplete = file.lexerDiagnostics.length > 0 || file.parserDiagnostics.length > 0;
+  const ownership = classOwnership(file, incomplete ? [] : commands);
   const initial = {
     diagnostics: collectArray<Diagnostics>(),
     targets: makeMap<SimpleCommandNode, FunctionDefinitionNode>(),
@@ -207,30 +209,39 @@ export function analyzeCalls(
     if (!word) return previous;
 
     const reference = functionCommand(command) ? classMemberReference(word) : null;
-    const member = reference
-      ? (resolveInstanceCommand(file, word, reference, context.classFiles) ??
-        (reference.binding === 'self'
-          ? resolveSelfCommand(file, word, reference.member, scopes)
-          : null))
-      : null;
+    const member =
+      ownershipOperationIssue(file, command, ownership) ??
+      (reference
+        ? (resolveInstanceCommand(file, word, reference, context.classFiles, ownership) ??
+          (reference.binding === 'self'
+            ? resolveSelfCommand(file, word, reference.member, scopes)
+            : null))
+        : null);
     if (member) {
-      if (member.target) {
+      if (!('code' in member) && member.target) {
         return {
           ...previous,
           classTargets: setEntry(previous.classTargets, command, [member.target]),
         };
       }
 
-      return options.ignores && ignored(options.ignores, word.range.start.line, 'undefined-command')
+      const issue =
+        'code' in member
+          ? member
+          : {
+              code: 'undefined-command',
+              message: member.name + ' is not defined in class ' + member.definition.name + '.',
+            };
+      return options.ignores && ignored(options.ignores, word.range.start.line, issue.code)
         ? previous
         : {
             ...previous,
             diagnostics: appendItems(previous.diagnostics, {
               severity: DiagnosticSeverity.Error,
-              code: 'undefined-command',
+              code: issue.code,
               range: protocolRange(mapRange(word.range)),
               source: 'z-ls',
-              message: member.name + ' is not defined in class ' + member.definition.name + '.',
+              message: issue.message,
             }),
           };
     }

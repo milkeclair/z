@@ -1,6 +1,6 @@
 import { decodeLiteral } from '../embeddedCode/literal';
-import { classMethodAt, type ZshFileHydration } from '../zshHydrator';
-import { locate, type WordNode, type WordPartNode } from '../zshParser/ast';
+import type { ZshFileHydration } from '../zshHydrator';
+import type { WordNode, WordPartNode } from '../zshParser/ast';
 import type {
   ClassAttribute,
   ClassDefinition,
@@ -8,6 +8,7 @@ import type {
   ClassInstance,
   ClassMethod,
 } from '../zshHydrator/classes';
+import { borrowAt, ownerAt, type ClassReferenceIssue, type Ownership } from './ownership';
 
 export type ClassCommandTarget = {
   readonly definition: ClassDefinition;
@@ -38,7 +39,9 @@ export function classMemberReference(
     part.kind === 'variableReference'
       ? part.name.value
       : part.kind === 'parameterExpansion'
-        ? /^\$\{([A-Za-z_][A-Za-z0-9_]*)\}$/.exec(part.raw)?.[1]
+        ? part.raw === '$1'
+          ? '1'
+          : /^\$\{([A-Za-z_][A-Za-z0-9_]*|1)\}$/.exec(part.raw)?.[1]
         : undefined;
   if (!binding) return null;
 
@@ -62,56 +65,47 @@ export function memberTarget(
   return attribute ? { definition, instance, member: attribute, operation } : null;
 }
 
-/** 呼び出しに先行する同一スコープの束縛を解決する。 */
+/** 呼び出し位置で有効な所有参照と、借用に許可された属性の取得を解決する。 */
 export function resolveInstanceCommand(
   file: ZshFileHydration,
   word: WordNode,
   reference: NonNullable<ReturnType<typeof classMemberReference>>,
   files: readonly ClassFileHydration[],
-): {
-  readonly definition: ClassDefinition;
-  readonly name: string;
-  readonly target: ClassCommandTarget | null;
-} | null {
+  ownership: Ownership,
+):
+  | {
+      readonly definition: ClassDefinition;
+      readonly name: string;
+      readonly target: ClassCommandTarget | null;
+    }
+  | ClassReferenceIssue
+  | null {
   const offset = word.range.start.offset;
-  const candidates = file.classes.instances.filter(
-    (instance) =>
-      instance.name === reference.binding && instance.declaration.range.end.offset <= offset,
-  );
-  if (candidates.length === 0) return null;
-
-  const location = locate(file.query, offset);
-  if (location?.kind !== 'syntax') return null;
-
-  const scope = location.path.findLast((node) => node.kind === 'functionDefinition') ?? null;
-  const method = classMethodAt(file.classes, scope, offset);
-  const scoped = candidates.filter(({ scope: instanceScope }) => {
-    if (method)
-      return (
-        instanceScope.kind === 'classMethod' && instanceScope.declaration === method.declaration
-      );
-    if (scope) return instanceScope.kind === 'function' && instanceScope.declaration === scope;
-    return instanceScope.kind === 'file';
-  });
-  if (scoped.length !== 1) return null;
-
-  const [instance] = scoped;
-  const declaration = locate(file.query, instance.declaration.range.start.offset);
-  if (declaration?.kind !== 'syntax') return null;
-
-  const list = declaration.path.findLast((node) => node.kind === 'list');
-  if (!list || !location.path.includes(list)) return null;
+  const name = '$' + reference.binding + '.' + reference.member;
+  const borrowed = borrowAt(file, reference.binding, offset, ownership);
+  const binding = borrowed ? null : ownerAt(file, reference.binding, offset, ownership.moves);
+  const instance = borrowed ?? binding?.instance;
+  if (!instance) return null;
+  if (binding?.state === 'moved') {
+    return {
+      code: 'class-reference-moved',
+      message: name + ' uses a reference whose ownership was moved.',
+    };
+  }
 
   for (let index = files.length - 1; index >= 0; index--) {
     const definition = files[index].definitions.findLast(
       (candidate) => candidate.name === instance.className && candidate.state === 'published',
     );
     if (definition) {
-      return {
-        definition,
-        name: '$' + reference.binding + '.' + reference.member,
-        target: memberTarget(definition, reference.member, instance),
-      };
+      const target = memberTarget(definition, reference.member, instance);
+      if (borrowed && target && target.operation !== 'get') {
+        return {
+          code: 'class-borrow-readonly',
+          message: name + ' cannot modify or call methods on a borrowed instance.',
+        };
+      }
+      return { definition, name, target };
     }
   }
 
