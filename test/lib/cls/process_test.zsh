@@ -570,6 +570,42 @@ z.t.describe "z.cls.borrow"; {
     }
   }
 
+  z.t.context "借用中に同じ実体をもう一度貸し出す場合"; {
+    z.t.it "内側の借用だけを終了し、外側が戻るまで所有者の更新を拒否する"; {
+      () {
+        local owner="" escaped=""
+        z.cls.new TestCounter owner || return 1
+
+        read_inner_borrow() {
+          local borrowed=$1
+          escaped=$borrowed
+          $borrowed.count.get
+        }
+
+        read_outer_borrow() {
+          local borrowed=$1
+          z.cls.borrow from=owner read_inner_borrow || return 1
+          local inner_getter=$escaped.count.get
+          z.t.expect "${+functions[$inner_getter]}" 0
+
+          $owner.count.set 9 2>/dev/null
+          z.t.expect.status.is.false
+
+          $borrowed.count.get
+        }
+
+        z.cls.borrow from=owner read_outer_borrow
+        z.t.expect.reply 0
+
+        $owner.count.set 9
+        $owner.count.get
+        z.t.expect.reply 9
+        z.cls.delete owner
+        unfunction read_outer_borrow read_inner_borrow
+      }
+    }
+  }
+
   z.t.context "コールバックを特定できない場合"; {
     z.t.it "所有者の更新権限を保ったまま失敗する"; {
       () {
