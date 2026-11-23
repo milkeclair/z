@@ -189,25 +189,26 @@ z.cls.instance.call._run() {
   z.cls.instance.call._validate "$z_cls_instance" "$1" "$z_cls_access" || return 1
   (( ${+z_cls_bodies[$z_cls_class:$2]} )) || return 1
 
-  if [[ $z_cls_access == read && ${z_cls_owner_refs[$z_cls_instance]:-$z_cls_instance} == "$1" ]]; then
-    z.cls.borrow._with "$z_cls_instance" z.cls.instance.call._run "${@:2}"
-    return $?
+  local z_cls_body=$z_cls_bodies[$z_cls_class:$2]
+  local z_cls_activated=0
+  if [[ -z ${z_cls_active[$z_cls_instance]-} ]]; then
+    local z_cls_current_instance=$z_cls_instance
+    z_cls_active[$z_cls_instance]=1
+    z_cls_activated=1
   fi
 
-  if z.is.not.null "${z_cls_active[$z_cls_instance]:-}"; then
-    z.cls.instance._execute "$z_cls_instance" "$1" "${@:2}"
-    return $?
-  fi
-
-  local z_cls_current_instance=$z_cls_instance
   local z_cls_result=0
-
-  z_cls_active[$z_cls_instance]=1
   {
-    z.cls.instance._execute "$z_cls_instance" "$1" "${@:2}"
+    if [[ $z_cls_access == read && ${z_cls_owner_refs[$z_cls_instance]:-$z_cls_instance} == "$1" ]]; then
+      z.cls.borrow._with "$z_cls_instance" z.cls.instance._execute "$z_cls_body" "${@:3}"
+    else
+      z.cls.instance._execute "$1" "$z_cls_body" "${@:3}"
+    fi
   } always {
     z_cls_result=$?
-    unset "z_cls_active[$z_cls_instance]"
+    if (( z_cls_activated )); then
+      unset "z_cls_active[$z_cls_instance]"
+    fi
   }
 
   return $z_cls_result

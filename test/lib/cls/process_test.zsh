@@ -624,6 +624,29 @@ z.t.describe "z.cls.borrow"; {
     }
   }
 
+  z.t.context "所有者のreadメソッドで一時コマンドを作れない場合"; {
+    z.t.it "実体の実行中フラグを解除し、再実行できる"; {
+      () {
+        local owner=""
+        z.cls.new TestCounter owner || return 1
+
+        local candidate="z_cls_ref_${$}_$(( z_cls_next_reference + 1 ))"
+        local occupied=$candidate.count.get
+        functions[$occupied]='REPLY=occupied'
+
+        $owner.value 2>/dev/null
+        z.t.expect.status.is.false
+        z.t.expect "${+z_cls_active[$owner]}" 0
+        z.t.expect "${+z_cls_references[$candidate]}" 0
+
+        unfunction "$occupied"
+        $owner.value
+        z.t.expect.reply 0
+        z.cls.delete owner
+      }
+    }
+  }
+
   z.t.context "一時参照のコマンド名が途中で衝突する場合"; {
     z.t.it "既存関数を残し、今回登録した関数と借用状態を片付ける"; {
       () {
