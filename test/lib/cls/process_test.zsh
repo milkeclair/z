@@ -258,7 +258,7 @@ z.t.describe "z.cls.new"; {
         local -r z_cls_class=caller_class
         z.cls.draw ScopedInternals
           z.cls.attr count default=0
-          z.cls.fn increment '$self.count.get || return 1; $self.count.set "$(( REPLY + 1 ))" || return 1; $self.count.get'
+          z.cls.fn increment access=write '$self.count.get || return 1; $self.count.set "$(( REPLY + 1 ))" || return 1; $self.count.get'
         z.cls.drew
 
         local object=""
@@ -283,7 +283,7 @@ z.t.describe "z.cls.new"; {
       () {
         z.cls.draw FormerPrefix
           z.cls.attr __z_cls_value default=0
-          z.cls.fn increment '$self.__z_cls_value.get || return 1; $self.__z_cls_value.set "$(( REPLY + 1 ))" || return 1; $self.__z_cls_value.get'
+          z.cls.fn increment access=write '$self.__z_cls_value.get || return 1; $self.__z_cls_value.set "$(( REPLY + 1 ))" || return 1; $self.__z_cls_value.get'
         z.cls.drew
 
         local object=""
@@ -528,6 +528,9 @@ z.t.describe "z.cls.borrow"; {
         z.cls.draw ReadOnlyBorrow
           z.cls.attr count default=5
           z.cls.fn value '$self.count.get'
+          z.cls.fn write_value access=write '$self.count.set 6'
+          z.cls.fn leak_self 'REPLY=$self'
+          z.cls.fn try_write 'z.cls.instance.call._set "$self" count 6'
         z.cls.drew
 
         local owner="" destination="" escaped=""
@@ -540,8 +543,11 @@ z.t.describe "z.cls.borrow"; {
 
           $owner.count.set 7 2>/dev/null
           z.t.expect.status.is.false
-          $owner.value 2>/dev/null
+          $owner.write_value 2>/dev/null
           z.t.expect.status.is.false
+
+          $borrowed.value
+          z.t.expect.reply 5
           z.cls.owner.move from=owner to=destination 2>/dev/null
           z.t.expect.status.is.false
           z.cls.delete owner 2>/dev/null
@@ -560,6 +566,13 @@ z.t.describe "z.cls.borrow"; {
         local getter=$escaped.count.get
         z.t.expect "${+functions[$getter]}" 0
         z.t.expect "${+z_cls_references[$escaped]}" 0
+
+        $owner.leak_self
+        local leaked=$REPLY
+        z.t.expect "${+z_cls_references[$leaked]}" 0
+
+        $owner.try_write 2>/dev/null
+        z.t.expect.status.is.false
 
         $owner.count.set 8
         $owner.value

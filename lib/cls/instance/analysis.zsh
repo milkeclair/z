@@ -2,7 +2,7 @@
 #
 # $1: クラス名
 # $2: 実体参照
-# $3?: getの場合は属性の読み取り用コマンドだけを列挙
+# $3?: readの場合はgetterと読み取り専用メソッドを列挙
 # REPLY: コマンド名の配列。メンバーがない場合は空配列
 # return: 0
 #
@@ -17,15 +17,16 @@ z.cls.instance._commands() {
   local -a z_cls_wrappers=()
   local z_cls_member
 
-  if [[ ${3:-} != get ]]; then
-    for z_cls_member in ${=z_cls_class_methods[$z_cls_class]}; do
-      z_cls_wrappers+=("$z_cls_id.$z_cls_member")
-    done
-  fi
+  for z_cls_member in ${=z_cls_class_methods[$z_cls_class]}; do
+    if [[ ${3:-} == read && ${z_cls_method_access[$z_cls_class:$z_cls_member]:-read} == write ]]; then
+      continue
+    fi
+    z_cls_wrappers+=("$z_cls_id.$z_cls_member")
+  done
 
   for z_cls_member in ${=z_cls_class_attrs[$z_cls_class]}; do
     z_cls_wrappers+=("$z_cls_id.$z_cls_member.get")
-    [[ ${3:-} == get ]] || z_cls_wrappers+=("$z_cls_id.$z_cls_member.set")
+    [[ ${3:-} == read ]] || z_cls_wrappers+=("$z_cls_id.$z_cls_member.set")
   done
 
   REPLY=("${z_cls_wrappers[@]}")

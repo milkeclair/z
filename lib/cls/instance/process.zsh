@@ -40,30 +40,32 @@ z.cls.instance._call() {
 
 # メソッド本体を、readonlyのselfとメソッド引数を持つ関数スコープで実行する。
 #
-# $1: 実体の参照
-# $2: メソッド名
+# $1: 内部の実体ID
+# $2: selfに渡す参照
+# $3: メソッド名
 # $@?: メソッドに渡す引数
 # REPLY: メソッドの結果
 # return: メソッドの終了コード
 #
 # example:
 #  # 前提: objectがREPLY=$selfを実行するidentityメソッドを持つ
-#  z.cls.instance._execute "$object" identity
+#  z.cls.instance._execute "$object" "$object" identity
 #  # REPLY: objectと同じ実体参照
 #  # return: 0
 z.cls.instance._execute() {
   local z_cls_instance=$1
-  local z_cls_member=$2
+  local z_cls_self=$2
+  local z_cls_member=$3
   local z_cls_key="${z_cls_instances[$z_cls_instance]}:$z_cls_member"
 
   (( ${+z_cls_bodies[$z_cls_key]} )) || return 1
 
   local z_cls_body=$z_cls_bodies[$z_cls_key]
-  shift 2
+  shift 3
 
   # EXITトラップもメソッド引数で動くよう、本体専用のスコープを作る。
   () {
-    local -r self=${z_cls_owner_refs[$z_cls_instance]:-$z_cls_instance}
+    local -r self=$z_cls_self
 
     eval "$z_cls_body"
   } "$@"

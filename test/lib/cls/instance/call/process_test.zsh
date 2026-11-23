@@ -155,7 +155,7 @@ z.t.describe "z.cls.instance.call._access"; {
         z.cls.draw FailedSetter
           z.cls.attr count default=4
           z.cls.attr other default=13
-          z.cls.fn prepare
+          z.cls.fn prepare access=write
             $self.count.set 4
           z.cls.fn.done
         z.cls.drew
@@ -237,7 +237,7 @@ z.t.describe "z.cls.instance.call._run"; {
       () {
         z.cls.draw DirectRunScope
           z.cls.attr count default=0
-          z.cls.fn fail
+          z.cls.fn fail access=write
             $self.count.set 4 || return 1
             $self.count.get || return 1
             REPLY="failed:$REPLY"
@@ -545,10 +545,10 @@ z.t.describe "z.cls.instance.call._run"; {
     z.t.it "selfを同じIDに保ち、外側の実行中フラグも保持する"; {
       () {
         z.cls.draw SameSelf
-          z.cls.fn identity
+          z.cls.fn identity access=write
             REPLY=$self
           z.cls.fn.done
-          z.cls.fn nested
+          z.cls.fn nested access=write
             local before=$self
             $self.identity || return 1
             local nested_id=$REPLY
@@ -578,10 +578,10 @@ z.t.describe "z.cls.instance.call._run"; {
     z.t.it "内側だけselfを切り替え、戻った後は外側のIDを使う"; {
       () {
         z.cls.draw DifferentSelf
-          z.cls.fn identity
+          z.cls.fn identity access=write
             REPLY=$self
           z.cls.fn.done
-          z.cls.fn bounce
+          z.cls.fn bounce access=write
             local before=$self
             $1.identity || return 1
             local other_id=$REPLY
@@ -614,7 +614,7 @@ z.t.describe "z.cls.instance.call._run"; {
       () {
         local -r self=caller_self
         z.cls.draw ReadonlySelf
-          z.cls.fn inspect
+          z.cls.fn inspect access=write
             local before=$self
             (self=replacement) 2>/dev/null
             local assignment_status=$?

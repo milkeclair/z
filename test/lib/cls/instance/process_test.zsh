@@ -6,7 +6,7 @@ z.t.describe "z.cls.instance._call"; {
       () {
         z.cls.draw DirectCall
           z.cls.attr count default=0
-          z.cls.fn add '$self.count.get || return 1; $self.count.set "$(( REPLY + $1 ))" || return 1; $self.count.get'
+          z.cls.fn add access=write '$self.count.get || return 1; $self.count.set "$(( REPLY + $1 ))" || return 1; $self.count.get'
         z.cls.drew
 
         local object=""
@@ -46,7 +46,7 @@ z.t.describe "z.cls.instance._execute"; {
       local literal=outer
       local exit_arg=""
 
-      z.cls.instance._execute execute_ref fail argument
+      z.cls.instance._execute execute_ref execute_ref fail argument
       local call_status=$?
       local call_reply=$REPLY
 

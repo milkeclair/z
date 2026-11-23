@@ -16,6 +16,7 @@ z.cls.capture._start() {
   z.cls.capture._watch
 
   typeset -g +x z_cls_capture_discard=${4:-0}
+  typeset -g +x z_cls_capture_access=${5:-read}
   typeset -g +x z_cls_capture_done_result=0
   typeset -g +x z_cls_capture_stack=$2
   typeset -g +x z_cls_capture_file=$3
@@ -211,7 +212,7 @@ z.cls.capture._method() {
     return 0
   fi
 
-  z.cls.store._method "$z_cls_drawing" "$z_cls_capture_method" "$z_cls_capture_body"
+  z.cls.store._method "$z_cls_drawing" "$z_cls_capture_method" "$z_cls_capture_body" "$z_cls_capture_access"
   z_cls_capture_method=''
   z.is.not.null "$z_cls_drawing" || z.cls.capture._stop
 }

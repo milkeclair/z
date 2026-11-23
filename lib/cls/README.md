@@ -9,13 +9,13 @@
 z.cls.draw Counter
   z.cls.attr count default=0
 
-  z.cls.fn increment
+  z.cls.fn increment access=write
     $self.count.get || return 1
     $self.count.set "$(( REPLY + 1 ))" || return 1
     $self.count.get
   z.cls.fn.done
 
-  z.cls.fn add
+  z.cls.fn add access=write
     z.arg.named count "$@" && local count=$REPLY
     z.int.is.match "$count" || return 1
     $self.count.get || return 1
@@ -141,7 +141,7 @@ z.cls.borrow from=saved read_count
 # REPLY: 5
 ```
 
-借用参照から呼べるのは属性の getter です。借用中は所有者側も実体の更新、メソッド呼び出し、所有権の移動、削除ができません。関数から戻ると借用参照とそのコピーが失効し、所有者は再び実体を更新できます。
+借用参照からは属性の getter と読み取り専用メソッドを呼べます。借用中は所有者側も実体の更新、書き込みメソッドの呼び出し、所有権の移動、削除ができません。関数から戻ると借用参照とそのコピーが失効し、所有者は再び実体を更新できます。
 
 ## 定義と呼出しの規則
 
@@ -155,7 +155,8 @@ z.cls.borrow from=saved read_count
 - 属性名は通常の変数名にします。Zshの特殊パラメータと`REPLY`・`reply`は予約名です。
 - 実体参照の代入先は、書込み可能な通常のスカラー変数にします。
   作成後はreadonlyになりますが、属性は引き続き更新できます。
-- `z.cls.fn name`と`z.cls.fn.done`は、独立した無条件の文として記述します。
+- メソッドの既定権限は `read` です。更新するメソッドは `z.cls.fn name access=write` で宣言します。読み取り専用メソッドの `$self` は、呼び出し中だけ有効な読み取り参照です。
+- `z.cls.fn`と`z.cls.fn.done`は、独立した無条件の文として記述します。
   本体内の引用、コメント、ヒアドキュメント、パイプ、条件分岐、通常のループはZshの構文です。
 - `z.cls.fn name 'body'`で短い本体を引数として登録することもできます。
 - クラスの境界は`z.cls.draw`と`z.cls.drew`、メソッド本体の境界は`z.cls.fn`と`z.cls.fn.done`です。字下げは読みやすさのために使います。

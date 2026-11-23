@@ -183,10 +183,19 @@ z.cls.instance.call._access_typed() {
 #  # 変更後: countは4、実行中フラグは解除済み
 z.cls.instance.call._run() {
   local z_cls_instance=${z_cls_references[$1]:-$1}
-  z.cls.instance.call._validate "$z_cls_instance" "$1" write || return 1
+  local z_cls_class=${z_cls_instances[$z_cls_instance]-}
+  local z_cls_access=${z_cls_method_access[$z_cls_class:$2]:-read}
+
+  z.cls.instance.call._validate "$z_cls_instance" "$1" "$z_cls_access" || return 1
+  (( ${+z_cls_bodies[$z_cls_class:$2]} )) || return 1
+
+  if [[ $z_cls_access == read && ${z_cls_owner_refs[$z_cls_instance]:-$z_cls_instance} == "$1" ]]; then
+    z.cls.borrow._with "$z_cls_instance" z.cls.instance.call._run "${@:2}"
+    return $?
+  fi
 
   if z.is.not.null "${z_cls_active[$z_cls_instance]:-}"; then
-    z.cls.instance._execute "$z_cls_instance" "${@:2}"
+    z.cls.instance._execute "$z_cls_instance" "$1" "${@:2}"
     return $?
   fi
 
@@ -195,7 +204,7 @@ z.cls.instance.call._run() {
 
   z_cls_active[$z_cls_instance]=1
   {
-    z.cls.instance._execute "$z_cls_instance" "${@:2}"
+    z.cls.instance._execute "$z_cls_instance" "$1" "${@:2}"
   } always {
     z_cls_result=$?
     unset "z_cls_active[$z_cls_instance]"

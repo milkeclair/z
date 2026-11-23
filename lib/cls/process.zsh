@@ -90,7 +90,7 @@ z.cls.attr() {
 #
 # example:
 #  # 前提: Counterを定義中で、属性countを登録している
-#  z.cls.fn increment
+#  z.cls.fn increment access=write
 #    $self.count.get || return 1
 #    $self.count.set "$(( REPLY + 1 ))" || return 1
 #    $self.count.get
@@ -102,23 +102,42 @@ z.cls.fn() {
 
   local invalid=0
   local key="$z_cls_drawing:${1:-}"
+  local access=read
+  local has_access=0
+  local -a body=()
+  local argument
 
-  if z.int.is.lt $# 1 || z.int.is.gt $# 2 || z.is.null "$z_cls_drawing" || ! z.cls.is._name "${1:-}"; then
+  for argument in "${@:2}"; do
+    case $argument in
+      access=*)
+        (( has_access )) && invalid=1
+        access=${argument#access=}
+        has_access=1
+        ;;
+      *) body+=("$argument") ;;
+    esac
+  done
+
+  if (( $# == 0 || ${#body} > 1 )) ||
+      z.is.null "$z_cls_drawing" || ! z.cls.is._name "${1:-}"; then
     z.io.error "Expected an active class and a valid method name."
     invalid=1
   elif z.var.exists "z_cls_bodies[$key]"; then
     z.io.error "Method $1 already exists."
     invalid=1
+  elif (( invalid )) || [[ $access != read && $access != write ]]; then
+    z.io.error "Expected at most one access option, read or write."
+    invalid=1
   fi
 
-  if z.int.is.gteq $# 2; then
+  if (( ${#body} )); then
     z.int.is.zero $invalid || return 1
-    z.cls.store._method "$z_cls_drawing" "$1" "$2"
+    z.cls.store._method "$z_cls_drawing" "$1" "$body[1]" "$access"
     return 0
   fi
 
   unsetopt localoptions
-  z.cls.capture._start "${1:-invalid}" "${(j:|:)funcstack[2,-1]}" "${funcfiletrace[1]%:*}" "$invalid"
+  z.cls.capture._start "${1:-invalid}" "${(j:|:)funcstack[2,-1]}" "${funcfiletrace[1]%:*}" "$invalid" "$access"
 }
 
 # メソッドの収集を終えたクラスを公開する。
@@ -183,7 +202,7 @@ z.cls.abort() {
 
   z.hash.keys z_cls_bodies
   for key in "${(@)REPLY}"; do
-    z.str.start_with "$key" "$z_cls_drawing:" && unset "z_cls_bodies[$key]"
+    z.str.start_with "$key" "$z_cls_drawing:" && unset "z_cls_bodies[$key]" "z_cls_method_access[$key]"
   done
 
   if z.is.not.null "$z_cls_drawing"; then
@@ -272,27 +291,7 @@ z.cls.borrow() {
     return 1
   fi
 
-  local z_cls_ref="z_cls_ref_${$}_$(( ++z_cls_next_reference ))"
-  z.cls.instance._commands "$z_cls_instances[$z_cls_id]" "$z_cls_ref" get
-  local -a z_cls_commands=("${(@)REPLY}")
-
-  z.cls.instance.commands._validate "${z_cls_commands[@]}" || return 1
-  z.cls.instance.commands._install "${z_cls_commands[@]}" || return 1
-
-  z_cls_references[$z_cls_ref]=$z_cls_id
-  z_cls_borrow_counts[$z_cls_id]=$(( ${z_cls_borrow_counts[$z_cls_id]:-0} + 1 ))
-  local z_cls_result=0
-  {
-    "$z_cls_callback" "$z_cls_ref"
-  } always {
-    z_cls_result=$?
-    unset "z_cls_references[$z_cls_ref]"
-    z.cls.instance.commands._uninstall "${z_cls_commands[@]}"
-    z_cls_borrow_counts[$z_cls_id]=$(( z_cls_borrow_counts[$z_cls_id] - 1 ))
-    (( z_cls_borrow_counts[$z_cls_id] )) || unset "z_cls_borrow_counts[$z_cls_id]"
-  }
-
-  return $z_cls_result
+  z.cls.borrow._with "$z_cls_id" "$z_cls_callback"
 }
 
 # 実体、生成したコマンド、保存済みの属性を削除する。
