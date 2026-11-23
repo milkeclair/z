@@ -23,6 +23,45 @@ z.t.describe "z.cls.owner.move"; {
     }
   }
 
+  z.t.context "移動元より移動先のスコープが短い場合"; {
+    z.t.it "古い参照を即座に失効させ、移動先の終了後も呼び出しを拒否する"; {
+      () {
+        z.cls.draw OwnerLifetime
+          z.cls.attr count default=5
+          z.cls.fn value '$self.count.get'
+        z.cls.drew
+
+        local counter="" escaped=""
+        z.cls.new OwnerLifetime counter || return 1
+        local original=$counter
+
+        () {
+          local saved=""
+          z.cls.owner.move from=counter to=saved || return 1
+          escaped=$saved
+
+          $saved.count.set 7
+          $saved.value
+          z.t.expect.reply 7
+
+          z.t.expect "$counter" "$original"
+          [[ $saved != "$counter" ]]
+          z.t.expect.status.is.true
+
+          local old_command=$counter.value
+          z.t.expect "${+functions[$old_command]}" 0
+
+          z.cls.delete "$original" 2>/dev/null
+          z.t.expect.status.is.false
+        }
+
+        $escaped.value 2>/dev/null
+        z.t.expect.status.is.false
+        z.t.expect "${+z_cls_instances[$original]}" 1
+      }
+    }
+  }
+
   z.t.context "借用した変数を移動元にした場合"; {
     z.t.it "既存の所有者を残して拒否する"; {
       () {

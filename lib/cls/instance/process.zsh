@@ -22,9 +22,9 @@ z.cls.instance._call() {
   local z_cls_operation=$2
   local z_cls_member=$3
 
-  z.is.not.null "${z_cls_instances[$1]:-}" && z_cls_instance=$1
+  [[ $1 == z_cls_* ]] && z_cls_instance=$1
   if z.is.null "$z_cls_instance"; then
-    z.cls.instance.call._validate "$z_cls_instance" "$1"
+    z.io.error "Instance reference $1 is not available in this scope."
     return 1
   fi
 
@@ -63,7 +63,7 @@ z.cls.instance._execute() {
 
   # EXITトラップもメソッド引数で動くよう、本体専用のスコープを作る。
   () {
-    local -r self=$z_cls_instance
+    local -r self=${z_cls_owner_refs[$z_cls_instance]:-$z_cls_instance}
 
     eval "$z_cls_body"
   } "$@"
@@ -144,19 +144,10 @@ z.cls.instance._snapshot() {
 #  # 変更後: 実体と、参照がなくなった生成コマンドを解放済み
 z.cls.instance._release() {
   local z_cls_id=$1
-  local z_cls_command
+  local z_cls_ref=${z_cls_owner_refs[$z_cls_id]:-$z_cls_id}
 
-  for z_cls_command in ${=z_cls_members[$z_cls_id]}; do
-    z_cls_wrapper_refs[$z_cls_command]=$(( z_cls_wrapper_refs[$z_cls_command] - 1 ))
-
-    z.int.is.zero $z_cls_wrapper_refs[$z_cls_command] || continue
-
-    if z.cls.instance._owns "$z_cls_command"; then
-      unfunction "$z_cls_command"
-    fi
-
-    unset "z_cls_wrapper_refs[$z_cls_command]"
-  done
+  unset "z_cls_references[$z_cls_ref]" "z_cls_owner_refs[$z_cls_id]"
+  z.cls.instance.commands._uninstall ${=z_cls_members[$z_cls_id]}
 
   local z_cls_attribute
 
@@ -176,6 +167,9 @@ z.cls.instance._release() {
     z_cls_active=()
     z_cls_wrapper_refs=()
     z_cls_owner_markers=()
+    z_cls_references=()
+    z_cls_owner_refs=()
+    z_cls_borrow_counts=()
     z_cls_gc_allocations=0
   fi
 }

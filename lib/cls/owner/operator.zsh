@@ -26,7 +26,8 @@ z.cls.owner._writable() {
   esac
 
   local z_cls_ref=${(P)z_cls_binding:-}
-  z.is.null "$z_cls_ref" || z.is.null "${z_cls_instances[$z_cls_ref]:-}"
+  local z_cls_id=${z_cls_references[$z_cls_ref]:-$z_cls_ref}
+  z.is.null "$z_cls_ref" || z.is.null "${z_cls_instances[$z_cls_id]:-}"
 }
 
 # 指定した変数が実体の現在の所有変数か検証する。
@@ -41,7 +42,10 @@ z.cls.owner._writable() {
 #  z.cls.owner._is_current counter "$counter"
 #  # return: 0
 z.cls.owner._is_current() {
-  local z_cls_marker=${z_cls_owner_markers[$2]:-}
+  local z_cls_id=${z_cls_references[$2]:-$2}
+  [[ "${z_cls_owner_refs[$z_cls_id]:-$z_cls_id}" == "$2" ]] || return 1
+
+  local z_cls_marker=${z_cls_owner_markers[$z_cls_id]:-}
   z.is.not.null "$z_cls_marker" || return 1
   z.str.includes "${parameters[$1]:-}" tied || return 1
 

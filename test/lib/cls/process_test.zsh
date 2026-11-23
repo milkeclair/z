@@ -643,7 +643,7 @@ z.t.describe "z.cls.delete"; {
             z.cls.new TestCounter object || return 1
 
             z.cls.owner.move from=object "to=owner_$index" || return 1
-            saved_refs+=("$object")
+            saved_refs+=("$REPLY")
           }
 
           z.t.expect.status.is.true

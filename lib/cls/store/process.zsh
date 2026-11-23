@@ -11,7 +11,7 @@
 z.cls.store._ensure() {
   if z.is.eq "${z_cls_store_ready:-0}" 1 &&
       z.var.exists z_cls_dispatch_programs && z.var.exists z_cls_owner_markers &&
-      z.var.exists z_cls_scalars; then
+      z.var.exists z_cls_scalars && z.var.exists z_cls_references; then
     return 0
   fi
 
@@ -30,6 +30,10 @@ z.cls.store._ensure() {
   z.var.exists z_cls_next_id || typeset -gi z_cls_next_id=0
   z.var.exists z_cls_owner_markers || typeset -gA z_cls_owner_markers
   z.var.exists z_cls_next_owner_id || typeset -gi +x z_cls_next_owner_id=0
+  z.var.exists z_cls_next_reference || typeset -gi +x z_cls_next_reference=0
+  z.var.exists z_cls_references || typeset -gA z_cls_references
+  z.var.exists z_cls_owner_refs || typeset -gA z_cls_owner_refs
+  z.var.exists z_cls_borrow_counts || typeset -gA z_cls_borrow_counts
   z.var.exists z_cls_gc_allocations || typeset -gi +x z_cls_gc_allocations=0
   z.var.exists z_cls_active || typeset -gA z_cls_active
   z.var.exists z_cls_drawing || typeset -g +x z_cls_drawing=''

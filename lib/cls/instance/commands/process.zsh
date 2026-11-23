@@ -44,6 +44,7 @@ z.cls.instance.commands._validate() {
 #  # return: 0
 #  # 変更後: z_cls_12345_1.incrementを登録し、参照数は1
 z.cls.instance.commands._install() {
+  local -a z_cls_installed=()
   local z_cls_command
 
   for z_cls_command in "$@"; do
@@ -65,8 +66,40 @@ z.cls.instance.commands._install() {
       z_cls_dispatch_programs[${z_cls_command#*.}]=$functions[$z_cls_template]
     fi
 
-    functions -c "$z_cls_template" "$z_cls_command"
+    if ! functions -c "$z_cls_template" "$z_cls_command"; then
+      z.cls.instance.commands._uninstall "${z_cls_installed[@]}"
+      return 1
+    fi
+
+    z_cls_installed+=("$z_cls_command")
     (( z_cls_wrapper_refs[$z_cls_command] += 1 ))
+  done
+
+  return 0
+}
+
+# 生成時に登録したコマンドを手放し、置き換えられていない本体を解放する。
+#
+# $@: 登録済みのコマンド名
+# REPLY: null
+# return: 0
+#
+# example:
+#  # 前提: z_cls_12345_1.incrementが実体用に1回登録されている
+#  z.cls.instance.commands._uninstall z_cls_12345_1.increment
+#  # 変更後: z_cls_12345_1.incrementの生成済みコマンドを削除
+z.cls.instance.commands._uninstall() {
+  local z_cls_command
+
+  for z_cls_command in "$@"; do
+    z_cls_wrapper_refs[$z_cls_command]=$(( z_cls_wrapper_refs[$z_cls_command] - 1 ))
+    z.int.is.zero $z_cls_wrapper_refs[$z_cls_command] || continue
+
+    if z.cls.instance._owns "$z_cls_command"; then
+      unfunction "$z_cls_command"
+    fi
+
+    unset "z_cls_wrapper_refs[$z_cls_command]"
   done
 
   return 0

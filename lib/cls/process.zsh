@@ -227,9 +227,11 @@ z.cls.new() {
   local -a z_cls_wrappers=("${(@)REPLY}")
 
   z.cls.instance.commands._validate "${z_cls_wrappers[@]}" || return 1
-  z.cls.owner._bind "$z_cls_id" "$z_cls_binding" || return 1
-
-  z.cls.instance.commands._install "${z_cls_wrappers[@]}"
+  z.cls.instance.commands._install "${z_cls_wrappers[@]}" || return 1
+  if ! z.cls.owner._bind "$z_cls_id" "$z_cls_binding"; then
+    z.cls.instance.commands._uninstall "${z_cls_wrappers[@]}"
+    return 1
+  fi
 
   z_cls_members[$z_cls_id]="${(j: :)z_cls_wrappers}"
   z_cls_instances[$z_cls_id]=$z_cls_class
@@ -256,12 +258,14 @@ z.cls.delete() {
 
   z.int.is.eq $# 1 || return 1
 
-  local z_cls_id=${(P)1:-}
+  local z_cls_ref=${(P)1:-}
+  [[ $1 == z_cls_* ]] && z_cls_ref=$1
+  local z_cls_id=${z_cls_references[$z_cls_ref]:-$z_cls_ref}
 
-  z.is.not.null "${z_cls_instances[$1]:-}" && z_cls_id=$1
+  z.cls.instance.call._validate "$z_cls_id" "$z_cls_ref" write || return 1
 
-  if z.is.null "${z_cls_instances[$z_cls_id]:-}" || z.is.not.null "${z_cls_active[$z_cls_id]:-}"; then
-    z.io.error "Expected an existing, inactive instance reference."
+  if [[ -n ${z_cls_active[$z_cls_id]-} ]]; then
+    z.io.error "Expected an inactive instance reference."
     return 1
   fi
 

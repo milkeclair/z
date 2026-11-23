@@ -4,6 +4,8 @@ z.t.describe "z.cls.instance.call._validate"; {
   z.t.context "生存中の実体の場合"; {
     z.t.it "実行を許可する"; {
       z.cls.store._ensure
+      local validate_marker=""
+      local -A z_cls_owner_markers=([validate_ref]=validate_marker)
       z_cls_instances[validate_ref]=ValidateCall
 
       z.cls.instance.call._validate validate_ref
@@ -28,6 +30,8 @@ z.t.describe "z.cls.instance.call._validate"; {
   z.t.context "別の実体の呼出しから再入する場合"; {
     z.t.it "実行中の実体を保護する"; {
       z.cls.store._ensure
+      local reentry_marker=""
+      local -A z_cls_owner_markers=([reentry_ref]=reentry_marker)
       z_cls_instances[reentry_ref]=ValidateReentry
       z_cls_active[reentry_ref]=1
       z.t.mock name=z.io.error

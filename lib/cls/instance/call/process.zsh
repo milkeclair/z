@@ -1,7 +1,8 @@
 # 生存中の実体かを確認し、他の実体の呼び出しからの再入を拒否する。
 #
 # $1: 解決済みの実体参照
-# $2?: エラーに表示する元の変数名
+# $2?: 呼び出しに使った参照
+# $3?: writeの場合は更新できる所有者参照に限る
 # REPLY: null
 # return: 0|1
 #
@@ -11,9 +12,19 @@
 #  # return: 0
 z.cls.instance.call._validate() {
   local z_cls_instance=$1
+  local z_cls_ref=${2:-$1}
+  local z_cls_owner=${z_cls_owner_refs[$z_cls_instance]:-$z_cls_instance}
+  local z_cls_marker=${z_cls_owner_markers[$z_cls_instance]-}
 
-  if z.is.null "${z_cls_instances[$z_cls_instance]:-}"; then
-    z.io.error "Instance reference ${2:-$1} is not available in this scope."
+  if [[ -z ${z_cls_instances[$z_cls_instance]-} || -z $z_cls_marker ]] ||
+      (( ! ${+parameters[$z_cls_marker]} )) ||
+      [[ $z_cls_owner != "$z_cls_ref" && ${z_cls_references[$z_cls_ref]-} != "$z_cls_instance" ]]; then
+    z.io.error "Instance reference $z_cls_ref is not available in this scope."
+    return 1
+  fi
+
+  if [[ ${3:-} == write && ( $z_cls_owner != "$z_cls_ref" || -n ${z_cls_borrow_counts[$z_cls_instance]-} ) ]]; then
+    z.io.error "Instance reference $z_cls_ref cannot modify a borrowed instance."
     return 1
   fi
 
@@ -40,17 +51,18 @@ z.cls.instance.call._validate() {
 #  # return: 0
 #  # 変更後: labelの値はhello
 z.cls.instance.call._set() {
-  z.cls.instance.call._validate "$1" || return 1
+  local z_cls_id=${z_cls_references[$1]:-$1}
+  z.cls.instance.call._validate "$z_cls_id" "$1" write || return 1
 
-  local z_cls_key="$1:$2"
+  local z_cls_key="$z_cls_id:$2"
   if (( ${+z_cls_values[$z_cls_key]} )); then
-    z.cls.instance.call._access "$1" set "$2" "${@:3}"
+    z.cls.instance.call._access "$z_cls_id" set "$2" "${@:3}"
     return $?
   fi
 
   z.int.is.eq $# 3 || return 1
 
-  local z_cls_default_key="${z_cls_instances[$1]}:$2"
+  local z_cls_default_key="${z_cls_instances[$z_cls_id]}:$2"
   (( ${+z_cls_defaults[$z_cls_default_key]} )) || return 1
 
   z_cls_scalars[$z_cls_key]=$3
@@ -170,12 +182,11 @@ z.cls.instance.call._access_typed() {
 #  # return: 7
 #  # 変更後: countは4、実行中フラグは解除済み
 z.cls.instance.call._run() {
-  z.cls.instance.call._validate "$1" || return 1
-
-  local z_cls_instance=$1
+  local z_cls_instance=${z_cls_references[$1]:-$1}
+  z.cls.instance.call._validate "$z_cls_instance" "$1" write || return 1
 
   if z.is.not.null "${z_cls_active[$z_cls_instance]:-}"; then
-    z.cls.instance._execute "$@"
+    z.cls.instance._execute "$z_cls_instance" "${@:2}"
     return $?
   fi
 
@@ -184,7 +195,7 @@ z.cls.instance.call._run() {
 
   z_cls_active[$z_cls_instance]=1
   {
-    z.cls.instance._execute "$@"
+    z.cls.instance._execute "$z_cls_instance" "${@:2}"
   } always {
     z_cls_result=$?
     unset "z_cls_active[$z_cls_instance]"
