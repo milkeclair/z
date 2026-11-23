@@ -20,6 +20,8 @@ export type ClassScopeLocation =
       readonly offset: number;
     };
 
+export type ClassMethodAccess = 'read' | 'write';
+
 export type ClassMethodBody =
   | {
       readonly kind: 'inline';
@@ -48,6 +50,7 @@ export type ClassInformation =
       readonly kind: 'classMethod';
       readonly name: string;
       readonly classOffset: number;
+      readonly access: ClassMethodAccess;
       readonly body: ClassMethodBody;
     }
   | {
@@ -73,6 +76,7 @@ export type ClassAttribute = {
 export type ClassMethod = {
   readonly kind: 'classMethod';
   readonly name: string;
+  readonly access: ClassMethodAccess;
   readonly declaration: SimpleCommandNode;
   readonly nameNode: WordNode;
   readonly body:

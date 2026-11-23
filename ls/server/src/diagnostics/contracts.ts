@@ -6,7 +6,9 @@ function sameParameter(left: ParameterDoc, right: ParameterDoc): boolean {
   if (
     left.kind !== right.kind ||
     left.optional !== right.optional ||
-    left.valueType !== right.valueType
+    left.valueType !== right.valueType ||
+    left.classReference?.className !== right.classReference?.className ||
+    left.classReference?.access !== right.classReference?.access
   ) {
     return false;
   }

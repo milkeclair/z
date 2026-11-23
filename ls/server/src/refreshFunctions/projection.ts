@@ -86,6 +86,7 @@ function legacyArgument(parameter: ParameterDoc): FuncArg {
   const common = {
     optional: parameter.optional,
     ...(parameter.valueType ? { valueType: parameter.valueType } : {}),
+    ...(parameter.classReference ? { classReference: parameter.classReference } : {}),
     ...(parameter.literalValues ? { literalValues: parameter.literalValues } : {}),
   };
 

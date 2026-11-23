@@ -8,7 +8,8 @@ import type {
   ClassInstance,
   ClassMethod,
 } from '../zshHydrator/classes';
-import { borrowAt, ownerAt, type ClassReferenceIssue, type Ownership } from './ownership';
+import { ownerAt, type ClassReferenceIssue, type Ownership } from './ownership';
+import { parameterAt } from './classContracts';
 
 export type ClassCommandTarget = {
   readonly definition: ClassDefinition;
@@ -39,9 +40,8 @@ export function classMemberReference(
     part.kind === 'variableReference'
       ? part.name.value
       : part.kind === 'parameterExpansion'
-        ? part.raw === '$1'
-          ? '1'
-          : /^\$\{([A-Za-z_][A-Za-z0-9_]*|1)\}$/.exec(part.raw)?.[1]
+        ? (/^\$([1-9][0-9]*)$/.exec(part.raw)?.[1] ??
+          /^\$\{([A-Za-z_][A-Za-z0-9_]*|[1-9][0-9]*)\}$/.exec(part.raw)?.[1])
         : undefined;
   if (!binding) return null;
 
@@ -65,6 +65,13 @@ export function memberTarget(
   return attribute ? { definition, instance, member: attribute, operation } : null;
 }
 
+export function memberRequiresWrite(target: ClassCommandTarget): boolean {
+  return (
+    target.operation === 'set' ||
+    (target.member.kind === 'classMethod' && target.member.access === 'write')
+  );
+}
+
 /** 呼び出し位置で有効な所有参照と、借用に許可された属性の取得を解決する。 */
 export function resolveInstanceCommand(
   file: ZshFileHydration,
@@ -82,27 +89,40 @@ export function resolveInstanceCommand(
   | null {
   const offset = word.range.start.offset;
   const name = '$' + reference.binding + '.' + reference.member;
-  const borrowed = borrowAt(file, reference.binding, offset, ownership);
-  const binding = borrowed ? null : ownerAt(file, reference.binding, offset, ownership.moves);
-  const instance = borrowed ?? binding?.instance;
-  if (!instance) return null;
-  if (binding?.state === 'moved') {
+  const parameter = ownership.typedFunctions
+    ? parameterAt(file, reference.binding, offset)?.classReference
+    : undefined;
+  if (parameter?.access === 'owner') return null;
+  const binding = parameter ? null : ownerAt(file, reference.binding, offset, ownership.moves);
+  const className = parameter?.className ?? binding?.className;
+  if (!className) return null;
+  if (binding?.state === 'maybe-uninitialized') {
+    return {
+      code: 'class-reference-uninitialized',
+      message: name + ' may refer to an uninitialized instance.',
+    };
+  }
+  if (binding?.state === 'moved' || binding?.state === 'maybe-moved') {
     return {
       code: 'class-reference-moved',
-      message: name + ' uses a reference whose ownership was moved.',
+      message:
+        name +
+        (binding.state === 'moved'
+          ? ' uses a reference whose ownership was moved.'
+          : ' uses a reference whose ownership may have moved.'),
     };
   }
 
   for (let index = files.length - 1; index >= 0; index--) {
     const definition = files[index].definitions.findLast(
-      (candidate) => candidate.name === instance.className && candidate.state === 'published',
+      (candidate) => candidate.name === className && candidate.state === 'published',
     );
     if (definition) {
-      const target = memberTarget(definition, reference.member, instance);
-      if (borrowed && target && target.operation !== 'get') {
+      const target = memberTarget(definition, reference.member, binding?.instance ?? null);
+      if (parameter?.access === 'read' && target && memberRequiresWrite(target)) {
         return {
           code: 'class-borrow-readonly',
-          message: name + ' cannot modify or call methods on a borrowed instance.',
+          message: name + ' requires write access to the instance.',
         };
       }
       return { definition, name, target };

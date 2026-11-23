@@ -1,7 +1,8 @@
-import { functionCommand } from '../connection/ast/cursor';
+import { namedKey } from '../connection/ast/word';
 import { literalWord } from '../refreshFunctions/word';
-import { classMethodAt, type ZshFileHydration } from '../zshHydrator';
+import { classMethodAt, documentationOf, type ZshFileHydration } from '../zshHydrator';
 import type { ClassInstance } from '../zshHydrator/classes';
+import { classArguments, commandName, parameterAt, variableArgument } from './classContracts';
 import {
   locate,
   type FunctionDefinitionNode,
@@ -11,27 +12,30 @@ import {
 } from '../zshParser/ast';
 
 export type ClassReferenceIssue = {
-  readonly code: 'class-reference-moved' | 'class-borrow-readonly';
+  readonly code:
+    | 'class-reference-moved'
+    | 'class-borrow-readonly'
+    | 'class-argument-type'
+    | 'class-owner-required'
+    | 'class-reference-uninitialized';
   readonly message: string;
 };
 
 type OwnerBinding = {
-  readonly instance: ClassInstance;
-  readonly state: 'owner' | 'moved';
+  readonly instance: ClassInstance | null;
+  readonly className: string;
+  readonly state: 'owner' | 'moved' | 'maybe-moved' | 'maybe-uninitialized';
 };
 
 type Move = {
   readonly from: string;
-  readonly to: string;
-  readonly instance: ClassInstance;
+  readonly to: string | null;
+  readonly instance: ClassInstance | null;
+  readonly className: string;
   readonly offset: number;
   readonly list: ListNode;
   readonly scope: Scope;
-};
-
-type Borrow = {
-  readonly instance: ClassInstance;
-  readonly owner: string;
+  readonly conditional: { readonly list: ListNode; readonly offset: number } | null;
 };
 
 type Scope = FunctionDefinitionNode | SimpleCommandNode | null;
@@ -42,7 +46,7 @@ type Site = {
 
 export type Ownership = {
   readonly moves: readonly Move[];
-  readonly callbacks: ReadonlyMap<FunctionDefinitionNode, Borrow | null>;
+  readonly typedFunctions: boolean;
 };
 
 function siteAt(file: ZshFileHydration, offset: number): Site | null {
@@ -55,12 +59,6 @@ function siteAt(file: ZshFileHydration, offset: number): Site | null {
     lists: location.path.filter((node) => node.kind === 'list'),
     scope: method?.declaration ?? scope,
   };
-}
-
-function commandName(command: SimpleCommandNode): string | null {
-  return command.commandName && functionCommand(command)
-    ? literalWord(command.commandName.word)
-    : null;
 }
 
 function standalone(item: ListItemNode): SimpleCommandNode | null {
@@ -160,17 +158,34 @@ export function ownerAt(
   const site = siteAt(file, offset);
   if (!site) return null;
 
-  const move = moves.findLast(
-    (event) =>
-      event.offset <= offset &&
-      (event.from === binding || event.to === binding) &&
-      event.scope === site.scope &&
-      site.lists.includes(event.list),
-  );
-  if (move) return { instance: move.instance, state: move.from === binding ? 'moved' : 'owner' };
+  for (let index = moves.length - 1; index >= 0; index--) {
+    const event = moves[index];
+    if (event.offset > offset || event.scope !== site.scope) continue;
+    if (event.from !== binding && event.to !== binding) continue;
+    if (site.lists.includes(event.list)) {
+      return {
+        instance: event.instance,
+        className: event.className,
+        state: event.from === binding ? 'moved' : 'owner',
+      };
+    }
+    if (
+      event.conditional &&
+      event.conditional.offset <= offset &&
+      site.lists.includes(event.conditional.list)
+    ) {
+      return {
+        instance: event.instance,
+        className: event.className,
+        state: event.from === binding ? 'maybe-moved' : 'maybe-uninitialized',
+      };
+    }
+  }
 
   const candidates = visibleInstances(file, site, offset, binding);
-  return candidates.length === 1 ? { instance: candidates[0], state: 'owner' } : null;
+  return candidates.length === 1
+    ? { instance: candidates[0], className: candidates[0].className, state: 'owner' }
+    : null;
 }
 
 function declares(command: SimpleCommandNode, name: string): boolean {
@@ -200,117 +215,132 @@ function writableDeclaration(command: SimpleCommandNode, name: string): boolean 
   );
 }
 
-/** 移動の命令と、クラスを特定できる同一ファイルの借用コールバックを収集する。 */
+function afterConditional(file: ZshFileHydration, offset: number): Move['conditional'] {
+  const location = locate(file.query, offset);
+  if (location?.kind !== 'syntax') return null;
+  const path = location.path;
+  const branch = path.findLastIndex((node) => node.kind === 'ifCommand');
+  if (
+    branch < 0 ||
+    path
+      .slice(branch + 1)
+      .some(
+        (node) =>
+          node.kind === 'subshellCommand' ||
+          node.kind === 'functionDefinition' ||
+          node.kind === 'commandSubstitution' ||
+          node.kind === 'processSubstitution',
+      )
+  )
+    return null;
+  const arm = path.slice(branch + 1).find((node) => node.kind === 'ifBranch');
+  const condition = arm?.condition.items.length === 1 ? standalone(arm.condition.items[0]) : null;
+  if (condition && commandName(condition) === 'false' && !condition.arguments.length) return null;
+
+  const branchLists = path.slice(branch + 1).filter((node) => node.kind === 'list');
+  if (
+    branchLists.some((list) =>
+      list.items.some((item) => {
+        if (item.range.start.offset <= offset) return false;
+        const command = standalone(item);
+        const name = command && commandName(command);
+        return name === 'return' || name === 'exit';
+      }),
+    )
+  )
+    return null;
+
+  const parent = path.slice(0, branch).findLast((node) => node.kind === 'list');
+  const command = path[branch];
+  return parent ? { list: parent, offset: command.range.end.offset } : null;
+}
+
+/** 明示された移動と、関数の所有権引数で消費される変数を記録する。 */
 export function classOwnership(
   file: ZshFileHydration,
   commands: readonly SimpleCommandNode[],
+  resolve: (name: string, offset: number) => FunctionDefinitionNode | null,
 ): Ownership {
-  const callbacks = new Map<FunctionDefinitionNode, Borrow | null>();
-  if (!file.classes.instances.length) return { moves: [], callbacks };
-
-  const named = commands.map((command) => ({ command, name: commandName(command) }));
   const moves: Move[] = [];
-  for (const { command, name } of named) {
-    if (name !== 'z.cls.owner.move' || command.arguments.length !== 2) continue;
-    const args = command.arguments.map((word) => literalWord(word));
-    const from = args.map((arg) => variable(arg, 'from')).find((value) => value !== null);
-    const to = args.map((arg) => variable(arg, 'to')).find((value) => value !== null);
-    if (!from || !to || from === to) continue;
+  const typedFunctions = file.functions.some(({ definition }) =>
+    documentationOf(definition)?.parameters.some((parameter) => parameter.classReference),
+  );
+  if (!file.classes.instances.length && !typedFunctions) return { moves, typedFunctions };
 
+  for (const command of commands) {
+    const name = commandName(command);
+    if (!name) continue;
     const offset = command.range.start.offset;
+
+    if (name === 'z.cls.owner.move') {
+      const args = command.arguments.map((word) => literalWord(word));
+      const direct = args.map((arg) => variable(arg, 'from')).find((value) => value !== null);
+      const source = command.arguments.find((argument) => namedKey(argument) === 'from');
+      const from = direct ?? (source && variableArgument(source, 'from'));
+      const to = args.map((arg) => variable(arg, 'to')).find((value) => value !== null);
+      if (!from || !to || from === to || args.length !== 2) continue;
+
+      const site = siteAt(file, offset);
+      const list = site?.lists.at(-1);
+      if (!site || !list) continue;
+      const item = list.items.find((entry) => moveCommand(entry) === command);
+      const destination = before(site.lists, offset).findLast((entry) => declares(entry, to));
+      if (!item || !destination || !writableDeclaration(destination, to)) continue;
+
+      const binding = ownerAt(file, from, offset, moves);
+      const formal =
+        !direct && typedFunctions ? parameterAt(file, from, offset)?.classReference : undefined;
+      const className =
+        binding?.state === 'owner'
+          ? binding.className
+          : formal?.access === 'owner'
+            ? formal.className
+            : null;
+      if (!className || ownerAt(file, to, offset, moves)) continue;
+      moves.push({
+        from,
+        to,
+        offset: item.range.end.offset,
+        scope: site.scope,
+        list,
+        instance: binding?.instance ?? null,
+        className,
+        conditional: afterConditional(file, offset),
+      });
+      continue;
+    }
+
+    const target = resolve(name, offset);
+    if (!target) continue;
+    const consumed = classArguments(command, target).filter(
+      ({ type, ownerName }) => type.access === 'owner' && ownerName,
+    );
+    if (!consumed.length) continue;
+
     const site = siteAt(file, offset);
     const list = site?.lists.at(-1);
     if (!site || !list) continue;
-
     const item = list.items.find((entry) => moveCommand(entry) === command);
-    const destination = before([list], offset).findLast((entry) => declares(entry, to));
-    if (!item || !destination || !writableDeclaration(destination, to)) continue;
+    if (!item) continue;
 
-    const binding = ownerAt(file, from, offset, moves);
-    if (binding?.state !== 'owner' || ownerAt(file, to, offset, moves)) continue;
-    moves.push({
-      from,
-      to,
-      offset: item.range.end.offset,
-      scope: site.scope,
-      list,
-      instance: binding.instance,
-    });
+    for (const { type, ownerName: from } of consumed) {
+      if (!from) continue;
+      const binding = ownerAt(file, from, offset, moves);
+      if (binding?.state !== 'owner' || binding.className !== type.className) continue;
+      moves.push({
+        from,
+        to: null,
+        offset: item.range.end.offset,
+        scope: site.scope,
+        list,
+        instance: binding.instance,
+        className: binding.className,
+        conditional: afterConditional(file, offset),
+      });
+    }
   }
 
-  const normalCalls = new Set(named.map(({ name }) => name));
-  for (const { command, name } of named) {
-    if (name !== 'z.cls.borrow' || command.arguments.length !== 2) continue;
-    const args = command.arguments.map((word) => literalWord(word));
-    const namedIndex = args.findIndex((arg) => arg?.startsWith('from='));
-    if (namedIndex === -1) continue;
-    const callback = args[1 - namedIndex];
-    if (!callback || normalCalls.has(callback)) continue;
-    const definitions = file.functions.filter((entry) => entry.name === callback);
-    if (definitions.length !== 1) continue;
-    const { definition } = definitions[0];
-    const start = definition.body.range.start.offset;
-    const end = definition.body.range.end.offset;
-    if (
-      named.some(
-        ({ command: candidate, name: called }) =>
-          (called === 'shift' || called === 'set') &&
-          candidate.range.start.offset >= start &&
-          candidate.range.end.offset <= end,
-      )
-    )
-      continue;
-
-    const owner = variable(args[namedIndex], 'from');
-    const binding = owner && ownerAt(file, owner, command.range.start.offset, moves);
-    const known = owner && binding && binding.state === 'owner' && !callbacks.has(definition);
-    callbacks.set(definition, known ? { instance: binding.instance, owner } : null);
-  }
-
-  return { moves, callbacks };
-}
-
-function borrowedArgument(command: SimpleCommandNode, name: string): boolean {
-  if (command.semantic.role !== 'declaration') return false;
-  const declaration = command.semantic.declaration;
-  return (
-    declaration.kind === 'local' &&
-    declaration.options.some((option) => option.name.includes('r')) &&
-    !declaration.options.some((option) => option.name.includes('g')) &&
-    declaration.assignments.some((assign) => {
-      const value = assign.value?.value.raw;
-      return (
-        assign.name.value === name &&
-        (value === '$1' || value === '"$1"' || value === '${1}' || value === '"${1}"')
-      );
-    })
-  );
-}
-
-/** 借用の第1引数、またはその読み取り専用のローカル名だけを関連付ける。 */
-export function borrowAt(
-  file: ZshFileHydration,
-  binding: string,
-  offset: number,
-  ownership: Ownership,
-): ClassInstance | null {
-  if (!ownership.callbacks.size) return null;
-  const site = siteAt(file, offset);
-  const scope = site?.scope;
-  if (!site || scope?.kind !== 'functionDefinition') return null;
-
-  const borrow = ownership.callbacks.get(scope);
-  if (!borrow) return null;
-
-  const previous = before(site.lists, offset).filter(
-    (command) => command.range.start.offset >= scope.range.start.offset,
-  );
-  if (binding === '1' || previous.some((command) => borrowedArgument(command, binding))) {
-    return borrow.instance;
-  }
-
-  const shadowed = previous.some((command) => declares(command, binding));
-  return binding === borrow.owner && !shadowed ? borrow.instance : null;
+  return { moves, typedFunctions };
 }
 
 /** 所有権を必要とする操作を、静的に特定できる変数名から検証する。 */
@@ -319,30 +349,39 @@ export function ownershipOperationIssue(
   command: SimpleCommandNode,
   ownership: Ownership,
 ): ClassReferenceIssue | null {
-  if (!ownership.moves.length && !ownership.callbacks.size) return null;
   const name = commandName(command);
   if (name !== 'z.cls.owner.move' && name !== 'z.cls.delete') return null;
+  const key = name === 'z.cls.owner.move' ? 'from' : undefined;
+  const argument = key
+    ? command.arguments.find((word) => namedKey(word) === key)
+    : command.arguments[0];
+  if (!argument) return null;
 
-  const args = command.arguments.map((word) => literalWord(word));
+  const literal = literalWord(argument);
   const binding =
-    name === 'z.cls.owner.move'
-      ? args.map((arg) => variable(arg, 'from')).find((arg) => arg !== null)
-      : args[0];
-  if (!binding || !/^[A-Za-z_][A-Za-z_0-9]*$/.test(binding)) return null;
+    variable(literal, key ?? '') ?? (key ? null : literal) ?? variableArgument(argument, key);
+  if (!binding) return null;
 
   const offset = command.range.start.offset;
-  if (borrowAt(file, binding, offset, ownership)) {
+  const reference = ownership.typedFunctions
+    ? parameterAt(file, binding, offset)?.classReference
+    : undefined;
+  if (reference && reference.access !== 'owner') {
     return {
-      code: 'class-borrow-readonly',
-      message: name + ' cannot move or delete the borrowed instance ' + binding + '.',
+      code: 'class-owner-required',
+      message: name + ' requires ownership of ' + binding + '.',
     };
   }
-  if (ownerAt(file, binding, offset, ownership.moves)?.state === 'moved') {
+  const state = ownerAt(file, binding, offset, ownership.moves)?.state;
+  if (state === 'moved' || state === 'maybe-moved') {
     return {
       code: 'class-reference-moved',
-      message: name + ' uses the reference ' + binding + ' whose ownership was moved.',
+      message:
+        name +
+        ' uses the reference ' +
+        binding +
+        (state === 'moved' ? ' whose ownership was moved.' : ' whose ownership may have moved.'),
     };
   }
-
   return null;
 }

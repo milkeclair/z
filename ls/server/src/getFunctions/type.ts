@@ -1,4 +1,5 @@
 import type { Result } from '../document/type';
+import type { ClassReferenceType } from '../zshHydrator/documentation/types';
 
 export type FuncArg = {
   readonly position: number;
@@ -6,6 +7,7 @@ export type FuncArg = {
   readonly optional: boolean;
   readonly isNamed: boolean;
   readonly valueType?: 'code';
+  readonly classReference?: ClassReferenceType;
   readonly literalValues?: readonly string[];
 };
 

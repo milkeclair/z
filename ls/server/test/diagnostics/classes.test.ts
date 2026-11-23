@@ -615,49 +615,37 @@ describe('class ownership diagnostics', () => {
     expect(scenario.items).toEqual([]);
   });
 
-  test('借用中はgetterを解決し、借用参照と所有者の更新を報告する', () => {
+  test('呼び出し元に依存せずreadの属性とメソッドを検査する', () => {
+    const members = counterClass
+      .replace('z.cls.fn increment', 'z.cls.fn increment access=write')
+      .replace('  z.cls.drew', "  z.cls.fn value '$self.count.get'\n  z.cls.drew");
     const scenario = fixture(
       [
+        '# $1 [Counter<read>]: 読み取り対象',
         'read_count() {',
-        '  local -r borrowed=$1',
-        '  $borrowed.count.get',
-        '  $1.count.get',
-        '  $borrowed.count.set 8',
-        '  $borrowed.increment',
-        '  $saved.count.set 9',
-        '  z.cls.delete borrowed',
-        '  z.cls.owner.move from=saved to=destination',
+        '  local -r ref=$1',
+        '  $ref.count.get',
+        '  $ref.value',
+        '  $ref.count.set 8',
+        '  $1.increment',
+        '  $ref.missing',
         '}',
-        'typeset counter saved',
+        '# $1 [Counter<write>]: 更新対象',
+        'update_count() { $1.count.set 9; }',
+        'typeset counter',
         'z.cls.new Counter counter',
-        'z.cls.owner.move from=counter to=saved',
-        'z.cls.borrow from=saved read_count',
-        '$saved.count.set 10',
+        'read_count "$counter"',
+        'z.cls.borrow from=counter "$callback"',
+        'z.cls.borrow from=counter update_count',
         '',
       ].join('\n'),
-      classApi + ownershipApi + counterClass,
+      classApi + ownershipApi + members,
     );
-
     expect(scenario.items.map(({ code, range }) => [code, range.start.line])).toEqual([
-      ['class-borrow-readonly', 4],
       ['class-borrow-readonly', 5],
       ['class-borrow-readonly', 6],
-      ['class-borrow-readonly', 7],
-      ['class-borrow-readonly', 8],
-    ]);
-
-    const report = scenario.diagnostics.files.get(scenario.document.uri);
-    if (!report) throw new Error('Expected caller diagnostics');
-    const analysis = analyzeCalls(
-      scenario.snapshot,
-      report.file,
-      report.facts.calls,
-      scenario.diagnostics.context,
-    );
-    expect([...analysis.classTargets.values()].flat().map((target) => target.operation)).toEqual([
-      'get',
-      'get',
-      'set',
+      ['undefined-command', 7],
+      ['class-argument-type', 15],
     ]);
   });
 
@@ -669,6 +657,137 @@ describe('class ownership diagnostics', () => {
         'z.cls.new Counter counter',
         'z.cls.borrow from=counter read_count',
         'read_count "$counter"',
+        '',
+      ].join('\n'),
+      classApi + ownershipApi + counterClass,
+    );
+    expect(scenario.items).toEqual([]);
+  });
+  test('所有権引数で指定した変数を呼び出し元で移動済みにする', () => {
+    const consumer = [
+      '# $from [Counter<owner>]: 受け取る所有変数',
+      'consume_counter() {',
+      '  z.arg.named from "$@" && local owner_name=$REPLY',
+      '  local received=""',
+      '  z.cls.owner.move "from=$owner_name" to=received',
+      '}',
+      '',
+    ].join('\n');
+    const scenario = fixture(
+      [
+        'typeset counter',
+        'z.cls.new Counter counter',
+        'consume_counter from=counter',
+        '$counter.count.get',
+        '',
+      ].join('\n'),
+      classApi + ownershipApi + counterClass + consumer,
+    );
+
+    expect(scenario.items.map(({ code, range }) => [code, range.start.line])).toEqual([
+      ['class-reference-moved', 3],
+    ]);
+    expect(
+      scenario.diagnostics.files.get(scenario.definitionUri)?.items.map((item) => item.code),
+    ).not.toContain('class-owner-contract');
+  });
+
+  test('所有権を移さずに戻る経路を関数の宣言に報告する', () => {
+    const consumer = [
+      '# $1 [Counter<owner>]: 受け取る所有変数',
+      'consume_counter() {',
+      '  local received=""',
+      '  if [[ -n "$condition" ]]; then',
+      '    return',
+      '  fi',
+      '  z.cls.owner.move "from=$1" to=received',
+      '}',
+      '',
+    ].join('\n');
+    const scenario = fixture('', classApi + ownershipApi + counterClass + consumer);
+    expect(
+      scenario.diagnostics.files.get(scenario.definitionUri)?.items.map((item) => item.code),
+    ).toContain('class-owner-contract');
+  });
+
+  test('条件付きで所有権を渡した後の使用を報告する', () => {
+    const consumer = [
+      '# $1 [Counter<owner>]: 引数の所有変数',
+      'consume_counter() {',
+      '  local received=""',
+      '  z.cls.owner.move "from=$1" to=received',
+      '}',
+      '',
+    ].join('\n');
+    const scenario = fixture(
+      [
+        'typeset counter',
+        'z.cls.new Counter counter',
+        'if [[ -n "$condition" ]]; then',
+        '  consume_counter counter',
+        'else',
+        '  $counter.count.get',
+        'fi',
+        '$counter.count.get',
+        '',
+      ].join('\n'),
+      classApi + ownershipApi + counterClass + consumer,
+    );
+    expect(scenario.items.map(({ code, range }) => [code, range.start.line])).toEqual([
+      ['class-reference-moved', 7],
+    ]);
+    expect(scenario.items[0]?.message).toContain('may have moved');
+  });
+  test('readの引数をwriteが必要な通常関数の名前付き引数へ渡すと報告する', () => {
+    const scenario = fixture(
+      [
+        '# $target [Counter<write>]: 更新対象',
+        'update_count() { z.arg.named target "$@" && local ref=$REPLY; $ref.count.set 1; }',
+        '# $1 [Counter<read>]: 読み取り対象',
+        'read_count() { local -r ref=$1; update_count "target=$ref"; }',
+        '',
+      ].join('\n'),
+      classApi + ownershipApi + counterClass + 'z.arg.named() { :; }\n',
+    );
+
+    expect(scenario.items.map(({ code, range }) => [code, range.start.line])).toEqual([
+      ['class-argument-type', 3],
+    ]);
+  });
+
+  test('両分岐でmoveを通る所有者契約を受理する', () => {
+    const scenario = fixture(
+      [
+        '# $1 [Counter<owner>]: 受け取る所有変数',
+        'consume_counter() {',
+        '  local received=""',
+        '  if [[ -n "$condition" ]]; then',
+        '    z.cls.owner.move "from=$1" to=received',
+        '  else',
+        '    z.cls.owner.move "from=$1" to=received',
+        '  fi',
+        '}',
+        '',
+      ].join('\n'),
+      classApi + ownershipApi + counterClass,
+    );
+    expect(scenario.items.map(({ code }) => code)).not.toContain('class-owner-contract');
+  });
+
+  test('移動した分岐からreturnする場合は合流後の所有参照を有効に保つ', () => {
+    const scenario = fixture(
+      [
+        '# $1 [Counter<owner>]: 受け取る所有変数',
+        'consume_counter() { local received=""; z.cls.owner.move "from=$1" to=received; }',
+        'run() {',
+        '  local counter=""',
+        '  z.cls.new Counter counter',
+        '  if [[ -n "$condition" ]]; then',
+        '    consume_counter counter',
+        '    return',
+        '  fi',
+        '  $counter.count.get',
+        '}',
         '',
       ].join('\n'),
       classApi + ownershipApi + counterClass,

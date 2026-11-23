@@ -25,7 +25,7 @@ type LocatedMember = {
 /** 本体や値をコピーせず、最終AST内のメンバーの構文ノードを保持する。 */
 function memberFromCommand(command: HydratedClassCommand): LocatedMember | null {
   const information = command.hydration;
-  const [nameNode, value] = command.arguments;
+  const [nameNode] = command.arguments;
   if (!nameNode) return null;
 
   const base = { name: information.name, declaration: command, nameNode };
@@ -47,17 +47,29 @@ function memberFromCommand(command: HydratedClassCommand): LocatedMember | null 
     }
     case 'classMethod':
       if (information.body.kind === 'inline') {
+        const offset = information.body.range.start.offset;
+        const value = command.arguments.find((word) => word.range.start.offset === offset);
         if (!value) return null;
 
         return {
           classOffset: information.classOffset,
-          member: { ...base, kind: 'classMethod', body: { kind: 'inline', value } },
+          member: {
+            ...base,
+            kind: 'classMethod',
+            access: information.access,
+            body: { kind: 'inline', value },
+          },
         };
       }
 
       return {
         classOffset: information.classOffset,
-        member: { ...base, kind: 'classMethod', body: information.body },
+        member: {
+          ...base,
+          kind: 'classMethod',
+          access: information.access,
+          body: information.body,
+        },
       };
     default:
       return null;

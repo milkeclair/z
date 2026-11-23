@@ -1,3 +1,4 @@
+import { invalidOwnerParameters } from './classContracts';
 import {
   addValue,
   appendItems,
@@ -371,6 +372,17 @@ export function collectFileFacts(file: ZshFileHydration): FileFacts {
     ...formatDiagnostics(file),
     ...[...facts.usages.values()].flatMap(unusedArguments),
     ...syntaxDiagnostics(file),
+    ...(!file.lexerDiagnostics.length && !file.parserDiagnostics.length
+      ? [...new Set(file.functions.map(({ definition }) => definition))].flatMap((definition) =>
+          invalidOwnerParameters(file, definition).map((parameter): Diagnostics => ({
+            severity: DiagnosticSeverity.Error,
+            code: 'class-owner-contract',
+            range: protocolRange(parameter.markerRange),
+            message: 'An owner parameter must be moved on every returning path.',
+            source: 'z-ls',
+          })),
+        )
+      : []),
   ];
 
   const sets = facts.declarations;

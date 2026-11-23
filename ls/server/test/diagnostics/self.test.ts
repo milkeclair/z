@@ -22,6 +22,7 @@ const classApi = [
   'z.cls.attr() { : "$@" }',
   '# $1: method name',
   '# $2? [code]: inline body',
+  '# $access?: method access',
   'z.cls.fn() { : "$@" }',
   'z.cls.fn.done() { : }',
   'z.cls.drew() { : }',
@@ -35,11 +36,11 @@ const counter = [
   'z.cls.draw Counter',
   '  z.cls.attr count default=0',
   '  z.cls.attr self default=business',
-  '  z.cls.fn increment',
+  '  z.cls.fn increment access=write',
   '    "$self.count.get"',
   '    "$self.count.set" 1',
   '  z.cls.fn.done',
-  '  z.cls.fn twice',
+  '  z.cls.fn twice access=write',
   '    "$self.increment"',
   '  z.cls.fn.done',
   '  z.cls.drew',
@@ -201,7 +202,7 @@ describe('selfのクラス参照', () => {
         [
           'z.cls.draw Other',
           '  z.cls.attr label default=other',
-          '  z.cls.fn twice',
+          '  z.cls.fn twice access=write',
           '    "$self.label.get"',
           '    "$self.count.get"',
           '  z.cls.fn.done',
@@ -339,5 +340,43 @@ describe('selfのクラス参照', () => {
 
     expect([...scenario.analysis.classTargets.values()].flat()).toHaveLength(3);
     expect(scenario.report.items.filter((item) => item.code === 'undefined-command')).toEqual([]);
+  });
+  test('読み取り専用selfからの更新とwriteメソッドを報告する', () => {
+    const source = counter.replace(
+      '  z.cls.drew',
+      [
+        '  z.cls.fn bad access=read',
+        '    $self.count.set 2',
+        '    $self.increment',
+        '  z.cls.fn.done',
+        "  z.cls.fn using_read access=read '$self.count.get'",
+        '  z.cls.drew',
+      ].join('\n'),
+    );
+    const scenario = fixture(source);
+
+    expect(
+      scenario.report.items.filter((item) => item.code === 'class-borrow-readonly'),
+    ).toHaveLength(2);
+    expect(
+      scenario.report.file.classes.definitions[0]?.methods.map(({ name, access }) => [
+        name,
+        access,
+      ]),
+    ).toContainEqual(['using_read', 'read']);
+  });
+  test('readメソッドのselfをwriteが必要な関数へ渡すと報告する', () => {
+    const source = [
+      '# $1 [Counter<write>]: 更新する実体',
+      'update() { $1.count.set 1; }',
+      counter.replace(
+        '  z.cls.drew',
+        '  z.cls.fn bad\n    update "$self"\n  z.cls.fn.done\n  z.cls.drew',
+      ),
+    ].join('\n');
+    const scenario = fixture(source);
+    expect(
+      scenario.report.items.filter((item) => item.code === 'class-argument-type'),
+    ).toHaveLength(1);
   });
 });

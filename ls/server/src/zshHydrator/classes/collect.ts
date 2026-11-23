@@ -1,3 +1,5 @@
+import { methodArguments } from './method';
+import type { ClassMethodAccess } from './types';
 import { castDraft } from 'immer';
 import { addValue, appendItems, makeMap, makeSet, produce, setEntry } from '../../util/collections';
 import { again, done, loop } from '../../util/loop';
@@ -41,6 +43,7 @@ type Capture =
       readonly definition: Definition;
       readonly node: SimpleCommandNode;
       readonly name: string;
+      readonly access: ClassMethodAccess;
       readonly depth: number;
     }
   | {
@@ -124,6 +127,7 @@ function blockMethodFromCapture(
     information: {
       kind: 'classMethod',
       name: capture.name,
+      access: capture.access,
       classOffset: capture.definition.node.range.start.offset,
       body: {
         kind: 'block',
@@ -290,25 +294,27 @@ function declareMethod(
   state: State,
 ): State {
   const [name] = directive.args;
-  if (directive.args.length < 1 || directive.args.length > 2 || !identifier(name)) return state;
+  const method = methodArguments(directive.command);
+  if (!identifier(name) || !method) return state;
 
   const definition = capture.definition;
   const duplicate = definition.members.some(
     (member) => member.information.kind === 'classMethod' && member.information.name === name,
   );
   if (duplicate) {
-    return directive.args.length === 1
+    return !method.body
       ? finishDefinition(state, directive.scope, capture, directive.command.range, 'aborted')
       : state;
   }
 
-  if (directive.args.length === 1) {
+  if (!method.body) {
     return withCapture(state, directive.scope, {
       kind: 'method',
       definition,
       node: directive.command,
       name,
       depth: directive.depth,
+      access: method.access,
     });
   }
 
@@ -317,8 +323,9 @@ function declareMethod(
     information: {
       kind: 'classMethod',
       name,
+      access: method.access,
       classOffset: definition.node.range.start.offset,
-      body: { kind: 'inline', range: directive.command.arguments[1].range },
+      body: { kind: 'inline', range: method.body.range },
     },
   });
 }
@@ -377,7 +384,8 @@ function applyRejectedDirective(
     return withCapture(state, directive.scope, capture.outer ?? null);
   }
 
-  return directive.name === 'z.cls.fn' && directive.args.length === 1
+  const method = directive.name === 'z.cls.fn' ? methodArguments(directive.command) : null;
+  return method && !method.body
     ? withCapture(state, directive.scope, { ...capture, methodDepth: directive.depth })
     : state;
 }

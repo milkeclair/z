@@ -22,8 +22,14 @@ import { isAliasReference, isKnownShellCommand, type ResolutionContext } from '.
 import type { IgnoreControls } from './controls';
 import { ignored } from './controls';
 import { simpleParameter } from './facts';
-import { resolveSelfCommand } from './self';
-import { classOwnership, ownershipOperationIssue } from './ownership';
+import { resolveSelfCommand, selfReferenceAt } from './self';
+import {
+  classOwnership,
+  ownerAt,
+  ownershipOperationIssue,
+  type ClassReferenceIssue,
+} from './ownership';
+import { classArguments, parameterAt } from './classContracts';
 import type { Diagnostics } from './type';
 
 export type { ResolutionContext } from './commandResolution';
@@ -198,7 +204,121 @@ export function analyzeCalls(
   const origin = scopes.at(-1);
   const mapRange = options.mapRange ?? ((range) => range);
   const incomplete = file.lexerDiagnostics.length > 0 || file.parserDiagnostics.length > 0;
-  const ownership = classOwnership(file, incomplete ? [] : commands);
+  const resolveTarget = (name: string, offset: number) => {
+    const inherited = scopes
+      .map((scope) => localDefinition(scope.definitions, name, scope.offset))
+      .find((target) => target !== undefined);
+    return (
+      localDefinition(local, name, offset) ??
+      inherited ??
+      resolveFunction(snapshot, name, {
+        file: origin?.file ?? file,
+        offset: origin?.offset ?? offset,
+      })?.definition ??
+      null
+    );
+  };
+  const ownership = classOwnership(file, incomplete ? [] : commands, resolveTarget);
+  const argumentIssue = (
+    command: SimpleCommandNode,
+    target: FunctionDefinitionNode,
+  ): ClassReferenceIssue | null => {
+    const offset = command.range.start.offset;
+    for (const { type, binding, literal, ownerName } of classArguments(command, target)) {
+      if (type.access !== 'owner' && literal !== null && !literal.startsWith('z_cls_')) {
+        return {
+          code: 'class-argument-type',
+          message: 'Expected a reference of type ' + type.className + '<' + type.access + '>.',
+        };
+      }
+      if (!binding) continue;
+      const parameter =
+        binding === 'self'
+          ? selfReferenceAt(file, offset, scopes)
+          : ownership.typedFunctions
+            ? parameterAt(file, binding, offset)?.classReference
+            : undefined;
+      const owner = parameter ? null : ownerAt(file, binding, offset, ownership.moves);
+      if (owner?.state === 'maybe-uninitialized') {
+        return {
+          code: 'class-reference-uninitialized',
+          message: binding + ' may refer to an uninitialized instance.',
+        };
+      }
+      if (owner?.state === 'moved' || owner?.state === 'maybe-moved') {
+        return {
+          code: 'class-reference-moved',
+          message: binding + (owner.state === 'moved' ? ' was moved.' : ' may have moved.'),
+        };
+      }
+      if (type.access === 'owner' && !ownerName && owner) {
+        return {
+          code: 'class-owner-required',
+          message: 'Pass the variable name ' + binding + ' to transfer its ownership.',
+        };
+      }
+      const actual = parameter ?? (owner ? { className: owner.className, access: 'owner' } : null);
+      if (!actual) continue;
+      if (
+        actual.className !== type.className ||
+        (type.access === 'owner' && actual.access !== 'owner') ||
+        (type.access === 'write' && actual.access === 'read')
+      ) {
+        return {
+          code: 'class-argument-type',
+          message:
+            'Expected ' +
+            type.className +
+            '<' +
+            type.access +
+            '> for ' +
+            binding +
+            ', received ' +
+            actual.className +
+            '<' +
+            actual.access +
+            '>.',
+        };
+      }
+    }
+    return null;
+  };
+  const borrowIssue = (command: SimpleCommandNode): ClassReferenceIssue | null => {
+    if (command.arguments.length !== 2) return null;
+    const source = command.arguments.find((word) => namedKey(word) === 'from');
+    const recipient = command.arguments.find((word) => word !== source);
+    const receiver = recipient && literalWord(recipient);
+    const name = source && literalWord(source)?.slice('from='.length);
+    if (!name || !receiver) return null;
+    const offset = command.range.start.offset;
+    const owner = ownerAt(file, name, offset, ownership.moves);
+    if (!owner) return null;
+
+    if (owner.state !== 'owner') {
+      return {
+        code: 'class-reference-moved',
+        message: name + ' is not a live owner at this borrow.',
+      };
+    }
+
+    const target = resolveTarget(receiver, offset);
+    const type =
+      target &&
+      documentationOf(target)?.parameters.find(
+        (parameter) => parameter.kind === 'positionalParameterDoc' && parameter.position === 1,
+      )?.classReference;
+    if (type && (type.access !== 'read' || type.className !== owner.className)) {
+      return {
+        code: 'class-argument-type',
+        message:
+          receiver +
+          ' must accept ' +
+          owner.className +
+          '<read> as its first argument when called through z.cls.borrow.',
+      };
+    }
+    return null;
+  };
   const initial = {
     diagnostics: collectArray<Diagnostics>(),
     targets: makeMap<SimpleCommandNode, FunctionDefinitionNode>(),
@@ -262,17 +382,28 @@ export function analyzeCalls(
       return previous;
     }
 
-    const inherited = scopes
-      .map((scope) => localDefinition(scope.definitions, name, scope.offset))
-      .find((target) => target !== undefined);
-    const target = functionCommand(command)
-      ? (localDefinition(local, name, word.range.start.offset) ??
-        inherited ??
-        resolveFunction(snapshot, name, {
-          file: origin?.file ?? file,
-          offset: origin?.offset ?? word.range.start.offset,
-        })?.definition)
-      : null;
+    const target = functionCommand(command) ? resolveTarget(name, word.range.start.offset) : null;
+
+    const issue =
+      !incomplete && target
+        ? name === 'z.cls.borrow'
+          ? borrowIssue(command)
+          : argumentIssue(command, target)
+        : null;
+    if (
+      issue &&
+      (!options.ignores || !ignored(options.ignores, word.range.start.line, issue.code))
+    ) {
+      return {
+        ...previous,
+        diagnostics: appendItems(previous.diagnostics, {
+          ...issue,
+          severity: DiagnosticSeverity.Error,
+          range: protocolRange(mapRange(word.range)),
+          source: 'z-ls',
+        }),
+      };
+    }
 
     if (target) {
       const diagnostics = incomplete

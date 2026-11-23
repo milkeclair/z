@@ -28,6 +28,11 @@ export function argumentToken(arg: FuncArg): string {
 
 /** コード型と許可値を、関数コメントと同じ形式で表示する。 */
 export function argumentType(arg: FuncArg): string {
+  if (arg.classReference) {
+    const { className, access } = arg.classReference;
+    return '[' + className + '<' + access + '>]';
+  }
+
   if (arg.valueType !== 'code') {
     return '';
   }
