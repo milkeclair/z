@@ -7,7 +7,7 @@ z.t.describe "z.cls.instance._commands"; {
       z_cls_class_methods[CommandList]='increment '
       z_cls_class_attrs[CommandList]='count '
 
-      z.cls.instance._commands CommandList ref
+      z.cls.instance._commands CommandList reference=ref
 
       z.t.expect.reply.is.arr ref.increment ref.count.get ref.count.set
     }
@@ -19,7 +19,7 @@ z.t.describe "z.cls.instance._commands"; {
       z_cls_class_methods[EmptyCommandList]=''
       z_cls_class_attrs[EmptyCommandList]=''
 
-      z.cls.instance._commands EmptyCommandList ref
+      z.cls.instance._commands EmptyCommandList reference=ref
 
       local reply_type=${(t)REPLY}
       local reply_count=${#REPLY}
@@ -40,10 +40,9 @@ z.t.describe "z.cls.instance._commands"; {
 
         local -A z_cls_class_methods=() z_cls_class_attrs=()
 
-        z.cls.instance._commands PublishedCommandList ref
+        z.cls.instance._commands PublishedCommandList reference=ref
         z.t.expect.reply.is.arr ref.value ref.increment ref.count.get ref.count.set
       }
     }
   }
-
 }

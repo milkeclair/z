@@ -62,7 +62,6 @@ z.t.describe "z.cls.store._ensure"; {
   }
 }
 
-
 z.t.describe "z.cls.store._scalar"; {
   z.t.context "空白と空値を保存する場合"; {
     z.t.it "値をそのまま保存し、呼出元のREPLYを保持する"; {
@@ -73,7 +72,6 @@ z.t.describe "z.cls.store._scalar"; {
         z.cls.store._scalar declaration_ref label "two words"
 
         z.t.expect.reply before
-
 
         z.t.expect "$z_cls_scalars[declaration_ref:label]" "two words"
 

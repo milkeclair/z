@@ -1,6 +1,6 @@
 # 生存中の実体かを確認し、他の実体の呼び出しからの再入を拒否する。
 #
-# $1: 解決済みの実体参照
+# $1: 解決済みの内部実体ID
 # $2?: 呼び出しに使った参照
 # REPLY: null
 # return: 0|1
@@ -116,7 +116,9 @@ z.cls.instance.call._access_typed() {
   local -a z_cls_attributes=("$3")
   if z.is.eq "$2" set; then
     # 数値式から参照できるよう、更新時は同じ実体の属性をすべて復元する。
-    z_cls_attributes=(${=z_cls_class_attrs[${z_cls_instances[$1]}]})
+    local -a REPLY=()
+    z.cls.store._names "${z_cls_class_attrs[${z_cls_instances[$1]}]-}"
+    z_cls_attributes=("${REPLY[@]}")
   fi
 
   local z_cls_attribute

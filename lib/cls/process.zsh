@@ -153,7 +153,7 @@ z.cls.drew() {
   z.cls.capture._stop
   () {
     local REPLY=""
-    z.cls.instance._commands "$z_cls_drawing" ""
+    z.cls.instance._commands "$z_cls_drawing"
     z.arr.join "${REPLY[@]}"
     z_cls_command_suffixes[$z_cls_drawing]=$REPLY
   }
@@ -224,13 +224,14 @@ z.cls.new() {
 
   local z_cls_id="z_cls_${$}_$z_cls_next_id"
 
-  z.cls.instance._commands "$1" "$z_cls_id"
+  z.cls.instance._commands "$1" reference="$z_cls_id"
 
   local -a z_cls_wrappers=("${(@)REPLY}")
 
   z.cls.instance.commands._validate "${z_cls_wrappers[@]}" || return 1
   z.cls.instance.commands._install "${z_cls_wrappers[@]}" || return 1
-  if ! z.cls.owner._bind "$z_cls_id" "$2"; then
+
+  if ! z.cls.owner._bind "$z_cls_id" "to=$2"; then
     z.cls.instance.commands._uninstall "${z_cls_wrappers[@]}"
     return 1
   fi

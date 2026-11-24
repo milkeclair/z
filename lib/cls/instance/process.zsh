@@ -68,7 +68,6 @@ z.cls.instance._snapshot() {
         z_cls_values[$1:$2]="typeset -i $2=${(P)2}"
         return 0
       fi
-
       ;;
     array|array-local)
       local -a REPLY=()
@@ -105,17 +104,19 @@ z.cls.instance._snapshot() {
 #  # return: 0
 #  # 変更後: 実体と、参照がなくなった生成コマンドを解放済み
 z.cls.instance._release() {
-  local REPLY=""
+  local -a REPLY=()
   local instance_id=$1
   local reference=${z_cls_owner_refs[$instance_id]:-$instance_id}
   local class_name=$z_cls_instances[$instance_id]
 
   unset "z_cls_references[$reference]" "z_cls_owner_refs[$instance_id]"
-  z.cls.instance.commands._uninstall ${=z_cls_members[$instance_id]}
+  z.cls.store._names "${z_cls_members[$instance_id]-}"
+  z.cls.instance.commands._uninstall "${REPLY[@]}"
 
   local attribute
 
-  for attribute in ${=z_cls_class_attrs[$class_name]}; do
+  z.cls.store._names "${z_cls_class_attrs[$class_name]-}"
+  for attribute in "${REPLY[@]}"; do
     unset "z_cls_scalars[$instance_id:$attribute]" "z_cls_values[$instance_id:$attribute]"
   done
 
