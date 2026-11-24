@@ -130,27 +130,27 @@ z.cls.instance._snapshot() {
 #  # return: 0
 #  # 変更後: 実体と、参照がなくなった生成コマンドを解放済み
 z.cls.instance._release() {
-  local z_cls_id=$1
-  local z_cls_command
+  local instance_id=$1
+  local command_name
 
-  for z_cls_command in ${=z_cls_members[$z_cls_id]}; do
-    z_cls_wrapper_refs[$z_cls_command]=$(( z_cls_wrapper_refs[$z_cls_command] - 1 ))
+  for command_name in ${=z_cls_members[$instance_id]}; do
+    z_cls_wrapper_refs[$command_name]=$(( z_cls_wrapper_refs[$command_name] - 1 ))
 
-    z.int.is.zero $z_cls_wrapper_refs[$z_cls_command] || continue
+    z.int.is.zero $z_cls_wrapper_refs[$command_name] || continue
 
-    if z.cls.instance._owns "$z_cls_command"; then
-      unfunction "$z_cls_command"
+    if z.cls.instance._owns "$command_name"; then
+      unfunction "$command_name"
     fi
 
-    unset "z_cls_wrapper_refs[$z_cls_command]"
+    unset "z_cls_wrapper_refs[$command_name]"
   done
 
-  local z_cls_attribute
+  local attribute
 
-  for z_cls_attribute in ${=z_cls_class_attrs[${z_cls_instances[$z_cls_id]}]}; do
-    unset "z_cls_values[$z_cls_id:$z_cls_attribute]"
+  for attribute in ${=z_cls_class_attrs[${z_cls_instances[$instance_id]}]}; do
+    unset "z_cls_values[$instance_id:$attribute]"
   done
 
   # 未設定のactive要素も管理ノードを残すため、一緒に削除する。
-  unset "z_cls_instances[$z_cls_id]" "z_cls_members[$z_cls_id]" "z_cls_active[$z_cls_id]"
+  unset "z_cls_instances[$instance_id]" "z_cls_members[$instance_id]" "z_cls_active[$instance_id]"
 }
