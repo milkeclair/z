@@ -19,9 +19,8 @@
 z.cls.instance.call._set() {
   z.is.eq "$#" 3 || return
 
-  local REPLY=""
-  z.cls.instance._resolve "$1" || return
-  local instance_id=$REPLY
+  local instance_id=""
+  z.cls.instance._resolve "$1" instance_id || return
 
   z.var.exists "z_cls_defaults[$z_cls_instances[$instance_id]:$2]" || return
   z_cls_scalars[$instance_id:$2]=$3
@@ -46,11 +45,7 @@ z.cls.instance.call._set() {
 #  # REPLY: reason
 z.cls.instance.call._run() {
   local z_cls_instance=""
-  () {
-    local REPLY=""
-    z.cls.instance._resolve "$1" || return
-    z_cls_instance=$REPLY
-  } "$1" || return
+  z.cls.instance._resolve "$1" z_cls_instance || return
 
   local z_cls_method_key="$z_cls_instances[$z_cls_instance]:$2"
   z.var.exists "z_cls_bodies[$z_cls_method_key]" || return
@@ -59,11 +54,11 @@ z.cls.instance.call._run() {
   local z_cls_self=$1
   shift 2
 
-  local z_cls_activated=0
-  if ! z.var.exists "z_cls_active[$z_cls_instance]"; then
+  local z_cls_activated=false
+  if z.is.not.eq "${z_cls_current_instance-}" "$z_cls_instance"; then
     local z_cls_current_instance=$z_cls_instance
     z_cls_active[$z_cls_instance]=1
-    z_cls_activated=1
+    z_cls_activated=true
   fi
 
   {
@@ -74,7 +69,7 @@ z.cls.instance.call._run() {
       eval "$z_cls_body"
     } "$@"
   } always {
-    if z.int.is.not.zero "$z_cls_activated"; then
+    if z.is.true "$z_cls_activated"; then
       unset "z_cls_active[$z_cls_instance]"
     fi
   }
