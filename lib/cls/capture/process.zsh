@@ -45,16 +45,17 @@ z.cls.capture._watch() {
   typeset -g +x z_cls_debug_before=$options[debugbeforecmd]
   typeset -g +x z_cls_debug_localtraps=$options[localtraps]
 
-  local trap_line
+  # 退避前のDEBUGトラップによる呼出元の変数への代入と区別する。
+  local z_cls_debug_line
 
   z.str.split.line "$(trap)"
-  for trap_line in "${REPLY[@]}"; do
-    z.str.start_with "$trap_line" 'trap -- ' || continue
+  for z_cls_debug_line in "${REPLY[@]}"; do
+    z.str.start_with "$z_cls_debug_line" 'trap -- ' || continue
 
-    z.str.split.shell "$trap_line"
+    z.str.split.shell "$z_cls_debug_line"
     z.arg.get "${REPLY[@]}" index=4
 
-    z.is.eq "$REPLY" DEBUG && z_cls_debug_trap=$trap_line
+    z.is.eq "$REPLY" DEBUG && z_cls_debug_trap=$z_cls_debug_line
   done
 
   unsetopt localoptions localtraps

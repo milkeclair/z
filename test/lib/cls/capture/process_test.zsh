@@ -319,6 +319,33 @@ z.t.describe "z.cls.capture._skip"; {
 }
 
 z.t.describe "z.cls.capture._watch"; {
+  z.t.context "DEBUGトラップが呼出元のtrap_lineに代入する場合"; {
+    z.t.it "トラップを上書きせず、呼出元への代入を保つ"; {
+      local -a output=()
+      output=("${(@f)$(
+        local trap_line=before
+        trap '
+          if [[ $funcstack[1] == z.cls.capture._watch && $ZSH_DEBUG_CMD == "z.is.eq \"\$REPLY\" DEBUG"* ]]; then
+            trap_line="assigned by DEBUG"
+          fi
+        ' DEBUG
+        local original=$(trap)
+
+        z.cls.draw CaptureTrap
+        z.cls.drew
+
+        local restored=$(trap)
+        trap - DEBUG
+        print -rl -- "${(qqqq)original}" "${(qqqq)restored}" "$trap_line"
+      )}")
+
+      z.t.expect.status.is.true
+      z.t.expect "${#output}" 3
+      z.t.expect "$output[2]" "$output[1]"
+      z.t.expect "$output[3]" "assigned by DEBUG"
+    }
+  }
+
   z.t.context "定義時のオプションを変更する場合"; {
     local -a option_sets=(
       localoptions
