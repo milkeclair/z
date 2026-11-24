@@ -197,8 +197,8 @@ function readClassDirective(
   const names = [
     'z.cls.draw',
     'z.cls.attr',
-    'z.cls.fn',
-    'z.cls.fn.done',
+    'z.cls.method',
+    'z.cls.method.defined',
     'z.cls.drew',
     'z.cls.abort',
     'z.cls.new',
@@ -244,7 +244,7 @@ function isMethodEnd(directive: ClassDirective, depth: number): boolean {
   return (
     directive.depth === depth &&
     directive.standalone &&
-    directive.name === 'z.cls.fn.done' &&
+    directive.name === 'z.cls.method.defined' &&
     directive.args.length === 0
   );
 }
@@ -342,7 +342,7 @@ function applyDefinitionDirective(
   switch (directive.name) {
     case 'z.cls.attr':
       return declareAttribute(directive, capture.definition, state);
-    case 'z.cls.fn':
+    case 'z.cls.method':
       return declareMethod(directive, capture, state);
     case 'z.cls.drew':
       return directive.args.length === 0
@@ -387,7 +387,7 @@ function applyRejectedDirective(
     return withCapture(state, directive.scope, capture.outer ?? null);
   }
 
-  const method = directive.name === 'z.cls.fn' ? methodArguments(directive.command) : null;
+  const method = directive.name === 'z.cls.method' ? methodArguments(directive.command) : null;
   return method && !method.body
     ? withCapture(state, directive.scope, { ...capture, methodDepth: directive.depth })
     : state;

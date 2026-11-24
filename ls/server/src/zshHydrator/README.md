@@ -119,7 +119,7 @@ hydrateAstを再適用すると、元のASTを変えずに意味情報を作り�
 
 定義中のクラスへの入れ子や、同じ構文スコープで公開済みの名前による`draw`は拒否した範囲として分離します。
 拒否した範囲のメンバーと終端を外側へ混ぜず、対応する`drew`の後に外側の収集を続けます。
-メソッド本体は同じ深さの独立した`fn.done`まで保持し、本体内の`draw`や`drew`、論理演算・パイプ・非同期実行中の`fn.done`で収集を終了しません。
+メソッド本体は同じ深さの独立した`method.defined`まで保持し、本体内の`draw`や`drew`、論理演算・パイプ・非同期実行中の`method.defined`で収集を終了しません。
 
 ## メソッド内のself参照
 
@@ -135,12 +135,12 @@ hydrateAstを再適用すると、元のASTを変えずに意味情報を作り�
 ```zsh
 z.cls.draw Counter
   z.cls.attr count default=0
-  z.cls.fn increment
+  z.cls.method increment
     "$self.count.get"
     local next=$(( REPLY + 1 ))
     "$self.count.set" "$next"
     REPLY=$next
-  z.cls.fn.done
+  z.cls.method.defined
   z.cls.drew
 ```
 

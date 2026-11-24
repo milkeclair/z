@@ -23,8 +23,8 @@ const classApi = [
   '# $1: method name',
   '# $2? [code]: inline body',
   '# $access?: method access',
-  'z.cls.fn() { : "$@" }',
-  'z.cls.fn.done() { : }',
+  'z.cls.method() { : "$@" }',
+  'z.cls.method.defined() { : }',
   'z.cls.drew() { : }',
   'z.cls.new() { : }',
   '# $1 [code]: body',
@@ -36,13 +36,13 @@ const counter = [
   'z.cls.draw Counter',
   '  z.cls.attr count default=0',
   '  z.cls.attr self default=business',
-  '  z.cls.fn increment',
+  '  z.cls.method increment',
   '    "$self.count.get"',
   '    "$self.count.set" 1',
-  '  z.cls.fn.done',
-  '  z.cls.fn twice',
+  '  z.cls.method.defined',
+  '  z.cls.method twice',
   '    "$self.increment"',
-  '  z.cls.fn.done',
+  '  z.cls.method.defined',
   '  z.cls.drew',
   '',
 ].join('\n');
@@ -179,9 +179,9 @@ describe('selfのクラス参照', () => {
         'load() {',
         '  z.cls.draw LocalCounter',
         '    z.cls.attr count default=0',
-        '    z.cls.fn value',
+        '    z.cls.method value',
         '      "$self.count.get"',
-        '    z.cls.fn.done',
+        '    z.cls.method.defined',
         '    z.cls.drew',
         '}',
         '',
@@ -202,10 +202,10 @@ describe('selfのクラス参照', () => {
         [
           'z.cls.draw Other',
           '  z.cls.attr label default=other',
-          '  z.cls.fn twice',
+          '  z.cls.method twice',
           '    "$self.label.get"',
           '    "$self.count.get"',
-          '  z.cls.fn.done',
+          '  z.cls.method.defined',
           '  z.cls.drew',
           '',
         ].join('\n'),
@@ -225,7 +225,7 @@ describe('selfのクラス参照', () => {
       [
         'z.cls.draw Inline',
         '  z.cls.attr count default=0',
-        '  z.cls.fn value \'"$self.count.get"\'',
+        '  z.cls.method value \'"$self.count.get"\'',
         '  z.cls.drew',
         '',
       ].join('\n'),
@@ -257,7 +257,7 @@ describe('selfのクラス参照', () => {
 
   test('引数形式の本体のselfの診断を元の引用内へ対応付ける', () => {
     const scenario = fixture(
-      ['z.cls.draw Inline', '  z.cls.fn value \'"$self.typo"\'', '  z.cls.drew', ''].join('\n'),
+      ['z.cls.draw Inline', '  z.cls.method value \'"$self.typo"\'', '  z.cls.drew', ''].join('\n'),
     );
     const items = scenario.report.items.filter((item) => item.code === 'undefined-command');
     const offset = scenario.document.getText().indexOf('"$self.typo"');
@@ -273,7 +273,7 @@ describe('selfのクラス参照', () => {
     const scenario = fixture(
       [
         'z.cls.draw InlineNested',
-        '  z.cls.fn value \'run_code "\\$self.typo"\'',
+        '  z.cls.method value \'run_code "\\$self.typo"\'',
         '  z.cls.drew',
         '',
       ].join('\n'),
@@ -293,7 +293,7 @@ describe('selfのクラス参照', () => {
     const scenario = fixture(
       [
         'z.cls.draw InlineHelper',
-        '  z.cls.fn value \'helper() { "$self.typo" }; helper\'',
+        '  z.cls.method value \'helper() { "$self.typo" }; helper\'',
         '  z.cls.drew',
         '',
       ].join('\n'),
@@ -346,12 +346,12 @@ describe('selfのクラス参照', () => {
       '  z.cls.drew',
       [
         '  # $self [Counter<read>]: 読み取る実体',
-        '  z.cls.fn bad',
+        '  z.cls.method bad',
         '    $self.count.set 2',
         '    $self.increment',
-        '  z.cls.fn.done',
+        '  z.cls.method.defined',
         '  # $self [Counter<read>]: 読み取る実体',
-        "  z.cls.fn using_read '$self.count.get'",
+        "  z.cls.method using_read '$self.count.get'",
         '  z.cls.drew',
       ].join('\n'),
     );
@@ -373,7 +373,7 @@ describe('selfのクラス参照', () => {
       'update() { $1.count.set 1; }',
       counter.replace(
         '  z.cls.drew',
-        '  # $self [Counter<read>]: 読み取る実体\n  z.cls.fn bad\n    update "$self"\n  z.cls.fn.done\n  z.cls.drew',
+        '  # $self [Counter<read>]: 読み取る実体\n  z.cls.method bad\n    update "$self"\n  z.cls.method.defined\n  z.cls.drew',
       ),
     ].join('\n');
     const scenario = fixture(source);

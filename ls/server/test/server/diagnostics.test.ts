@@ -25,7 +25,7 @@ describe('startServer', () => {
       fs.writeFileSync(path.join(outside, '.zshrc'), 'source ' + JSON.stringify(library) + '\n');
       fs.writeFileSync(
         path.join(root, 'dsl.zsh'),
-        ['z.cls.draw', 'z.cls.attr', 'z.cls.fn', 'z.cls.fn.done', 'z.cls.drew']
+        ['z.cls.draw', 'z.cls.attr', 'z.cls.method', 'z.cls.method.defined', 'z.cls.drew']
           .map((name) => name + '() { :; }')
           .join('\n'),
       );
@@ -34,9 +34,9 @@ describe('startServer', () => {
         'z.cls.draw Counter',
         '  z.cls.attr count default=0',
         '  # $self [Counter<read>]: 読み取る実体',
-        '  z.cls.fn value',
+        '  z.cls.method value',
         '    external_update "$self"',
-        '  z.cls.fn.done',
+        '  z.cls.method.defined',
         'z.cls.drew',
         '',
       ].join('\n');

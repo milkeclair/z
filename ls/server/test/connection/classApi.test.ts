@@ -19,8 +19,8 @@ const publicCommands = [
   'z.cls.delete',
   'z.cls.draw',
   'z.cls.drew',
-  'z.cls.fn',
-  'z.cls.fn.done',
+  'z.cls.method',
+  'z.cls.method.defined',
   'z.cls.new',
 ];
 

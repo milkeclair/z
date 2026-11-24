@@ -14,11 +14,11 @@ import { astContractViolations } from '../zshParser/parser/contracts';
 const source = [
   'z.cls.draw Counter',
   '  z.cls.attr count default=0',
-  '  z.cls.fn increment',
+  '  z.cls.method increment',
   '    (( ++count ))',
   '    print "$1"',
-  '  z.cls.fn.done',
-  '  z.cls.fn value \'"$self.count.get"\'',
+  '  z.cls.method.defined',
+  '  z.cls.method value \'"$self.count.get"\'',
   '  z.cls.drew',
   'z.cls.new Counter object',
   '',
@@ -37,9 +37,9 @@ describe('class hydration', () => {
     const file = fixture(
       [
         'z.cls.draw Duplicate',
-        "  z.cls.fn run ':'",
-        '  z.cls.fn run',
-        '  z.cls.fn.done',
+        "  z.cls.method run ':'",
+        '  z.cls.method run',
+        '  z.cls.method.defined',
         '  z.cls.drew',
         '',
       ].join('\n'),
@@ -53,8 +53,8 @@ describe('class hydration', () => {
     const file = fixture(
       [
         'z.cls.draw Duplicate',
-        "  z.cls.fn run 'print first'",
-        "  z.cls.fn run 'print second'",
+        "  z.cls.method run 'print first'",
+        "  z.cls.method run 'print second'",
         '  z.cls.drew',
         '',
       ].join('\n'),
@@ -122,7 +122,7 @@ describe('class hydration', () => {
   test('深い構文内の終了名ではメソッドを閉じない', () => {
     const text = source.replace(
       '(( ++count ))',
-      'if true; then z.cls.fn.done; fi\n    print deeper',
+      'if true; then z.cls.method.defined; fi\n    print deeper',
     );
     const file = fixture(text);
     const method = file.classes.definitions[0].methods[0];
@@ -130,7 +130,7 @@ describe('class hydration', () => {
     expect(method.body.kind).toBe('block');
     if (method.body.kind !== 'block') throw new Error('Expected a block method');
 
-    expect(method.body.end?.start.offset).toBe(text.lastIndexOf('z.cls.fn.done'));
+    expect(method.body.end?.start.offset).toBe(text.lastIndexOf('z.cls.method.defined'));
     expect(classMethodAt(file.classes, null, text.indexOf('print deeper'))).toBe(method);
   });
 
@@ -266,14 +266,14 @@ describe('class hydration', () => {
       '(( ++count ))',
     );
     expect(source.slice(block.body.range.start.offset, block.body.range.end.offset)).not.toContain(
-      'z.cls.fn.done',
+      'z.cls.method.defined',
     );
     expect(inline.body.kind).toBe('inline');
     if (inline.body.kind !== 'inline') throw new Error('Expected an inline method');
 
     expect(inline.body.value).toBe(inline.declaration.arguments[1]);
     expect(classMethodAt(file.classes, null, source.indexOf('print "$1"'))).toBe(block);
-    expect(classMethodAt(file.classes, null, source.indexOf('z.cls.fn.done'))).toBeNull();
+    expect(classMethodAt(file.classes, null, source.indexOf('z.cls.method.defined'))).toBeNull();
   });
 
   test('入力ASTへ情報を付加し直しても意味情報を重複させない', () => {
@@ -292,7 +292,7 @@ describe('class hydration', () => {
 
   test('未完了と破棄済みのクラスを公開済みのクラスと区別する', () => {
     const incomplete = fixture(
-      ['z.cls.draw Open', '  z.cls.fn run', '    print "$1"', ''].join('\n'),
+      ['z.cls.draw Open', '  z.cls.method run', '    print "$1"', ''].join('\n'),
     );
 
     expect(incomplete.classes.definitions[0]).toMatchObject({ name: 'Open', state: 'incomplete' });
@@ -321,11 +321,11 @@ describe('class hydration', () => {
       'load() {',
       '  z.cls.draw Counter',
       '    z.cls.attr count default=0',
-      '    z.cls.fn increment',
+      '    z.cls.method increment',
       '      (( ++count ))',
       '      print "$1"',
-      '    z.cls.fn.done',
-      '    z.cls.fn value \'"$self.count.get"\'',
+      '    z.cls.method.defined',
+      '    z.cls.method value \'"$self.count.get"\'',
       '    z.cls.drew',
       '}',
       '',
@@ -342,7 +342,10 @@ describe('class hydration', () => {
 
   test('入れ子の関数にある終端名で外側のメソッドを閉じない', () => {
     const file = fixture(
-      source.replace('(( ++count ))', 'helper() { z.cls.fn.done }\n    print "z.cls.fn.done"'),
+      source.replace(
+        '(( ++count ))',
+        'helper() { z.cls.method.defined }\n    print "z.cls.method.defined"',
+      ),
     );
 
     expect(file.classes.definitions[0].methods.map((method) => method.name)).toEqual([
@@ -553,11 +556,11 @@ describe('class hydration', () => {
       [
         'z.cls.draw Outer',
         '  z.cls.draw Rejected',
-        '    z.cls.fn run',
+        '    z.cls.method run',
         '      z.cls.draw Business',
         '      z.cls.drew',
         '      z.cls.abort',
-        '    z.cls.fn.done',
+        '    z.cls.method.defined',
         '    z.cls.abort',
         '    z.cls.drew',
         '  z.cls.attr kept default=0',
@@ -616,10 +619,10 @@ describe('class hydration', () => {
   test('メソッド本体のdrawとdrewを終了マーカーとして扱わない', () => {
     const text = [
       'z.cls.draw MethodMarkers',
-      '  z.cls.fn run',
+      '  z.cls.method run',
       '    z.cls.draw Business',
       '    z.cls.drew',
-      '  z.cls.fn.done',
+      '  z.cls.method.defined',
       '  z.cls.drew',
       '',
     ].join('\n');
@@ -633,18 +636,18 @@ describe('class hydration', () => {
     expect(text.slice(method.body.range.start.offset, method.body.range.end.offset)).toContain(
       'z.cls.drew',
     );
-    expect(method.body.end?.start.offset).toBe(text.indexOf('z.cls.fn.done'));
+    expect(method.body.end?.start.offset).toBe(text.indexOf('z.cls.method.defined'));
   });
 
-  test('論理演算・パイプ・非同期実行中のfn.doneでメソッドを閉じない', () => {
+  test('論理演算・パイプ・非同期実行中のmethod.definedでメソッドを閉じない', () => {
     const text = [
       'z.cls.draw MethodBoundary',
-      '  z.cls.fn run',
-      '    true && z.cls.fn.done',
-      '    print value | z.cls.fn.done',
-      '    z.cls.fn.done &',
+      '  z.cls.method run',
+      '    true && z.cls.method.defined',
+      '    print value | z.cls.method.defined',
+      '    z.cls.method.defined &',
       '    print tail',
-      '  z.cls.fn.done',
+      '  z.cls.method.defined',
       '  z.cls.drew',
       '',
     ].join('\n');
@@ -654,7 +657,7 @@ describe('class hydration', () => {
     expect(method.body.kind).toBe('block');
     if (method.body.kind !== 'block') throw new Error('Expected a block method');
 
-    expect(method.body.end?.start.offset).toBe(text.lastIndexOf('z.cls.fn.done'));
+    expect(method.body.end?.start.offset).toBe(text.lastIndexOf('z.cls.method.defined'));
     expect(classMethodAt(file.classes, null, text.indexOf('print tail'))).toBe(method);
   });
 

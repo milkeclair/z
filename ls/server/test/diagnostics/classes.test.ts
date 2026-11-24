@@ -67,17 +67,17 @@ const classApi =
     'z.cls.attr() { : "$@" }',
     '# $1: method name',
     '# $2? [code]: inline body',
-    'z.cls.fn() { : "$@" }',
-    'z.cls.fn.done() { : }',
+    'z.cls.method() { : "$@" }',
+    'z.cls.method.defined() { : }',
     'z.cls.drew() { : }',
     'z.cls.new() { : }',
   ].join('\n') + '\n';
 const counterClass = [
   'z.cls.draw Counter',
   '  z.cls.attr count default=0',
-  '  z.cls.fn increment',
+  '  z.cls.method increment',
   '    (( ++count ))',
-  '  z.cls.fn.done',
+  '  z.cls.method.defined',
   '  z.cls.drew',
   '',
 ].join('\n');
@@ -85,8 +85,8 @@ const counterClass = [
 describe('class DSL command diagnostics', () => {
   test('引数形式のメソッド本体は共通のコード引数解析で元位置に診断する', () => {
     const source = counterClass.replace(
-      'z.cls.fn increment\n    (( ++count ))\n  z.cls.fn.done',
-      "z.cls.fn increment 'missing_inline_method'",
+      'z.cls.method increment\n    (( ++count ))\n  z.cls.method.defined',
+      "z.cls.method increment 'missing_inline_method'",
     );
     const scenario = fixture('', classApi + source);
     const diagnostics =
@@ -141,7 +141,7 @@ describe('class DSL command diagnostics', () => {
       scenario.definitionUri,
       'shellscript',
       1,
-      classApi + counterClass.replace('z.cls.fn increment', 'z.cls.fn reset'),
+      classApi + counterClass.replace('z.cls.method increment', 'z.cls.method reset'),
     );
 
     const snapshot = refreshFunctionSnapshot({
@@ -163,7 +163,7 @@ describe('class DSL command diagnostics', () => {
   test('入れ子の関数や文字列内の終了名でメソッドを閉じない', () => {
     const source = counterClass.replace(
       '(( ++count ))',
-      'helper() { z.cls.fn.done }\n    print "z.cls.fn.done"\n    z.cls.fn imaginary',
+      'helper() { z.cls.method.defined }\n    print "z.cls.method.defined"\n    z.cls.method imaginary',
     );
     const scenario = fixture(
       'z.cls.new Counter counter\n$counter.increment\n$counter.imaginary\n',
@@ -179,9 +179,9 @@ describe('scoped class references', () => {
   test('スコープによって異なるクラスを指す同名変数の呼出を認識する', () => {
     const arrayClass = [
       'z.cls.draw ArrayBox',
-      '  z.cls.fn fill',
+      '  z.cls.method fill',
       '    :',
-      '  z.cls.fn.done',
+      '  z.cls.method.defined',
       '  z.cls.drew',
       '',
     ].join('\n');
@@ -215,7 +215,7 @@ describe('scoped class references', () => {
       1,
       [
         'z.cls.draw Local',
-        '  z.cls.fn value "REPLY=1"',
+        '  z.cls.method value "REPLY=1"',
         '  z.cls.drew',
         'z.cls.new Counter counter',
         '$counter.increment',
@@ -262,9 +262,9 @@ describe('scoped class references', () => {
       'load() {',
       '  z.cls.draw Counter',
       '    z.cls.attr count default=0',
-      '    z.cls.fn increment',
+      '    z.cls.method increment',
       '      print "$1"',
-      '    z.cls.fn.done',
+      '    z.cls.method.defined',
       '    z.cls.drew',
       '}',
       '',
@@ -284,9 +284,9 @@ describe('scoped class references', () => {
       'load() {',
       '  z.cls.draw Counter',
       '    z.cls.attr count default=0',
-      '    z.cls.fn increment',
+      '    z.cls.method increment',
       '      z.arg.named option "$@"',
-      '    z.cls.fn.done',
+      '    z.cls.method.defined',
       '    z.cls.drew',
       '}',
       '',
@@ -484,7 +484,7 @@ describe('hydrated class command targets', () => {
     const api = '# $1 [code]: body\nrun() { eval "$1" }\n';
     const text = [
       "run 'z.cls.draw Local",
-      '  z.cls.fn value "REPLY=1"',
+      '  z.cls.method value "REPLY=1"',
       '  z.cls.drew',
       'z.cls.new Local local_object',
       "$local_object.missing'",
@@ -618,7 +618,7 @@ describe('class ownership diagnostics', () => {
   test('呼び出し元に依存せずreadの属性とメソッドを検査する', () => {
     const members = counterClass.replace(
       '  z.cls.drew',
-      "  # $self [Counter<read>]: 参照\n  z.cls.fn value '$self.count.get'\n  z.cls.drew",
+      "  # $self [Counter<read>]: 参照\n  z.cls.method value '$self.count.get'\n  z.cls.drew",
     );
     const scenario = fixture(
       [
