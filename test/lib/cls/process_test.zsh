@@ -464,24 +464,38 @@ z.t.describe "z.cls.new"; {
     }
   }
 
-  z.t.context "呼出元に内部処理と同じ用途の名前がある場合"; {
-    z.t.it "指定した変数にインスタンスを代入し、メソッドから呼出元の変数を参照できる"; {
+  z.t.context "代入先の名前がclassの場合"; {
+    z.t.it "呼び出し元のclassにインスタンス参照を代入する"; {
       () {
         local class=""
+        z.cls.draw ClassBinding
+        z.cls.drew
+
+        z.cls.new ClassBinding class
+
+        z.t.expect.includes "$class" z_cls_
+
+        z.cls.delete class
+      }
+    }
+  }
+
+  z.t.context "メソッドが呼び出し元のローカル変数を参照する場合"; {
+    z.t.it "resultとcurrent_instanceを呼び出し元から読む"; {
+      () {
+        local object=""
         local result=caller_result
         local current_instance=caller_instance
-
         z.cls.draw CallerVariables
           z.cls.method read 'REPLY="${result}:$current_instance"'
         z.cls.drew
+        z.cls.new CallerVariables object
 
-        z.cls.new CallerVariables class
-
-        z.t.expect.status.is.true
-        "$class.read"
+        $object.read
 
         z.t.expect.reply "caller_result:caller_instance"
-        z.cls.delete class
+
+        z.cls.delete object
       }
     }
   }
