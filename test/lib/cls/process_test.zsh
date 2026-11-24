@@ -2,7 +2,7 @@ source ${z_main}
 
 z.t.describe "z.cls.draw"; {
   z.t.context "有効なクラス名の場合"; {
-    z.t.it "定義を開始する"; {
+    z.t.it "有効なクラス名で定義を開始する"; {
       z.cls.draw DirectDraw
         z.t.expect "$z_cls_drawing" DirectDraw
 
@@ -11,12 +11,12 @@ z.t.describe "z.cls.draw"; {
   }
 
   z.t.context "DEBUGトラップが呼出元のresultに代入する場合"; {
-    z.t.it "定義開始は成功し、トラップの代入は呼出元へ届く"; {
+    z.t.it "DEBUGトラップの代入で定義開始の終了コードは変わらない"; {
       local -a output=()
       output=("${(@f)$(
         local result=before
         TRAPDEBUG() {
-          if [[ $funcstack[2] == z.cls.draw && $ZSH_DEBUG_CMD == 'unsetopt localoptions' ]]; then
+          if [[ $funcstack[2] == z.cls.draw ]]; then
             result=61
           fi
           return 0
@@ -36,7 +36,7 @@ z.t.describe "z.cls.draw"; {
   }
 
   z.t.context "引数が不足する場合"; {
-    z.t.it "失敗する"; {
+    z.t.it "クラス名のない定義はdrewで失敗する"; {
       z.t.mock name=z.io.error
 
       z.cls.draw # zls: ignore
@@ -45,7 +45,6 @@ z.t.describe "z.cls.draw"; {
       z.t.expect.status.is.false
     }
   }
-
 }
 
 # 定義読込時のトラップ設定を初期化のスコープに閉じ込める。
@@ -56,8 +55,8 @@ z.t.describe "z.cls.draw"; {
 }
 
 z.t.describe "z.cls.attr"; {
-  z.t.context "定義中の属性の場合"; {
-    z.t.it "初期値を保持する"; {
+  z.t.context "属性に初期値を指定する場合"; {
+    z.t.it "falseを属性の初期値として保存する"; {
       z.cls.draw DirectAttr
         z.cls.attr literal default=false
 
@@ -68,7 +67,7 @@ z.t.describe "z.cls.attr"; {
   }
 
   z.t.context "同名属性がある場合"; {
-    z.t.it "上書きを拒否する"; {
+    z.t.it "同名属性の再宣言で元の初期値を上書きしない"; {
       z.cls.draw DuplicateAttr
         z.cls.attr count default=3
         z.t.mock name=z.io.error
@@ -83,7 +82,7 @@ z.t.describe "z.cls.attr"; {
   }
 
   z.t.context "空の初期値を明示した場合"; {
-    z.t.it "空文字列をスカラーとして保持する"; {
+    z.t.it "空の初期値を持つ属性をスカラーとして取得する"; {
       z.cls.draw EmptyDefault
         z.cls.attr default default=
       z.cls.drew
@@ -105,7 +104,7 @@ z.t.describe "z.cls.attr"; {
   }
 
   z.t.context "defaultを属性名より前に置く場合"; {
-    z.t.it "初期値の空白と等号を保持する"; {
+    z.t.it "先に指定したdefault=の空白と等号を保つ"; {
       z.cls.draw NamedDefault
         z.cls.attr 'default=a b=c' label
       z.cls.drew
@@ -124,41 +123,31 @@ z.t.describe "z.cls.attr"; {
   }
 
   z.t.context "defaultを省略した場合"; {
-    z.t.it "属性の登録とクラスの公開が失敗する"; {
+    z.t.it "default=を省略した属性は登録できない"; {
       z.cls.draw MissingDefault
         z.cls.attr value 2>/dev/null # zls: ignore missing-named-argument
 
         z.t.expect.status.is.false
-      z.cls.drew
 
-      z.t.expect.status.is.false
-
-      z.hash.has.key z_cls_classes key=MissingDefault
-
-      z.t.expect.status.is.false
+      z.cls.abort
     }
   }
 
   z.t.context "defaultを重複して指定した場合"; {
-    z.t.it "属性の登録とクラスの公開が失敗する"; {
+    z.t.it "default=が2つある属性は登録できない"; {
       z.cls.draw DuplicateDefault
         z.cls.attr default=one default=two 2>/dev/null # zls: ignore missing-positional-argument
 
         z.t.expect.status.is.false
-      z.cls.drew
 
-      z.t.expect.status.is.false
-
-      z.hash.has.key z_cls_classes key=DuplicateDefault
-
-      z.t.expect.status.is.false
+      z.cls.abort
     }
   }
 }
 
 z.t.describe "z.cls.method"; {
-  z.t.context "明示的な本体の場合"; {
-    z.t.it "クラスへ登録する"; {
+  z.t.context "本文を第2引数で渡す場合"; {
+    z.t.it "第2引数の本文をメソッドとして登録する"; {
       z.cls.draw DirectMethod
         z.cls.method value 'REPLY=literal'
 
@@ -167,11 +156,38 @@ z.t.describe "z.cls.method"; {
       z.cls.abort
     }
   }
+
+  z.t.context "第2引数が空文字列の場合"; {
+    z.t.it "空の本文を持つメソッドを登録する"; {
+      z.cls.draw EmptyMethod
+        z.cls.method empty ''
+
+        z.hash.has.key z_cls_bodies key=EmptyMethod:empty
+
+        z.t.expect.status.is.true
+        z.t.expect.is.null "$z_cls_bodies[EmptyMethod:empty]"
+
+      z.cls.abort
+    }
+  }
+
+  z.t.context "第2引数を渡しメソッド名が不正な場合"; {
+    z.t.it "引用本文の不正なメソッド名はその場で拒否する"; {
+      z.cls.draw InvalidQuotedMethod
+        z.t.mock name=z.io.error
+
+        z.cls.method bad-name 'REPLY=ignored'
+
+        z.t.expect.status.is.false
+
+      z.cls.abort
+    }
+  }
 }
 
 z.t.describe "z.cls.drew"; {
   z.t.context "定義を開始していない場合"; {
-    z.t.it "公開を拒否する"; {
+    z.t.it "定義中のクラスがなければ公開に失敗する"; {
       z.cls.abort
       z.t.mock name=z.io.error
 
@@ -182,12 +198,26 @@ z.t.describe "z.cls.drew"; {
   }
 
   z.t.context "定義中のクラスの場合"; {
-    z.t.it "公開して定義状態を終了する"; {
+    z.t.it "定義中のクラスを公開し定義状態を解除する"; {
       z.cls.draw DirectPublish
       z.cls.drew
 
       z.t.expect "$z_cls_classes[DirectPublish]" 1
       z.t.expect.is.null "$z_cls_drawing"
+    }
+  }
+
+  z.t.context "属性の登録に失敗した場合"; {
+    z.t.it "属性の登録に失敗したクラスは公開されない"; {
+      z.cls.draw InvalidAttributeClass
+        z.cls.attr value 2>/dev/null # zls: ignore missing-named-argument
+      z.cls.drew
+
+      z.t.expect.status.is.false
+
+      z.hash.has.key z_cls_classes key=InvalidAttributeClass
+
+      z.t.expect.status.is.false
     }
   }
 }
@@ -262,7 +292,7 @@ z.t.describe "z.cls.abort"; {
 
 z.t.describe "z.cls.new"; {
   z.t.context "参照を変換する変数属性がある場合"; {
-    z.t.it "大文字へ変換する変数には実体を作らない"; {
+    z.t.it "大文字へ変換する変数にはインスタンスを作らない"; {
       () {
         z.cls.draw RejectUpper
         z.cls.drew
@@ -280,7 +310,7 @@ z.t.describe "z.cls.new"; {
       }
     }
 
-    z.t.it "桁揃えする変数には実体を作らない"; {
+    z.t.it "桁揃えする変数にはインスタンスを作らない"; {
       () {
         z.cls.draw RejectJustified
         z.cls.drew
@@ -322,7 +352,7 @@ z.t.describe "z.cls.new"; {
   }
 
   z.t.context "呼出元に内部処理と同じ用途の名前がある場合"; {
-    z.t.it "指定した変数に実体を代入し、メソッドから呼出元の変数を参照できる"; {
+    z.t.it "指定した変数にインスタンスを代入し、メソッドから呼出元の変数を参照できる"; {
       () {
         local class=""
         local result=caller_result
@@ -492,7 +522,7 @@ z.t.describe "z.cls.new"; {
   }
 
   z.t.context "クラスが存在しない場合"; {
-    z.t.it "実体を作らず失敗する"; {
+    z.t.it "インスタンスを作らず失敗する"; {
       z.t.mock name=z.io.error
 
       z.cls.new MissingDirectClass missing_direct_object
@@ -524,7 +554,7 @@ z.t.describe "z.cls.new"; {
   }
 
   z.t.context "内側のスコープに同名localがある場合"; {
-    z.t.it "内側の実体を削除しても外側の参照と状態を保持する"; {
+    z.t.it "内側のインスタンスの削除後に外側の状態を保持する"; {
       () {
         local counter=""
         z.cls.new TestCounter counter
@@ -562,7 +592,7 @@ z.t.describe "z.cls.new"; {
       }
     }
 
-    z.t.it "内側の参照が別クラスを指す場合も呼び分ける"; {
+    z.t.it "内側と外側の参照をそれぞれのクラスへ解決する"; {
       () {
         local counter=""
         z.cls.new TestCounter counter
@@ -635,7 +665,7 @@ z.t.describe "z.cls.new"; {
   }
 
   z.t.context "呼出元に同名の通常関数がある場合"; {
-    z.t.it "通常関数と実体のメソッドを独立して呼び出せる"; {
+    z.t.it "通常関数とインスタンスのメソッドを独立して呼び出せる"; {
       () {
         local first=""
         first.value() {
@@ -686,25 +716,39 @@ z.t.describe "z.cls.new"; {
     }
   }
 
-  z.t.context "呼出元がIFSとGLOB_SUBSTを設定している場合"; {
-    z.t.it "属性を復元でき、削除後に生成コマンドを残さない"; {
+  z.t.context "呼び出し元のIFSがコロンの場合"; {
+    z.t.it "setterで同じインスタンスの属性を参照する"; {
       () {
         local object=""
         local IFS=:
-        setopt localoptions globsubst
 
-        z.cls.draw ClassWithOptions
+        z.cls.draw ClassWithCustomIFS
           z.cls.attr value default=1
           z.cls.attr other default=2
         z.cls.drew
-
-        z.cls.new ClassWithOptions object
+        z.cls.new ClassWithCustomIFS object
         z_cls_values[${object}:value]='typeset -i value=1'
 
         $object.value.set 'other + 1'
         $object.value.get
 
         z.t.expect.reply 3
+
+        z.cls.delete object
+      }
+    }
+  }
+
+  z.t.context "GLOB_SUBSTが有効な場合"; {
+    z.t.it "インスタンスの削除で生成したgetterを解除する"; {
+      () {
+        local object=""
+        setopt localoptions globsubst
+
+        z.cls.draw ClassWithGlobSubst
+          z.cls.attr value default=1
+        z.cls.drew
+        z.cls.new ClassWithGlobSubst object
 
         z.cls.delete object
         z.var.exists "functions[$object.value.get]"
@@ -715,7 +759,7 @@ z.t.describe "z.cls.new"; {
   }
 
   z.t.context "作成先を宣言していない場合"; {
-    z.t.it "グローバル変数と実体を作らない"; {
+    z.t.it "グローバル変数とインスタンスを作らない"; {
       z.t.mock name=z.io.error
 
       z.cls.new TestCounter missing_counter
@@ -749,7 +793,7 @@ z.t.describe "z.cls.delete"; {
     }
   }
 
-  z.t.context "実行中の実体の場合"; {
+  z.t.context "実行中のインスタンスの場合"; {
     z.t.it "状態を保持して削除を拒否する"; {
       () {
         z.cls.draw ActiveDelete
@@ -775,7 +819,7 @@ z.t.describe "z.cls.delete"; {
     }
   }
 
-  z.t.context "実体がある場合"; {
+  z.t.context "インスタンスがある場合"; {
     z.t.it "コマンドと状態を解放する"; {
       () {
         z.cls.draw DirectDelete
@@ -802,7 +846,7 @@ z.t.describe "z.cls.delete"; {
   }
 
   z.t.context "生成した関数を利用者が上書きした場合"; {
-    z.t.it "他の共有本体へ影響せず、削除後も上書きを保持する"; {
+    z.t.it "削除後にユーザーが上書きした関数を残す"; {
       () {
         local first=""
         z.cls.new TestCounter first
@@ -823,7 +867,7 @@ z.t.describe "z.cls.delete"; {
       }
     }
 
-    z.t.it "別メソッドの本体をコピーした上書きも削除しない"; {
+    z.t.it "別メソッドからコピーした上書きを残す"; {
       () {
         local first=""
         z.cls.new TestCounter first
@@ -909,7 +953,7 @@ z.t.describe "z.cls.delete"; {
   }
 
   z.t.context "削除した参照と同名の変数を別スコープで使う場合"; {
-    z.t.it "元のコマンドを解放し、新しい初期状態の実体を作る"; {
+    z.t.it "元のコマンドを解放し、新しい初期状態のインスタンスを作る"; {
       () {
         local first=""
         z.cls.new TestCounter first
