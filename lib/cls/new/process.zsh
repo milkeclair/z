@@ -11,23 +11,20 @@
 #  # return: 1
 #  # 変更後: objectと実体の登録は元のまま
 z.cls.new._validate() {
-  if ! z.int.is.eq $# 2 || z.is.null "${z_cls_classes[$1]:-}" || ! z.cls.is._attribute "$2"; then
+  if z.is.not.eq "$#" 2 || z.is.null "${z_cls_classes[$1]:-}" || ! z.cls.is._attribute "$2"; then
     z.io.error "Expected an existing class and an ordinary instance variable name."
     return 1
   fi
 
-  local z_cls_binding=$2
-  local z_cls_binding_type=${parameters[$z_cls_binding]:-}
-
-  case $z_cls_binding_type in
+  case ${parameters[$2]:-} in
     *readonly*|*array*|*association*|*integer*|*float*|*tied*|*upper*|*lower*|*left*|*right_blanks*|*right_zeros*)
-      z.io.error "Instance variable $z_cls_binding must be an ordinary writable scalar."
+      z.io.error "Instance variable $2 must be an ordinary writable scalar."
       return 1
       ;;
   esac
 
-  if z.is.not.null "${z_cls_instances[${(P)z_cls_binding:-}]:-}"; then
-    z.io.error "Instance variable $z_cls_binding already holds a reference."
+  if z.is.not.null "${z_cls_instances[${(P)2:-}]:-}"; then
+    z.io.error "Instance variable $2 already holds a reference."
     return 1
   fi
 

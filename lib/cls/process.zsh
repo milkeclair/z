@@ -13,9 +13,6 @@
 z.cls.draw() {
   z.cls.store._ensure
 
-  local caller_stack=${(j:|:)funcstack[2,-1]}
-  local result=1
-
   if ! z.is.eq "$#" 1 || ! z.cls.is._name "${1:-}"; then
     z.io.error "Expected a valid class name."
   elif z.is.not.null "$z_cls_drawing" || z.is.not.null "${z_cls_classes[$1]:-}"; then
@@ -24,20 +21,20 @@ z.cls.draw() {
     z_cls_class_attrs[$1]=''
     z_cls_class_methods[$1]=''
     z_cls_drawing=$1
-    typeset -g +x z_cls_draw_stack=$caller_stack
+    typeset -g +x z_cls_draw_stack=${(j:|:)funcstack[2,-1]}
     typeset -gi +x z_cls_draw_failed=0
-    result=0
+
+    unsetopt localoptions
+    z.cls.capture._watch
+    return 0
   fi
 
-  if z.int.is.not.zero $result; then
-    typeset -gi +x z_cls_reject_depth=1 z_cls_reject_method=0
-    typeset -g +x z_cls_reject_stack=$caller_stack
-  fi
+  typeset -gi +x z_cls_reject_depth=1 z_cls_reject_method=0
+  typeset -g +x z_cls_reject_stack=${(j:|:)funcstack[2,-1]}
 
   unsetopt localoptions
   z.cls.capture._watch
-
-  return $result
+  return 1
 }
 
 # 定義中のクラスにスカラー属性と初期値を登録する。
@@ -174,16 +171,17 @@ z.cls.abort() {
   z.cls.capture._stop
 
   local REPLY=""
-  local key
+  # 復元したDEBUGトラップは、呼出元の変数と同じ名前に代入できる。
+  local z_cls_abort_key
 
   z.hash.keys z_cls_defaults
-  for key in "${(@)REPLY}"; do
-    z.str.start_with "$key" "$z_cls_drawing:" && unset "z_cls_defaults[$key]"
+  for z_cls_abort_key in "${(@)REPLY}"; do
+    z.str.start_with "$z_cls_abort_key" "$z_cls_drawing:" && unset "z_cls_defaults[$z_cls_abort_key]"
   done
 
   z.hash.keys z_cls_bodies
-  for key in "${(@)REPLY}"; do
-    z.str.start_with "$key" "$z_cls_drawing:" && unset "z_cls_bodies[$key]"
+  for z_cls_abort_key in "${(@)REPLY}"; do
+    z.str.start_with "$z_cls_abort_key" "$z_cls_drawing:" && unset "z_cls_bodies[$z_cls_abort_key]"
   done
 
   if z.is.not.null "$z_cls_drawing"; then
@@ -214,14 +212,11 @@ z.cls.new() {
 
   z.cls.new._validate "$@" || return 1
 
-  local z_cls_class=$1
-  local z_cls_binding=$2
-
   (( ++z_cls_next_id ))
 
   local z_cls_id="z_cls_${$}_$z_cls_next_id"
 
-  z.cls.instance._commands "$z_cls_class" "$z_cls_binding" "$z_cls_id"
+  z.cls.instance._commands "$1" "$2" "$z_cls_id"
 
   local -a z_cls_wrappers=("${(@)REPLY}")
 
@@ -229,16 +224,17 @@ z.cls.new() {
 
   local z_cls_member
 
-  for z_cls_member in ${=z_cls_class_attrs[$z_cls_class]}; do
-    z.cls.store._scalar "$z_cls_id" "$z_cls_member" "$z_cls_defaults[$z_cls_class:$z_cls_member]"
+  for z_cls_member in ${=z_cls_class_attrs[$1]}; do
+    z.cls.store._scalar "$z_cls_id" "$z_cls_member" "$z_cls_defaults[$1:$z_cls_member]"
   done
 
   z.cls.instance.commands._install "${z_cls_wrappers[@]}"
 
-  z_cls_members[$z_cls_id]="${(j: :)z_cls_wrappers}"
-  z_cls_instances[$z_cls_id]=$z_cls_class
-  : ${(P)z_cls_binding::=$z_cls_id}
-  typeset -gr -- "$z_cls_binding"
+  z.arr.join "${z_cls_wrappers[@]}"
+  z_cls_members[$z_cls_id]=$REPLY
+  z_cls_instances[$z_cls_id]=$1
+  : ${(P)2::=$z_cls_id}
+  typeset -gr -- "$2"
 
   REPLY=$z_cls_id
 }
@@ -259,18 +255,18 @@ z.cls.delete() {
 
   local REPLY=""
 
-  z.int.is.eq $# 1 || return 1
+  z.is.eq "$#" 1 || return 1
 
-  local z_cls_id=${(P)1:-}
+  local instance_id=${(P)1:-}
 
-  z.is.not.null "${z_cls_instances[$1]:-}" && z_cls_id=$1
+  z.is.not.null "${z_cls_instances[$1]:-}" && instance_id=$1
 
-  if z.is.null "${z_cls_instances[$z_cls_id]:-}" || z.is.not.null "${z_cls_active[$z_cls_id]:-}"; then
+  if z.is.null "${z_cls_instances[$instance_id]:-}" || z.is.not.null "${z_cls_active[$instance_id]:-}"; then
     z.io.error "Expected an existing, inactive instance reference."
     return 1
   fi
 
-  z.cls.instance._release "$z_cls_id"
+  z.cls.instance._release "$instance_id"
 
   z.hash.count z_cls_instances
   if z.int.is.zero $REPLY; then
