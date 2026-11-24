@@ -11,28 +11,47 @@ import {
   type ListNode,
   type SimpleCommandNode,
   type WordNode,
+  type WordPartNode,
 } from '../zshParser/ast';
 
 const variablePattern = /^[A-Za-z_][A-Za-z_0-9]*$/;
+const positionalPattern = /^[1-9][0-9]*$/;
 
 export function variableName(value: string | null): string | null {
   return value && variablePattern.test(value) ? value : null;
 }
 
+/** 実体参照として静的に追跡できる変数名または位置引数番号を取得する。 */
+export function classReferenceBinding(part: WordPartNode): string | null {
+  if (part.kind === 'variableReference') return part.name.value;
+  if (part.kind !== 'parameterExpansion') return null;
+
+  const name =
+    part.raw[1] === '{' && part.raw.endsWith('}') ? part.raw.slice(2, -1) : part.raw.slice(1);
+
+  return part.raw.startsWith('$') && (variableName(name) || positionalPattern.test(name))
+    ? name
+    : null;
+}
+
 /** 静的に追跡できる単一の変数展開を、名前付き引数も含めて取得する。 */
 export function variableArgument(word: WordNode, key?: string): string | null {
-  const raw = word.raw;
-  const text = raw.startsWith('"') && raw.endsWith('"') ? raw.slice(1, -1) : raw;
+  const part = word.parts.find((entry) => entry.kind !== 'stringLiteral');
+  const binding = part && classReferenceBinding(part);
+  if (!part || !binding) return null;
+
+  const start = word.range.start.offset;
+  const expansion = word.raw.slice(part.range.start.offset - start, part.range.end.offset - start);
   const prefix = key ? key + '=' : '';
-  if (!text.startsWith(prefix)) return null;
-  const value = text.slice(prefix.length);
-  const unquoted = value.startsWith('"') && value.endsWith('"') ? value.slice(1, -1) : value;
-  return (
-    /^\$(?:\{([A-Za-z_][A-Za-z_0-9]*|[1-9][0-9]*)\}|([A-Za-z_][A-Za-z_0-9]*|[1-9][0-9]*))$/
-      .exec(unquoted)
-      ?.slice(1)
-      .find(Boolean) ?? null
-  );
+  const value = prefix + expansion;
+  const quotedExpansion = prefix + '"' + expansion + '"';
+
+  return word.raw === value ||
+    word.raw === '"' + value + '"' ||
+    word.raw === quotedExpansion ||
+    word.raw === '"' + quotedExpansion + '"'
+    ? binding
+    : null;
 }
 
 export function commandName(command: SimpleCommandNode): string | null {
@@ -156,7 +175,7 @@ export function parameterAt(
   if (!definition || classMethodAt(file.classes, definition, offset)) return null;
   const parameters = documentationOf(definition)?.parameters;
   if (!parameters?.some((parameter) => parameter.classReference)) return null;
-  const alias = /^[1-9][0-9]*$/.test(binding)
+  const alias = positionalPattern.test(binding)
     ? { source: binding, kind: 'positional' }
     : argumentAlias(
         location.path.filter((node) => node.kind === 'list'),

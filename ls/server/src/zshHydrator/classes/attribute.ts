@@ -1,16 +1,8 @@
 import { decodeLiteral } from '../../embeddedCode/literal';
 import { createCodeSourceMap, sourcePosition } from '../../embeddedCode/sourceMap';
 import type { SimpleCommandNode, WordNode } from '../../zshParser/ast';
-import { literalWord } from '../../zshParser/ast/word/literal';
+import { namedKey } from '../../zshParser/ast/word/literal';
 import type { SourceRange } from '../../zshParser/lexer';
-
-function isDefaultArgument(word: WordNode): boolean {
-  const prefix = word.parts[0];
-  if (prefix?.kind !== 'stringLiteral') return false;
-
-  const value = literalWord({ ...word, raw: prefix.value, parts: [prefix] });
-  return value?.startsWith('default=') ?? false;
-}
 
 /** 属性名と必須のdefault引数を、元の単語の参照を保って読み取る。 */
 export function attributeArguments(command: SimpleCommandNode): {
@@ -19,11 +11,13 @@ export function attributeArguments(command: SimpleCommandNode): {
 } | null {
   if (command.arguments.length !== 2) return null;
 
-  const index = command.arguments.findIndex(isDefaultArgument);
+  const index = command.arguments.findIndex((word) => namedKey(word) === 'default');
   if (index < 0) return null;
 
   const nameNode = command.arguments[1 - index];
-  return isDefaultArgument(nameNode) ? null : { nameNode, defaultValue: command.arguments[index] };
+  return namedKey(nameNode) === 'default'
+    ? null
+    : { nameNode, defaultValue: command.arguments[index] };
 }
 
 /** 引用と展開の構文を保ちながら、default=を除いた値の物理位置を返す。 */

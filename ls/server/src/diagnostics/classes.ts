@@ -9,7 +9,7 @@ import type {
   ClassMethod,
 } from '../zshHydrator/classes';
 import { ownerAt, type ClassReferenceIssue, type Ownership } from './ownership';
-import { parameterAt } from './classContracts';
+import { classReferenceBinding, parameterAt } from './classContracts';
 
 export type ClassCommandTarget = {
   readonly definition: ClassDefinition;
@@ -36,13 +36,7 @@ export function classMemberReference(
   const part = word.parts[index];
   if (!part || staticText(word, word.parts.slice(0, index)) !== '') return null;
 
-  const binding =
-    part.kind === 'variableReference'
-      ? part.name.value
-      : part.kind === 'parameterExpansion'
-        ? (/^\$([1-9][0-9]*)$/.exec(part.raw)?.[1] ??
-          /^\$\{([A-Za-z_][A-Za-z0-9_]*|[1-9][0-9]*)\}$/.exec(part.raw)?.[1])
-        : undefined;
+  const binding = classReferenceBinding(part);
   if (!binding) return null;
 
   const suffix = staticText(word, word.parts.slice(index + 1));

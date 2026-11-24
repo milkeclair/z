@@ -722,22 +722,25 @@ describe('class ownership diagnostics', () => {
     ]);
     expect(scenario.items[0]?.message).toContain('may have moved');
   });
-  test('readの引数をwriteが必要な通常関数の名前付き引数へ渡すと報告する', () => {
-    const scenario = fixture(
-      [
-        '# $target [Counter<write>]: 更新対象',
-        'update_count() { z.arg.named target "$@" && local ref=$REPLY; $ref.count.set 1; }',
-        '# $1 [Counter<read>]: 読み取り対象',
-        'read_count() { local -r ref=$1; update_count "target=$ref"; }',
-        '',
-      ].join('\n'),
-      classApi + ownershipApi + counterClass + 'z.arg.named() { :; }\n',
-    );
+  test.each(['"target=$ref"', 'target="$ref"', 'target=${ref}'])(
+    'readの引数をwriteが必要な通常関数の名前付き引数 %s へ渡すと報告する',
+    (argument) => {
+      const scenario = fixture(
+        [
+          '# $target [Counter<write>]: 更新対象',
+          'update_count() { z.arg.named target "$@" && local ref=$REPLY; $ref.count.set 1; }',
+          '# $1 [Counter<read>]: 読み取り対象',
+          'read_count() { local -r ref=$1; update_count ' + argument + '; }',
+          '',
+        ].join('\n'),
+        classApi + ownershipApi + counterClass + 'z.arg.named() { :; }\n',
+      );
 
-    expect(scenario.items.map(({ code, range }) => [code, range.start.line])).toEqual([
-      ['class-argument-type', 3],
-    ]);
-  });
+      expect(scenario.items.map(({ code, range }) => [code, range.start.line])).toEqual([
+        ['class-argument-type', 3],
+      ]);
+    },
+  );
 
   test('両分岐でmoveを通る所有者契約を受理する', () => {
     const scenario = fixture(

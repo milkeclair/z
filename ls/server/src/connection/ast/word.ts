@@ -1,5 +1,4 @@
-import type { WordNode } from '../../zshParser/ast';
-import { hereDocDelimiter } from '../../zshParser/lexer/delimiter';
+export { namedKey } from '../../zshParser/ast/word/literal';
 
 const RESERVED_COMMANDS: readonly string[] = [
   'if',
@@ -49,17 +48,4 @@ export function commandInsertion(name: string): string {
   const escapedQuote = "'" + String.fromCharCode(92) + "''";
 
   return "'" + name.split("'").join(escapedQuote) + "'";
-}
-
-/** 展開を評価せずにシェルの引用を外し、単語の静的な接頭辞から名前付き引数のキーを読む。 */
-export function namedKey(word: WordNode): string | null {
-  const prefix = word.parts[0];
-
-  if (prefix?.kind !== 'stringLiteral') {
-    return null;
-  }
-
-  const text = hereDocDelimiter(prefix.value).delimiter;
-
-  return /^([_a-zA-Z][_a-zA-Z0-9]*)=/.exec(text)?.[1] ?? null;
 }
