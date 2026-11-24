@@ -1,7 +1,7 @@
 source ${z_main}
 
 z.t.describe "z.cls.instance._call"; {
-  z.t.context "既存の実体を参照する場合"; {
+  z.t.context "既存のインスタンスを参照する場合"; {
     z.t.it "メソッドの更新と結果を保存する"; {
       () {
         z.cls.draw DirectCall
@@ -119,7 +119,7 @@ z.t.describe "z.cls.instance._snapshot"; {
 }
 
 z.t.describe "z.cls.instance._release"; {
-  z.t.context "他の実体が残る場合"; {
+  z.t.context "他のインスタンスが残る場合"; {
     z.t.it "対象だけを解放して生存中の状態を保つ"; {
       () {
         z.cls.draw DirectRelease

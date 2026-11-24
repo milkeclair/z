@@ -65,7 +65,7 @@ z.t.describe "z.cls.instance.execute._set"; {
       }
     }
 
-    z.t.it "式の途中で代入された別の変数も変更しない"; {
+    z.t.it "評価に失敗した式による他の変数への代入を破棄する"; {
       () {
         local -i number=4
         local other=13

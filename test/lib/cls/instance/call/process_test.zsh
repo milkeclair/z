@@ -16,7 +16,7 @@ z.t.describe "z.cls.instance.call._validate"; {
   }
 
   z.t.context "参照がない場合"; {
-    z.t.it "存在しない実体の操作を拒否する"; {
+    z.t.it "存在しないインスタンスの操作を拒否する"; {
       z.cls.store._ensure
       z.t.mock name=z.io.error
 
@@ -26,8 +26,8 @@ z.t.describe "z.cls.instance.call._validate"; {
     }
   }
 
-  z.t.context "別の実体の呼出しから再入する場合"; {
-    z.t.it "実行中の実体を保護する"; {
+  z.t.context "別のインスタンスの呼出しから再入する場合"; {
+    z.t.it "実行中のインスタンスを保護する"; {
       z.cls.store._ensure
       z_cls_instances[reentry_ref]=ValidateReentry
       z_cls_bodies[ValidateReentry:run]=':'
@@ -100,7 +100,7 @@ z.t.describe "z.cls.instance.call._access"; {
   }
 
   z.t.context "整数setterが他の属性を参照する場合"; {
-    z.t.it "復元した実体のスコープで評価する"; {
+    z.t.it "復元したインスタンスのスコープで評価する"; {
       () {
         z.cls.draw DirectAccessScope
           z.cls.attr count default=1
@@ -289,7 +289,7 @@ z.t.describe "z.cls.instance.call._run"; {
       }
     }
 
-    z.t.context "同じ実体のメソッドを入れ子で呼ぶ場合"; {
+    z.t.context "同じインスタンスのメソッドを入れ子で呼ぶ場合"; {
       z.t.it "内側と外側で同じ状態を使う"; {
         () {
           local first=""
@@ -326,7 +326,7 @@ z.t.describe "z.cls.instance.call._run"; {
     }
 
     z.t.context "配列を属性へ保存する場合"; {
-      z.t.it "空要素と空白を含む要素を更新後も保持する"; {
+      z.t.it "代入後に空の要素と空白を含む要素の境界を保持する"; {
         () {
           local first=""
           z.cls.new ArrayBox first
@@ -459,7 +459,7 @@ z.t.describe "z.cls.instance.call._run"; {
     }
 
     z.t.context "整数setterの式が他の属性を参照する場合"; {
-      z.t.it "同じ実体のスコープで式を評価する"; {
+      z.t.it "同じインスタンスのスコープで式を評価する"; {
         () {
           local arithmetic=""
           z.cls.new ArithmeticSetter arithmetic
@@ -514,8 +514,8 @@ z.t.describe "z.cls.instance.call._run"; {
       }
     }
 
-    z.t.context "同じ実体のメソッドを入れ子で呼ぶ場合"; {
-      z.t.it "selfを同じIDに保ち、外側の実行中フラグも保持する"; {
+    z.t.context "同じインスタンスのメソッドを入れ子で呼ぶ場合"; {
+      z.t.it "入れ子の呼び出しで同じselfと実行中フラグを保持する"; {
         () {
           z.cls.draw SameSelf
             z.cls.method identity
@@ -547,7 +547,7 @@ z.t.describe "z.cls.instance.call._run"; {
       }
     }
 
-    z.t.context "別の実体を呼んでから戻る場合"; {
+    z.t.context "別のインスタンスを呼んでから戻る場合"; {
       z.t.it "内側だけselfを切り替え、戻った後は外側のIDを使う"; {
         () {
           z.cls.draw DifferentSelf
@@ -583,7 +583,7 @@ z.t.describe "z.cls.instance.call._run"; {
     }
 
     z.t.context "selfを読み取る場合"; {
-      z.t.it "実体IDをreadonlyで渡し、呼出元のselfを変更しない"; {
+      z.t.it "インスタンスIDをreadonlyで渡し、呼出元のselfを変更しない"; {
         () {
           local -r self=caller_self
           z.cls.draw ReadonlySelf

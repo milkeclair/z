@@ -5,12 +5,12 @@
 # return: 0|1
 #
 # example:
-#  # 前提: 呼出元でlocal -a items=(one "two words")を宣言している
+#  local -a items=(one "two words")
 #  z.cls.instance.execute._get items
 #  # REPLY: ("one" "two words")
 #  # return: 0
 z.cls.instance.execute._get() {
-  z.is.eq "$#" 1 || return 1
+  z.is.not.eq "$#" 1 && return 1
 
   case ${(tP)1} in
     array*|association*) REPLY=("${(@P)1}") ;;

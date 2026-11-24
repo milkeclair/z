@@ -1,15 +1,16 @@
-# クラス定義、実体の状態、本体収集用の管理変数を初期化する。
+# クラス定義、インスタンスの状態、本体収集用の管理変数を初期化する。
 #
 # REPLY: null
 # return: 0
 #
 # example:
-#  # 前提: 保存領域は未初期化
 #  z.cls.store._ensure
 #  # return: 0
 #  # 変更後: z_cls_instances=()とz_cls_values=()を初期化済み
 z.cls.store._ensure() {
-  z.is.eq "${z_cls_store_ready:-0}" 1 && z.var.exists z_cls_dispatch_programs && return 0
+  if z.is.eq "${z_cls_store_ready-}" 1 && z.var.exists z_cls_dispatch_programs; then
+    return 0
+  fi
 
   zmodload zsh/parameter
 
@@ -33,27 +34,25 @@ z.cls.store._ensure() {
   typeset -gi +x z_cls_store_ready=1
 }
 
-# 通常のスカラーと十進整数を、復元可能な宣言へ引用して保存する。
+# スカラーを復元できる宣言として保存する。
 #
-# $1: 実体参照
+# $1: インスタンス参照
 # $2: 属性名
 # $3: 保存する値
-# $4?: 宣言フラグ（既定: --、整数は-i）
 # REPLY: null
 # return: 0
 #
 # example:
-#  # 前提: z.cls.store._ensureで保存領域を初期化している
+#  z.cls.store._ensure
 #  z.cls.store._scalar object label "two words"
 #  # return: 0
 #  # 変更後: z_cls_values[object:label]="typeset -- label='two words'"
 z.cls.store._scalar() {
-  local declaration_flag=${4:---}
   local -a REPLY=()
 
   z.arr.quote style=single "$3"
 
-  z_cls_values[$1:$2]="typeset $declaration_flag $2=$REPLY[1]"
+  z_cls_values[$1:$2]="typeset -- $2=$REPLY[1]"
 }
 
 # クラスのメソッド名と実行する本体を保存する。
@@ -65,7 +64,7 @@ z.cls.store._scalar() {
 # return: 0
 #
 # example:
-#  # 前提: Counterを定義中
+#  z.cls.draw Counter
 #  z.cls.store._method value class=Counter body='REPLY=0'
 #  # return: 0
 #  # 変更後: Counterのメソッド一覧にvalueを加え、本体にREPLY=0を保存
@@ -85,7 +84,9 @@ z.cls.store._method() {
 # return: 0
 #
 # example:
-#  # 前提: Counterの公開前にcountとincrementを宣言している
+#  z.cls.draw Counter
+#    z.cls.attr count default=0
+#    z.cls.method increment 'REPLY=1'
 #  z.cls.store._discard Counter
 #  # return: 0
 #  # 変更後: Counterの属性、初期値、メソッド本体を破棄
@@ -93,12 +94,12 @@ z.cls.store._discard() {
   local -a REPLY=()
   local member
 
-  z.cls.store._names "${z_cls_class_attrs[$1]-}"
+  z.cls.store._names "$z_cls_class_attrs[$1]"
   for member in "${REPLY[@]}"; do
     unset "z_cls_defaults[$1:$member]"
   done
 
-  z.cls.store._names "${z_cls_class_methods[$1]-}"
+  z.cls.store._names "$z_cls_class_methods[$1]"
   for member in "${REPLY[@]}"; do
     unset "z_cls_bodies[$1:$member]"
   done

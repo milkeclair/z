@@ -2,7 +2,7 @@ source ${z_main}
 
 z.t.describe "z.cls.instance._commands"; {
   z.t.context "属性とメソッドがある場合"; {
-    z.t.it "実体参照だけを接頭辞にする"; {
+    z.t.it "インスタンス参照だけを接頭辞にする"; {
       z.cls.store._ensure
       z_cls_class_methods[CommandList]='increment '
       z_cls_class_attrs[CommandList]='count '

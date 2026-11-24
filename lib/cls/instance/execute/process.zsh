@@ -6,7 +6,7 @@
 # return: 0|1
 #
 # example:
-#  # 前提: 呼出元でlocal -i count=4を宣言している
+#  local -i count=4
 #  z.cls.instance.execute._set count '2 +'
 #  # return: 1
 #  # 変更後: countは4のまま
@@ -19,16 +19,21 @@ z.cls.instance.execute._set() {
     association*)
       z.int.is.zero $(( ($# - 1) % 2 )) || return 1
       set -A "$1" "${@:2}"
+      return
       ;;
     array*)
       set -A "$1" "${@:2}"
+      return
       ;;
-    integer*|float*)
-      z.is.eq "$#" 2 || return 1
+  esac
 
+  z.is.not.eq "$#" 2 && return 1
+
+  case ${(tP)1} in
+    integer*|float*)
       if ! REPLY=$(
         : ${(P)1::=$2}
-        # 表示精度で丸めず、ロケールに依存しない数値表現だけを呼出元へ返す。
+        # 表示精度で丸めず、ロケールに依存しない数値表現だけを呼び出し元へ返す。
         local LC_ALL=C
         case ${(tP)1} in
           integer*) printf '%d' "$1" ;;
@@ -49,7 +54,6 @@ z.cls.instance.execute._set() {
       : ${(P)1::=$REPLY}
       ;;
     *)
-      z.is.eq "$#" 2 || return 1
       : ${(P)1::=$2}
       ;;
   esac
