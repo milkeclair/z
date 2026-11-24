@@ -72,7 +72,7 @@ export function memberRequiresWrite(target: ClassCommandTarget): boolean {
   );
 }
 
-/** 呼び出し位置で有効な所有参照と、借用に許可された属性の取得を解決する。 */
+/** 呼び出し位置で有効な所有参照と、引数の契約で許可された操作を解決する。 */
 export function resolveInstanceCommand(
   file: ZshFileHydration,
   word: WordNode,
@@ -121,7 +121,7 @@ export function resolveInstanceCommand(
       const target = memberTarget(definition, reference.member, binding?.instance ?? null);
       if (parameter?.access === 'read' && target && memberRequiresWrite(target)) {
         return {
-          code: 'class-borrow-readonly',
+          code: 'class-readonly-write',
           message: name + ' requires write access to the instance.',
         };
       }

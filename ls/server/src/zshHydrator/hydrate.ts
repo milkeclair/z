@@ -73,7 +73,7 @@ export function hydrateAst(
     documents.size === 0 &&
     !ast.comments.some((comment) => isHydratedComment(comment) || parseDirective(comment, options))
   ) {
-    return hydrateClasses(ast);
+    return hydrateClasses(ast, source);
   }
 
   // 先行コメントの位置ではなく、構文の範囲に含まれる関数定義の位置で絞り込む。
@@ -127,5 +127,5 @@ export function hydrateAst(
     },
   );
 
-  return hydrateClasses(documentedAst);
+  return hydrateClasses(documentedAst, source);
 }

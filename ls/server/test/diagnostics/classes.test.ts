@@ -556,7 +556,7 @@ describe('hydrated class command targets', () => {
 });
 
 describe('class ownership diagnostics', () => {
-  const ownershipApi = 'z.cls.owner.move() { :; }\nz.cls.borrow() { :; }\n';
+  const ownershipApi = 'z.cls.owner.move() { :; }\n';
 
   test('移動先を同じクラスに結び付け、古い参照の呼び出しを報告する', () => {
     const scenario = fixture(
@@ -616,9 +616,10 @@ describe('class ownership diagnostics', () => {
   });
 
   test('呼び出し元に依存せずreadの属性とメソッドを検査する', () => {
-    const members = counterClass
-      .replace('z.cls.fn increment', 'z.cls.fn increment access=write')
-      .replace('  z.cls.drew', "  z.cls.fn value '$self.count.get'\n  z.cls.drew");
+    const members = counterClass.replace(
+      '  z.cls.drew',
+      "  # $self [Counter<read>]: 参照\n  z.cls.fn value '$self.count.get'\n  z.cls.drew",
+    );
     const scenario = fixture(
       [
         '# $1 [Counter<read>]: 読み取り対象',
@@ -635,34 +636,17 @@ describe('class ownership diagnostics', () => {
         'typeset counter',
         'z.cls.new Counter counter',
         'read_count "$counter"',
-        'z.cls.borrow from=counter "$callback"',
-        'z.cls.borrow from=counter update_count',
         '',
       ].join('\n'),
       classApi + ownershipApi + members,
     );
     expect(scenario.items.map(({ code, range }) => [code, range.start.line])).toEqual([
-      ['class-borrow-readonly', 5],
-      ['class-borrow-readonly', 6],
+      ['class-readonly-write', 5],
+      ['class-readonly-write', 6],
       ['undefined-command', 7],
-      ['class-argument-type', 15],
     ]);
   });
 
-  test('通常の呼び出しがあるコールバックでは引数を借用参照と決めつけない', () => {
-    const scenario = fixture(
-      [
-        'read_count() { local -r borrowed=$1; $borrowed.count.set 8; }',
-        'typeset counter',
-        'z.cls.new Counter counter',
-        'z.cls.borrow from=counter read_count',
-        'read_count "$counter"',
-        '',
-      ].join('\n'),
-      classApi + ownershipApi + counterClass,
-    );
-    expect(scenario.items).toEqual([]);
-  });
   test('所有権引数で指定した変数を呼び出し元で移動済みにする', () => {
     const consumer = [
       '# $from [Counter<owner>]: 受け取る所有変数',

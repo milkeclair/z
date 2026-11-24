@@ -48,8 +48,8 @@ export function classInformationOf(node: SimpleCommandNode): ClassInformation | 
 }
 
 /** 通常の構文種別・トークン・範囲を保ったまま、クラスの意味情報を付加する。 */
-export function hydrateClasses(ast: FileNode): FileNode {
-  const information = collectClassInformation(ast);
+export function hydrateClasses(ast: FileNode, source: string): FileNode {
+  const information = collectClassInformation(ast, source);
   if (information.size === 0) return ast;
 
   return mapAst(ast, (node: AstNode): AstNode => {

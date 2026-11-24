@@ -113,9 +113,10 @@ describe('class hydration', () => {
   });
 
   test('クラスのないASTは追加コピーせず返す', () => {
-    const file = fixture('print hello\n');
+    const text = 'print hello\n';
+    const file = fixture(text);
 
-    expect(hydrateClasses(file.ast)).toBe(file.ast);
+    expect(hydrateClasses(file.ast, text)).toBe(file.ast);
   });
 
   test('深い構文内の終了名ではメソッドを閉じない', () => {

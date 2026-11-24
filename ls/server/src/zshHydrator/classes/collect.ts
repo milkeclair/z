@@ -1,4 +1,4 @@
-import { methodArguments } from './method';
+import { methodArguments, methodReceivers } from './method';
 import type { ClassMethodAccess } from './types';
 import { castDraft } from 'immer';
 import { addValue, appendItems, makeMap, makeSet, produce, setEntry } from '../../util/collections';
@@ -52,6 +52,7 @@ type Capture =
       readonly methodDepth: number | null;
     };
 type State = {
+  readonly receiverAccess: ReturnType<typeof methodReceivers>;
   readonly captures: ReadonlyMap<FunctionDefinitionNode | undefined, Capture>;
   readonly information: ReadonlyMap<number, ClassInformation | null>;
   readonly published: ReadonlyMap<FunctionDefinitionNode | undefined, ReadonlySet<string>>;
@@ -298,6 +299,7 @@ function declareMethod(
   if (!identifier(name) || !method) return state;
 
   const definition = capture.definition;
+  const access = state.receiverAccess(directive.command, definition.name);
   const duplicate = definition.members.some(
     (member) => member.information.kind === 'classMethod' && member.information.name === name,
   );
@@ -314,7 +316,7 @@ function declareMethod(
       node: directive.command,
       name,
       depth: directive.depth,
-      access: method.access,
+      access,
     });
   }
 
@@ -323,7 +325,7 @@ function declareMethod(
     information: {
       kind: 'classMethod',
       name,
-      access: method.access,
+      access,
       classOffset: definition.node.range.start.offset,
       body: { kind: 'inline', range: method.body.range },
     },
@@ -527,9 +529,15 @@ function finishOpenDefinitions(ast: FileNode, collected: State): State {
 /** 通常の関数スコープごとに独立して、構文上のコマンドからクラス宣言を解釈する。 */
 export function collectClassInformation(
   ast: FileNode,
+  source: string,
 ): ReadonlyMap<number, ClassInformation | null> {
   const initial: CollectionProgress = {
-    collected: { captures: makeMap(), information: makeMap(), published: makeMap() },
+    collected: {
+      captures: makeMap(),
+      information: makeMap(),
+      published: makeMap(),
+      receiverAccess: methodReceivers(ast.comments, source),
+    },
     functionScopes: null,
     standaloneCommand: null,
   };

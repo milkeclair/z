@@ -143,7 +143,7 @@ export function resolveSelfCommand(
   const commandName = '$self.' + name;
   if (owner.method.access === 'read' && target && memberRequiresWrite(target)) {
     return {
-      code: 'class-borrow-readonly',
+      code: 'class-readonly-write',
       message: commandName + ' requires write access in a read-only method.',
     };
   }

@@ -36,11 +36,11 @@ const counter = [
   'z.cls.draw Counter',
   '  z.cls.attr count default=0',
   '  z.cls.attr self default=business',
-  '  z.cls.fn increment access=write',
+  '  z.cls.fn increment',
   '    "$self.count.get"',
   '    "$self.count.set" 1',
   '  z.cls.fn.done',
-  '  z.cls.fn twice access=write',
+  '  z.cls.fn twice',
   '    "$self.increment"',
   '  z.cls.fn.done',
   '  z.cls.drew',
@@ -202,7 +202,7 @@ describe('selfのクラス参照', () => {
         [
           'z.cls.draw Other',
           '  z.cls.attr label default=other',
-          '  z.cls.fn twice access=write',
+          '  z.cls.fn twice',
           '    "$self.label.get"',
           '    "$self.count.get"',
           '  z.cls.fn.done',
@@ -345,18 +345,20 @@ describe('selfのクラス参照', () => {
     const source = counter.replace(
       '  z.cls.drew',
       [
-        '  z.cls.fn bad access=read',
+        '  # $self [Counter<read>]: 読み取る実体',
+        '  z.cls.fn bad',
         '    $self.count.set 2',
         '    $self.increment',
         '  z.cls.fn.done',
-        "  z.cls.fn using_read access=read '$self.count.get'",
+        '  # $self [Counter<read>]: 読み取る実体',
+        "  z.cls.fn using_read '$self.count.get'",
         '  z.cls.drew',
       ].join('\n'),
     );
     const scenario = fixture(source);
 
     expect(
-      scenario.report.items.filter((item) => item.code === 'class-borrow-readonly'),
+      scenario.report.items.filter((item) => item.code === 'class-readonly-write'),
     ).toHaveLength(2);
     expect(
       scenario.report.file.classes.definitions[0]?.methods.map(({ name, access }) => [
@@ -371,7 +373,7 @@ describe('selfのクラス参照', () => {
       'update() { $1.count.set 1; }',
       counter.replace(
         '  z.cls.drew',
-        '  z.cls.fn bad\n    update "$self"\n  z.cls.fn.done\n  z.cls.drew',
+        '  # $self [Counter<read>]: 読み取る実体\n  z.cls.fn bad\n    update "$self"\n  z.cls.fn.done\n  z.cls.drew',
       ),
     ].join('\n');
     const scenario = fixture(source);

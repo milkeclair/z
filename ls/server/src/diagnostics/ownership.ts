@@ -14,7 +14,7 @@ import {
 export type ClassReferenceIssue = {
   readonly code:
     | 'class-reference-moved'
-    | 'class-borrow-readonly'
+    | 'class-readonly-write'
     | 'class-argument-type'
     | 'class-owner-required'
     | 'class-reference-uninitialized';

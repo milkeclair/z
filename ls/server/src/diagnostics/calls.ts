@@ -283,42 +283,6 @@ export function analyzeCalls(
     }
     return null;
   };
-  const borrowIssue = (command: SimpleCommandNode): ClassReferenceIssue | null => {
-    if (command.arguments.length !== 2) return null;
-    const source = command.arguments.find((word) => namedKey(word) === 'from');
-    const recipient = command.arguments.find((word) => word !== source);
-    const receiver = recipient && literalWord(recipient);
-    const name = source && literalWord(source)?.slice('from='.length);
-    if (!name || !receiver) return null;
-    const offset = command.range.start.offset;
-    const owner = ownerAt(file, name, offset, ownership.moves);
-    if (!owner) return null;
-
-    if (owner.state !== 'owner') {
-      return {
-        code: 'class-reference-moved',
-        message: name + ' is not a live owner at this borrow.',
-      };
-    }
-
-    const target = resolveTarget(receiver, offset);
-    const type =
-      target &&
-      documentationOf(target)?.parameters.find(
-        (parameter) => parameter.kind === 'positionalParameterDoc' && parameter.position === 1,
-      )?.classReference;
-    if (type && (type.access !== 'read' || type.className !== owner.className)) {
-      return {
-        code: 'class-argument-type',
-        message:
-          receiver +
-          ' must accept ' +
-          owner.className +
-          '<read> as its first argument when called through z.cls.borrow.',
-      };
-    }
-    return null;
-  };
   const initial = {
     diagnostics: collectArray<Diagnostics>(),
     targets: makeMap<SimpleCommandNode, FunctionDefinitionNode>(),
@@ -384,12 +348,7 @@ export function analyzeCalls(
 
     const target = functionCommand(command) ? resolveTarget(name, word.range.start.offset) : null;
 
-    const issue =
-      !incomplete && target
-        ? name === 'z.cls.borrow'
-          ? borrowIssue(command)
-          : argumentIssue(command, target)
-        : null;
+    const issue = !incomplete && target ? argumentIssue(command, target) : null;
     if (
       issue &&
       (!options.ignores || !ignored(options.ignores, word.range.start.line, issue.code))
