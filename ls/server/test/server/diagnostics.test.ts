@@ -21,7 +21,7 @@ describe('startServer', () => {
       const library = path.join(outside, 'shared functions');
       fs.writeFileSync(
         library,
-        '# $1 [Counter<write>]: 更新する実体\nexternal_update() { $1.count.set 1; }\n',
+        '# $1 [Counter<write>]: 更新するインスタンス\nexternal_update() { $1.count.set 1; }\n',
       );
       fs.writeFileSync(path.join(outside, '.zshrc'), 'source ' + JSON.stringify(library) + '\n');
       writeClassApi(root);
@@ -30,7 +30,7 @@ describe('startServer', () => {
       const source = [
         'z.cls.draw Counter',
         '  z.cls.attr count default=0',
-        '  # $self [Counter<read>]: 読み取る実体',
+        '  # $self [Counter<read>]: 読み取るインスタンス',
         '  z.cls.method value',
         '    external_update "$self"',
         '  z.cls.method.defined',
@@ -62,7 +62,7 @@ describe('startServer', () => {
 
         fs.writeFileSync(
           library,
-          '# $1 [Counter<read>]: 読み取る実体\nexternal_update() { $1.count.get; }\n',
+          '# $1 [Counter<read>]: 読み取るインスタンス\nexternal_update() { $1.count.get; }\n',
         );
         await client.connection.sendNotification(DidChangeWatchedFilesNotification.type, {
           changes: [{ uri: pathToFileURL(library).href, type: FileChangeType.Changed }],

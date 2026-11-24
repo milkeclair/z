@@ -54,10 +54,10 @@ describe('readShellEnvironment', () => {
       expect(environment.aliases.has('fixture-alias')).toBe(true);
       expect(environment.functions.has('fixture-function')).toBe(true);
       expect(environment.functions.has('fixture-autoload')).toBe(true);
-      expect(environment.functionSources?.get('fixture-function')).toBe(
+      expect(environment.functionSources.get('fixture-function')).toBe(
         path.join(project.root, '.zshrc'),
       );
-      expect(environment.functionSources?.has('fixture-autoload')).toBe(false);
+      expect(environment.functionSources.has('fixture-autoload')).toBe(false);
       expect(fs.existsSync(path.join(project.root, 'autoload-executed'))).toBe(false);
     });
 

@@ -156,7 +156,7 @@ function instanceScope(
   return declaration ? { kind: 'classMethod', declaration } : null;
 }
 
-/** 実体のクラス名・変数名の単語を、最終ASTの所有スコープに対応付ける。 */
+/** インスタンスのクラス名・変数名の単語を、最終ASTの所有スコープに対応付ける。 */
 function instanceFromCommand(
   ast: FileNode,
   command: HydratedClassCommand,
@@ -182,7 +182,7 @@ function instanceFromCommand(
   };
 }
 
-/** コマンドや他のファイルの索引を変えず、実体の束縛を集める。 */
+/** コマンドや他のファイルの索引を変えず、インスタンスの束縛を集める。 */
 export function instancesFromCommands(
   ast: FileNode,
   commands: readonly HydratedClassCommand[],

@@ -82,11 +82,21 @@ export function refreshShellFunctions({
   }
 
   const targets = new Map<string, readonly FunctionTarget[]>();
-  for (const [filename, file] of files) {
+  for (const [filename, sourceEntries] of sourcesByFile) {
+    const file = files.get(filename);
+
+    if (!file) {
+      continue;
+    }
+
     const definitions = projectFileFunctions(file).targets;
-    for (const [name] of sourcesByFile.get(filename) ?? []) {
+
+    for (const [name] of sourceEntries) {
       const matches = definitions.get(name);
-      if (matches?.length === 1) targets.set(name, matches);
+
+      if (matches?.length === 1) {
+        targets.set(name, matches);
+      }
     }
   }
 

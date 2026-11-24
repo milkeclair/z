@@ -57,10 +57,13 @@ describe('literalWord', () => {
     expect(literalWord(word('print $(( 1 + 2 ))'))).toBeNull();
   });
 
-  test('指定された終端まで復元し、既存のimportとの互換性を保持する', () => {
+  test('指定した位置までの単語を復元する', () => {
     const argument = word("print 'option'=value");
 
     expect(literalWord(argument, argument.raw.indexOf('='))).toBe('option');
+  });
+
+  test('関数索引のimportをASTのliteralWordへ結び付ける', () => {
     expect(compatibilityLiteralWord).toBe(literalWord);
   });
 });

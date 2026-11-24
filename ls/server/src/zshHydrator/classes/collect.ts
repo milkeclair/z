@@ -61,6 +61,16 @@ type State = {
   readonly published: ReadonlyMap<FunctionDefinitionNode | undefined, ReadonlySet<string>>;
 };
 
+const CLASS_COMMANDS: ReadonlySet<string> = new Set([
+  'z.cls.draw',
+  'z.cls.attr',
+  'z.cls.method',
+  'z.cls.method.defined',
+  'z.cls.drew',
+  'z.cls.abort',
+  'z.cls.new',
+]);
+
 type ClassDirective = {
   readonly command: SimpleCommandNode;
   readonly name: string;
@@ -71,8 +81,12 @@ type ClassDirective = {
 };
 
 /** 実行時に予約した名前を、静的なクラスの識別子から除外する。 */
-function identifier(value: string | null | undefined): value is string {
+function isClassIdentifier(value: string | null | undefined): value is string {
   return typeof value === 'string' && isVariableName(value) && !value.startsWith('z_cls_');
+}
+
+function isAttributeName(value: string | null): value is string {
+  return isClassIdentifier(value) && value !== 'REPLY' && value !== 'reply';
 }
 
 /** 以前のASTを付加情報に保持しないよう、所有関係を位置で記録する。 */
@@ -111,7 +125,7 @@ function withMember(
   });
 }
 
-/** 編集中に終了マーカーが欠けた場合も、本体のソース位置を保持する。 */
+/** 編集中に終了マークが欠けた場合も、本体のソース位置を保持する。 */
 function blockMethodFromCapture(
   capture: Extract<Capture, { kind: 'method' }>,
   end: SourceRange,
@@ -185,18 +199,10 @@ function readClassDirective(
   if (external) return null;
 
   const name = command.commandName && literalWord(command.commandName.word);
-  if (!name || !name.startsWith('z.cls.')) return null;
 
-  const names = [
-    'z.cls.draw',
-    'z.cls.attr',
-    'z.cls.method',
-    'z.cls.method.defined',
-    'z.cls.drew',
-    'z.cls.abort',
-    'z.cls.new',
-  ];
-  if (!names.includes(name)) return null;
+  if (!name || !CLASS_COMMANDS.has(name)) {
+    return null;
+  }
 
   return {
     command,
@@ -208,14 +214,15 @@ function readClassDirective(
   };
 }
 
-/** 通常の関数または収集中のメソッドのスコープに、実体の束縛を記録する。 */
+/** 通常の関数または収集中のメソッドのスコープに、インスタンスの束縛を記録する。 */
 function declareInstance(
   directive: ClassDirective,
   capture: Capture | undefined,
   state: State,
 ): State {
   const [className, name] = directive.args;
-  if (directive.args.length !== 2 || !identifier(className) || !identifier(name)) return state;
+  if (directive.args.length !== 2 || !isClassIdentifier(className) || !isClassIdentifier(name))
+    return state;
 
   const scope: ClassScopeLocation =
     capture?.kind === 'method'
@@ -242,7 +249,7 @@ function isMethodEnd(directive: ClassDirective, depth: number): boolean {
   );
 }
 
-/** メソッド開始時と同じ構文の深さにある終了マーカーだけを処理する。 */
+/** メソッド開始時と同じ構文の深さにある終了マークだけを処理する。 */
 function applyMethodDirective(
   directive: ClassDirective,
   capture: Extract<Capture, { kind: 'method' }>,
@@ -263,9 +270,10 @@ function declareAttribute(directive: ClassDirective, definition: Definition, sta
   const attribute = attributeArguments(directive.command);
   const name = attribute && literalWord(attribute.nameNode);
   const duplicate = definition.members.some(
-    (member) => member.information.kind === 'classAttribute' && member.information.name === name,
+    ({ information }) => information.kind === 'classAttribute' && information.name === name,
   );
-  if (!attribute || !identifier(name) || name === 'REPLY' || name === 'reply' || duplicate) {
+
+  if (!isAttributeName(name) || duplicate) {
     return withCapture(state, directive.scope, {
       kind: 'definition',
       definition: { ...definition, failed: true },
@@ -290,7 +298,7 @@ function declareMethod(
 ): State {
   const [name] = directive.args;
   const method = methodArguments(directive.command);
-  if (!identifier(name) || !method) return state;
+  if (!isClassIdentifier(name) || !method) return state;
 
   const definition = capture.definition;
   const access = state.receiverAccess(directive.command, definition.name);
@@ -405,7 +413,7 @@ function collectCommand(
   if (directive.name === 'z.cls.draw') {
     if (
       directive.args.length === 1 &&
-      identifier(directive.args[0]) &&
+      isClassIdentifier(directive.args[0]) &&
       !capture &&
       !state.published.get(scope)?.has(directive.args[0])
     ) {

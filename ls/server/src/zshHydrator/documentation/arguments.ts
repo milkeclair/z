@@ -4,7 +4,7 @@ import type { ParameterDoc } from './types';
 
 export type DocumentedArgument = {
   readonly word: WordNode;
-  readonly parameter: ParameterDoc | undefined;
+  readonly parameter: ParameterDoc;
   readonly key?: string;
   readonly uncertain: boolean;
 };
@@ -35,11 +35,14 @@ export function* documentedArguments(
 
   for (const word of words) {
     const key = namedKey(word);
-    const namedParameter = key ? named.get(key) : undefined;
 
-    if (namedParameter && key) {
-      yield { word, parameter: namedParameter, key, uncertain: isUncertain(word) };
-      continue;
+    if (key !== null) {
+      const parameter = named.get(key);
+
+      if (parameter) {
+        yield { word, parameter, key, uncertain: isUncertain(word) };
+        continue;
+      }
     }
 
     if (positionUnknown) {
@@ -49,10 +52,10 @@ export function* documentedArguments(
     position++;
     positionUnknown = isUncertain(word);
 
-    yield {
-      word,
-      parameter: positional.get(position) ?? (position > lastPosition ? rest : undefined),
-      uncertain: positionUnknown,
-    };
+    const parameter = positional.get(position) ?? (position > lastPosition ? rest : undefined);
+
+    if (parameter) {
+      yield { word, parameter, uncertain: positionUnknown };
+    }
   }
 }

@@ -43,7 +43,7 @@ export function codeArguments(
     parameters,
     (word) => uncertainWord(word, context),
   )) {
-    if (parameter?.valueType !== 'code' || uncertain) {
+    if (parameter.valueType !== 'code' || uncertain) {
       continue;
     }
 

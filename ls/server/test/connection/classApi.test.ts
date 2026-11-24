@@ -84,7 +84,7 @@ describe('zCompletion', () => {
 
 describe('zDefinition', () => {
   describe('補完で隠すクラス内部関数を明示した場合', () => {
-    test('明示した内部呼出しは補完の表示設定に関係なく解決する', () => {
+    test('明示した内部関数の定義へ移動する', () => {
       const scenario = fixture('z.cls.instance._¦call reference method member\n');
       const diagnostics = refreshDiagnosticSnapshot({
         snapshot: scenario.snapshot,

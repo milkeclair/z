@@ -78,7 +78,7 @@ describe('analyzeCalls', () => {
       });
     });
 
-    test('引用しないselfと波括弧で囲んだselfも同じ所有クラスへ解決する', () => {
+    test('無引用の$selfと波括弧付きの${self}からクラスを解決する', () => {
       const scenario = fixture(
         counter.replace(
           '"$self.increment"',
@@ -101,7 +101,7 @@ describe('analyzeCalls', () => {
       ).toBe(true);
     });
 
-    test('selfという属性名を実体参照のselfと区別する', () => {
+    test('selfという属性名をインスタンス参照のselfと区別する', () => {
       const scenario = fixture(counter.replace('"$self.increment"', '"$self.self.get"'));
       const targets = [...scenario.analysis.classTargets.values()].flat();
       const definition = scenario.report.file.classes.definitions[0];
@@ -135,7 +135,7 @@ describe('analyzeCalls', () => {
       expect(scenario.report.items.filter((item) => item.code === 'undefined-command')).toEqual([]);
     });
 
-    test('selfを明示的に宣言しない通常の関数でも所属を推測しない', () => {
+    test('通常の関数で未宣言のselfを外側のクラスへ結び付けない', () => {
       const scenario = fixture(
         counter.replace('"$self.increment"', 'helper() { "$self.typo" }\n    "$self.increment"'),
       );
@@ -265,7 +265,7 @@ describe('analyzeCalls', () => {
       });
     });
 
-    test('入れ子のコード引数でも既知のselfと平坦化した元位置を保持する', () => {
+    test('入れ子のコード引数にあるselfの診断を元のソース位置へ戻す', () => {
       const scenario = fixture(
         [
           'z.cls.draw InlineNested',
@@ -299,7 +299,7 @@ describe('analyzeCalls', () => {
       expect(scenario.report.items.filter((item) => item.code === 'undefined-command')).toEqual([]);
     });
 
-    test('変動する実体やメンバー名を静的なself呼出しと扱わない', () => {
+    test('動的なインスタンス参照やメンバー名はselfの静的診断を保留する', () => {
       const scenario = fixture(
         counter.replace(
           '"$self.increment"',
@@ -311,7 +311,7 @@ describe('analyzeCalls', () => {
       expect(scenario.report.items.filter((item) => item.code === 'undefined-command')).toEqual([]);
     });
 
-    test('selfの診断にも既存の制御コメントを適用する', () => {
+    test('制御コメントでselfの未定義メンバー診断を抑制する', () => {
       const scenario = fixture(
         counter.replace('"$self.increment"', '"$self.typo" # zls: ignore undefined-command'),
       );
@@ -328,7 +328,7 @@ describe('analyzeCalls', () => {
       expect(scenario.report.items.filter((item) => item.code === 'undefined-command')).toEqual([]);
     });
 
-    test('新しいスコープのtypesetによるself宣言も外側へ結び付けない', () => {
+    test('匿名関数内のtypesetで宣言したselfを外側のクラスへ結び付けない', () => {
       const scenario = fixture(
         counter.replace(
           '"$self.increment"',
@@ -345,12 +345,12 @@ describe('analyzeCalls', () => {
       const source = counter.replace(
         '  z.cls.drew',
         [
-          '  # $self [Counter<read>]: 読み取る実体',
+          '  # $self [Counter<read>]: 読み取るインスタンス',
           '  z.cls.method bad',
           '    $self.count.set 2',
           '    $self.increment',
           '  z.cls.method.defined',
-          '  # $self [Counter<read>]: 読み取る実体',
+          '  # $self [Counter<read>]: 読み取るインスタンス',
           "  z.cls.method using_read '$self.count.get'",
           '  z.cls.drew',
         ].join('\n'),
@@ -370,11 +370,11 @@ describe('analyzeCalls', () => {
 
     test('readメソッドのselfをwriteが必要な関数へ渡すと報告する', () => {
       const source = [
-        '# $1 [Counter<write>]: 更新する実体',
+        '# $1 [Counter<write>]: 更新するインスタンス',
         'update() { $1.count.set 1; }',
         counter.replace(
           '  z.cls.drew',
-          '  # $self [Counter<read>]: 読み取る実体\n  z.cls.method bad\n    update "$self"\n  z.cls.method.defined\n  z.cls.drew',
+          '  # $self [Counter<read>]: 読み取るインスタンス\n  z.cls.method bad\n    update "$self"\n  z.cls.method.defined\n  z.cls.drew',
         ),
       ].join('\n');
       const scenario = fixture(source);

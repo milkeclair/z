@@ -6,7 +6,7 @@ import {
   documentedArguments,
   type DocumentedArgument,
 } from '../zshHydrator/documentation/arguments';
-import type { ParameterDoc } from '../zshHydrator/documentation/types';
+import type { ClassReferenceType, ParameterDoc } from '../zshHydrator/documentation/types';
 import {
   findAll,
   locate,
@@ -25,7 +25,7 @@ export function variableName(value: string | null): string | null {
   return value && isVariableName(value) ? value : null;
 }
 
-/** 実体参照として静的に追跡できる変数名または位置引数番号を取得する。 */
+/** インスタンス参照として静的に追跡できる変数名または位置引数番号を取得する。 */
 export function classReferenceBinding(part: WordPartNode): string | null {
   if (part.kind === 'variableReference') {
     return part.name.value;
@@ -83,24 +83,27 @@ export function classArguments(
     return [];
   }
 
-  const firstByParameter = new Map<ParameterDoc, DocumentedArgument>();
-  for (const argument of documentedArguments(command.arguments, parameters, isUncertain)) {
-    const parameter = argument.parameter;
+  const firstByParameter = new Map<
+    ParameterDoc,
+    DocumentedArgument & { readonly type: ClassReferenceType }
+  >();
 
-    if (parameter?.classReference && !firstByParameter.has(parameter)) {
-      firstByParameter.set(parameter, argument);
+  for (const argument of documentedArguments(command.arguments, parameters, isUncertain)) {
+    const { parameter } = argument;
+
+    if (parameter.classReference && !firstByParameter.has(parameter)) {
+      firstByParameter.set(parameter, { ...argument, type: parameter.classReference });
     }
   }
 
   return parameters.flatMap((parameter) => {
-    const type = parameter.classReference;
     const argument = firstByParameter.get(parameter);
 
-    if (!type || !argument) {
+    if (!argument) {
       return [];
     }
 
-    const { word, key, uncertain } = argument;
+    const { word, key, uncertain, type } = argument;
     const reference = variableArgument(word, key);
 
     // 引数数が不明な位置でも、単一の変数参照として読める値は契約を調べられる。

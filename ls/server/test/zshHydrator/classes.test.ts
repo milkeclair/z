@@ -149,14 +149,14 @@ describe('createZshFileHydration', () => {
       expect(file.classes.instances).toEqual([]);
     });
 
-    test('不正な実体名を登録しない', () => {
+    test('不正な名前でインスタンスを登録しない', () => {
       const file = fixture('z.cls.new Counter bad-name\n');
 
       expect(file.classes.definitions).toEqual([]);
       expect(file.classes.instances).toEqual([]);
     });
 
-    test('実体名のない宣言を登録しない', () => {
+    test('変数名のないインスタンス宣言を登録しない', () => {
       const file = fixture('z.cls.new Counter\n');
 
       expect(file.classes.definitions).toEqual([]);
@@ -170,7 +170,7 @@ describe('createZshFileHydration', () => {
       expect(file.classes.instances).toEqual([]);
     });
 
-    test('同名の実体の関数スコープを返却ASTに結び付ける', () => {
+    test('同名のインスタンスを宣言元の関数スコープへ結び付ける', () => {
       const file = fixture(
         'z.cls.new Counter object\nload() { local object=""; z.cls.new Other object; }\n',
       );
@@ -217,7 +217,7 @@ describe('createZshFileHydration', () => {
       expect(findAll(stale, 'simpleCommand').map(classInformationOf)).toEqual([information]);
     });
 
-    test('クラス・属性・メソッド・実体に意味情報を付与し、通常の構文ノードを保持する', () => {
+    test('クラス・属性・メソッド・インスタンスの情報を既存の構文ノードへ付加する', () => {
       const file = fixture();
       const definition = file.classes.definitions[0];
 
@@ -358,7 +358,7 @@ describe('createZshFileHydration', () => {
       ]);
     });
 
-    test('メソッド内の実体宣言をクラスメソッドのスコープに結び付ける', () => {
+    test('メソッド内のインスタンス宣言をメソッドのスコープへ結び付ける', () => {
       const file = fixture(source.replace('(( ++count ))', 'z.cls.new Other nested'));
       const binding = file.classes.instances.find((instance) => instance.name === 'nested');
 
@@ -411,7 +411,7 @@ describe('createZshFileHydration', () => {
       ).toBe('0');
     });
 
-    test('先に指定したdefault引数も元の単語へ結び付ける', () => {
+    test('属性名より前のdefault引数を元の単語へ結び付ける', () => {
       const file = fixture(
         ['z.cls.draw Reversed', '  z.cls.attr default=0 price', '  z.cls.drew', ''].join('\n'),
       );
@@ -439,7 +439,7 @@ describe('createZshFileHydration', () => {
       });
     });
 
-    test('引用した空のdefault値も長さ0の範囲で保持する', () => {
+    test('引用した空のdefault値を長さ0の範囲で保持する', () => {
       const file = fixture(
         ['z.cls.draw QuotedEmpty', '  z.cls.attr value default=""', '  z.cls.drew', ''].join('\n'),
       );
@@ -476,7 +476,7 @@ describe('createZshFileHydration', () => {
       ).toBe('日本語の値');
     });
 
-    test('引用内に名前付き引数を記述しても値の範囲を保持する', () => {
+    test('引用全体が名前付き引数の場合に値だけの範囲を保持する', () => {
       const text = [
         'z.cls.draw QuotedArgument',
         "  z.cls.attr value 'default=two words'",
@@ -715,7 +715,7 @@ describe('createZshFileHydration', () => {
       expect(classMethodAt(file.classes, null, text.indexOf('print tail'))).toBe(method);
     });
 
-    test('通常のZshグループ内でもクラスを定義できる', () => {
+    test('Zshグループ内の属性をクラス宣言に追加する', () => {
       const file = fixture(
         ['z.cls.draw Grouped; {', '  z.cls.attr price default=0', '  z.cls.drew', '}', ''].join(
           '\n',

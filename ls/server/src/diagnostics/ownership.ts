@@ -14,6 +14,7 @@ import {
   type FunctionDefinitionNode,
   type ListItemNode,
   type ListNode,
+  type PipelineNode,
   type SimpleCommandNode,
   type WordNode,
 } from '../zshParser/ast';
@@ -74,6 +75,12 @@ function standalone(item: ListItemNode): SimpleCommandNode | null {
   return command?.kind === 'simpleCommand' ? command : null;
 }
 
+function simplePipelineCommand(pipeline: PipelineNode): SimpleCommandNode | null {
+  const { first, modifier, rest } = pipeline;
+
+  return !modifier && rest.length === 0 && first.kind === 'simpleCommand' ? first : null;
+}
+
 function moveCommand(item: ListItemNode): SimpleCommandNode | null {
   const direct = standalone(item);
 
@@ -91,24 +98,17 @@ function moveCommand(item: ListItemNode): SimpleCommandNode | null {
     return null;
   }
 
-  const { first, rest } = sublist;
-  const guard = rest[0];
+  const move = simplePipelineCommand(sublist.first);
+  const guard = sublist.rest[0];
 
-  if (
-    first.modifier ||
-    first.rest.length ||
-    first.first.kind !== 'simpleCommand' ||
-    guard.operator.type !== 'orIf' ||
-    guard.pipeline.modifier ||
-    guard.pipeline.rest.length ||
-    guard.pipeline.first.kind !== 'simpleCommand'
-  ) {
+  if (!move || guard.operator.type !== 'orIf') {
     return null;
   }
 
-  const failure = commandName(guard.pipeline.first);
+  const failureCommand = simplePipelineCommand(guard.pipeline);
+  const failure = failureCommand && commandName(failureCommand);
 
-  return failure === 'return' || failure === 'exit' ? first.first : null;
+  return failure === 'return' || failure === 'exit' ? move : null;
 }
 
 function before(lists: readonly ListNode[], offset: number): readonly SimpleCommandNode[] {
@@ -202,21 +202,32 @@ function declares(command: SimpleCommandNode, name: string): boolean {
   );
 }
 
-function writableDeclaration(command: SimpleCommandNode, name: string): boolean {
-  if (command.semantic.role !== 'declaration') return false;
-  const declaration = command.semantic.declaration;
-  return (
-    (declaration.kind === 'local' || declaration.kind === 'typeset') &&
-    !declaration.options.length &&
-    (declaration.names.some((node) => node.value === name) ||
-      declaration.assignments.some(
-        (assign) =>
-          assign.name.value === name &&
-          assign.operator === '=' &&
-          !assign.subscript &&
-          assign.value?.value.kind === 'word' &&
-          literalWord(assign.value.value) === '',
-      ))
+function isWritableDestination(command: SimpleCommandNode, name: string): boolean {
+  if (command.semantic.role !== 'declaration') {
+    return false;
+  }
+
+  const { kind, options, names, assignments } = command.semantic.declaration;
+
+  if (kind !== 'local' && kind !== 'typeset') {
+    return false;
+  }
+
+  if (options.length) {
+    return false;
+  }
+
+  if (names.some((declared) => declared.value === name)) {
+    return true;
+  }
+
+  return assignments.some(
+    (assignment) =>
+      assignment.name.value === name &&
+      assignment.operator === '=' &&
+      !assignment.subscript &&
+      assignment.value !== null &&
+      literalWord(assignment.value.value) === '',
   );
 }
 
@@ -291,7 +302,7 @@ export function classOwnership(
       if (!site || !list) continue;
       const item = list.items.find((entry) => moveCommand(entry) === command);
       const destination = before(site.lists, offset).findLast((entry) => declares(entry, to));
-      if (!item || !destination || !writableDeclaration(destination, to)) continue;
+      if (!item || !destination || !isWritableDestination(destination, to)) continue;
 
       const binding = ownerAt(file, from, offset, moves);
       const formal =
@@ -318,8 +329,8 @@ export function classOwnership(
 
     const target = resolve(name, offset);
     if (!target) continue;
-    const consumed = classArguments(command, target, isUncertain).filter(
-      ({ type, ownerName }) => type.access === 'owner' && ownerName,
+    const consumed = classArguments(command, target, isUncertain).flatMap(({ type, ownerName }) =>
+      type.access === 'owner' && ownerName ? [{ className: type.className, from: ownerName }] : [],
     );
     if (!consumed.length) continue;
 
@@ -329,10 +340,13 @@ export function classOwnership(
     const item = list.items.find((entry) => moveCommand(entry) === command);
     if (!item) continue;
 
-    for (const { type, ownerName: from } of consumed) {
-      if (!from) continue;
+    for (const { className, from } of consumed) {
       const binding = ownerAt(file, from, offset, moves);
-      if (binding?.state !== 'owner' || binding.className !== type.className) continue;
+
+      if (binding?.state !== 'owner' || binding.className !== className) {
+        continue;
+      }
+
       moves.push({
         from,
         to: null,
@@ -364,8 +378,8 @@ export function ownershipOperationIssue(
   if (!argument) return null;
 
   const literal = literalWord(argument);
-  const binding =
-    variable(literal, key ?? '') ?? (key ? null : literal) ?? variableArgument(argument, key);
+  const explicitName = key ? variable(literal, key) : literal;
+  const binding = explicitName ?? variableArgument(argument, key);
   if (!binding) return null;
 
   const offset = command.range.start.offset;

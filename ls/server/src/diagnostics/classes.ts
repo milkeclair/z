@@ -13,7 +13,7 @@ import { classReferenceBinding, parameterAt } from './classContracts';
 
 export type ClassCommandTarget = {
   readonly definition: ClassDefinition;
-  // selfは所有クラスを確定できても、呼び出す実体は実行時に決まる。
+  // selfは所有クラスを確定できても、呼び出すインスタンスは実行時に決まる。
   readonly instance: ClassInstance | null;
   readonly member: ClassMethod | ClassAttribute;
   readonly operation: 'method' | 'get' | 'set';
@@ -28,7 +28,7 @@ function staticText(word: WordNode, parts: readonly WordPartNode[]): string | nu
   }, '');
 }
 
-/** 実体IDを展開する変数と、リテラルで書かれたメンバー名を取得する。 */
+/** インスタンスIDを展開する変数と、リテラルで書かれたメンバー名を取得する。 */
 export function classMemberReference(
   word: WordNode,
 ): { readonly binding: string; readonly member: string } | null {
@@ -126,7 +126,7 @@ export function resolveInstanceCommand(
   return null;
 }
 
-/** クラス宣言と実体の束縛が同じノードを参照する間だけ、解決コンテキストを再利用する。 */
+/** クラス宣言とインスタンスの束縛が同じノードを参照する間だけ、解決コンテキストを再利用する。 */
 export function sameClassFiles(
   left: readonly ClassFileHydration[],
   right: readonly ClassFileHydration[],

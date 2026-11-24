@@ -90,7 +90,7 @@ describe('validateTextDocument', () => {
       expect(diagnostics[0].range.start.line).toBe(2);
     });
 
-    test('別ファイルのクラスから生成されるメソッドと属性を認識し、タイプミスは診断する', () => {
+    test('別ファイルのクラスに存在しないメンバー名を診断する', () => {
       const scenario = fixture(
         'z.cls.new Counter counter\n$counter.increment\n$counter.count.get\n$counter.count.set 3\n$counter.typo\n',
         counterClass,
@@ -102,8 +102,6 @@ describe('validateTextDocument', () => {
           message: '$counter.typo is not defined in class Counter.',
         },
       ]);
-
-      expect(semantic(scenario.items)).toHaveLength(1);
     });
 
     test('メソッド内の未定義コマンドを元ファイルの位置で診断する', () => {
@@ -120,7 +118,7 @@ describe('validateTextDocument', () => {
       ]);
     });
 
-    test('メソッドの編集で未編集の呼出元を再診断する', () => {
+    test('メソッド名の変更で未編集の呼び出し元を再診断する', () => {
       const scenario = fixture('z.cls.new Counter counter\n$counter.increment\n', counterClass);
 
       expect(semantic(scenario.items)).toEqual([]);
@@ -164,7 +162,7 @@ describe('validateTextDocument', () => {
   });
 
   describe('実体の所属するスコープを解決する場合', () => {
-    test('スコープによって異なるクラスを指す同名変数の呼出を認識する', () => {
+    test('同名の変数をスコープごとに異なるクラスへ解決する', () => {
       const arrayClass = [
         'z.cls.draw ArrayBox',
         '  z.cls.method fill',
@@ -309,22 +307,30 @@ describe('validateTextDocument', () => {
       }
     });
 
-    test('同じASTを再利用し、変更したクラスの参照を古いコンテキストへ残さない', () => {
+    test('同じASTのクラス宣言を再利用できると判定する', () => {
       const file = createZshFileHydration({ sourceFile: 'x', file: 'x', content: counterClass });
-      const next = createZshFileHydration({
+
+      expect(sameClassFiles([file.classes], [file.classes])).toBe(true);
+    });
+
+    test('メソッド名を編集したASTは以前のクラス宣言を使わない', () => {
+      const file = createZshFileHydration({ sourceFile: 'x', file: 'x', content: counterClass });
+      const edited = createZshFileHydration({
         sourceFile: 'x',
         file: 'x',
         content: counterClass.replace('increment', 'reset'),
       });
 
-      expect(sameClassFiles([file.classes], [file.classes])).toBe(true);
-      expect(sameClassFiles([file.classes], [next.classes])).toBe(false);
-      const empty = createZshFileHydration({ sourceFile: 'y', file: 'y', content: 'print one\n' });
-
-      expect(sameClassFiles([empty.classes], [])).toBe(true);
+      expect(sameClassFiles([file.classes], [edited.classes])).toBe(false);
     });
 
-    test('呼出し解析が別ファイルのメソッドと属性の宣言を解決先として返す', () => {
+    test('クラス宣言のないファイルを追加してもクラス索引を再利用できる', () => {
+      const file = createZshFileHydration({ sourceFile: 'x', file: 'x', content: 'print one\n' });
+
+      expect(sameClassFiles([file.classes], [])).toBe(true);
+    });
+
+    test('別ファイルのメソッドと属性の宣言を呼び出し先として返す', () => {
       const scenario = fixture(
         'z.cls.new Counter object\n$object.increment\n$object.count.set 1\n',
         counterClass,
@@ -353,7 +359,7 @@ describe('validateTextDocument', () => {
       expect(targets[1].member).toBe(definition.attributes[0]);
     });
 
-    test('実体の変数名をそのまま使った呼び出しを未定義コマンドとして報告する', () => {
+    test('変数展開のないメソッド呼び出しを未定義コマンドとして報告する', () => {
       const scenario = fixture(
         [
           'typeset counter',
@@ -397,7 +403,7 @@ describe('validateTextDocument', () => {
       expect(analysis.classTargets.has(command)).toBe(false);
     });
 
-    test('実体IDを展開する呼び出しがメソッドと属性を解決する', () => {
+    test('インスタンスIDを展開してメソッドと属性を解決する', () => {
       const scenario = fixture(
         [
           'z.cls.new Counter counter && $counter.increment',
@@ -438,7 +444,7 @@ describe('validateTextDocument', () => {
       ]);
     });
 
-    test('初期化より前や別の関数の同名変数から実体を推測しない', () => {
+    test('初期化前の参照と別関数の同名変数をインスタンスへ結び付けない', () => {
       const scenario = fixture(
         [
           '$counter.unknown',
@@ -454,7 +460,7 @@ describe('validateTextDocument', () => {
       expect(semantic(scenario.items)).toEqual([]);
     });
 
-    test('コード引数内の実体は外側のクラスを使い、外側へ漏れない', () => {
+    test('コード引数内のインスタンスをその引数内で解決する', () => {
       const api = '# $1 [code]: body\nrun() { eval "$1" }\n';
       const scenario = fixture(
         "run 'z.cls.new Counter inside; $inside.missing'\n$inside.missing\n",
@@ -586,6 +592,23 @@ describe('validateTextDocument', () => {
       ]);
     });
 
+    test('deleteの引数にある等号付き文字列を移動元変数名として扱わない', () => {
+      const source = [
+        'typeset counter saved',
+        'z.cls.new Counter counter',
+        'z.cls.owner.move from=counter to=saved',
+        "z.cls.delete '=counter'",
+        '$counter.increment',
+        '',
+      ].join('\n');
+
+      const scenario = fixture(source, ownershipApi + counterClass);
+
+      expect(scenario.items).toMatchObject([
+        { code: 'class-reference-moved', range: { start: { line: 4 } } },
+      ]);
+    });
+
     test('条件付きの移動や代入先の状態が不明な移動を確定しない', () => {
       const scenario = fixture(
         [
@@ -611,7 +634,7 @@ describe('validateTextDocument', () => {
       );
       const scenario = fixture(
         [
-          '# $1 [Counter<read>]: 読み取り対象',
+          '# $1 [Counter<read>]: 読み取り対象のインスタンス',
           'read_count() {',
           '  local -r ref=$1',
           '  $ref.count.get',
@@ -719,7 +742,7 @@ describe('validateTextDocument', () => {
           [
             '# $target [Counter<write>]: 更新対象',
             'update_count() { z.arg.named target "$@" && local ref=$REPLY; $ref.count.set 1; }',
-            '# $1 [Counter<read>]: 読み取り対象',
+            '# $1 [Counter<read>]: 読み取り対象のインスタンス',
             'read_count() { local -r ref=$1; update_count ' + argument + '; }',
             '',
           ].join('\n'),
@@ -734,7 +757,7 @@ describe('validateTextDocument', () => {
 
     test('個数不明の展開以降は名前付きのクラス引数だけを診断する', () => {
       const source = [
-        '# $1 [Counter<read>]: 読み取り対象',
+        '# $1 [Counter<read>]: 読み取り対象のインスタンス',
         'caller() {',
         '  local -r ref=$1',
         '  update "$@" not_a_reference',
@@ -743,8 +766,8 @@ describe('validateTextDocument', () => {
         '',
       ].join('\n');
       const definitions = [
-        '# $2 [Counter<write>]: 位置で受け取る実体',
-        '# $target? [Counter<write>]: 名前で受け取る実体',
+        '# $2 [Counter<write>]: 位置引数で受け取るインスタンス',
+        '# $target? [Counter<write>]: 名前付き引数で受け取るインスタンス',
         'update() { : "$@"; }',
         '',
       ].join('\n');
@@ -759,7 +782,7 @@ describe('validateTextDocument', () => {
     test('クラス引数に型エラーがあっても同じ呼び出しのコード引数を解析する', () => {
       const source = "mixed nope 'missing_inline_command'\n";
       const definitions = [
-        '# $1 [Counter<read>]: 読み取り対象',
+        '# $1 [Counter<read>]: 読み取り対象のインスタンス',
         '# $2 [code]: 実行するコマンド',
         'mixed() { : "$@"; }',
         '',
@@ -777,7 +800,7 @@ describe('validateTextDocument', () => {
       ]);
     });
 
-    test('両分岐でmoveを通る所有者契約を受理する', () => {
+    test('すべての分岐で所有権を移す関数の契約を受理する', () => {
       const scenario = fixture(
         [
           '# $1 [Counter<owner>]: 受け取る所有変数',

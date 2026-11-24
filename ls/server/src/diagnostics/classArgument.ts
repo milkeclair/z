@@ -5,7 +5,7 @@ import { classArguments, parameterAt } from './classContracts';
 import { ownerAt, type ClassReferenceIssue, type Ownership } from './ownership';
 import { selfReferenceAt } from './self';
 
-/** 引数コメントの契約を、呼び出し場所で分かる実体と照合する。 */
+/** 引数コメントの契約を、呼び出し場所で分かるインスタンスと照合する。 */
 export function classArgumentIssue({
   command,
   file,

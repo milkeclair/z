@@ -12,7 +12,7 @@ export type ShellEnvironment =
       readonly globalAliases: ReadonlySet<string>;
       readonly suffixAliases: ReadonlySet<string>;
       readonly functions: ReadonlySet<string>;
-      readonly functionSources?: ReadonlyMap<string, string>;
+      readonly functionSources: ReadonlyMap<string, string>;
       readonly commandBuiltins: boolean;
     }
   | {

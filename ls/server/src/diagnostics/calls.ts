@@ -281,44 +281,37 @@ export function analyzeCalls(
 
     const target = functionCommand(command) ? resolveTarget(name, word.range.start.offset) : null;
 
-    const issue =
-      !incomplete && target
-        ? classArgumentIssue({ command, file, target, ownership, scopes, isUncertain })
-        : null;
-
-    if (
-      target &&
-      issue &&
-      (!options.ignores || !ignored(options.ignores, word.range.start.line, issue.code))
-    ) {
-      return {
-        ...previous,
-        diagnostics: appendItems(previous.diagnostics, {
-          ...issue,
-          severity: DiagnosticSeverity.Error,
-          range: protocolRange(mapRange(word.range)),
-          source: 'z-ls',
-        }),
-        targets: setEntry(previous.targets, command, target),
-      };
-    }
-
     if (target) {
-      const diagnostics = incomplete
-        ? previous.diagnostics
-        : previous.diagnostics.concat(
-            argumentDiagnostics(command, target, context, mapRange).filter(
-              (diagnostic) =>
-                !options.ignores ||
-                !ignored(options.ignores, word.range.start.line, diagnostic.code),
-            ),
-          );
+      const targets = setEntry(previous.targets, command, target);
 
-      return {
-        ...previous,
-        diagnostics,
-        targets: setEntry(previous.targets, command, target),
-      };
+      if (incomplete) {
+        return { ...previous, targets };
+      }
+
+      const issue = classArgumentIssue({ command, file, target, ownership, scopes, isUncertain });
+
+      if (
+        issue &&
+        (!options.ignores || !ignored(options.ignores, word.range.start.line, issue.code))
+      ) {
+        return {
+          ...previous,
+          diagnostics: appendItems(previous.diagnostics, {
+            ...issue,
+            severity: DiagnosticSeverity.Error,
+            range: protocolRange(mapRange(word.range)),
+            source: 'z-ls',
+          }),
+          targets,
+        };
+      }
+
+      const diagnostics = argumentDiagnostics(command, target, context, mapRange).filter(
+        (diagnostic) =>
+          !options.ignores || !ignored(options.ignores, word.range.start.line, diagnostic.code),
+      );
+
+      return { ...previous, diagnostics: previous.diagnostics.concat(diagnostics), targets };
     }
 
     if (context.autoloads.has(name) && functionCommand(command)) {
