@@ -161,8 +161,8 @@ z.cls.capture._debug() {
 #  # 変更後: printの実行を抑止
 z.cls.capture._skip() {
   if (( z_cls_reject_method )); then
-    z.is.eq "$1" z.cls.fn.done && z_cls_reject_method=0
-  elif z.is.eq "$1" z.cls.fn || z.str.start_with "$1" 'z.cls.fn '; then
+    z.is.eq "$1" z.cls.method.defined && z_cls_reject_method=0
+  elif z.is.eq "$1" z.cls.method || z.str.start_with "$1" 'z.cls.method '; then
     local -a REPLY=()
     z.str.split.shell "$1"
     # 拒否する前の判定と同じく、呼出元のSH_WORD_SPLITを単語数に反映する。
@@ -191,7 +191,7 @@ z.cls.capture._skip() {
 #
 # example:
 #  # 前提: 有効なCounter.incrementの本体を収集中
-#  z.cls.capture._method z.cls.fn.done "$z_cls_capture_stack"
+#  z.cls.capture._method z.cls.method.defined "$z_cls_capture_stack"
 #  # 変更後: Counter.incrementを登録し、本体の収集を終了
 z.cls.capture._method() {
   if [[ $2 != "$z_cls_capture_stack" ]]; then
@@ -200,7 +200,7 @@ z.cls.capture._method() {
     return 0
   fi
 
-  if z.is.not.eq "$1" z.cls.fn.done; then
+  if z.is.not.eq "$1" z.cls.method.defined; then
     z_cls_capture_body+="$1"$'\n'
     setopt errexit
     return 0

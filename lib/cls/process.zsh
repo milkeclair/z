@@ -81,7 +81,7 @@ z.cls.attr() {
 }
 
 # メソッド本体の収集を開始するか、引数で渡された本体を登録する。
-# 引用しない本体の末尾には、独立した文としてz.cls.fn.doneを置く。
+# 引用しない本体の末尾には、独立した文としてz.cls.method.definedを置く。
 #
 # $1: メソッド名
 # $2?: 引数で指定する本体
@@ -90,14 +90,14 @@ z.cls.attr() {
 #
 # example:
 #  # 前提: Counterを定義中で、属性countを登録している
-#  z.cls.fn increment
+#  z.cls.method increment
 #    $self.count.get || return 1
 #    $self.count.set "$(( REPLY + 1 ))" || return 1
 #    $self.count.get
-#  z.cls.fn.done
+#  z.cls.method.defined
 #  # return: 0
 #  # 変更後: Counterにincrementメソッドを登録済み
-z.cls.fn() {
+z.cls.method() {
   z.cls.store._ensure
 
   local invalid=0

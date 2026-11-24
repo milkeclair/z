@@ -1,5 +1,5 @@
 z.cls.draw Invalid
-  z.cls.fn bad-name
+  z.cls.method bad-name
     (( ++side_effect ))
-  z.cls.fn.done
+  z.cls.method.defined
 z.cls.drew

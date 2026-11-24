@@ -9,19 +9,19 @@
 z.cls.draw Counter
   z.cls.attr count default=0
 
-  z.cls.fn increment
+  z.cls.method increment
     $self.count.get || return 1
     $self.count.set "$(( REPLY + 1 ))" || return 1
     $self.count.get
-  z.cls.fn.done
+  z.cls.method.defined
 
-  z.cls.fn add
+  z.cls.method add
     z.arg.named count "$@" && local count=$REPLY
     z.int.is.match "$count" || return 1
     $self.count.get || return 1
     $self.count.set "$(( REPLY + count ))" || return 1
     $self.count.get
-  z.cls.fn.done
+  z.cls.method.defined
 
 z.cls.drew
 ```
@@ -116,10 +116,10 @@ print -r -- "$REPLY"  # 11
 - 属性名は通常の変数名にします。Zshの特殊パラメータと`REPLY`・`reply`は予約名です。
 - 実体参照の代入先は、書込み可能な通常のスカラー変数にします。
   作成後はreadonlyになりますが、属性は引き続き更新できます。
-- `z.cls.fn name`と`z.cls.fn.done`は、独立した無条件の文として記述します。
+- `z.cls.method name`と`z.cls.method.defined`は、独立した無条件の文として記述します。
   本体内の引用、コメント、ヒアドキュメント、パイプ、条件分岐、通常のループはZshの構文です。
-- `z.cls.fn name 'body'`で短い本体を引数として登録することもできます。
-- クラスの境界は`z.cls.draw`と`z.cls.drew`、メソッド本体の境界は`z.cls.fn`と`z.cls.fn.done`です。字下げは読みやすさのために使います。
+- `z.cls.method name 'body'`で短い本体を引数として登録することもできます。
+- クラスの境界は`z.cls.draw`と`z.cls.drew`、メソッド本体の境界は`z.cls.method`と`z.cls.method.defined`です。字下げは読みやすさのために使います。
 - 属性は`z.cls.attr name default=value`で宣言します。`default=0`は文字列`0`、`default=`は空文字列です。`default`の省略や重複した属性は定義エラーになり、`z.cls.drew`で1を返します。
 - `z.cls.draw`が定義を拒否すると、対応する`z.cls.drew`までコマンドを読み飛ばします。その`z.cls.drew`は1を返し、定義中だった外側のクラスは続けられます。
 - `z.cls.drew`でクラスを公開し、`z.cls.abort`で未完了の定義を破棄します。
