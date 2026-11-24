@@ -90,14 +90,14 @@ z.cls.attr() {
 #
 # example:
 #  # 前提: Counterを定義中で、属性countを登録している
-#  z.cls.fn increment
+#  z.cls.method increment
 #    $self.count.get || return 1
 #    $self.count.set "$(( REPLY + 1 ))" || return 1
 #    $self.count.get
-#  z.cls.fn.done
+#  z.cls.method.defined
 #  # return: 0
 #  # 変更後: Counterにincrementメソッドを登録済み
-z.cls.fn() {
+z.cls.method() {
   z.cls.store._ensure
 
   local invalid=0
@@ -158,7 +158,8 @@ z.cls.drew() {
   () {
     local REPLY=""
     z.cls.instance._commands "$z_cls_drawing" ""
-    z_cls_command_suffixes[$z_cls_drawing]="${(j: :)REPLY}"
+    z.arr.join "${REPLY[@]}"
+    z_cls_command_suffixes[$z_cls_drawing]=$REPLY
   }
 
   z_cls_classes[$z_cls_drawing]=1
@@ -222,26 +223,24 @@ z.cls.new() {
   z.cls.new._validate "$@" || return 1
   z.cls.gc._collect
 
-  local z_cls_class=$1
-  local z_cls_binding=$2
-
   (( ++z_cls_next_id ))
 
   local z_cls_id="z_cls_${$}_$z_cls_next_id"
 
-  z.cls.instance._commands "$z_cls_class" "$z_cls_id"
+  z.cls.instance._commands "$1" "$z_cls_id"
 
   local -a z_cls_wrappers=("${(@)REPLY}")
 
   z.cls.instance.commands._validate "${z_cls_wrappers[@]}" || return 1
   z.cls.instance.commands._install "${z_cls_wrappers[@]}" || return 1
-  if ! z.cls.owner._bind "$z_cls_id" "$z_cls_binding"; then
+  if ! z.cls.owner._bind "$z_cls_id" "$2"; then
     z.cls.instance.commands._uninstall "${z_cls_wrappers[@]}"
     return 1
   fi
 
-  z_cls_members[$z_cls_id]="${(j: :)z_cls_wrappers}"
-  z_cls_instances[$z_cls_id]=$z_cls_class
+  z.arr.join "${z_cls_wrappers[@]}"
+  z_cls_members[$z_cls_id]=$REPLY
+  z_cls_instances[$z_cls_id]=$1
   (( ++z_cls_gc_allocations ))
 
   REPLY=$z_cls_id
@@ -263,20 +262,20 @@ z.cls.delete() {
 
   local REPLY=""
 
-  z.int.is.eq $# 1 || return 1
+  z.is.eq "$#" 1 || return 1
 
-  local z_cls_ref=${(P)1:-}
-  z.str.start_with "$1" z_cls_ && z_cls_ref=$1
-  local z_cls_id=${z_cls_references[$z_cls_ref]:-$z_cls_ref}
+  local reference=${(P)1:-}
+  z.str.start_with "$1" z_cls_ && reference=$1
+  local instance_id=${z_cls_references[$reference]:-$reference}
 
-  z.cls.instance.call._validate "$z_cls_id" "$z_cls_ref" || return 1
+  z.cls.instance.call._validate "$instance_id" "$reference" || return 1
 
-  if z.is.not.null "${z_cls_active[$z_cls_id]-}"; then
+  if z.is.not.null "${z_cls_active[$instance_id]-}"; then
     z.io.error "Expected an inactive instance reference."
     return 1
   fi
 
-  z.cls.instance._release "$z_cls_id"
+  z.cls.instance._release "$instance_id"
 
   return 0
 }

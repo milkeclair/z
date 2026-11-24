@@ -155,9 +155,9 @@ z.t.describe "z.cls.instance.call._access"; {
         z.cls.draw FailedSetter
           z.cls.attr count default=4
           z.cls.attr other default=13
-          z.cls.fn prepare
+          z.cls.method prepare
             $self.count.set 4
-          z.cls.fn.done
+          z.cls.method.defined
         z.cls.drew
         local object=""
         z.cls.new FailedSetter object
@@ -237,12 +237,12 @@ z.t.describe "z.cls.instance.call._run"; {
       () {
         z.cls.draw DirectRunScope
           z.cls.attr count default=0
-          z.cls.fn fail
+          z.cls.method fail
             $self.count.set 4 || return 1
             $self.count.get || return 1
             REPLY="failed:$REPLY"
             return 7
-          z.cls.fn.done
+          z.cls.method.defined
         z.cls.drew
 
         local object=""
@@ -520,12 +520,12 @@ z.t.describe "z.cls.instance.call._run"; {
     z.t.it "終了トラップの引数と戻り値を保ち、local変数を漏らさない"; {
       () {
         z.cls.draw ExitTrapArguments
-          z.cls.fn fail
+          z.cls.method fail
             local literal=inner
             trap 'exit_arg=$1' EXIT
             REPLY="$literal:$1"
             return 7
-          z.cls.fn.done
+          z.cls.method.defined
         z.cls.drew
 
         local object=""
@@ -553,7 +553,7 @@ z.t.describe "z.cls.instance.call._run"; {
       () {
         z.cls.draw CallbackUpdate
           z.cls.attr count default=5
-          z.cls.fn update '"$1" "$self"'
+          z.cls.method update '"$1" "$self"'
         z.cls.drew
 
         local owner=""
@@ -605,17 +605,17 @@ z.t.describe "z.cls.instance.call._run"; {
     z.t.it "selfを同じIDに保ち、外側の実行中フラグも保持する"; {
       () {
         z.cls.draw SameSelf
-          z.cls.fn identity
+          z.cls.method identity
             REPLY=$self
-          z.cls.fn.done
-          z.cls.fn nested
+          z.cls.method.defined
+          z.cls.method nested
             local before=$self
             $self.identity || return 1
             local nested_id=$REPLY
             z.cls.delete "$self" 2>/dev/null
             local delete_status=$?
             REPLY=("$before" "$nested_id" "$self" "$delete_status")
-          z.cls.fn.done
+          z.cls.method.defined
         z.cls.drew
         local object=""
         z.cls.new SameSelf object
@@ -638,16 +638,16 @@ z.t.describe "z.cls.instance.call._run"; {
     z.t.it "内側だけselfを切り替え、戻った後は外側のIDを使う"; {
       () {
         z.cls.draw DifferentSelf
-          z.cls.fn identity
+          z.cls.method identity
             REPLY=$self
-          z.cls.fn.done
-          z.cls.fn bounce
+          z.cls.method.defined
+          z.cls.method bounce
             local before=$self
             $1.identity || return 1
             local other_id=$REPLY
             $self.identity || return 1
             REPLY=("$before" "$other_id" "$REPLY" "$self")
-          z.cls.fn.done
+          z.cls.method.defined
         z.cls.drew
         local first=""
         local second=""
@@ -674,12 +674,12 @@ z.t.describe "z.cls.instance.call._run"; {
       () {
         local -r self=caller_self
         z.cls.draw ReadonlySelf
-          z.cls.fn inspect
+          z.cls.method inspect
             local before=$self
             (self=replacement) 2>/dev/null
             local assignment_status=$?
             REPLY=("$before" "$self" "$parameters[self]" "$assignment_status")
-          z.cls.fn.done
+          z.cls.method.defined
         z.cls.drew
         local object=""
         z.cls.new ReadonlySelf object

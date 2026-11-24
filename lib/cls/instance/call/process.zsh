@@ -48,18 +48,17 @@ z.cls.instance.call._set() {
   local z_cls_id=${z_cls_references[$1]:-$1}
   z.cls.instance.call._validate "$z_cls_id" "$1" || return 1
 
-  local z_cls_key="$z_cls_id:$2"
-  if (( ${+z_cls_values[$z_cls_key]} )); then
+  if (( ${+z_cls_values[$z_cls_id:$2]} )); then
     z.cls.instance.call._access "$z_cls_id" set "$2" "${@:3}"
     return $?
   fi
 
   z.is.eq "$#" 3 || return 1
 
-  local z_cls_default_key="${z_cls_instances[$z_cls_id]}:$2"
-  (( ${+z_cls_defaults[$z_cls_default_key]} )) || return 1
+  local default_key="${z_cls_instances[$z_cls_id]}:$2"
+  (( ${+z_cls_defaults[$default_key]} )) || return 1
 
-  z_cls_scalars[$z_cls_key]=$3
+  z_cls_scalars[$z_cls_id:$2]=$3
 }
 
 # 十進整数は保存形式から直接処理し、他の宣言は属性を復元して処理する。
@@ -77,38 +76,26 @@ z.cls.instance.call._set() {
 #  # REPLY: 0
 #  # return: 0
 z.cls.instance.call._access() {
-  local z_cls_instance=$1
-  local z_cls_operation=$2
-  local z_cls_member=$3
-  local z_cls_key="$1:$3"
-
-  shift 3
-
-  local z_cls_declaration=$z_cls_values[$z_cls_key]
-
-  if z.str.start_with "$z_cls_declaration" "typeset -i $z_cls_member="; then
-    case $z_cls_operation in
+  if z.str.start_with "$z_cls_values[$1:$3]" "typeset -i $3="; then
+    case $2 in
       get)
-        z.int.is.zero $# || return 1
-        z.str.unquote "${z_cls_declaration#*=}"
+        z.is.eq "$#" 3 || return 1
+        z.str.unquote "${z_cls_values[$1:$3]#*=}"
         return $?
         ;;
       set)
-        z.is.eq "$#" 1 || return 1
-
-        if z.int.is.match "$1"; then
-          local -i z_cls_numeric=0
-
-          (( z_cls_numeric = $1, 1 )) || return 1
-
-          z_cls_values[$z_cls_key]="typeset -i $z_cls_member=$z_cls_numeric"
+        z.is.eq "$#" 4 || return 1
+        if z.int.is.match "$4"; then
+          local -i number=0
+          (( number = $4, 1 )) || return 1
+          z_cls_values[$1:$3]="typeset -i $3=$number"
           return 0
         fi
         ;;
     esac
   fi
 
-  z.cls.instance.call._access_typed "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
+  z.cls.instance.call._access_typed "$@"
 }
 
 # 型付き属性の復元、取得・更新、保存を同じ関数スコープで行う。
@@ -126,39 +113,28 @@ z.cls.instance.call._access() {
 #  # REPLY: ("one" "two words")
 #  # return: 0
 z.cls.instance.call._access_typed() {
-  local z_cls_instance=$1
-  local z_cls_operation=$2
-  local z_cls_member=$3
-  local z_cls_class=$z_cls_instances[$z_cls_instance]
-  local -a z_cls_attributes=("$z_cls_member")
-
-  shift 3
-
-  if z.is.eq "$z_cls_operation" set; then
-    # 数値式は、同じ実体の他の属性を参照できる。
-    z_cls_attributes=(${=z_cls_class_attrs[$z_cls_class]})
+  local -a z_cls_attributes=("$3")
+  if z.is.eq "$2" set; then
+    # 数値式から参照できるよう、更新時は同じ実体の属性をすべて復元する。
+    z_cls_attributes=(${=z_cls_class_attrs[${z_cls_instances[$1]}]})
   fi
 
   local z_cls_attribute
-  local z_cls_key
-
   for z_cls_attribute in "${z_cls_attributes[@]}"; do
-    z_cls_key="$z_cls_instance:$z_cls_attribute"
-    if z.var.exists "z_cls_values[$z_cls_key]"; then
-      eval "$z_cls_values[$z_cls_key]"
+    if z.var.exists "z_cls_values[$1:$z_cls_attribute]"; then
+      eval "$z_cls_values[$1:$z_cls_attribute]"
     else
-      local z_cls_default_key="$z_cls_class:$z_cls_attribute"
-      local -- "$z_cls_attribute=${z_cls_scalars[$z_cls_key]-$z_cls_defaults[$z_cls_default_key]}"
+      local -- "$z_cls_attribute=${z_cls_scalars[$1:$z_cls_attribute]-$z_cls_defaults[${z_cls_instances[$1]}:$z_cls_attribute]}"
     fi
   done
 
-  case $z_cls_operation in
+  case $2 in
     get)
-      z.cls.instance.execute._get "$z_cls_member" "$@"
+      z.cls.instance.execute._get "$3" "${@:4}"
       ;;
     set)
-      z.cls.instance.execute._set "$z_cls_member" "$@" || return $?
-      z.cls.instance._snapshot "$z_cls_instance" "$z_cls_member"
+      z.cls.instance.execute._set "$3" "${@:4}" || return $?
+      z.cls.instance._snapshot "$1" "$3"
       ;;
   esac
 }
@@ -178,12 +154,11 @@ z.cls.instance.call._access_typed() {
 #  # 変更後: countは4、実行中フラグは解除済み
 z.cls.instance.call._run() {
   local z_cls_instance=${z_cls_references[$1]:-$1}
-  local z_cls_class=${z_cls_instances[$z_cls_instance]-}
 
   z.cls.instance.call._validate "$z_cls_instance" "$1" || return 1
-  (( ${+z_cls_bodies[$z_cls_class:$2]} )) || return 1
+  (( ${+z_cls_bodies[${z_cls_instances[$z_cls_instance]}:$2]} )) || return 1
 
-  local z_cls_body=$z_cls_bodies[$z_cls_class:$2]
+  local z_cls_body=$z_cls_bodies[${z_cls_instances[$z_cls_instance]}:$2]
   local z_cls_activated=0
   if [[ -z ${z_cls_active[$z_cls_instance]-} ]]; then
     local z_cls_current_instance=$z_cls_instance
@@ -194,7 +169,6 @@ z.cls.instance.call._run() {
   local z_cls_self=$1
   shift 2
 
-  local z_cls_result=0
   {
     # EXITトラップは呼出元の引数を参照するため、内部引数を除いてから本体を実行する。
     () {
@@ -203,11 +177,8 @@ z.cls.instance.call._run() {
       eval "$z_cls_body"
     } "$@"
   } always {
-    z_cls_result=$?
     if (( z_cls_activated )); then
       unset "z_cls_active[$z_cls_instance]"
     fi
   }
-
-  return $z_cls_result
 }

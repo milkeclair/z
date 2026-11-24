@@ -6,7 +6,7 @@ z.t.describe "z.cls.instance._call"; {
       () {
         z.cls.draw DirectCall
           z.cls.attr count default=0
-          z.cls.fn add '$self.count.get || return 1; $self.count.set "$(( REPLY + $1 ))" || return 1; $self.count.get'
+          z.cls.method add '$self.count.get || return 1; $self.count.set "$(( REPLY + $1 ))" || return 1; $self.count.get'
         z.cls.drew
 
         local object=""
@@ -38,6 +38,21 @@ z.t.describe "z.cls.instance._call"; {
 }
 
 z.t.describe "z.cls.instance._snapshot"; {
+  z.t.context "属性がsnapshot_keyという名前の場合"; {
+    z.t.it "呼出元で宣言した整数を保存する"; {
+      () {
+        local -i snapshot_key=9
+        z.cls.store._ensure
+        z.cls.instance._snapshot SnapshotScope snapshot_key
+
+        z.t.expect.includes "$z_cls_values[SnapshotScope:snapshot_key]" "typeset -i snapshot_key="
+        z.t.expect.includes "$z_cls_values[SnapshotScope:snapshot_key]" "9"
+
+        unset 'z_cls_values[SnapshotScope:snapshot_key]'
+      }
+    }
+  }
+
   z.t.context "リテラル文字列の場合"; {
     z.t.it "保存後に変更しても値を保持する"; {
       () {

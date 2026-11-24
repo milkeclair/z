@@ -10,16 +10,10 @@
 #  # REPLY: ("one" "two words")
 #  # return: 0
 z.cls.instance.execute._get() {
-  local z_cls_name=$1
+  z.is.eq "$#" 1 || return 1
 
-  shift
-  z.int.is.zero $# || return 1
-
-  local z_cls_type=${(tP)z_cls_name}
-
-  if z.str.includes "$z_cls_type" array || z.str.includes "$z_cls_type" association; then
-    REPLY=("${(@P)z_cls_name}")
-  else
-    REPLY=${(P)z_cls_name}
-  fi
+  case ${(tP)1} in
+    array*|association*) REPLY=("${(@P)1}") ;;
+    *) REPLY=${(P)1} ;;
+  esac
 }

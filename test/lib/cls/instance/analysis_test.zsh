@@ -34,8 +34,8 @@ z.t.describe "z.cls.instance._commands"; {
       () {
         z.cls.draw PublishedCommandList
           z.cls.attr count default=0
-          z.cls.fn value '$self.count.get'
-          z.cls.fn increment '$self.count.set 1'
+          z.cls.method value '$self.count.get'
+          z.cls.method increment '$self.count.set 1'
         z.cls.drew
 
         local -A z_cls_class_methods=() z_cls_class_attrs=()

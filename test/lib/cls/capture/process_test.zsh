@@ -213,11 +213,11 @@ z.t.describe "z.cls.capture._debug"; {
       local -a output=()
       output=("${(@f)$(
         z.cls.draw MarkerOuter
-          z.cls.fn build
+          z.cls.method build
             z.cls.draw MarkerInner
               z.cls.attr value default=ready
             z.cls.drew
-          z.cls.fn.done
+          z.cls.method.defined
         z.cls.drew
 
         print -r -- "${+z_cls_classes[MarkerInner]}"

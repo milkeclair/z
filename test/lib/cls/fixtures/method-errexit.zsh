@@ -5,11 +5,11 @@ source "$Z_ROOT/main.zsh"
 z.cls.draw StopEarly
   z.cls.attr count default=0
 
-  z.cls.fn run
+  z.cls.method run
     false
     REPLY=continued
     print -r -- SHOULD_NOT_RUN
-  z.cls.fn.done
+  z.cls.method.defined
 z.cls.drew
 
 local object=""
