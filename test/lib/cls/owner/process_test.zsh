@@ -28,7 +28,7 @@ z.t.describe "z.cls.owner.move"; {
       () {
         z.cls.draw OwnerLifetime
           z.cls.attr count default=5
-          z.cls.fn value '$self.count.get'
+          z.cls.method value '$self.count.get'
         z.cls.drew
 
         local counter="" escaped=""
