@@ -258,7 +258,7 @@ z.t.describe "z.cls.new"; {
         local -r z_cls_class=caller_class
         z.cls.draw ScopedInternals
           z.cls.attr count default=0
-          z.cls.fn increment access=write '$self.count.get || return 1; $self.count.set "$(( REPLY + 1 ))" || return 1; $self.count.get'
+          z.cls.fn increment '$self.count.get || return 1; $self.count.set "$(( REPLY + 1 ))" || return 1; $self.count.get'
         z.cls.drew
 
         local object=""
@@ -283,7 +283,7 @@ z.t.describe "z.cls.new"; {
       () {
         z.cls.draw FormerPrefix
           z.cls.attr __z_cls_value default=0
-          z.cls.fn increment access=write '$self.__z_cls_value.get || return 1; $self.__z_cls_value.set "$(( REPLY + 1 ))" || return 1; $self.__z_cls_value.get'
+          z.cls.fn increment '$self.__z_cls_value.get || return 1; $self.__z_cls_value.set "$(( REPLY + 1 ))" || return 1; $self.__z_cls_value.get'
         z.cls.drew
 
         local object=""
@@ -517,210 +517,6 @@ z.t.describe "z.cls.new"; {
 
       z.cls.delete first
       unfunction first.value
-    }
-  }
-}
-
-z.t.describe "z.cls.borrow"; {
-  z.t.context "読み取り専用で貸し出す場合"; {
-    z.t.it "借用中だけgetterを使え、所有者側の変更も拒否する"; {
-      () {
-        z.cls.draw ReadOnlyBorrow
-          z.cls.attr count default=5
-          z.cls.fn value '$self.count.get'
-          z.cls.fn write_value access=write '$self.count.set 6'
-          z.cls.fn leak_self 'REPLY=$self'
-          z.cls.fn keep_reply ':'
-          z.cls.fn try_write 'z.cls.instance.call._set "$self" count 6'
-        z.cls.drew
-
-        local owner="" destination="" escaped=""
-        z.cls.new ReadOnlyBorrow owner || return 1
-        read_borrowed_count() {
-          local borrowed=$1
-          escaped=$borrowed
-          local setter=$borrowed.count.set
-          z.t.expect "${+functions[$setter]}" 0
-
-          $owner.count.set 7 2>/dev/null
-          z.t.expect.status.is.false
-          $owner.write_value 2>/dev/null
-          z.t.expect.status.is.false
-
-          $borrowed.value
-          z.t.expect.reply 5
-          z.cls.owner.move from=owner to=destination 2>/dev/null
-          z.t.expect.status.is.false
-          z.cls.delete owner 2>/dev/null
-          z.t.expect.status.is.false
-
-          $borrowed.count.get || return 1
-          return 7
-        }
-
-        local result=0
-        z.cls.borrow from=owner read_borrowed_count || result=$?
-        local reply=$REPLY
-        z.t.expect "$result" 7
-        z.t.expect "$reply" 5
-
-        local getter=$escaped.count.get
-        z.t.expect "${+functions[$getter]}" 0
-        z.t.expect "${+z_cls_references[$escaped]}" 0
-
-        REPLY=(before call)
-        $owner.keep_reply
-        z.t.expect.reply.is.arr before call
-
-        $owner.leak_self
-        local leaked=$REPLY
-        z.t.expect "${+z_cls_references[$leaked]}" 0
-
-        $owner.try_write 2>/dev/null
-        z.t.expect.status.is.false
-
-        $owner.count.set 8
-        $owner.value
-        z.t.expect.reply 8
-        z.cls.delete owner
-        unfunction read_borrowed_count
-      }
-    }
-  }
-
-  z.t.context "借用中に同じ実体をもう一度貸し出す場合"; {
-    z.t.it "内側の借用だけを終了し、外側が戻るまで所有者の更新を拒否する"; {
-      () {
-        local owner="" escaped=""
-        z.cls.new TestCounter owner || return 1
-
-        read_inner_borrow() {
-          local borrowed=$1
-          escaped=$borrowed
-          $borrowed.count.get
-        }
-
-        read_outer_borrow() {
-          local borrowed=$1
-          z.cls.borrow from=owner read_inner_borrow || return 1
-          local inner_getter=$escaped.count.get
-          z.t.expect "${+functions[$inner_getter]}" 0
-
-          $owner.count.set 9 2>/dev/null
-          z.t.expect.status.is.false
-
-          $borrowed.count.get
-        }
-
-        z.cls.borrow from=owner read_outer_borrow
-        z.t.expect.reply 0
-
-        $owner.count.set 9
-        $owner.count.get
-        z.t.expect.reply 9
-        z.cls.delete owner
-        unfunction read_outer_borrow read_inner_borrow
-      }
-    }
-  }
-
-  z.t.context "所有者のreadメソッドで一時コマンドを作れない場合"; {
-    z.t.it "実体の実行中フラグを解除し、再実行できる"; {
-      () {
-        local owner=""
-        z.cls.new TestCounter owner || return 1
-
-        local candidate="z_cls_ref_${$}_$(( z_cls_next_reference + 1 ))"
-        local occupied=$candidate.count.get
-        functions[$occupied]='REPLY=occupied'
-
-        $owner.value 2>/dev/null
-        z.t.expect.status.is.false
-        z.t.expect "${+z_cls_active[$owner]}" 0
-        z.t.expect "${+z_cls_references[$candidate]}" 0
-
-        unfunction "$occupied"
-        $owner.value
-        z.t.expect.reply 0
-        z.cls.delete owner
-      }
-    }
-  }
-
-  z.t.context "一時参照のコマンド名が途中で衝突する場合"; {
-    z.t.it "既存関数を残し、今回登録した関数と借用状態を片付ける"; {
-      () {
-        z.cls.draw BorrowCollision
-          z.cls.attr count default=0
-          z.cls.fn value '$self.count.get'
-        z.cls.drew
-
-        local owner="" called=0
-        z.cls.new BorrowCollision owner || return 1
-        unused_borrow_callback() { called=1 }
-
-        local candidate="z_cls_ref_${$}_$(( z_cls_next_reference + 1 ))"
-        local occupied=$candidate.count.get
-        local prepared=$candidate.value
-        functions[$occupied]='REPLY=existing'
-        local before=$functions[$occupied]
-
-        z.cls.borrow from=owner unused_borrow_callback 2>/dev/null
-        z.t.expect.status.is.false
-
-        z.t.expect "$called" 0
-        z.t.expect "$functions[$occupied]" "$before"
-        z.t.expect "${+functions[$prepared]}" 0
-        z.t.expect "${+z_cls_references[$candidate]}" 0
-        z.t.expect "${+z_cls_borrow_counts[$owner]}" 0
-
-        unfunction "$occupied" unused_borrow_callback
-        z.cls.delete owner
-      }
-    }
-  }
-
-  z.t.context "コールバックが一時コマンドを置き換えた場合"; {
-    z.t.it "置き換えた関数を残し、元の実体への参照を失効させる"; {
-      () {
-        local owner="" borrowed=""
-        z.cls.new TestCounter owner || return 1
-        replace_borrow_callback() {
-          borrowed=$1
-          local replacement=$borrowed.value
-          functions[$replacement]='REPLY=replaced'
-        }
-
-        z.cls.borrow from=owner replace_borrow_callback
-        z.t.expect.status.is.true
-
-        local replacement=$borrowed.value
-        local getter=$borrowed.count.get
-
-        "$replacement"
-        z.t.expect.reply replaced
-        z.t.expect "${+functions[$getter]}" 0
-        z.t.expect "${+z_cls_references[$borrowed]}" 0
-
-        unfunction "$replacement" replace_borrow_callback
-        z.cls.delete owner
-      }
-    }
-  }
-
-  z.t.context "コールバックを特定できない場合"; {
-    z.t.it "所有者の更新権限を保ったまま失敗する"; {
-      () {
-        local owner=""
-        z.cls.new TestCounter owner || return 1
-        z.cls.borrow from=owner missing_borrow_callback 2>/dev/null
-        z.t.expect.status.is.false
-
-        $owner.count.set 6
-        $owner.count.get
-        z.t.expect.reply 6
-        z.cls.delete owner
-      }
     }
   }
 }

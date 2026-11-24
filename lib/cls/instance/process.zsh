@@ -38,32 +38,6 @@ z.cls.instance._call() {
   esac
 }
 
-# 解決済みのメソッド本体を、readonlyのselfとメソッド引数を持つ関数スコープで実行する。
-#
-# $1: selfに渡す参照
-# $2: メソッド本体
-# $@?: メソッドに渡す引数
-# REPLY: メソッドの結果
-# return: メソッドの終了コード
-#
-# example:
-#  # 前提: objectは実体への参照を保持している
-#  z.cls.instance._execute "$object" 'REPLY=$self'
-#  # REPLY: objectと同じ実体参照
-#  # return: 0
-z.cls.instance._execute() {
-  local z_cls_self=$1
-  local z_cls_body=$2
-  shift 2
-
-  # EXITトラップもメソッド引数で動くよう、本体専用のスコープを作る。
-  () {
-    local -r self=$z_cls_self
-
-    eval "$z_cls_body"
-  } "$@"
-}
-
 # 復元済みの属性を保存する。通常のスカラーは文字列、型付き属性は宣言として保持する。
 #
 # $1: 実体参照
@@ -164,7 +138,6 @@ z.cls.instance._release() {
     z_cls_owner_markers=()
     z_cls_references=()
     z_cls_owner_refs=()
-    z_cls_borrow_counts=()
     z_cls_gc_allocations=0
   fi
 }

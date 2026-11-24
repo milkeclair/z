@@ -2,7 +2,7 @@ z.cls.draw TestCounter
   z.cls.attr count default=0
   z.cls.attr label default=default
 
-  z.cls.fn increment access=write
+  z.cls.fn increment
     $self.count.get || return 1
     $self.count.set "$(( REPLY + 1 ))" || return 1
     $self.count.get
@@ -12,7 +12,7 @@ z.cls.draw TestCounter
     $self.count.get
   z.cls.fn.done
 
-  z.cls.fn add access=write
+  z.cls.fn add
     z.arg.named count "$@" && local count=$REPLY
     z.int.is.match "$count" || return 1
     $self.count.get || return 1
@@ -20,18 +20,18 @@ z.cls.draw TestCounter
     $self.count.get
   z.cls.fn.done
 
-  z.cls.fn twice access=write
+  z.cls.fn twice
     $self.increment || return 1
     $self.increment
   z.cls.fn.done
 
-  z.cls.fn fail access=write
+  z.cls.fn fail
     $self.increment || return 1
     REPLY="failure:$1"
     return 7
   z.cls.fn.done
 
-  z.cls.fn loop access=write
+  z.cls.fn loop
     $self.label.get || return 1
     local label=$REPLY
     for item in one two; do

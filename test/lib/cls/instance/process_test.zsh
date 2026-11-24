@@ -6,7 +6,7 @@ z.t.describe "z.cls.instance._call"; {
       () {
         z.cls.draw DirectCall
           z.cls.attr count default=0
-          z.cls.fn add access=write '$self.count.get || return 1; $self.count.set "$(( REPLY + $1 ))" || return 1; $self.count.get'
+          z.cls.fn add '$self.count.get || return 1; $self.count.set "$(( REPLY + $1 ))" || return 1; $self.count.get'
         z.cls.drew
 
         local object=""
@@ -35,27 +35,6 @@ z.t.describe "z.cls.instance._call"; {
       z.t.expect.status.is.false
     }
   }
-}
-
-z.t.describe "z.cls.instance._execute"; {
-  z.t.context "メソッドが0以外で戻る場合"; {
-    z.t.it "終了トラップの引数と戻り値を保ち、local変数を漏らさない"; {
-      local body='local literal=inner; trap "exit_arg=\$1" EXIT; REPLY="$literal:$1"; return 7'
-      local literal=outer
-      local exit_arg=""
-
-      z.cls.instance._execute execute_ref "$body" argument
-      local call_status=$?
-      local call_reply=$REPLY
-
-      z.t.expect "$call_status" 7
-      z.t.expect "$call_reply" inner:argument
-      z.t.expect "$literal" outer
-      z.t.expect "$exit_arg" argument
-
-    }
-  }
-
 }
 
 z.t.describe "z.cls.instance._snapshot"; {

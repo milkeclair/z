@@ -2,7 +2,6 @@
 #
 # $1: 解決済みの実体参照
 # $2?: 呼び出しに使った参照
-# $3?: writeの場合は更新できる所有者参照に限る
 # REPLY: null
 # return: 0|1
 #
@@ -18,13 +17,8 @@ z.cls.instance.call._validate() {
 
   if [[ -z ${z_cls_instances[$z_cls_instance]-} || -z $z_cls_marker ]] ||
       (( ! ${+parameters[$z_cls_marker]} )) ||
-      [[ $z_cls_owner != "$z_cls_ref" && ${z_cls_references[$z_cls_ref]-} != "$z_cls_instance" ]]; then
+      [[ $z_cls_owner != "$z_cls_ref" ]]; then
     z.io.error "Instance reference $z_cls_ref is not available in this scope."
-    return 1
-  fi
-
-  if [[ ${3:-} == write && ( $z_cls_owner != "$z_cls_ref" || -n ${z_cls_borrow_counts[$z_cls_instance]-} ) ]]; then
-    z.io.error "Instance reference $z_cls_ref cannot modify a borrowed instance."
     return 1
   fi
 
@@ -52,7 +46,7 @@ z.cls.instance.call._validate() {
 #  # 変更後: labelの値はhello
 z.cls.instance.call._set() {
   local z_cls_id=${z_cls_references[$1]:-$1}
-  z.cls.instance.call._validate "$z_cls_id" "$1" write || return 1
+  z.cls.instance.call._validate "$z_cls_id" "$1" || return 1
 
   local z_cls_key="$z_cls_id:$2"
   if (( ${+z_cls_values[$z_cls_key]} )); then
@@ -60,7 +54,7 @@ z.cls.instance.call._set() {
     return $?
   fi
 
-  z.int.is.eq $# 3 || return 1
+  z.is.eq "$#" 3 || return 1
 
   local z_cls_default_key="${z_cls_instances[$z_cls_id]}:$2"
   (( ${+z_cls_defaults[$z_cls_default_key]} )) || return 1
@@ -184,9 +178,8 @@ z.cls.instance.call._access_typed() {
 z.cls.instance.call._run() {
   local z_cls_instance=${z_cls_references[$1]:-$1}
   local z_cls_class=${z_cls_instances[$z_cls_instance]-}
-  local z_cls_access=${z_cls_method_access[$z_cls_class:$2]:-read}
 
-  z.cls.instance.call._validate "$z_cls_instance" "$1" "$z_cls_access" || return 1
+  z.cls.instance.call._validate "$z_cls_instance" "$1" || return 1
   (( ${+z_cls_bodies[$z_cls_class:$2]} )) || return 1
 
   local z_cls_body=$z_cls_bodies[$z_cls_class:$2]
@@ -197,13 +190,17 @@ z.cls.instance.call._run() {
     z_cls_activated=1
   fi
 
+  local z_cls_self=$1
+  shift 2
+
   local z_cls_result=0
   {
-    if [[ $z_cls_access == read && ${z_cls_owner_refs[$z_cls_instance]:-$z_cls_instance} == "$1" ]]; then
-      z.cls.borrow._with "$z_cls_instance" z.cls.instance._execute "$z_cls_body" "${@:3}"
-    else
-      z.cls.instance._execute "$1" "$z_cls_body" "${@:3}"
-    fi
+    # EXITトラップは呼出元の引数を参照するため、内部引数を除いてから本体を実行する。
+    () {
+      local -r self=$z_cls_self
+
+      eval "$z_cls_body"
+    } "$@"
   } always {
     z_cls_result=$?
     if (( z_cls_activated )); then

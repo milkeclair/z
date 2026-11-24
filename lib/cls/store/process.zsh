@@ -12,7 +12,7 @@ z.cls.store._ensure() {
   if z.is.eq "${z_cls_store_ready:-0}" 1 &&
       z.var.exists z_cls_dispatch_programs && z.var.exists z_cls_owner_markers &&
       z.var.exists z_cls_scalars && z.var.exists z_cls_references &&
-      z.var.exists z_cls_method_access && (( ${+z_cls_command_suffixes} )); then
+      z.var.exists z_cls_command_suffixes; then
     return 0
   fi
 
@@ -23,7 +23,6 @@ z.cls.store._ensure() {
   z.var.exists z_cls_command_suffixes || typeset -gA z_cls_command_suffixes
   z.var.exists z_cls_defaults || typeset -gA z_cls_defaults
   z.var.exists z_cls_bodies || typeset -gA z_cls_bodies
-  z.var.exists z_cls_method_access || typeset -gA z_cls_method_access
   z.var.exists z_cls_instances || typeset -gA z_cls_instances
   z.var.exists z_cls_scalars || typeset -gA z_cls_scalars
   z.var.exists z_cls_values || typeset -gA z_cls_values
@@ -36,7 +35,6 @@ z.cls.store._ensure() {
   z.var.exists z_cls_next_reference || typeset -gi +x z_cls_next_reference=0
   z.var.exists z_cls_references || typeset -gA z_cls_references
   z.var.exists z_cls_owner_refs || typeset -gA z_cls_owner_refs
-  z.var.exists z_cls_borrow_counts || typeset -gA z_cls_borrow_counts
   z.var.exists z_cls_gc_allocations || typeset -gi +x z_cls_gc_allocations=0
   z.var.exists z_cls_active || typeset -gA z_cls_active
   z.var.exists z_cls_drawing || typeset -g +x z_cls_drawing=''
@@ -68,7 +66,6 @@ z.cls.store._scalar() {
 # $1: 定義中のクラス名
 # $2: メソッド名
 # $3: メソッド本体
-# $4?: メソッドの権限（既定はread）
 # REPLY: null
 # return: 0
 #
@@ -79,6 +76,5 @@ z.cls.store._scalar() {
 #  # 変更後: Counterのメソッド一覧にvalueを加え、本体にREPLY=0を保存
 z.cls.store._method() {
   z_cls_bodies[$1:$2]=$3
-  z_cls_method_access[$1:$2]=${4:-read}
   z_cls_class_methods[$1]+="$2 "
 }

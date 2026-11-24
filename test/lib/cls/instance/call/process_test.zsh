@@ -155,7 +155,7 @@ z.t.describe "z.cls.instance.call._access"; {
         z.cls.draw FailedSetter
           z.cls.attr count default=4
           z.cls.attr other default=13
-          z.cls.fn prepare access=write
+          z.cls.fn prepare
             $self.count.set 4
           z.cls.fn.done
         z.cls.drew
@@ -237,7 +237,7 @@ z.t.describe "z.cls.instance.call._run"; {
       () {
         z.cls.draw DirectRunScope
           z.cls.attr count default=0
-          z.cls.fn fail access=write
+          z.cls.fn fail
             $self.count.set 4 || return 1
             $self.count.get || return 1
             REPLY="failed:$REPLY"
@@ -516,6 +516,66 @@ z.t.describe "z.cls.instance.call._run"; {
     }
   }
 
+  z.t.context "メソッドが0以外で戻る場合"; {
+    z.t.it "終了トラップの引数と戻り値を保ち、local変数を漏らさない"; {
+      () {
+        z.cls.draw ExitTrapArguments
+          z.cls.fn fail
+            local literal=inner
+            trap 'exit_arg=$1' EXIT
+            REPLY="$literal:$1"
+            return 7
+          z.cls.fn.done
+        z.cls.drew
+
+        local object=""
+        z.cls.new ExitTrapArguments object
+
+        local literal=outer
+        local exit_arg=""
+
+        $object.fail argument
+        local call_status=$?
+        local call_reply=$REPLY
+
+        z.t.expect "$call_status" 7
+        z.t.expect "$call_reply" inner:argument
+        z.t.expect "$literal" outer
+        z.t.expect "$exit_arg" argument
+
+        z.cls.delete object
+      }
+    }
+  }
+
+  z.t.context "実体参照をコールバックに渡す場合"; {
+    z.t.it "コールバックから同じ実体を更新する"; {
+      () {
+        z.cls.draw CallbackUpdate
+          z.cls.attr count default=5
+          z.cls.fn update '"$1" "$self"'
+        z.cls.drew
+
+        local owner=""
+        z.cls.new CallbackUpdate owner
+
+        update_through_reference() {
+          local ref=$1
+          $ref.count.set 8
+        }
+
+        $owner.update update_through_reference
+
+        z.t.expect.status.is.true
+        $owner.count.get
+        z.t.expect.reply 8
+
+        unfunction update_through_reference
+        z.cls.delete owner
+      }
+    }
+  }
+
   z.t.context "属性と同名の引数がある場合"; {
     z.t.it "named引数と呼出元のcountを属性から独立して扱う"; {
       () {
@@ -545,10 +605,10 @@ z.t.describe "z.cls.instance.call._run"; {
     z.t.it "selfを同じIDに保ち、外側の実行中フラグも保持する"; {
       () {
         z.cls.draw SameSelf
-          z.cls.fn identity access=write
+          z.cls.fn identity
             REPLY=$self
           z.cls.fn.done
-          z.cls.fn nested access=write
+          z.cls.fn nested
             local before=$self
             $self.identity || return 1
             local nested_id=$REPLY
@@ -578,10 +638,10 @@ z.t.describe "z.cls.instance.call._run"; {
     z.t.it "内側だけselfを切り替え、戻った後は外側のIDを使う"; {
       () {
         z.cls.draw DifferentSelf
-          z.cls.fn identity access=write
+          z.cls.fn identity
             REPLY=$self
           z.cls.fn.done
-          z.cls.fn bounce access=write
+          z.cls.fn bounce
             local before=$self
             $1.identity || return 1
             local other_id=$REPLY
@@ -614,7 +674,7 @@ z.t.describe "z.cls.instance.call._run"; {
       () {
         local -r self=caller_self
         z.cls.draw ReadonlySelf
-          z.cls.fn inspect access=write
+          z.cls.fn inspect
             local before=$self
             (self=replacement) 2>/dev/null
             local assignment_status=$?

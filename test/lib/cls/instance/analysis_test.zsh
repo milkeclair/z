@@ -30,18 +30,15 @@ z.t.describe "z.cls.instance._commands"; {
   }
 
   z.t.context "クラスを公開したあと"; {
-    z.t.it "公開時の一覧から読み取り用と所有者用のコマンドを返す"; {
+    z.t.it "公開時の一覧から実体のコマンドを返す"; {
       () {
         z.cls.draw PublishedCommandList
           z.cls.attr count default=0
           z.cls.fn value '$self.count.get'
-          z.cls.fn increment access=write '$self.count.set 1'
+          z.cls.fn increment '$self.count.set 1'
         z.cls.drew
 
         local -A z_cls_class_methods=() z_cls_class_attrs=()
-
-        z.cls.instance._commands PublishedCommandList ref read
-        z.t.expect.reply.is.arr ref.value ref.count.get
 
         z.cls.instance._commands PublishedCommandList ref
         z.t.expect.reply.is.arr ref.value ref.increment ref.count.get ref.count.set

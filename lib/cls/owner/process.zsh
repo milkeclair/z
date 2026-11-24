@@ -28,8 +28,8 @@ z.cls.owner.move() {
     return 1
   fi
 
-  if [[ -n ${z_cls_active[$z_cls_id]-} || -n ${z_cls_borrow_counts[$z_cls_id]-} ]]; then
-    z.io.error "Cannot move an active or borrowed instance."
+  if [[ -n ${z_cls_active[$z_cls_id]-} ]]; then
+    z.io.error "Cannot move an active instance."
     return 1
   fi
 

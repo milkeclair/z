@@ -1,7 +1,7 @@
 z.cls.draw SyntaxBox
   z.cls.attr value default=initial
 
-  z.cls.fn run access=write
+  z.cls.fn run
     false || $self.value.set "value:$1" || return 1
     $self.value.get || return 1
     print -r -- "$REPLY" | cat >/dev/null

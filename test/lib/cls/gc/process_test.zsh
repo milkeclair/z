@@ -36,23 +36,23 @@ z.t.describe "z.cls.gc._collect"; {
       z.cls.draw CollectAfterReturn
       z.cls.drew
 
-      local borrowed=""
+      local active_ref=""
       () {
         local target=""
         z.cls.new CollectAfterReturn target
-        borrowed=$target
+        active_ref=$target
       }
-      z_cls_active[$borrowed]=1
+      z_cls_active[$active_ref]=1
 
       z_cls_gc_allocations=64
       z.cls.gc._collect
-      z.var.exists "z_cls_instances[$borrowed]"
+      z.var.exists "z_cls_instances[$active_ref]"
       z.t.expect.status.is.true
 
-      unset "z_cls_active[$borrowed]"
+      unset "z_cls_active[$active_ref]"
       z_cls_gc_allocations=64
       z.cls.gc._collect
-      z.var.exists "z_cls_instances[$borrowed]"
+      z.var.exists "z_cls_instances[$active_ref]"
       z.t.expect.status.is.false
     }
   }

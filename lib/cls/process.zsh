@@ -90,7 +90,7 @@ z.cls.attr() {
 #
 # example:
 #  # 前提: Counterを定義中で、属性countを登録している
-#  z.cls.fn increment access=write
+#  z.cls.fn increment
 #    $self.count.get || return 1
 #    $self.count.set "$(( REPLY + 1 ))" || return 1
 #    $self.count.get
@@ -102,42 +102,24 @@ z.cls.fn() {
 
   local invalid=0
   local key="$z_cls_drawing:${1:-}"
-  local access=read
-  local has_access=0
-  local -a body=()
-  local argument
 
-  for argument in "${@:2}"; do
-    case $argument in
-      access=*)
-        (( has_access )) && invalid=1
-        access=${argument#access=}
-        has_access=1
-        ;;
-      *) body+=("$argument") ;;
-    esac
-  done
-
-  if (( $# == 0 || ${#body} > 1 )) ||
+  if (( $# == 0 || $# > 2 )) ||
       z.is.null "$z_cls_drawing" || ! z.cls.is._name "${1:-}"; then
     z.io.error "Expected an active class and a valid method name."
     invalid=1
   elif z.var.exists "z_cls_bodies[$key]"; then
     z.io.error "Method $1 already exists."
     invalid=1
-  elif (( invalid )) || [[ $access != read && $access != write ]]; then
-    z.io.error "Expected at most one access option, read or write."
-    invalid=1
   fi
 
-  if (( ${#body} )); then
+  if (( $# >= 2 )); then
     z.int.is.zero $invalid || return 1
-    z.cls.store._method "$z_cls_drawing" "$1" "$body[1]" "$access"
+    z.cls.store._method "$z_cls_drawing" "$1" "$2"
     return 0
   fi
 
   unsetopt localoptions
-  z.cls.capture._start "${1:-invalid}" "${(j:|:)funcstack[2,-1]}" "${funcfiletrace[1]%:*}" "$invalid" "$access"
+  z.cls.capture._start "${1:-invalid}" "${(j:|:)funcstack[2,-1]}" "${funcfiletrace[1]%:*}" "$invalid"
 }
 
 # メソッドの収集を終えたクラスを公開する。
@@ -176,9 +158,7 @@ z.cls.drew() {
   () {
     local REPLY=""
     z.cls.instance._commands "$z_cls_drawing" ""
-    z_cls_command_suffixes[${z_cls_drawing}:owner]="${(j: :)REPLY}"
-    z.cls.instance._commands "$z_cls_drawing" "" read
-    z_cls_command_suffixes[${z_cls_drawing}:read]="${(j: :)REPLY}"
+    z_cls_command_suffixes[$z_cls_drawing]="${(j: :)REPLY}"
   }
 
   z_cls_classes[$z_cls_drawing]=1
@@ -210,7 +190,7 @@ z.cls.abort() {
 
   z.hash.keys z_cls_bodies
   for key in "${(@)REPLY}"; do
-    z.str.start_with "$key" "$z_cls_drawing:" && unset "z_cls_bodies[$key]" "z_cls_method_access[$key]"
+    z.str.start_with "$key" "$z_cls_drawing:" && unset "z_cls_bodies[$key]"
   done
 
   if z.is.not.null "$z_cls_drawing"; then
@@ -267,41 +247,6 @@ z.cls.new() {
   REPLY=$z_cls_id
 }
 
-# 指定した関数の実行中だけ、実体の属性を読み取れる参照を渡す。
-#
-# $from: 現在の所有変数名
-# $1: 借用参照を第一引数で受け取る関数名
-# REPLY: 関数の結果
-# return: 関数の終了コード。借用を開始できない場合は1
-#
-# example:
-#  # 前提: savedはcount=7の実体を所有している
-#  read_count() { local borrowed=$1; $borrowed.count.get }
-#  z.cls.borrow from=saved read_count
-#  # REPLY: 7
-z.cls.borrow() {
-  z.cls.store._ensure
-
-  z.int.is.eq $# 2 || return 1
-  z.arg.named from "$@" && local z_cls_from=$REPLY
-  z.arg.named.shift from "$@"
-  local z_cls_callback=$REPLY[1]
-  if ! z.cls.is._attribute "$z_cls_from" || ! z.var.exists "functions[$z_cls_callback]"; then
-    z.io.error "Expected an owner and a callback function."
-    return 1
-  fi
-
-  local z_cls_owner=${(P)z_cls_from:-}
-  local z_cls_id=${z_cls_references[$z_cls_owner]:-$z_cls_owner}
-  if ! z.cls.owner._is_current "$z_cls_from" "$z_cls_owner" ||
-      [[ -n ${z_cls_active[$z_cls_id]-} ]]; then
-    z.io.error "Expected the owner of an inactive instance."
-    return 1
-  fi
-
-  z.cls.borrow._with "$z_cls_id" "$z_cls_callback"
-}
-
 # 実体、生成したコマンド、保存済みの属性を削除する。
 #
 # $1: 実体の変数名または参照
@@ -324,7 +269,7 @@ z.cls.delete() {
   [[ $1 == z_cls_* ]] && z_cls_ref=$1
   local z_cls_id=${z_cls_references[$z_cls_ref]:-$z_cls_ref}
 
-  z.cls.instance.call._validate "$z_cls_id" "$z_cls_ref" write || return 1
+  z.cls.instance.call._validate "$z_cls_id" "$z_cls_ref" || return 1
 
   if [[ -n ${z_cls_active[$z_cls_id]-} ]]; then
     z.io.error "Expected an inactive instance reference."

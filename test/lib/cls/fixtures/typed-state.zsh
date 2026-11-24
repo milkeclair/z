@@ -6,7 +6,7 @@ z.cls.draw TypedState
   z.cls.attr missing default=initial
   z.cls.attr plain default=initial
 
-  z.cls.fn fill access=write
+  z.cls.fn fill
     $self.table.set "space key" "value words" empty "" || return 1
     $self.number.set 255 || return 1
     $self.fraction.set 1.23456789 || return 1

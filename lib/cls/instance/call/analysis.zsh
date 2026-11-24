@@ -20,7 +20,7 @@ z.cls.instance.call._get() {
     return $?
   fi
 
-  z.int.is.eq $# 2 || return 1
+  z.is.eq "$#" 2 || return 1
 
   if (( ${+z_cls_scalars[$z_cls_key]} )); then
     REPLY=$z_cls_scalars[$z_cls_key]

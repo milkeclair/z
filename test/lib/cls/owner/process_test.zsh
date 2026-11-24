@@ -62,17 +62,17 @@ z.t.describe "z.cls.owner.move"; {
     }
   }
 
-  z.t.context "借用した変数を移動元にした場合"; {
+  z.t.context "所有者の参照をコピーした変数を移動元にした場合"; {
     z.t.it "既存の所有者を残して拒否する"; {
       () {
-        z.cls.draw BorrowedMove
+        z.cls.draw CopiedMove
         z.cls.drew
 
         local owner="" saved=""
-        z.cls.new BorrowedMove owner || return 1
-        local borrowed=$owner
+        z.cls.new CopiedMove owner || return 1
+        local copied=$owner
 
-        z.cls.owner.move from=borrowed to=saved 2>/dev/null
+        z.cls.owner.move from=copied to=saved 2>/dev/null
 
         z.t.expect.status.is.false
         z.t.expect.is.null "$saved"

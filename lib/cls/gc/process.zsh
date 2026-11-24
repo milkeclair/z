@@ -18,7 +18,7 @@ z.cls.gc._collect() {
   z.hash.keys z_cls_owner_markers
   for z_cls_gc_id in "${REPLY[@]}"; do
     z.var.exists "$z_cls_owner_markers[$z_cls_gc_id]" && continue
-    [[ -n ${z_cls_active[$z_cls_gc_id]-} || -n ${z_cls_borrow_counts[$z_cls_gc_id]-} ]] && continue
+    [[ -n ${z_cls_active[$z_cls_gc_id]-} ]] && continue
 
     z.cls.instance._release "$z_cls_gc_id"
   done
