@@ -1,15 +1,28 @@
-# 生成が続いていれば、所有者がスコープを抜けた非実行中の実体を解放する。
+# 所有者のスコープを抜け、実行中でもないインスタンスを回収する。
+# 前回の回収から64個のインスタンスを生成した後に回収を始める。
 #
 # REPLY: null
 # return: 0
 #
 # example:
-#  # 前提: 前回の回収から64個の実体を生成し、一部は所有者のスコープを抜けている
+#  z.cls.draw CollectCounter
+#  z.cls.drew
+#  local reference=""
+#  () {
+#    local counter=""
+#    z.cls.new CollectCounter counter
+#    reference=$counter
+#  }
+#  z_cls_gc_allocations=64
 #  z.cls.gc._collect
 #  # return: 0
-#  # 変更後: 所有者が消えた非実行中の実体を解放済み
+#  z.var.exists "z_cls_instances[$reference]"
+#  # return: 1
 z.cls.gc._collect() {
-  z.int.is.lt $z_cls_gc_allocations 64 && return 0
+  if z.int.is.lt "$z_cls_gc_allocations" 64; then
+    return 0
+  fi
+
   z_cls_gc_allocations=0
 
   local REPLY=""
@@ -17,8 +30,13 @@ z.cls.gc._collect() {
 
   z.hash.keys z_cls_owner_markers
   for instance_id in "${REPLY[@]}"; do
-    z.var.exists "$z_cls_owner_markers[$instance_id]" && continue
-    z.is.not.null "${z_cls_active[$instance_id]-}" && continue
+    if z.var.exists "${z_cls_owner_markers[$instance_id]-}"; then
+      continue
+    fi
+
+    if z.is.not.null "${z_cls_active[$instance_id]-}"; then
+      continue
+    fi
 
     z.cls.instance._release "$instance_id"
   done
