@@ -14,9 +14,9 @@
 #  # return: 0
 #  # 変更後: incrementの本体を登録し、収集を終了
 z.cls.method.defined() {
-  local result=${z_cls_capture_done_result:-0}
-
-  unset z_cls_capture_done_result
-
-  return $result
+  {
+    return ${z_cls_capture_done_result:-0}
+  } always {
+    unset z_cls_capture_done_result
+  }
 }
