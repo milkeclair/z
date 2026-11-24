@@ -45,16 +45,17 @@ z.cls.capture._watch() {
   typeset -g +x z_cls_debug_before=$options[debugbeforecmd]
   typeset -g +x z_cls_debug_localtraps=$options[localtraps]
 
-  local trap_line
+  # 退避前のDEBUGトラップによる呼出元の変数への代入と区別する。
+  local z_cls_debug_line
 
   z.str.split.line "$(trap)"
-  for trap_line in "${REPLY[@]}"; do
-    z.str.start_with "$trap_line" 'trap -- ' || continue
+  for z_cls_debug_line in "${REPLY[@]}"; do
+    z.str.start_with "$z_cls_debug_line" 'trap -- ' || continue
 
-    z.str.split.shell "$trap_line"
-    local -a trap_words=("${REPLY[@]}")
+    z.str.split.shell "$z_cls_debug_line"
+    z.arg.get "${REPLY[@]}" index=4
 
-    z.is.eq "$trap_words[4]" DEBUG && z_cls_debug_trap=$trap_line
+    z.is.eq "$REPLY" DEBUG && z_cls_debug_trap=$z_cls_debug_line
   done
 
   unsetopt localoptions localtraps
@@ -116,15 +117,15 @@ z.cls.capture._stop() {
 #  # 変更後: 本体にREPLY=readyを追記し、その場での実行を抑止
 z.cls.capture._debug() {
   local REPLY=""
-  local z_cls_stack=${(j:|:)funcstack[3,-1]}
+  local current_stack=${(j:|:)funcstack[3,-1]}
 
   if (( ${z_cls_reject_depth:-0} )); then
-    if [[ $z_cls_stack == "$z_cls_reject_stack" ]]; then
+    if [[ $current_stack == "$z_cls_reject_stack" ]]; then
       z.cls.capture._skip "$1"
       return 0
     fi
 
-    z.cls.capture._within_scope "$z_cls_stack" "$z_cls_reject_stack" && return 0
+    z.cls.capture._within_scope "$current_stack" "$z_cls_reject_stack" && return 0
 
     unset z_cls_reject_depth z_cls_reject_method z_cls_reject_stack
     if z.is.null "$z_cls_drawing"; then
@@ -134,18 +135,18 @@ z.cls.capture._debug() {
   fi
 
   if z.is.not.null "${z_cls_capture_method:-}"; then
-    if [[ $z_cls_stack == "$z_cls_capture_stack" ]] ||
-        ! z.cls.capture._within_scope "$z_cls_stack" "$z_cls_capture_stack"; then
-      z.cls.capture._method "$1" "$z_cls_stack"
+    if [[ $current_stack == "$z_cls_capture_stack" ]] ||
+        ! z.cls.capture._within_scope "$current_stack" "$z_cls_capture_stack"; then
+      z.cls.capture._method "$1" "$current_stack"
     fi
     return 0
   fi
 
-  if z.is.not.null "$z_cls_drawing" && ! z.cls.capture._within_scope "$z_cls_stack" "$z_cls_draw_stack"; then
-    local z_cls_abandoned=$z_cls_drawing
+  if z.is.not.null "$z_cls_drawing" && ! z.cls.capture._within_scope "$current_stack" "$z_cls_draw_stack"; then
+    local abandoned_class=$z_cls_drawing
 
     z.cls.abort
-    z.io.error "Unfinished class definition $z_cls_abandoned. Definition discarded."
+    z.io.error "Unfinished class definition $abandoned_class. Definition discarded."
   fi
 }
 
@@ -161,8 +162,8 @@ z.cls.capture._debug() {
 #  # 変更後: printの実行を抑止
 z.cls.capture._skip() {
   if (( z_cls_reject_method )); then
-    z.is.eq "$1" z.cls.fn.done && z_cls_reject_method=0
-  elif z.is.eq "$1" z.cls.fn || z.str.start_with "$1" 'z.cls.fn '; then
+    z.is.eq "$1" z.cls.method.defined && z_cls_reject_method=0
+  elif z.is.eq "$1" z.cls.method || z.str.start_with "$1" 'z.cls.method '; then
     local -a REPLY=()
     z.str.split.shell "$1"
     # 拒否する前の判定と同じく、呼出元のSH_WORD_SPLITを単語数に反映する。
@@ -191,7 +192,7 @@ z.cls.capture._skip() {
 #
 # example:
 #  # 前提: 有効なCounter.incrementの本体を収集中
-#  z.cls.capture._method z.cls.fn.done "$z_cls_capture_stack"
+#  z.cls.capture._method z.cls.method.defined "$z_cls_capture_stack"
 #  # 変更後: Counter.incrementを登録し、本体の収集を終了
 z.cls.capture._method() {
   if [[ $2 != "$z_cls_capture_stack" ]]; then
@@ -200,7 +201,7 @@ z.cls.capture._method() {
     return 0
   fi
 
-  if z.is.not.eq "$1" z.cls.fn.done; then
+  if z.is.not.eq "$1" z.cls.method.defined; then
     z_cls_capture_body+="$1"$'\n'
     setopt errexit
     return 0

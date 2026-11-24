@@ -1,6 +1,31 @@
 source ${z_main}
 
 z.t.describe "z.cls.draw"; {
+  z.t.context "DEBUGトラップが呼出元のresultに代入する場合"; {
+    z.t.it "定義開始は成功し、トラップの代入は呼出元へ届く"; {
+      local -a output=()
+      output=("${(@f)$(
+        local result=before
+        TRAPDEBUG() {
+          if [[ $funcstack[2] == z.cls.draw && $ZSH_DEBUG_CMD == 'unsetopt localoptions' ]]; then
+            result=61
+          fi
+          return 0
+        }
+
+        z.cls.draw DebugDraw
+        local draw_status=$?
+        z.cls.drew
+        unfunction TRAPDEBUG
+        print -rl -- "$draw_status" "$result"
+      )}")
+
+      z.t.expect.status.is.true
+      z.t.expect "$output[1]" 0
+      z.t.expect "$output[2]" 61
+    }
+  }
+
   z.t.context "有効なクラス名の場合"; {
     z.t.it "定義を開始する"; {
       z.cls.draw DirectDraw
@@ -130,6 +155,33 @@ z.t.describe "z.cls.drew"; {
 }
 
 z.t.describe "z.cls.abort"; {
+  z.t.context "DEBUGトラップが呼出元のkeyに代入する場合"; {
+    z.t.it "トラップの代入を保ち、未公開の定義を破棄する"; {
+      local -a output=()
+      output=("${(@f)$(
+        local key=before
+        TRAPDEBUG() {
+          if [[ $funcstack[2] == z.cls.abort && $ZSH_DEBUG_CMD == 'z.str.start_with '* ]]; then
+            key=other
+          fi
+          return 0
+        }
+
+        z.cls.draw DebugAbort
+          z.cls.attr count default=1
+          z.cls.method value 'REPLY=old'
+        z.cls.abort
+        unfunction TRAPDEBUG
+        print -rl -- "$key" "${+z_cls_defaults[DebugAbort:count]}" "${+z_cls_bodies[DebugAbort:value]}"
+      )}")
+
+      z.t.expect.status.is.true
+      z.t.expect "$output[1]" other
+      z.t.expect "$output[2]" 0
+      z.t.expect "$output[3]" 0
+    }
+  }
+
   z.t.context "呼出元にreadonly argがある場合"; {
     z.t.it "呼出元を変更せずに定義を破棄する"; {
       z.cls.draw ReadonlyAbort

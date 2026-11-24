@@ -13,9 +13,6 @@
 z.cls.draw() {
   z.cls.store._ensure
 
-  local caller_stack=${(j:|:)funcstack[2,-1]}
-  local result=1
-
   if ! z.is.eq "$#" 1 || ! z.cls.is._name "${1:-}"; then
     z.io.error "Expected a valid class name."
   elif z.is.not.null "$z_cls_drawing" || z.is.not.null "${z_cls_classes[$1]:-}"; then
@@ -24,20 +21,20 @@ z.cls.draw() {
     z_cls_class_attrs[$1]=''
     z_cls_class_methods[$1]=''
     z_cls_drawing=$1
-    typeset -g +x z_cls_draw_stack=$caller_stack
+    typeset -g +x z_cls_draw_stack=${(j:|:)funcstack[2,-1]}
     typeset -gi +x z_cls_draw_failed=0
-    result=0
+
+    unsetopt localoptions
+    z.cls.capture._watch
+    return 0
   fi
 
-  if z.int.is.not.zero $result; then
-    typeset -gi +x z_cls_reject_depth=1 z_cls_reject_method=0
-    typeset -g +x z_cls_reject_stack=$caller_stack
-  fi
+  typeset -gi +x z_cls_reject_depth=1 z_cls_reject_method=0
+  typeset -g +x z_cls_reject_stack=${(j:|:)funcstack[2,-1]}
 
   unsetopt localoptions
   z.cls.capture._watch
-
-  return $result
+  return 1
 }
 
 # 定義中のクラスにスカラー属性と初期値を登録する。
@@ -81,7 +78,7 @@ z.cls.attr() {
 }
 
 # メソッド本体の収集を開始するか、引数で渡された本体を登録する。
-# 引用しない本体の末尾には、独立した文としてz.cls.fn.doneを置く。
+# 引用しない本体の末尾には、独立した文としてz.cls.method.definedを置く。
 #
 # $1: メソッド名
 # $2?: 引数で指定する本体
@@ -103,8 +100,7 @@ z.cls.method() {
   local invalid=0
   local key="$z_cls_drawing:${1:-}"
 
-  if z.int.is.lt $# 1 || z.int.is.gt $# 2 ||
-      z.is.null "$z_cls_drawing" || ! z.cls.is._name "${1:-}"; then
+  if z.int.is.lt $# 1 || z.int.is.gt $# 2 || z.is.null "$z_cls_drawing" || ! z.cls.is._name "${1:-}"; then
     z.io.error "Expected an active class and a valid method name."
     invalid=1
   elif z.var.exists "z_cls_bodies[$key]"; then
@@ -182,16 +178,17 @@ z.cls.abort() {
   z.cls.capture._stop
 
   local REPLY=""
-  local key
+  # 復元したDEBUGトラップは、呼出元の変数と同じ名前に代入できる。
+  local z_cls_abort_key
 
   z.hash.keys z_cls_defaults
-  for key in "${(@)REPLY}"; do
-    z.str.start_with "$key" "$z_cls_drawing:" && unset "z_cls_defaults[$key]"
+  for z_cls_abort_key in "${(@)REPLY}"; do
+    z.str.start_with "$z_cls_abort_key" "$z_cls_drawing:" && unset "z_cls_defaults[$z_cls_abort_key]"
   done
 
   z.hash.keys z_cls_bodies
-  for key in "${(@)REPLY}"; do
-    z.str.start_with "$key" "$z_cls_drawing:" && unset "z_cls_bodies[$key]"
+  for z_cls_abort_key in "${(@)REPLY}"; do
+    z.str.start_with "$z_cls_abort_key" "$z_cls_drawing:" && unset "z_cls_bodies[$z_cls_abort_key]"
   done
 
   if z.is.not.null "$z_cls_drawing"; then
