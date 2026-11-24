@@ -2,7 +2,7 @@ source ${z_main}
 
 z.t.describe "z.cls.draw"; {
   z.t.context "有効なクラス名の場合"; {
-    z.t.it "定義を開始する"; {
+    z.t.it "有効なクラス名で定義を開始する"; {
       z.cls.draw DirectDraw
         z.t.expect "$z_cls_drawing" DirectDraw
 
@@ -11,12 +11,12 @@ z.t.describe "z.cls.draw"; {
   }
 
   z.t.context "DEBUGトラップが呼出元のresultに代入する場合"; {
-    z.t.it "定義開始は成功し、トラップの代入は呼出元へ届く"; {
+    z.t.it "DEBUGトラップの代入で定義開始の終了コードは変わらない"; {
       local -a output=()
       output=("${(@f)$(
         local result=before
         TRAPDEBUG() {
-          if [[ $funcstack[2] == z.cls.draw && $ZSH_DEBUG_CMD == 'unsetopt localoptions' ]]; then
+          if [[ $funcstack[2] == z.cls.draw ]]; then
             result=61
           fi
           return 0
@@ -36,7 +36,7 @@ z.t.describe "z.cls.draw"; {
   }
 
   z.t.context "引数が不足する場合"; {
-    z.t.it "失敗する"; {
+    z.t.it "クラス名のない定義はdrewで失敗する"; {
       z.t.mock name=z.io.error
 
       z.cls.draw # zls: ignore
@@ -45,7 +45,6 @@ z.t.describe "z.cls.draw"; {
       z.t.expect.status.is.false
     }
   }
-
 }
 
 # 定義読込時のトラップ設定を初期化のスコープに閉じ込める。
@@ -56,8 +55,8 @@ z.t.describe "z.cls.draw"; {
 }
 
 z.t.describe "z.cls.attr"; {
-  z.t.context "定義中の属性の場合"; {
-    z.t.it "初期値を保持する"; {
+  z.t.context "属性に初期値を指定する場合"; {
+    z.t.it "falseを属性の初期値として保存する"; {
       z.cls.draw DirectAttr
         z.cls.attr literal default=false
 
@@ -68,7 +67,7 @@ z.t.describe "z.cls.attr"; {
   }
 
   z.t.context "同名属性がある場合"; {
-    z.t.it "上書きを拒否する"; {
+    z.t.it "同名属性の再宣言で元の初期値を上書きしない"; {
       z.cls.draw DuplicateAttr
         z.cls.attr count default=3
         z.t.mock name=z.io.error
@@ -83,7 +82,7 @@ z.t.describe "z.cls.attr"; {
   }
 
   z.t.context "空の初期値を明示した場合"; {
-    z.t.it "空文字列をスカラーとして保持する"; {
+    z.t.it "空の初期値を持つ属性をスカラーとして取得する"; {
       z.cls.draw EmptyDefault
         z.cls.attr default default=
       z.cls.drew
@@ -105,7 +104,7 @@ z.t.describe "z.cls.attr"; {
   }
 
   z.t.context "defaultを属性名より前に置く場合"; {
-    z.t.it "初期値の空白と等号を保持する"; {
+    z.t.it "先に指定したdefault=の空白と等号を保つ"; {
       z.cls.draw NamedDefault
         z.cls.attr 'default=a b=c' label
       z.cls.drew
@@ -124,41 +123,31 @@ z.t.describe "z.cls.attr"; {
   }
 
   z.t.context "defaultを省略した場合"; {
-    z.t.it "属性の登録とクラスの公開が失敗する"; {
+    z.t.it "default=を省略した属性は登録できない"; {
       z.cls.draw MissingDefault
         z.cls.attr value 2>/dev/null # zls: ignore missing-named-argument
 
         z.t.expect.status.is.false
-      z.cls.drew
 
-      z.t.expect.status.is.false
-
-      z.hash.has.key z_cls_classes key=MissingDefault
-
-      z.t.expect.status.is.false
+      z.cls.abort
     }
   }
 
   z.t.context "defaultを重複して指定した場合"; {
-    z.t.it "属性の登録とクラスの公開が失敗する"; {
+    z.t.it "default=が2つある属性は登録できない"; {
       z.cls.draw DuplicateDefault
         z.cls.attr default=one default=two 2>/dev/null # zls: ignore missing-positional-argument
 
         z.t.expect.status.is.false
-      z.cls.drew
 
-      z.t.expect.status.is.false
-
-      z.hash.has.key z_cls_classes key=DuplicateDefault
-
-      z.t.expect.status.is.false
+      z.cls.abort
     }
   }
 }
 
 z.t.describe "z.cls.method"; {
-  z.t.context "明示的な本体の場合"; {
-    z.t.it "クラスへ登録する"; {
+  z.t.context "本文を第2引数で渡す場合"; {
+    z.t.it "第2引数の本文をメソッドとして登録する"; {
       z.cls.draw DirectMethod
         z.cls.method value 'REPLY=literal'
 
@@ -167,11 +156,38 @@ z.t.describe "z.cls.method"; {
       z.cls.abort
     }
   }
+
+  z.t.context "第2引数が空文字列の場合"; {
+    z.t.it "空の本文を持つメソッドを登録する"; {
+      z.cls.draw EmptyMethod
+        z.cls.method empty ''
+
+        z.hash.has.key z_cls_bodies key=EmptyMethod:empty
+
+        z.t.expect.status.is.true
+        z.t.expect.is.null "$z_cls_bodies[EmptyMethod:empty]"
+
+      z.cls.abort
+    }
+  }
+
+  z.t.context "第2引数を渡しメソッド名が不正な場合"; {
+    z.t.it "引用本文の不正なメソッド名はその場で拒否する"; {
+      z.cls.draw InvalidQuotedMethod
+        z.t.mock name=z.io.error
+
+        z.cls.method bad-name 'REPLY=ignored'
+
+        z.t.expect.status.is.false
+
+      z.cls.abort
+    }
+  }
 }
 
 z.t.describe "z.cls.drew"; {
   z.t.context "定義を開始していない場合"; {
-    z.t.it "公開を拒否する"; {
+    z.t.it "定義中のクラスがなければ公開に失敗する"; {
       z.cls.abort
       z.t.mock name=z.io.error
 
@@ -182,12 +198,26 @@ z.t.describe "z.cls.drew"; {
   }
 
   z.t.context "定義中のクラスの場合"; {
-    z.t.it "公開して定義状態を終了する"; {
+    z.t.it "定義中のクラスを公開し定義状態を解除する"; {
       z.cls.draw DirectPublish
       z.cls.drew
 
       z.t.expect "$z_cls_classes[DirectPublish]" 1
       z.t.expect.is.null "$z_cls_drawing"
+    }
+  }
+
+  z.t.context "属性の登録に失敗した場合"; {
+    z.t.it "属性の登録に失敗したクラスは公開されない"; {
+      z.cls.draw InvalidAttributeClass
+        z.cls.attr value 2>/dev/null # zls: ignore missing-named-argument
+      z.cls.drew
+
+      z.t.expect.status.is.false
+
+      z.hash.has.key z_cls_classes key=InvalidAttributeClass
+
+      z.t.expect.status.is.false
     }
   }
 }

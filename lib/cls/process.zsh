@@ -6,16 +6,15 @@
 # return: 0|1
 #
 # example:
-#  # 前提: Counterが未登録で、他のクラスを定義していない
 #  z.cls.draw Counter
 #  # return: 0
-#  # 変更後: Counterを定義中
+#  z.cls.drew
 z.cls.draw() {
   z.cls.store._ensure
 
-  if ! z.is.eq "$#" 1 || ! z.cls.is._name "${1:-}"; then
+  if z.int.is.not.eq "$#" 1 || ! z.cls.is._name "$1"; then
     z.io.error "Expected a valid class name."
-  elif z.is.not.null "$z_cls_drawing" || z.is.not.null "${z_cls_classes[$1]:-}"; then
+  elif z.is.not.null "$z_cls_drawing" || z.var.exists "z_cls_classes[$1]"; then
     z.io.error "Class $1 already exists or a definition is active."
   else
     z_cls_class_attrs[$1]=''
@@ -45,26 +44,38 @@ z.cls.draw() {
 # return: 0|1
 #
 # example:
-#  # 前提: z.cls.draw Counterで定義を開始している
-#  z.cls.attr count default=0
-#  # return: 0
-#  # 変更後: Counterの属性countの初期値は0
+#  z.cls.draw Counter
+#    z.cls.attr count default=0
+#    # return: 0
+#  z.cls.drew
 z.cls.attr() {
   z.cls.store._ensure
 
+  if z.is.null "$z_cls_drawing"; then
+    z.io.error "No class definition is active."
+    return 1
+  fi
+
   local REPLY=""
-  local -a input_args=("$@") parsed_args=()
+  local -a input_args=("$@")
   local -A parsed_named=([default]="")
+  local -a parsed_args=()
 
   z.arg.parse input=input_args named=parsed_named rest=parsed_args
   z.arr.count "${parsed_args[@]}"
-  local attribute=${parsed_args[1]:-}
 
-  # 全2引数のうち1つを位置引数とし、空のdefault=も明示指定として受け付ける。
-  if z.is.not.eq "$#" 2 || z.is.not.eq "$REPLY" 1 ||
-      z.is.null "$z_cls_drawing" || ! z.cls.is._attribute "$attribute"; then
-    z.io.error "Expected an active class, an ordinary attribute name, and default=."
-    z.is.not.null "$z_cls_drawing" && z_cls_draw_failed=1
+  # 指定されたdefault=を数え、省略や重複と区別する。
+  if z.int.is.not.eq "$#" 2 || z.int.is.not.eq "$REPLY" 1; then
+    z.io.error "Expected an attribute name and one default= argument."
+    z_cls_draw_failed=1
+    return 1
+  fi
+
+  local attribute=$parsed_args[1]
+
+  if ! z.cls.is._attribute "$attribute"; then
+    z.io.error "Expected an ordinary attribute name: $attribute"
+    z_cls_draw_failed=1
     return 1
   fi
 
@@ -89,35 +100,44 @@ z.cls.attr() {
 # return: 0|1
 #
 # example:
-#  # 前提: Counterを定義中で、属性countを登録している
-#  z.cls.method increment
-#    $self.count.get || return 1
-#    $self.count.set "$(( REPLY + 1 ))" || return 1
-#    $self.count.get
-#  z.cls.method.defined
-#  # return: 0
-#  # 変更後: Counterにincrementメソッドを登録済み
+#  z.cls.draw Counter
+#    z.cls.attr count default=0
+#
+#    z.cls.method increment
+#      # return: 0
+#      $self.count.get
+#      $self.count.set "$(( REPLY + 1 ))"
+#      $self.count.get
+#    z.cls.method.defined
+#  z.cls.drew
 z.cls.method() {
   z.cls.store._ensure
 
   local invalid=0
-  local key="$z_cls_drawing:${1:-}"
 
-  if z.int.is.lt $# 1 || z.int.is.gt $# 2 || z.is.null "$z_cls_drawing" || ! z.cls.is._name "${1:-}"; then
-    z.io.error "Expected an active class and a valid method name."
+  if z.int.is.zero "$#" || z.int.is.gt "$#" 2; then
+    z.io.error "Expected a method name and at most one body."
     invalid=1
-  elif z.var.exists "z_cls_bodies[$key]"; then
+  elif z.is.null "$z_cls_drawing"; then
+    z.io.error "No class definition is active."
+    invalid=1
+  elif ! z.cls.is._name "$1"; then
+    z.io.error "Expected a valid method name."
+    invalid=1
+  elif z.var.exists "z_cls_bodies[$z_cls_drawing:$1]"; then
     z.io.error "Method $1 already exists."
     invalid=1
   fi
 
-  if z.int.is.gteq $# 2; then
-    z.int.is.zero $invalid || return 1
+  if z.int.is.gteq "$#" 2; then
+    z.int.is.zero "$invalid" || return 1
+
     z.cls.store._method "$1" class="$z_cls_drawing" body="$2"
     return 0
   fi
 
   unsetopt localoptions
+  # 名前が空でも、終了マーカーまで本体を収集して実行を止める。
   z.cls.capture._start "${1:-invalid}" \
     stack="${(j:|:)funcstack[2,-1]}" \
     file="${funcfiletrace[1]%:*}" \
@@ -131,17 +151,21 @@ z.cls.method() {
 # return: 0|1
 #
 # example:
-#  # 前提: Counterを定義中で、全メソッドの収集が完了している
+#  z.cls.draw Counter
+#    z.cls.attr count default=0
 #  z.cls.drew
 #  # return: 0
-#  # 変更後: Counterを公開済み。z.cls.new Counter counterで実体を作れる
 z.cls.drew() {
   z.cls.store._ensure
 
-  if (( ${z_cls_reject_result:-0} )); then
+  if z.var.exists z_cls_reject_result; then
     unset z_cls_reject_result
     unsetopt localoptions
-    z.is.not.null "$z_cls_drawing" || z.cls.capture._stop
+
+    if z.is.null "$z_cls_drawing"; then
+      z.cls.capture._stop
+    fi
+
     return 1
   fi
 
@@ -151,7 +175,8 @@ z.cls.drew() {
   fi
 
   unsetopt localoptions
-  if (( z_cls_draw_failed )); then
+
+  if z.int.is.not.zero "$z_cls_draw_failed"; then
     z.cls.abort
     return 1
   fi

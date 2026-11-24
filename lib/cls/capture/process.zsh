@@ -8,10 +8,12 @@
 # return: 0
 #
 # example:
-#  # 前提: Counterを定義中で、DEBUGトラップにより呼出元を監視できる
-#  z.cls.capture._start increment stack="$z_cls_draw_stack" file=counter.zsh
-#  # return: 0
-#  # 変更後: z_cls_capture_method=increment、z_cls_capture_body=''
+#  z.cls.draw Counter
+#    z.cls.capture._start value stack="$z_cls_draw_stack" file=counter.zsh
+#    # return: 0
+#    REPLY=ready
+#    z.cls.method.defined
+#  z.cls.drew
 z.cls.capture._start() {
   z.cls.capture._watch
 
@@ -20,8 +22,8 @@ z.cls.capture._start() {
   z.arg.named file "${@:2}" && local file=$REPLY
   z.arg.named discard "${@:2}" default=0 && local discard=$REPLY
 
+  unset z_cls_capture_done_result
   typeset -g +x z_cls_capture_discard=$discard
-  typeset -g +x z_cls_capture_done_result=0
   typeset -g +x z_cls_capture_stack=$stack
   typeset -g +x z_cls_capture_file=$file
   typeset -g +x z_cls_capture_body=''
@@ -34,13 +36,12 @@ z.cls.capture._start() {
 # return: 0
 #
 # example:
-#  # 前提: クラスを定義していない
+#  z.cls.store._ensure
 #  z.cls.capture._watch
 #  # return: 0
-#  # 変更後: z_cls_debug_watching=1
 #  z.cls.capture._stop
 z.cls.capture._watch() {
-  z.is.eq "${z_cls_debug_watching:-0}" 1 && return 0
+  z.var.exists z_cls_debug_watching && return 0
 
   local REPLY=""
 
@@ -75,12 +76,18 @@ z.cls.capture._watch() {
 # return: 0
 #
 # example:
-#  # 前提: 元のDEBUGトラップがtrap ': original' DEBUG
-#  z.cls.capture._stop
-#  # return: 0
-#  # 変更後: trap ': original' DEBUGを復元し、収集中のメソッド名を空にする
+#  (
+#    trap ': original' DEBUG
+#    z.cls.store._ensure
+#    z.cls.capture._watch
+#
+#    z.cls.capture._stop
+#    # return: 0
+#    trap
+#    # 出力: trap -- ': original' DEBUG
+#  )
 z.cls.capture._stop() {
-  z.is.eq "${z_cls_debug_watching:-0}" 1 || return 0
+  z.var.exists z_cls_debug_watching || return 0
 
   z_cls_capture_method=''
   unset z_cls_debug_watching z_cls_reject_depth z_cls_reject_method z_cls_reject_stack
@@ -117,14 +124,21 @@ z.cls.capture._stop() {
 # return: 0
 #
 # example:
-#  # 前提: runの本体を収集中のDEBUGトラップ内
-#  z.cls.capture._debug 'REPLY=ready'
-#  # 変更後: 本体にREPLY=readyを追記し、その場での実行を抑止
+#  (
+#    z.cls.store._ensure
+#    z_cls_capture_method=value
+#    z_cls_capture_stack=""
+#    z_cls_capture_body=""
+#
+#    z.cls.capture._debug 'REPLY=ready'
+#    unsetopt errexit
+#    # z_cls_capture_body: $'REPLY=ready\n'
+#  )
 z.cls.capture._debug() {
   local REPLY=""
   local current_stack=${(j:|:)funcstack[3,-1]}
 
-  if z.int.is.not.zero "${z_cls_reject_depth:-0}"; then
+  if z.var.exists z_cls_reject_depth; then
     if [[ $current_stack == "$z_cls_reject_stack" ]]; then
       z.cls.capture._skip "$1"
       return 0
@@ -139,20 +153,24 @@ z.cls.capture._debug() {
     fi
   fi
 
-  if z.is.not.null "${z_cls_capture_method:-}"; then
-    if [[ $current_stack == "$z_cls_capture_stack" ]] ||
-        ! z.cls.capture._within_scope "$current_stack" "$z_cls_capture_stack"; then
-      z.cls.capture._method "$1" "$current_stack"
+  if z.is.not.null "$z_cls_capture_method"; then
+    if [[ $current_stack == "$z_cls_capture_stack" ]]; then
+      z.cls.capture._method "$1"
+    elif ! z.cls.capture._within_scope "$current_stack" "$z_cls_capture_stack"; then
+      z.cls.abort
+      z.io.error "Unfinished class method in $z_cls_capture_file. Definition discarded."
     fi
+
     return 0
   fi
 
-  if z.is.not.null "$z_cls_drawing" && ! z.cls.capture._within_scope "$current_stack" "$z_cls_draw_stack"; then
-    local abandoned_class=$z_cls_drawing
+  z.is.null "$z_cls_drawing" && return 0
+  z.cls.capture._within_scope "$current_stack" "$z_cls_draw_stack" && return 0
 
-    z.cls.abort
-    z.io.error "Unfinished class definition $abandoned_class. Definition discarded."
-  fi
+  local abandoned_class=$z_cls_drawing
+
+  z.cls.abort
+  z.io.error "Unfinished class definition $abandoned_class. Definition discarded."
 }
 
 # 拒否したクラスの対応する終端まで、宣言も通常のコマンドも飛ばす。
@@ -162,15 +180,21 @@ z.cls.capture._debug() {
 # return: 0
 #
 # example:
-#  # 前提: 拒否したクラスを書いている間のDEBUGトラップ内
-#  z.cls.capture._skip 'print unexpected'
-#  # 変更後: printの実行を抑止
+#  (
+#    z_cls_reject_depth=1
+#    z_cls_reject_method=0
+#
+#    z.cls.capture._skip z.cls.drew
+#    # return: 0
+#    # z_cls_reject_result: 1
+#  )
 z.cls.capture._skip() {
-  if z.int.is.not.zero "${z_cls_reject_method:-0}"; then
+  if z.int.is.not.zero "$z_cls_reject_method"; then
     z.is.eq "$1" z.cls.method.defined && z_cls_reject_method=0
   elif z.is.eq "$1" z.cls.method || z.str.start_with "$1" 'z.cls.method '; then
     local -a REPLY=()
     z.str.split.shell "$1"
+
     # 呼出元のSH_WORD_SPLITを単語数の判定に反映する。
     z.arr.count ${REPLY[@]}
     z.int.is.lteq "$REPLY" 2 && z_cls_reject_method=1
@@ -181,6 +205,8 @@ z.cls.capture._skip() {
     if z.int.is.zero "$z_cls_reject_depth"; then
       unset z_cls_reject_depth z_cls_reject_method z_cls_reject_stack
       typeset -g +x z_cls_reject_result=1
+
+      # 最外のz.cls.drewを実行し、定義を拒否したことを返す。
       return 0
     fi
   fi
@@ -192,21 +218,22 @@ z.cls.capture._skip() {
 # メソッドの終端を処理し、それ以外のコマンドを本体へ保存する。
 #
 # $1: Zshが復元したコマンドの文字列
-# $2: 現在の呼出しスタック
 # REPLY: null
 # return: 0
 #
 # example:
-#  # 前提: 有効なCounter.incrementの本体を収集中
-#  z.cls.capture._method z.cls.method.defined "$z_cls_capture_stack"
-#  # 変更後: Counter.incrementを登録し、本体の収集を終了
+#  (
+#    z.cls.store._ensure
+#    z_cls_drawing=Counter
+#    z_cls_capture_method=value
+#    z_cls_capture_body='REPLY=ready'
+#    z_cls_capture_discard=0
+#
+#    z.cls.capture._method z.cls.method.defined
+#    # return: 0
+#    # z_cls_bodies[Counter:value]: REPLY=ready
+#  )
 z.cls.capture._method() {
-  if [[ $2 != "$z_cls_capture_stack" ]]; then
-    z.cls.abort
-    z.io.error "Unfinished class method in $z_cls_capture_file. Definition discarded."
-    return 0
-  fi
-
   if z.is.not.eq "$1" z.cls.method.defined; then
     z_cls_capture_body+="$1"$'\n'
 
@@ -215,13 +242,12 @@ z.cls.capture._method() {
     return 0
   fi
 
-  if z.int.is.not.zero "${z_cls_capture_discard:-0}"; then
+  if z.int.is.not.zero "$z_cls_capture_discard"; then
     z.cls.abort
-    z_cls_capture_done_result=1
+    typeset -g +x z_cls_capture_done_result=1
     return 0
   fi
 
   z.cls.store._method "$z_cls_capture_method" class="$z_cls_drawing" body="$z_cls_capture_body"
   z_cls_capture_method=''
-  z.is.not.null "$z_cls_drawing" || z.cls.capture._stop
 }
