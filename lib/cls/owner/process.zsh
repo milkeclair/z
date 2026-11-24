@@ -13,6 +13,8 @@
 #  # 変更後: savedから同じ実体を操作でき、counterの参照は失効する
 z.cls.owner.move() {
   z.cls.store._ensure
+
+  # 移動元と移動先を動的スコープから参照する間は、同名の変数を隠さない名前を使う。
   z.arg.named from "$@" && local z_cls_from=$REPLY
   z.arg.named to "$@" && local z_cls_to=$REPLY
 
@@ -48,8 +50,13 @@ z.cls.owner.move() {
   unset "z_cls_references[$z_cls_old_ref]"
   z_cls_references[$z_cls_new_ref]=$z_cls_id
   z_cls_owner_refs[$z_cls_id]=$z_cls_new_ref
-  z.cls.instance.commands._uninstall ${=z_cls_members[$z_cls_id]}
-  z_cls_members[$z_cls_id]="${(j: :)z_cls_new_commands}"
+
+  if z.is.not.null "$z_cls_members[$z_cls_id]"; then
+    z.arr.split "$z_cls_members[$z_cls_id]"
+    z.cls.instance.commands._uninstall "${REPLY[@]}"
+  fi
+  z.arr.join "${z_cls_new_commands[@]}"
+  z_cls_members[$z_cls_id]=$REPLY
 
   REPLY=$z_cls_new_ref
 }

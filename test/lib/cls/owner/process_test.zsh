@@ -8,17 +8,17 @@ z.t.describe "z.cls.owner.move"; {
           z.cls.attr count default=5
         z.cls.drew
 
-        local saved=""
+        local to=""
         () {
-          local counter=""
-          z.cls.new TransferOwner counter || return 1
-          z.cls.owner.move from=counter to=saved
+          local from=""
+          z.cls.new TransferOwner from || return 1
+          z.cls.owner.move from=from to=to
         }
         z.t.expect.status.is.true
 
-        $saved.count.get
+        $to.count.get
         z.t.expect.reply 5
-        z.cls.delete "$saved"
+        z.cls.delete "$to"
       }
     }
   }

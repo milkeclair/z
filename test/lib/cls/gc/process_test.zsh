@@ -12,14 +12,14 @@ z.t.describe "z.cls.gc._collect"; {
 
       local counter=""
       z.cls.new CollectInLoop counter || return 1
-      local -i i
-      for (( i=0; i<70; i++ )); do
+      repeat 70; do
         () {
           local counter=""
           z.cls.new CollectInLoop counter
         } || return 1
       done
-      local instances=${#z_cls_instances}
+      z.hash.count z_cls_instances
+      local instances=$REPLY
       $counter.count.get
       z.t.expect.reply 10
       z.int.is.lt "$instances" 70

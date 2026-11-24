@@ -9,12 +9,9 @@
 #  z.cls.owner._writable counter
 #  # return: 0
 z.cls.owner._writable() {
-  local z_cls_binding=$1
+  z.cls.is._attribute "$1" || return 1
 
-  z.cls.is._attribute "$z_cls_binding" || return 1
-
-  local z_cls_binding_type=${parameters[$z_cls_binding]:-}
-  case $z_cls_binding_type in
+  case ${parameters[$1]:-} in
     *readonly*|*tied*|*upper*|*lower*|*left*|*right_blanks*|*right_zeros*)
       return 1
       ;;
@@ -25,9 +22,11 @@ z.cls.owner._writable() {
       ;;
   esac
 
-  local z_cls_ref=${(P)z_cls_binding:-}
-  local z_cls_id=${z_cls_references[$z_cls_ref]:-$z_cls_ref}
-  z.is.null "$z_cls_ref" || z.is.null "${z_cls_instances[$z_cls_id]:-}"
+  local reference=${(P)1:-}
+  z.is.null "$reference" && return 0
+
+  local instance_id=${z_cls_references[$reference]:-$reference}
+  z.is.null "${z_cls_instances[$instance_id]:-}"
 }
 
 # 指定した変数が実体の現在の所有変数か検証する。
@@ -49,15 +48,15 @@ z.cls.owner._is_current() {
   z.is.not.null "$z_cls_marker" || return 1
   z.str.includes "${parameters[$1]:-}" tied || return 1
 
-  local z_cls_decl=$(builtin typeset -p -- "$1")
+  local declaration=$(builtin typeset -p -- "$1")
   local REPLY=""
-  z.str.split.shell "$z_cls_decl"
-  local -a z_cls_words=("${REPLY[@]}")
-  local -i z_cls_index=2
-  while z.str.start_with "${z_cls_words[z_cls_index]:-}" -; do
-    (( ++z_cls_index ))
+  z.str.split.shell "$declaration"
+  local -a words=("${REPLY[@]}")
+  local -i index=2
+  while z.str.start_with "${words[index]:-}" -; do
+    (( ++index ))
   done
 
-  z.is.eq "${z_cls_words[z_cls_index]:-}" "$1" &&
-    z.str.start_with "${z_cls_words[z_cls_index+1]:-}" "$z_cls_marker="
+  z.is.eq "${words[index]:-}" "$1" &&
+    z.str.start_with "${words[index+1]:-}" "$z_cls_marker="
 }
