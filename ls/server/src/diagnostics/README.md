@@ -59,9 +59,9 @@ ASTの所有関係、引数の契約、制御コメント、snapshotの再利用
 ## クラス定義
 
 hydratorが通常の構文コマンドへクラスの意味を付加し、
-ファイルごとのクラス・メンバー・実体の索引を提供します。
+ファイルごとのクラス・メンバー・インスタンスの索引を提供します。
 診断はこの索引を保持し、DSLを再認識する処理を持ちません。
-呼び出しが `$counter.increment` や `${counter}.count.get` の形であれば、先行する `z.cls.new` の束縛と公開済みクラスを照合します。呼び出し解析はメンバーと実体の宣言元を返します。
+呼び出しが `$counter.increment` や `${counter}.count.get` の形であれば、先行する `z.cls.new` の束縛と公開済みクラスを照合します。呼び出し解析はメンバーとインスタンスの宣言元を返します。
 
 コンテキストの再利用では、クラス宣言と束縛が現在のASTを参照していることを確認します。
 同じ名前のまま変更した場合も解決先を更新し、古いASTの参照を残しません。
@@ -69,20 +69,64 @@ hydratorが通常の構文コマンドへクラスの意味を付加し、
 引数で渡す本体は[code]として共通の埋め込み解析へ渡し、元の位置へ診断を対応付けます。
 
 `codePrograms`の各要素の`file.classes`から、コード引数のクラス索引を参照できます。
-コード引数は外側のクラス定義を継承しますが、そのコードでの定義・実体はそのプログラム内に保ちます。
+コード引数は外側のクラス定義を継承しますが、そのコードでの定義・インスタンスはそのプログラム内に保ちます。
 同じ構文スコープで先行する束縛を一つに絞れれば、そこからクラスを特定します。束縛が不明な呼び出しは動的コマンドとして扱います。
 ソースを実行したり、条件分岐後の変数の型を再現したりする解析は行いません。
 
 属性の初期値は必須の名前付き引数`default=`で指定し、省略は通常の関数引数の診断で報告します。
 不正な属性を含むクラスや、入れ子や同じスコープでの重複で拒否されたクラスは、公開済みクラスの照合から除外します。
 
-`$self`によるメソッドと属性の呼出しは、実際の所有メソッドからクラスを確定できる場合に共有の解決先へ結び付けます。
+`$self`によるメソッドと属性の呼び出しは、実際の所有メソッドからクラスを確定できる場合に共有の解決先へ結び付けます。
 未定義のメンバーは`undefined-command`として、元のWordまたはコード引数内の位置へ診断します。
-`ClassCommandTarget.instance`は、具体的な実体が実行時に決まるself参照ではnullです。
-変数展開から実体を特定した場合は、その宣言を参照します。`counter.increment` は通常のコマンド名として解決します。
+`ClassCommandTarget.instance`は、具体的なインスタンスが実行時に決まるself参照ではnullです。
+変数展開からインスタンスを特定した場合は、その宣言を参照します。`counter.increment` は通常のコマンド名として解決します。
 
-同一の構文スコープで、宣言済みの変数間の `z.cls.owner.move from=counter to=saved` を追跡します。移動先を元のクラスへ結び付け、移動元でのメンバー呼び出しや削除には `class-reference-moved` を報告します。
+## インスタンス参照の型
 
-関数コメントの [Counter<read>] と [Counter<write>] は実体参照の型と操作の契約を表します。メソッドの直前に # $self [Counter<read>]: 読み取る実体 と書くと、受け手にも同じ検査を適用します。読み取り専用の参照からsetterや更新メソッドを呼ぶと `class-readonly-write` を報告します。読み取り契約のないメソッドは更新可能として扱います。
+関数コメントの`[Counter<read>]`は読み取り専用、`[Counter<write>]`は更新可能なインスタンス参照を表します。メソッドでは、直前の`# $self [Counter<read>]: 読み取り対象`で受け手の型を指定できます。型を省略したメソッドは更新可能として扱います。
 
-`[Counter<owner>]` は実体を所有する変数名を受け取り、関数から戻るまでにその所有権を移す契約です。戻る経路から移動が確認できない場合は `class-owner-contract` を報告します。呼び出し元ではこの契約から変数が移動済みになることを追い、分岐後でも移動済みの経路がある参照の使用を報告します。動的な展開や関数名を解決できない呼び出しでは、権限の診断を保留します。
+```zsh
+# $1 [Counter<write>]: 更新するインスタンス
+update_count() {
+  $1.count.set 3
+}
+
+z.cls.draw Counter
+  z.cls.attr count default=0
+
+  # $self [Counter<read>]: 読み取り対象
+  z.cls.method value
+    $self.count.get
+  z.cls.method.defined
+
+  # $self [Counter<read>]: 読み取り対象
+  z.cls.method invalid_update
+    update_count "$self"  # class-argument-type
+    $self.count.set 3      # class-readonly-write
+  z.cls.method.defined
+z.cls.drew
+
+typeset counter
+z.cls.new Counter counter
+update_count "$counter"
+$counter.value
+# REPLY: 3
+```
+
+## 所有権の移動
+
+`[Counter<owner>]`は、インスタンスを所有する変数の名前を受け取り、関数が戻る前に所有権を移す契約です。移動せずに戻る経路があれば`class-owner-contract`を報告します。呼び出し元では、移動元を使うと`class-reference-moved`を報告します。動的な展開や関数名を解決できない呼び出しでは診断を保留します。
+
+次の例は、所有権移動のAPIを読み込み、上のコードで`counter`を作成した状態を前提にします。
+
+```zsh
+# $from [Counter<owner>]: 所有変数の名前
+consume_counter() {
+  z.arg.named from "$@" && local owner_name=$REPLY
+  local received=""
+  z.cls.owner.move "from=$owner_name" to=received
+}
+
+consume_counter from=counter
+$counter.count.get  # class-reference-moved
+```
