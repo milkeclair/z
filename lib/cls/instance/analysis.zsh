@@ -14,7 +14,9 @@
 #  # return: 0
 z.cls.instance._commands() {
   local class_name=$1
-  z.arg.named reference "${@:2}" && local reference=$REPLY
+  shift
+
+  z.arg.named reference "$@" && local reference=$REPLY
 
   local -a wrappers=()
   local member

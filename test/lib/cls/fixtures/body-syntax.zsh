@@ -11,5 +11,4 @@ TEXT
     $self.value.get || return 1
     return 9
   z.cls.method.defined
-
 z.cls.drew

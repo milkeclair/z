@@ -122,13 +122,18 @@ z.cls.instance.call._access_typed() {
     eval "$z_cls_values[$1:$z_cls_attribute]"
   done
 
+  local z_cls_member=$3
+
   case $2 in
     get)
-      z.cls.instance.execute._get "$3" "${@:4}"
+      shift 3
+      z.cls.instance.execute._get "$z_cls_member" "$@"
       ;;
     set)
-      z.cls.instance.execute._set "$3" "${@:4}" || return
-      z.cls.instance._snapshot "$1" "$3"
+      local z_cls_instance_id=$1
+      shift 3
+      z.cls.instance.execute._set "$z_cls_member" "$@" || return
+      z.cls.instance._snapshot "$z_cls_instance_id" "$z_cls_member"
       ;;
   esac
 }
