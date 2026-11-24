@@ -12,12 +12,16 @@ z.t.describe "z.cls.owner.move"; {
         () {
           local from=""
           z.cls.new TransferOwner from || return 1
+
           z.cls.owner.move from=from to=to
         }
+
         z.t.expect.status.is.true
 
         $to.count.get
+
         z.t.expect.reply 5
+
         z.cls.delete "$to"
       }
     }
@@ -42,23 +46,26 @@ z.t.describe "z.cls.owner.move"; {
 
           $saved.count.set 7
           $saved.value
+
           z.t.expect.reply 7
-
           z.t.expect "$counter" "$original"
-          z.is.not.eq "$saved" "$counter"
-          z.t.expect.status.is.true
+          z.t.expect.not "$saved" "$counter"
 
-          local old_command=$counter.value
-          z.var.exists "functions[$old_command]"
+          z.var.exists "functions[$counter.value]"
+
           z.t.expect.status.is.false
 
           z.cls.delete "$original" 2>/dev/null
+
           z.t.expect.status.is.false
         }
 
         $escaped.value 2>/dev/null
+
         z.t.expect.status.is.false
+
         z.var.exists "z_cls_instances[$original]"
+
         z.t.expect.status.is.true
       }
     }
@@ -78,6 +85,7 @@ z.t.describe "z.cls.owner.move"; {
 
         z.t.expect.status.is.false
         z.t.expect.is.null "$saved"
+
         z.cls.delete "$owner"
       }
     }
@@ -91,12 +99,17 @@ z.t.describe "z.cls.owner.move"; {
 
         local holder=""
         z.cls.new UndeclaredMoveTarget holder || return 1
+
         z.cls.owner.move from=holder to=missing_move_binding 2>/dev/null
 
         z.t.expect.status.is.false
+
         z.var.exists missing_move_binding
+
         z.t.expect.status.is.false
+
         z.cls.owner._is_current holder "$holder"
+
         z.t.expect.status.is.true
 
         z.cls.delete "$holder"
@@ -111,16 +124,61 @@ z.t.describe "z.cls.owner._bind"; {
       local -A z_cls_owner_markers=()
       () {
         local binding=""
-        z.cls.owner._bind test_reference binding
+        REPLY=before
 
-        z.t.expect.status.is.true
+        z.cls.owner._bind test_reference to=binding
+        local bind_status=$? bind_reply=$REPLY
+
+        z.t.expect "$bind_status" 0
+        z.t.expect "$bind_reply" before
         z.t.expect "$binding" test_reference
+
         z.var.exists "$z_cls_owner_markers[test_reference]"
+
         z.t.expect.status.is.true
       }
 
       z.var.exists "$z_cls_owner_markers[test_reference]"
+
       z.t.expect.status.is.false
+    }
+  }
+
+  z.t.context "参照と実体IDが異なる場合"; {
+    z.t.it "代入先へ参照を渡し、目印を実体IDに登録する"; {
+      () {
+        local -A z_cls_owner_markers=()
+        local instance=""
+
+        z.cls.owner._bind new_reference to=instance instance=original_instance
+
+        z.t.expect.status.is.true
+        z.t.expect "$instance" new_reference
+
+        z.var.exists "$z_cls_owner_markers[original_instance]"
+
+        z.t.expect.status.is.true
+
+        z.var.exists 'z_cls_owner_markers[new_reference]'
+
+        z.t.expect.status.is.false
+      }
+    }
+  }
+
+  z.t.context "代入先が指定されていない場合"; {
+    z.t.it "目印を登録せずに失敗する"; {
+      () {
+        local -A z_cls_owner_markers=()
+
+        z.cls.owner._bind missing_target # zls: ignore missing-named-argument
+
+        z.t.expect.status.is.false
+
+        z.hash.count z_cls_owner_markers
+
+        z.t.expect.reply 0
+      }
     }
   }
 }
