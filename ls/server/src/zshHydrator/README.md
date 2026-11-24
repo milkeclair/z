@@ -136,12 +136,11 @@ hydrateAstを再適用すると、元のASTを変えずに意味情報を作り�
 z.cls.draw Counter
   z.cls.attr count default=0
   z.cls.method increment
-    "$self.count.get"
-    local next=$(( REPLY + 1 ))
-    "$self.count.set" "$next"
-    REPLY=$next
+    $self.count.get || return 1
+    $self.count.set "$(( REPLY + 1 ))" || return 1
+    $self.count.get
   z.cls.method.defined
-  z.cls.drew
+z.cls.drew
 ```
 
-この定義は、countを1増やして結果を返すCounter.incrementを公開します。
+`z.cls.new Counter counter`で実体を作った後、`$counter.increment`でcountを1増やし、結果を`REPLY`に返します。

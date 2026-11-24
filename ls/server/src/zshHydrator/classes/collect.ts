@@ -1,5 +1,3 @@
-import { methodArguments, methodReceivers } from './method';
-import type { ClassMethodAccess } from './types';
 import { castDraft } from 'immer';
 import { addValue, appendItems, makeMap, makeSet, produce, setEntry } from '../../util/collections';
 import { again, done, loop } from '../../util/loop';
@@ -16,11 +14,15 @@ import { standalonePipeline } from '../../zshParser/ast/listItem';
 import type { FoldStep } from '../../zshParser/ast/traversal/walk';
 import { literalWord } from '../../zshParser/ast/word/literal';
 import type { SourceRange } from '../../zshParser/lexer';
+import { isVariableName } from '../../zshParser/parser/word/variableName';
+import type { HydrationOptions } from '../directive';
 import { attributeArguments } from './attribute';
+import { methodArguments, methodReceivers } from './method';
 import type {
   ClassDefinition,
   ClassDefinitionScopeLocation,
   ClassInformation,
+  ClassMethodAccess,
   ClassScopeLocation,
 } from './types';
 
@@ -70,14 +72,7 @@ type ClassDirective = {
 
 /** 実行時に予約した名前を、静的なクラスの識別子から除外する。 */
 function identifier(value: string | null | undefined): value is string {
-  if (!value || value.startsWith('z_cls_')) return false;
-
-  return [...value].every((char, index) => {
-    const letter = (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z');
-    const digit = index > 0 && char >= '0' && char <= '9';
-
-    return char === '_' || letter || digit;
-  });
+  return typeof value === 'string' && isVariableName(value) && !value.startsWith('z_cls_');
 }
 
 /** 以前のASTを付加情報に保持しないよう、所有関係を位置で記録する。 */
@@ -85,7 +80,6 @@ function scopeLocation(scope: FunctionDefinitionNode | undefined): ClassDefiniti
   return scope ? { kind: 'function', offset: scope.range.start.offset } : { kind: 'file' };
 }
 
-/** 以前の状態を変更せず、1つの構文スコープの収集状態を置き換える。 */
 function withCapture(
   state: State,
   scope: FunctionDefinitionNode | undefined,
@@ -102,7 +96,6 @@ function withCapture(
   return { ...state, captures };
 }
 
-/** 宣言形式にかかわらず、元の状態を変えない共通の遷移でメンバーを追加する。 */
 function withMember(
   state: State,
   scope: FunctionDefinitionNode | undefined,
@@ -272,7 +265,7 @@ function declareAttribute(directive: ClassDirective, definition: Definition, sta
   const duplicate = definition.members.some(
     (member) => member.information.kind === 'classAttribute' && member.information.name === name,
   );
-  if (!attribute || !identifier(name) || duplicate) {
+  if (!attribute || !identifier(name) || name === 'REPLY' || name === 'reply' || duplicate) {
     return withCapture(state, directive.scope, {
       kind: 'definition',
       definition: { ...definition, failed: true },
@@ -524,13 +517,14 @@ function finishOpenDefinitions(ast: FileNode, collected: State): State {
 export function collectClassInformation(
   ast: FileNode,
   source: string,
+  options: HydrationOptions,
 ): ReadonlyMap<number, ClassInformation | null> {
   const initial: CollectionProgress = {
     collected: {
       captures: makeMap(),
       information: makeMap(),
       published: makeMap(),
-      receiverAccess: methodReceivers(ast.comments, source),
+      receiverAccess: methodReceivers(ast.comments, source, options),
     },
     functionScopes: null,
     standaloneCommand: null,

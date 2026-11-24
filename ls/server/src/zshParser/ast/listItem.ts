@@ -24,8 +24,12 @@ export function standalonePipeline(item: ListItemNode): PipelineNode | null {
   const { sublist, terminator } = item;
   const foreground =
     !terminator || terminator.type === 'newline' || terminator.type === 'semicolon';
-  if (sublist.kind !== 'sublist' || !foreground || sublist.rest.length) return null;
+
+  if (sublist.kind !== 'sublist' || !foreground || sublist.rest.length) {
+    return null;
+  }
 
   const pipeline = sublist.first;
+
   return !pipeline.modifier && pipeline.rest.length === 0 ? pipeline : null;
 }

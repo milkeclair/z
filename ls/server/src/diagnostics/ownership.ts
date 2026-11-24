@@ -15,6 +15,7 @@ import {
   type ListItemNode,
   type ListNode,
   type SimpleCommandNode,
+  type WordNode,
 } from '../zshParser/ast';
 import { standalonePipeline } from '../zshParser/ast/listItem';
 
@@ -75,18 +76,24 @@ function standalone(item: ListItemNode): SimpleCommandNode | null {
 
 function moveCommand(item: ListItemNode): SimpleCommandNode | null {
   const direct = standalone(item);
-  if (direct) return direct;
+
+  if (direct) {
+    return direct;
+  }
 
   const { sublist, terminator } = item;
+
   if (
     sublist.kind !== 'sublist' ||
     sublist.rest.length !== 1 ||
     (terminator && terminator.type !== 'newline' && terminator.type !== 'semicolon')
-  )
+  ) {
     return null;
+  }
 
   const { first, rest } = sublist;
   const guard = rest[0];
+
   if (
     first.modifier ||
     first.rest.length ||
@@ -95,10 +102,12 @@ function moveCommand(item: ListItemNode): SimpleCommandNode | null {
     guard.pipeline.modifier ||
     guard.pipeline.rest.length ||
     guard.pipeline.first.kind !== 'simpleCommand'
-  )
+  ) {
     return null;
+  }
 
   const failure = commandName(guard.pipeline.first);
+
   return failure === 'return' || failure === 'exit' ? first.first : null;
 }
 
@@ -256,6 +265,7 @@ export function classOwnership(
   file: ZshFileHydration,
   commands: readonly SimpleCommandNode[],
   resolve: (name: string, offset: number) => FunctionDefinitionNode | null,
+  isUncertain: (word: WordNode) => boolean,
 ): Ownership {
   const moves: Move[] = [];
   const typedFunctions = file.functions.some(({ definition }) =>
@@ -308,7 +318,7 @@ export function classOwnership(
 
     const target = resolve(name, offset);
     if (!target) continue;
-    const consumed = classArguments(command, target).filter(
+    const consumed = classArguments(command, target, isUncertain).filter(
       ({ type, ownerName }) => type.access === 'owner' && ownerName,
     );
     if (!consumed.length) continue;

@@ -1,5 +1,6 @@
 import { makeMap } from '../../util/collections';
-import { again, done, loop } from '../../util/loop';
+import { lowerBound } from '../../util/search';
+import type { HydrationOptions } from '../directive';
 import type {
   AstNode,
   FileNode,
@@ -48,8 +49,12 @@ export function classInformationOf(node: SimpleCommandNode): ClassInformation | 
 }
 
 /** 通常の構文種別・トークン・範囲を保ったまま、クラスの意味情報を付加する。 */
-export function hydrateClasses(ast: FileNode, source: string): FileNode {
-  const information = collectClassInformation(ast, source);
+export function hydrateClasses(
+  ast: FileNode,
+  source: string,
+  options: HydrationOptions = {},
+): FileNode {
+  const information = collectClassInformation(ast, source, options);
   if (information.size === 0) return ast;
 
   return mapAst(ast, (node: AstNode): AstNode => {
@@ -102,21 +107,8 @@ export function classMethodAt(
 ): ClassMethod | null {
   const methods = classes.methodScopes.get(scope) ?? [];
 
-  return loop<{ readonly low: number; readonly high: number }, ClassMethod | null>(
-    { low: 0, high: methods.length - 1 },
-    ({ low, high }) => {
-      if (low > high) return done(null);
+  const index = lowerBound(methods.length, (index) => methods[index].range.start.offset <= offset);
+  const entry = methods[index - 1];
 
-      const middle = Math.floor((low + high) / 2);
-      const entry = methods[middle];
-
-      if (offset < entry.range.start.offset) {
-        return again({ low, high: middle - 1 });
-      }
-
-      return offset >= entry.range.end.offset
-        ? again({ low: middle + 1, high })
-        : done(entry.method);
-    },
-  );
+  return entry && offset < entry.range.end.offset ? entry.method : null;
 }

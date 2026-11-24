@@ -14,7 +14,7 @@ export type ShellFunctionIndex = {
 
 const MAX_DEFINITION_BYTES = 2 * 1024 * 1024;
 
-/** 読み取れる通常ファイルだけを、既存のディスクキャッシュで取得する。 */
+/** シェルが報告した定義に読み取り権限がなければ、ほかの定義の索引化を続ける。 */
 function readShellDefinition(previous: ZshHydrator, filename: string): ZshHydrationEntry | null {
   try {
     return hydrateDiskFile({
@@ -31,6 +31,7 @@ function readShellDefinition(previous: ZshHydrator, filename: string): ZshHydrat
     ) {
       return null;
     }
+
     throw error;
   }
 }
@@ -47,7 +48,10 @@ export function refreshShellFunctions({
   readonly previous?: ShellFunctionIndex;
   readonly changedPaths?: readonly string[];
 }): ShellFunctionIndex | undefined {
-  if (!sources?.size) return undefined;
+  if (!sources?.size) {
+    return undefined;
+  }
+
   if (
     previous?.sources === sources &&
     previous.root === project.projectRoot &&
@@ -67,13 +71,15 @@ export function refreshShellFunctions({
     const file = readShellDefinition(cached, filename);
     if (file) files.set(filename, file);
   }
+
   if (
     previous?.sources === sources &&
     previous.root === project.projectRoot &&
     previous.files.size === files.size &&
     [...files].every(([filename, file]) => previous.files.get(filename) === file)
-  )
+  ) {
     return previous;
+  }
 
   const targets = new Map<string, readonly FunctionTarget[]>();
   for (const [filename, file] of files) {

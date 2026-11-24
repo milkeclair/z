@@ -22,14 +22,9 @@ import { isAliasReference, isKnownShellCommand, type ResolutionContext } from '.
 import type { IgnoreControls } from './controls';
 import { ignored } from './controls';
 import { simpleParameter } from './facts';
-import { resolveSelfCommand, selfReferenceAt } from './self';
-import {
-  classOwnership,
-  ownerAt,
-  ownershipOperationIssue,
-  type ClassReferenceIssue,
-} from './ownership';
-import { classArguments, parameterAt } from './classContracts';
+import { resolveSelfCommand } from './self';
+import { classOwnership, ownershipOperationIssue } from './ownership';
+import { classArgumentIssue } from './classArgument';
 import type { Diagnostics } from './type';
 
 export type { ResolutionContext } from './commandResolution';
@@ -218,71 +213,9 @@ export function analyzeCalls(
       null
     );
   };
-  const ownership = classOwnership(file, incomplete ? [] : commands, resolveTarget);
-  const argumentIssue = (
-    command: SimpleCommandNode,
-    target: FunctionDefinitionNode,
-  ): ClassReferenceIssue | null => {
-    const offset = command.range.start.offset;
-    for (const { type, binding, literal, ownerName } of classArguments(command, target)) {
-      if (type.access !== 'owner' && literal !== null && !literal.startsWith('z_cls_')) {
-        return {
-          code: 'class-argument-type',
-          message: 'Expected a reference of type ' + type.className + '<' + type.access + '>.',
-        };
-      }
-      if (!binding) continue;
-      const parameter =
-        binding === 'self'
-          ? selfReferenceAt(file, offset, scopes)
-          : ownership.typedFunctions
-            ? parameterAt(file, binding, offset)?.classReference
-            : undefined;
-      const owner = parameter ? null : ownerAt(file, binding, offset, ownership.moves);
-      if (owner?.state === 'maybe-uninitialized') {
-        return {
-          code: 'class-reference-uninitialized',
-          message: binding + ' may refer to an uninitialized instance.',
-        };
-      }
-      if (owner?.state === 'moved' || owner?.state === 'maybe-moved') {
-        return {
-          code: 'class-reference-moved',
-          message: binding + (owner.state === 'moved' ? ' was moved.' : ' may have moved.'),
-        };
-      }
-      if (type.access === 'owner' && !ownerName && owner) {
-        return {
-          code: 'class-owner-required',
-          message: 'Pass the variable name ' + binding + ' to transfer its ownership.',
-        };
-      }
-      const actual = parameter ?? (owner ? { className: owner.className, access: 'owner' } : null);
-      if (!actual) continue;
-      if (
-        actual.className !== type.className ||
-        (type.access === 'owner' && actual.access !== 'owner') ||
-        (type.access === 'write' && actual.access === 'read')
-      ) {
-        return {
-          code: 'class-argument-type',
-          message:
-            'Expected ' +
-            type.className +
-            '<' +
-            type.access +
-            '> for ' +
-            binding +
-            ', received ' +
-            actual.className +
-            '<' +
-            actual.access +
-            '>.',
-        };
-      }
-    }
-    return null;
-  };
+  const isUncertain = (word: WordNode) => uncertainWord(word, context);
+  const ownership = classOwnership(file, incomplete ? [] : commands, resolveTarget, isUncertain);
+
   const initial = {
     diagnostics: collectArray<Diagnostics>(),
     targets: makeMap<SimpleCommandNode, FunctionDefinitionNode>(),
@@ -348,8 +281,13 @@ export function analyzeCalls(
 
     const target = functionCommand(command) ? resolveTarget(name, word.range.start.offset) : null;
 
-    const issue = !incomplete && target ? argumentIssue(command, target) : null;
+    const issue =
+      !incomplete && target
+        ? classArgumentIssue({ command, file, target, ownership, scopes, isUncertain })
+        : null;
+
     if (
+      target &&
       issue &&
       (!options.ignores || !ignored(options.ignores, word.range.start.line, issue.code))
     ) {
@@ -361,6 +299,7 @@ export function analyzeCalls(
           range: protocolRange(mapRange(word.range)),
           source: 'z-ls',
         }),
+        targets: setEntry(previous.targets, command, target),
       };
     }
 

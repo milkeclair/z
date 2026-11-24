@@ -2,6 +2,10 @@ import { functionCommand } from '../connection/ast/cursor';
 import { namedKey, zArgNamedKey } from '../connection/ast/word';
 import { literalWord } from '../refreshFunctions/word';
 import { classMethodAt, documentationOf, type ZshFileHydration } from '../zshHydrator';
+import {
+  documentedArguments,
+  type DocumentedArgument,
+} from '../zshHydrator/documentation/arguments';
 import type { ParameterDoc } from '../zshHydrator/documentation/types';
 import {
   findAll,
@@ -13,18 +17,23 @@ import {
   type WordNode,
   type WordPartNode,
 } from '../zshParser/ast';
+import { isVariableName } from '../zshParser/parser/word/variableName';
 
-const variablePattern = /^[A-Za-z_][A-Za-z_0-9]*$/;
 const positionalPattern = /^[1-9][0-9]*$/;
 
 export function variableName(value: string | null): string | null {
-  return value && variablePattern.test(value) ? value : null;
+  return value && isVariableName(value) ? value : null;
 }
 
 /** 実体参照として静的に追跡できる変数名または位置引数番号を取得する。 */
 export function classReferenceBinding(part: WordPartNode): string | null {
-  if (part.kind === 'variableReference') return part.name.value;
-  if (part.kind !== 'parameterExpansion') return null;
+  if (part.kind === 'variableReference') {
+    return part.name.value;
+  }
+
+  if (part.kind !== 'parameterExpansion') {
+    return null;
+  }
 
   const name =
     part.raw[1] === '{' && part.raw.endsWith('}') ? part.raw.slice(2, -1) : part.raw.slice(1);
@@ -38,7 +47,10 @@ export function classReferenceBinding(part: WordPartNode): string | null {
 export function variableArgument(word: WordNode, key?: string): string | null {
   const part = word.parts.find((entry) => entry.kind !== 'stringLiteral');
   const binding = part && classReferenceBinding(part);
-  if (!part || !binding) return null;
+
+  if (!part || !binding) {
+    return null;
+  }
 
   const start = word.range.start.offset;
   const expansion = word.raw.slice(part.range.start.offset - start, part.range.end.offset - start);
@@ -60,35 +72,46 @@ export function commandName(command: SimpleCommandNode): string | null {
     : null;
 }
 
-export function classArguments(command: SimpleCommandNode, definition: FunctionDefinitionNode) {
+export function classArguments(
+  command: SimpleCommandNode,
+  definition: FunctionDefinitionNode,
+  isUncertain: (word: WordNode) => boolean,
+) {
   const parameters = documentationOf(definition)?.parameters ?? [];
-  if (!parameters.some((parameter) => parameter.classReference)) return [];
 
-  const named = new Set(
-    parameters.flatMap((p) => (p.kind === 'namedParameterDoc' ? [p.name] : [])),
-  );
-  const positional = command.arguments.filter((word) => !named.has(namedKey(word) ?? ''));
+  if (!parameters.some((parameter) => parameter.classReference)) {
+    return [];
+  }
+
+  const firstByParameter = new Map<ParameterDoc, DocumentedArgument>();
+  for (const argument of documentedArguments(command.arguments, parameters, isUncertain)) {
+    const parameter = argument.parameter;
+
+    if (parameter?.classReference && !firstByParameter.has(parameter)) {
+      firstByParameter.set(parameter, argument);
+    }
+  }
+
   return parameters.flatMap((parameter) => {
     const type = parameter.classReference;
-    if (!type || parameter.kind === 'restParameterDoc') return [];
-    const key = parameter.kind === 'namedParameterDoc' ? parameter.name : undefined;
-    const word =
-      parameter.kind === 'namedParameterDoc'
-        ? command.arguments.find((argument) => namedKey(argument) === key)
-        : positional[parameter.position - 1];
-    if (!word) return [];
-    const literal = literalWord(word);
-    const value = literal?.slice(key ? key.length + 1 : 0) ?? null;
-    const ownerName = type.access === 'owner' ? variableName(value) : null;
-    return [
-      {
-        type,
-        word,
-        literal: value,
-        ownerName,
-        binding: ownerName ?? variableArgument(word, key),
-      },
-    ];
+    const argument = firstByParameter.get(parameter);
+
+    if (!type || !argument) {
+      return [];
+    }
+
+    const { word, key, uncertain } = argument;
+    const reference = variableArgument(word, key);
+
+    // 引数数が不明な位置でも、単一の変数参照として読める値は契約を調べられる。
+    if (uncertain && !reference) {
+      return [];
+    }
+
+    const literal = literalWord(word)?.slice(key ? key.length + 1 : 0) ?? null;
+    const ownerName = type.access === 'owner' ? variableName(literal) : null;
+
+    return [{ type, word, literal, ownerName, binding: ownerName ?? reference }];
   });
 }
 
@@ -99,9 +122,14 @@ function declarationSource(
   if (command.prefixAssignments.some((assignment) => assignment.name.value === name)) {
     return { source: null };
   }
-  if (command.semantic.role !== 'declaration') return null;
+
+  if (command.semantic.role !== 'declaration') {
+    return null;
+  }
+
   const declaration = command.semantic.declaration;
   const assignment = declaration.assignments.find((entry) => entry.name.value === name);
+
   if (assignment) {
     return {
       source:
@@ -114,6 +142,7 @@ function declarationSource(
           : null,
     };
   }
+
   return declaration.names.some((entry) => entry.value === name) ? { source: null } : null;
 }
 
@@ -128,18 +157,29 @@ function argumentAlias(
       if (
         item.range.end.offset > offset ||
         item.range.start.offset < definition.body.range.start.offset
-      )
-        continue;
-      const { sublist } = item;
-      if (sublist.kind !== 'sublist' || sublist.first.rest.length || sublist.first.modifier)
-        continue;
-      const head = sublist.first.first;
-      const tail = sublist.rest[0];
-      if (!tail && head.kind === 'simpleCommand') {
-        const value = declarationSource(head, name);
-        if (value) return value.source ? { source: value.source, kind: 'positional' } : null;
+      ) {
         continue;
       }
+
+      const { sublist } = item;
+
+      if (sublist.kind !== 'sublist' || sublist.first.rest.length || sublist.first.modifier) {
+        continue;
+      }
+
+      const head = sublist.first.first;
+      const tail = sublist.rest[0];
+
+      if (!tail && head.kind === 'simpleCommand') {
+        const value = declarationSource(head, name);
+
+        if (value) {
+          return value.source ? { source: value.source, kind: 'positional' } : null;
+        }
+
+        continue;
+      }
+
       if (
         head.kind !== 'simpleCommand' ||
         sublist.rest.length !== 1 ||
@@ -147,11 +187,18 @@ function argumentAlias(
         tail.pipeline.rest.length ||
         tail.pipeline.modifier ||
         tail.pipeline.first.kind !== 'simpleCommand'
-      )
+      ) {
         continue;
+      }
+
       const value = declarationSource(tail.pipeline.first, name);
-      if (!value) continue;
+
+      if (!value) {
+        continue;
+      }
+
       const key = zArgNamedKey(head);
+
       return key &&
         functionCommand(head) &&
         value.source === 'REPLY' &&
