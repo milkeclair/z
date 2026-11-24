@@ -91,7 +91,7 @@ z.cls.owner._bind() {
   builtin typeset -gT "$z_cls_binding=$z_cls_reference" "$z_cls_marker" || return 1
   builtin typeset -gr -- "$z_cls_binding" || return 1
 
-  local old_reference=${z_cls_owner_refs[$z_cls_bound_instance]-}
+  local old_reference=${z_cls_owner_refs[$z_cls_bound_instance]}
   if z.is.not.null "$old_reference"; then
     unset "z_cls_references[$old_reference]"
   fi

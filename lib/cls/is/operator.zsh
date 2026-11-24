@@ -10,7 +10,7 @@
 #  z.cls.is._name bad-name
 #  # return: 1
 z.cls.is._name() {
-  local name=${1-}
+  local name=${1}
   local pattern='^[A-Za-z_][A-Za-z0-9_]*$'
 
   z.str.is.match "$name" "$pattern" &&
@@ -29,11 +29,11 @@ z.cls.is._name() {
 #  z.cls.is._attribute REPLY
 #  # return: 1
 z.cls.is._attribute() {
-  z.cls.is._name "${1-}" || return
+  z.cls.is._name "${1}" || return
 
   case $1 in
     REPLY|reply) return 1 ;;
   esac
 
-  z.str.excludes "${parameters[$1]-}" special
+  z.str.excludes "${parameters[$1]}" special
 }

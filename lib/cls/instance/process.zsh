@@ -15,14 +15,14 @@
 #  # 変更後: instance_idにcounterと同じインスタンスIDを代入済み
 #  # return: 0
 z.cls.instance._resolve() {
-  local z_cls_resolved_id=${z_cls_references[$1]-}
+  local z_cls_resolved_id=${z_cls_references[$1]}
 
   if z.is.null "$z_cls_resolved_id"; then
     z.io.error "Instance reference $1 is not available in this scope."
     return 1
   fi
 
-  case ${z_cls_active[$z_cls_resolved_id]-} in
+  case ${z_cls_active[$z_cls_resolved_id]} in
     '')
       if ! z.var.exists "$z_cls_owner_markers[$z_cls_resolved_id]"; then
         z.io.error "Instance reference $1 is not available in this scope."
@@ -30,7 +30,7 @@ z.cls.instance._resolve() {
       fi
       ;;
     *)
-      if z.is.not.eq "${z_cls_current_instance-}" "$z_cls_resolved_id"; then
+      if z.is.not.eq "${z_cls_current_instance}" "$z_cls_resolved_id"; then
         z.io.error "Instance $z_cls_resolved_id is active in another instance call."
         return 1
       fi

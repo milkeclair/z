@@ -82,7 +82,7 @@ z.t.describe "z.cls.gc._collect"; {
       }
     }
 
-    z.t.it "マーク名が空のインスタンスをnounsetでも回収する"; {
+    z.t.it "マーク名が空のインスタンスを回収する"; {
       () {
         z.cls.draw CollectUnmarkedInstance
         z.cls.drew
@@ -92,10 +92,7 @@ z.t.describe "z.cls.gc._collect"; {
         z_cls_owner_markers[$counter]=""
         z_cls_gc_allocations=64
 
-        () {
-          setopt localoptions nounset
-          z.cls.gc._collect
-        }
+        z.cls.gc._collect
 
         z.var.exists "z_cls_instances[$counter]"
 

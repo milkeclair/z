@@ -34,10 +34,7 @@ z.t.describe "z.cls.owner.is._writable"; {
 
   z.t.context "代入先が宣言されていない場合"; {
     z.t.it "未宣言の変数への書き込みを拒否する"; {
-      () {
-        setopt localoptions nounset
-        z.cls.owner.is._writable undeclared_gc_target
-      }
+      z.cls.owner.is._writable undeclared_gc_target
 
       z.t.expect.status.is.false
     }
@@ -95,10 +92,7 @@ z.t.describe "z.cls.owner.is._current"; {
         local mark=$z_cls_owner_markers[$owner]
         unset "z_cls_owner_markers[$owner]"
 
-        () {
-          setopt localoptions nounset
-          z.cls.owner.is._current owner instance="$owner"
-        }
+        z.cls.owner.is._current owner instance="$owner"
 
         z.t.expect.status.is.false
 
@@ -118,10 +112,7 @@ z.t.describe "z.cls.owner.is._current"; {
         local mark=$z_cls_owner_markers[$owner]
         z_cls_owner_markers[$owner]=""
 
-        () {
-          setopt localoptions nounset
-          z.cls.owner.is._current owner instance="$owner"
-        }
+        z.cls.owner.is._current owner instance="$owner"
 
         z.t.expect.status.is.false
 

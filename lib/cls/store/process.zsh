@@ -8,7 +8,7 @@
 #  # return: 0
 #  # 変更後: z_cls_instances=()とz_cls_scalars=()を初期化済み
 z.cls.store._ensure() {
-  if z.is.eq "${z_cls_store_ready-}" 1 && z.var.exists z_cls_dispatch_programs &&
+  if z.is.eq "${z_cls_store_ready}" 1 && z.var.exists z_cls_dispatch_programs &&
     z.var.exists z_cls_owner_markers; then
     return 0
   fi
