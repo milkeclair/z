@@ -10,6 +10,7 @@ import {
   SignatureHelpRequest,
   WorkspaceDiagnosticRequest,
 } from 'vscode-languageserver/node';
+import { writeClassApi } from '../support/classApi';
 import { createLspClient, createProjectDirectory, withRequestTimeout } from './client';
 
 describe('startServer', () => {
@@ -23,12 +24,8 @@ describe('startServer', () => {
         '# $1 [Counter<write>]: 更新する実体\nexternal_update() { $1.count.set 1; }\n',
       );
       fs.writeFileSync(path.join(outside, '.zshrc'), 'source ' + JSON.stringify(library) + '\n');
-      fs.writeFileSync(
-        path.join(root, 'dsl.zsh'),
-        ['z.cls.draw', 'z.cls.attr', 'z.cls.method', 'z.cls.method.defined', 'z.cls.drew']
-          .map((name) => name + '() { :; }')
-          .join('\n'),
-      );
+      writeClassApi(root);
+
       const caller = pathToFileURL(path.join(root, 'caller.zsh')).href;
       const source = [
         'z.cls.draw Counter',
