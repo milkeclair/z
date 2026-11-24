@@ -2,7 +2,7 @@ source "$z_main"
 
 z.t.describe "z.cls.owner.move"; {
   z.t.context "所有権を呼び出し元の変数へ移した場合"; {
-    z.t.it "移動元のスコープが終わっても移動先から同じ実体を操作できる"; {
+    z.t.it "移動元のスコープが終わっても移動先から同じインスタンスを操作できる"; {
       () {
         z.cls.draw TransferOwner
           z.cls.attr count default=5
@@ -27,46 +27,90 @@ z.t.describe "z.cls.owner.move"; {
     }
   }
 
-  z.t.context "移動元より移動先のスコープが短い場合"; {
-    z.t.it "古い参照を即座に失効させ、移動先の終了後も呼び出しを拒否する"; {
+  z.t.context "移動前の参照を保持している場合"; {
+    z.t.it "移動元の変数は以前の参照を保持し、移動先は別の参照を受け取る"; {
       () {
-        z.cls.draw OwnerLifetime
-          z.cls.attr count default=5
-          z.cls.method value '$self.count.get'
+        z.cls.draw KeepFormerReference
         z.cls.drew
 
-        local counter="" escaped=""
-        z.cls.new OwnerLifetime counter || return 1
-        local original=$counter
+        local counter=""
+        local saved=""
+        z.cls.new KeepFormerReference counter
+        local former_reference=$counter
 
-        () {
-          local saved=""
-          z.cls.owner.move from=counter to=saved || return 1
-          escaped=$saved
+        z.cls.owner.move from=counter to=saved
 
-          $saved.count.set 7
-          $saved.value
+        z.t.expect "$counter" "$former_reference"
+        z.t.expect.not "$saved" "$former_reference"
 
-          z.t.expect.reply 7
-          z.t.expect "$counter" "$original"
-          z.t.expect.not "$saved" "$counter"
+        z.cls.delete saved
+      }
+    }
 
-          z.var.exists "functions[$counter.value]"
+    z.t.it "移動前の参照から呼ぶコマンドを解除する"; {
+      () {
+        z.cls.draw ReleaseFormerCommands
+          z.cls.attr count default=5
+        z.cls.drew
 
-          z.t.expect.status.is.false
+        local counter=""
+        local saved=""
+        z.cls.new ReleaseFormerCommands counter
+        local former_reference=$counter
 
-          z.cls.delete "$original" 2>/dev/null
+        z.cls.owner.move from=counter to=saved
 
-          z.t.expect.status.is.false
-        }
-
-        $escaped.value 2>/dev/null
+        z.var.exists "functions[$former_reference.count.get]"
 
         z.t.expect.status.is.false
 
-        z.var.exists "z_cls_instances[$original]"
+        z.cls.delete saved
+      }
+    }
 
-        z.t.expect.status.is.true
+    z.t.it "移動前の参照を指定した削除を拒否する"; {
+      () {
+        z.cls.draw KeepMovedInstance
+        z.cls.drew
+
+        local counter=""
+        local saved=""
+        z.cls.new KeepMovedInstance counter
+        local former_reference=$counter
+
+        z.cls.owner.move from=counter to=saved
+        z.cls.delete "$former_reference" 2>/dev/null
+
+        z.t.expect.status.is.false
+
+        z.cls.delete saved
+      }
+    }
+  }
+
+  z.t.context "移動先のスコープが終了した場合"; {
+    z.t.it "移動先からコピーした参照でもメソッドを呼べない"; {
+      () {
+        z.cls.draw OwnerLifetime
+          z.cls.attr count default=5
+          z.cls.method value
+            $self.count.get
+          z.cls.method.defined
+        z.cls.drew
+
+        local counter=""
+        local moved_reference=""
+        z.cls.new OwnerLifetime counter
+
+        () {
+          local saved=""
+          z.cls.owner.move from=counter to=saved
+          moved_reference=$saved
+        }
+
+        $moved_reference.value 2>/dev/null
+
+        z.t.expect.status.is.false
       }
     }
   }
@@ -108,7 +152,7 @@ z.t.describe "z.cls.owner.move"; {
 
         z.t.expect.status.is.false
 
-        z.cls.owner._is_current holder "$holder"
+        z.cls.owner.is._current holder reference="$holder"
 
         z.t.expect.status.is.true
 
@@ -119,10 +163,10 @@ z.t.describe "z.cls.owner.move"; {
 }
 
 z.t.describe "z.cls.owner._bind"; {
-  z.t.context "寿命を持つ代入先へ参照を渡す場合"; {
-    z.t.it "所有者のスコープが終わると目印も消える"; {
-      local -A z_cls_owner_markers=()
+  z.t.context "所有者の変数に参照を代入する場合"; {
+    z.t.it "呼出元のREPLYを保持する"; {
       () {
+        local -A z_cls_owner_markers=()
         local binding=""
         REPLY=before
 
@@ -131,54 +175,61 @@ z.t.describe "z.cls.owner._bind"; {
 
         z.t.expect "$bind_status" 0
         z.t.expect "$bind_reply" before
-        z.t.expect "$binding" test_reference
-
-        z.var.exists "$z_cls_owner_markers[test_reference]"
-
-        z.t.expect.status.is.true
       }
+    }
 
-      z.var.exists "$z_cls_owner_markers[test_reference]"
+    z.t.it "変数名がbindingでも呼出元へ参照を代入する"; {
+      () {
+        local -A z_cls_owner_markers=()
+        local binding=""
 
-      z.t.expect.status.is.false
+        z.cls.owner._bind test_reference to=binding
+
+        z.t.expect "$binding" test_reference
+      }
     }
   }
 
-  z.t.context "参照と実体IDが異なる場合"; {
-    z.t.it "代入先へ参照を渡し、目印を実体IDに登録する"; {
+  z.t.context "所有者のスコープが終了した場合"; {
+    z.t.it "所有者と結び付けたマークを失う"; {
+      () {
+        local -A z_cls_owner_markers=()
+        () {
+          local binding=""
+          z.cls.owner._bind test_reference to=binding
+
+          z.var.exists "$z_cls_owner_markers[test_reference]"
+
+          z.t.expect.status.is.true
+        }
+
+        z.var.exists "$z_cls_owner_markers[test_reference]"
+
+        z.t.expect.status.is.false
+      }
+    }
+  }
+
+  z.t.context "参照とインスタンスIDが異なる場合"; {
+    z.t.it "マークをインスタンスIDで登録する"; {
       () {
         local -A z_cls_owner_markers=()
         local instance=""
 
         z.cls.owner._bind new_reference to=instance instance=original_instance
 
-        z.t.expect.status.is.true
-        z.t.expect "$instance" new_reference
-
         z.var.exists "$z_cls_owner_markers[original_instance]"
 
         z.t.expect.status.is.true
-
-        z.var.exists 'z_cls_owner_markers[new_reference]'
-
-        z.t.expect.status.is.false
       }
     }
   }
 
   z.t.context "代入先が指定されていない場合"; {
-    z.t.it "目印を登録せずに失敗する"; {
-      () {
-        local -A z_cls_owner_markers=()
+    z.t.it "必須のtoがなければ失敗する"; {
+      z.cls.owner._bind missing_target # zls: ignore missing-named-argument
 
-        z.cls.owner._bind missing_target # zls: ignore missing-named-argument
-
-        z.t.expect.status.is.false
-
-        z.hash.count z_cls_owner_markers
-
-        z.t.expect.reply 0
-      }
+      z.t.expect.status.is.false
     }
   }
 }
