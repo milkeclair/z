@@ -78,7 +78,6 @@ z.cls.owner.move() {
 z.cls.owner._bind() {
   local REPLY=""
   z.arg.named to "${@:2}" && local z_cls_binding=$REPLY
-  z.arg.named instance "${@:2}" "default=$1" && local z_cls_instance=$REPLY
 
   z.is.null "$z_cls_binding" && return 1
 
@@ -86,5 +85,7 @@ z.cls.owner._bind() {
 
   builtin typeset -gT "$z_cls_binding=$1" "$z_cls_marker" || return 1
   builtin typeset -gr -- "$z_cls_binding" || return 1
-  z_cls_owner_markers[$z_cls_instance]=$z_cls_marker
+
+  z.arg.named instance "${@:2}" "default=$1"
+  z_cls_owner_markers[$REPLY]=$z_cls_marker
 }
