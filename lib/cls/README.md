@@ -30,16 +30,18 @@ z.cls.drew
 
 ```zsh
 source ./counter.zsh
+
+local counter=""
 z.cls.new Counter counter
 
-counter.increment
-counter.add count=4
-counter.count.get
-print -r -- "$REPLY"  # 5
+$counter.increment
+$counter.add count=4
+$counter.count.get
+z.io "$REPLY"  # 5
 
-counter.count.set 10
-counter.increment
-print -r -- "$REPLY"  # 11
+$counter.count.set 10
+$counter.increment
+z.io "$REPLY"  # 11
 
 z.cls.delete counter
 ```
@@ -61,43 +63,43 @@ setterが成功すると、その時点で保存値へ反映します。直後�
 
 ## 参照と変数のスコープ
 
-`z.cls.new Class variable`は、指定した変数と`REPLY`へ実体参照を代入し、
-指定した変数をreadonlyにします。参照を持つ変数は通常のZshのスコープに従います。
+参照を受け取る変数を宣言してから、`z.cls.new Class variable`を呼びます。
+指定した変数と`REPLY`へ実体参照を代入し、指定した変数をreadonlyにします。
+参照を持つ変数は通常のZshのスコープに従います。
 同じ変数への再代入や、同じ変数を使った実体の再生成は拒否されます。
 
-以下の例は、それぞれの前の実行例とは独立したシェルで、Counterの定義を
-読み込んだ状態から実行します。ローカルな参照を作る場合は、呼出元で変数をlocal宣言します。
+次の例は、Counterの定義を読み込んだ新しいシェルで実行します。
+`example`の中でも同じ変数名を宣言し、別の実体を作ります。
 
 ```zsh
+local counter=""
 z.cls.new Counter counter
-counter.count.set 10
+$counter.count.set 10
 
 example() {
   local counter=""
   z.cls.new Counter counter
-  counter.increment
-  print -r -- "$REPLY"  # 1
+  $counter.increment
+  z.io "$REPLY"  # 1
   z.cls.delete counter
 }
 
 example
-counter.count.get
-print -r -- "$REPLY"  # 10
+$counter.count.get
+z.io "$REPLY"  # 10
 ```
 
-続けて参照をコピーすると、同じ実体の状態を共有できます。
-参照を展開したコマンド名は、その参照を持つ変数からメソッドや属性を呼び出します。
+参照をコピーした変数でも、同じ実体のメソッドと属性を呼び出せます。
 
 ```zsh
 typeset -r other=$counter
-"$other.increment"
-"$other.count.get"
-print -r -- "$REPLY"  # 11
+$other.increment
+$other.count.get
+z.io "$REPLY"  # 11
 ```
 
-短い形式の`counter.increment`は、呼出し時に見えるcounter変数から実体を解決します。
-`"$other.increment"`は、コピー済みの参照から直接呼び出します。
-新しい実体には、内側のスコープで宣言した同名localなど、新しい代入先が必要です。
+`$counter.increment`や`$other.increment`では、変数の値である実体IDを展開します。
+新しい実体には、内側のスコープの同名変数など、新しい代入先を用意します。
 コピーした参照も再代入から保護する場合は、`typeset -r`または`local -r`を使います。
 
 `z.cls.delete variable`または`z.cls.delete "$reference"`で実体を解放します。
@@ -133,7 +135,7 @@ print -r -- "$REPLY"  # 11
 
 ## 公開APIと内部関数
 
-公開APIはdraw、attr、fn、fn.done、drew、abort、new、deleteの8関数です。
+公開APIはdraw、attr、method、method.defined、drew、abort、new、deleteの8関数です。
 内部の補助関数は、zの既存規約に従い、関数名の最後の区切りをアンダースコアから始めます。
 シェル補完とz-lsは通常、この補助関数を候補から除外します。
 z-lsではshowPrivateFunctions設定で表示できます。この規約は、Zshからの直接呼出しを制限するものではありません。
@@ -144,11 +146,10 @@ z-lsではshowPrivateFunctions設定で表示できます。この規約は、Zs
 
 ## 実行時の処理と編集
 
-メソッド本体の収集では、ZshのDEBUGトラップを一時的に使い、
-コマンドを実行せずに記録します。終了マーカーで、元の関数形式またはリスト形式の
-DEBUGトラップと、実行タイミング・localtrapsの設定を復元します。
-収集中は元のDEBUGトラップを一時停止します。Zshがコードを復元するため、
-実行時に保存する本体には元のコメントや整形を保持しません。
+クラスの定義中は元のDEBUGトラップを退避し、メソッド本体のコマンドを実行せずに記録します。
+`z.cls.method.defined`で本体の収集を終え、`z.cls.drew`または`z.cls.abort`で
+元のDEBUGトラップと、実行タイミング・`localtraps`の設定を復元します。
+保存する本体には、Zshが復元したコマンドを使います。
 
 定義ファイルは通常のシェル構文を保つため、シンタックスハイライトと本体の診断を利用できます。
 
