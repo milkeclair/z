@@ -9,10 +9,8 @@
 #  z.var.get TEST_VAR
 #  # REPLY: "Hello, World!"
 z.var.get() {
-  local var_name=$1
-
-  if z.var.exists $var_name; then
-    REPLY=("${(@P)var_name}")
+  if z.var.exists "$1"; then
+    REPLY=("${(@P)1}")
   else
     REPLY=()
   fi

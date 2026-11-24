@@ -284,7 +284,9 @@ z.cls.delete() {
 
   z.is.not.eq "$#" 1 && return 1
 
-  local reference=${(P)1-}
+  z.var.get "$1"
+  local reference="$REPLY"
+
   z.str.start_with "$1" z_cls_ && reference=$1
   local instance_id=${z_cls_references[$reference]-$reference}
 
