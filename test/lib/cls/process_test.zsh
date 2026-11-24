@@ -388,29 +388,20 @@ z.t.describe "z.cls.new"; {
     }
   }
 
-  z.t.context "nounsetの下で参照をコピーした場合"; {
-    z.t.it "nounset下でコピーした参照の状態共有と削除ができる"; {
-      local -a output=()
-      output=("${(@f)$(
-        setopt nounset
+  z.t.context "参照をコピーした場合"; {
+    z.t.it "コピーから更新した値を元の参照で読める"; {
+      () {
         local counter=""
         z.cls.new TestCounter counter
-        local -r other=$counter
-        "$other.increment"
-        $counter.count.get
-        print -rl -- "$REPLY"
-        $counter.add count=4
-        "$other.value"
-        print -rl -- "$REPLY"
-        z.cls.delete other
-        print -rl -- "${+functions[$counter.value]}"
-      )}")
+        local other=$counter
 
-      z.t.expect.status.is.true
-      z.t.expect "${#output}" 3
-      z.t.expect "$output[1]" 1
-      z.t.expect "$output[2]" 5
-      z.t.expect "$output[3]" 0
+        $other.increment
+        $counter.count.get
+
+        z.t.expect.reply 1
+
+        z.cls.delete counter
+      }
     }
   }
 
@@ -787,6 +778,21 @@ z.t.describe "z.cls.new"; {
 }
 
 z.t.describe "z.cls.delete"; {
+  z.t.context "コピーした参照を持つ変数を渡した場合"; {
+    z.t.it "元の参照で使っていたコマンドを解除する"; {
+      () {
+        local counter=""
+        z.cls.new TestCounter counter
+        local other=$counter
+
+        z.cls.delete other
+        z.var.exists "functions[$counter.value]"
+
+        z.t.expect.status.is.false
+      }
+    }
+  }
+
   z.t.context "errexitが有効な場合"; {
     z.t.it "インスタンスを登録表から削除する"; {
       (
@@ -902,7 +908,7 @@ z.t.describe "z.cls.delete"; {
 
         z.cls.delete first
 
-        z.t.expect "${functions[$first.value]-}" "$expected"
+        z.t.expect "${functions[$first.value]}" "$expected"
 
         unfunction "$first.value"
       }

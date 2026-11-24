@@ -23,7 +23,7 @@ z.cls.new._validate() {
     return 1
   fi
 
-  case ${parameters[$2]-} in
+  case ${parameters[$2]} in
     ""|*readonly*|*array*|*association*|*integer*|*float*|*tied*|*upper*|*lower*|*left*|*right_blanks*|*right_zeros*)
       z.io.error "Instance variable $2 must be a declared writable scalar."
       return 1

@@ -111,7 +111,7 @@ z.arg.parse() {
     for name in "${accepted_names[@]}"; do
       z.str.start_with "$arg" "${name}=" || continue
 
-      if ! z.is.true "${found[$name]:-false}"; then
+      if ! z.is.true ${found[$name]}; then
         z.str.remove.prefix "$arg" "${name}="
         local value=$REPLY
         z.is.null "$value" && value=${values[$name]}

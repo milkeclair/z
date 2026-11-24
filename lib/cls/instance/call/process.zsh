@@ -55,7 +55,7 @@ z.cls.instance.call._run() {
   shift 2
 
   local z_cls_activated=false
-  if z.is.not.eq "${z_cls_current_instance-}" "$z_cls_instance"; then
+  if z.is.not.eq "${z_cls_current_instance}" "$z_cls_instance"; then
     local z_cls_current_instance=$z_cls_instance
     z_cls_active[$z_cls_instance]=1
     z_cls_activated=true

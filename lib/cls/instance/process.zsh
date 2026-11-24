@@ -15,12 +15,12 @@
 #  # 変更後: instance_idにcounterと同じインスタンスIDを代入済み
 #  # return: 0
 z.cls.instance._resolve() {
-  if z.is.null "${z_cls_instances[$1]-}"; then
+  if z.is.null "${z_cls_instances[$1]}"; then
     z.io.error "Instance reference $1 is not available in this scope."
     return 1
   fi
 
-  if z.var.exists "z_cls_active[$1]" && z.is.not.eq "${z_cls_current_instance-}" "$1"; then
+  if z.var.exists "z_cls_active[$1]" && z.is.not.eq "${z_cls_current_instance}" "$1"; then
     z.io.error "Instance $1 is active in another instance call."
     return 1
   fi
