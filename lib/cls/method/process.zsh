@@ -12,9 +12,10 @@
 #    # return: 0
 #  z.cls.drew
 z.cls.method.defined() {
-  {
-    return ${z_cls_capture_done_result:-0}
-  } always {
+  if z.var.exists z_cls_capture_done_result; then
     unset z_cls_capture_done_result
-  }
+    return 1
+  fi
+
+  return 0
 }

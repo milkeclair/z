@@ -49,11 +49,14 @@ z.cls.owner.is._writable() {
 #  z.cls.owner.is._current counter reference="$counter"
 #  # return: 0
 z.cls.owner.is._current() {
-  local REPLY=""
-  z.arg.named reference "${@:2}" && local z_cls_reference=$REPLY
+  local z_cls_variable=$1
+  shift
 
-  local z_cls_instance_id=${z_cls_references[$z_cls_reference]:-$z_cls_reference}
-  if z.is.not.eq "$z_cls_reference" "${z_cls_owner_refs[$z_cls_instance_id]:-$z_cls_instance_id}"; then
+  local REPLY=""
+  z.arg.named reference "$@" && local z_cls_reference=$REPLY
+
+  local z_cls_instance_id=${z_cls_references[$z_cls_reference]-$z_cls_reference}
+  if z.is.not.eq "$z_cls_reference" "${z_cls_owner_refs[$z_cls_instance_id]-$z_cls_instance_id}"; then
     return 1
   fi
 
@@ -62,11 +65,11 @@ z.cls.owner.is._current() {
     return 1
   fi
 
-  if z.str.excludes "${parameters[$1]-}" tied; then
+  if z.str.excludes "${parameters[$z_cls_variable]-}" tied; then
     return 1
   fi
 
-  local declaration=$(builtin typeset -p -- "$1")
+  local declaration=$(builtin typeset -p -- "$z_cls_variable")
   z.str.split.shell "$declaration"
   local -a words=("${REPLY[@]}")
   local -i index=2
@@ -75,7 +78,7 @@ z.cls.owner.is._current() {
     (( ++index ))
   done
 
-  if z.is.not.eq "${words[index]-}" "$1"; then
+  if z.is.not.eq "${words[index]-}" "$z_cls_variable"; then
     return 1
   fi
 

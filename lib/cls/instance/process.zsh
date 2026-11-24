@@ -31,10 +31,14 @@ z.cls.instance._call() {
     return 1
   fi
 
-  case $2 in
-    method) z.cls.instance.call._run "$z_cls_instance" "$3" "${@:4}" ;;
-    get) z.cls.instance.call._get "$z_cls_instance" "$3" "${@:4}" ;;
-    set) z.cls.instance.call._set "$z_cls_instance" "$3" "${@:4}" ;;
+  local z_cls_operation=$2
+  local z_cls_member=$3
+  shift 3
+
+  case $z_cls_operation in
+    method) z.cls.instance.call._run "$z_cls_instance" "$z_cls_member" "$@" ;;
+    get) z.cls.instance.call._get "$z_cls_instance" "$z_cls_member" "$@" ;;
+    set) z.cls.instance.call._set "$z_cls_instance" "$z_cls_member" "$@" ;;
     *) return 1 ;;
   esac
 }
@@ -115,7 +119,7 @@ z.cls.instance._snapshot() {
 z.cls.instance._release() {
   local -a REPLY=()
   local instance_id=$1
-  local reference=${z_cls_owner_refs[$instance_id]:-$instance_id}
+  local reference=${z_cls_owner_refs[$instance_id]-$instance_id}
   local class_name=$z_cls_instances[$instance_id]
 
   unset "z_cls_references[$reference]" "z_cls_owner_refs[$instance_id]"

@@ -31,5 +31,4 @@ z.cls.draw TypedState
     z.is.eq "$REPLY" $'quote\' slash\\ newline\n$(print SHOULD_NOT_RUN)' || return 1
     REPLY=preserved
   z.cls.method.defined
-
 z.cls.drew

@@ -5,5 +5,4 @@ z.cls.draw ArithmeticSetter
   z.cls.method prepare
     $self.count.set 1
   z.cls.method.defined
-
 z.cls.drew

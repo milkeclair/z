@@ -14,7 +14,9 @@
 #  # return: 0
 z.cls.instance._commands() {
   local class_name=$1
-  z.arg.named reference "${@:2}" && local reference=$REPLY
+  shift
+
+  z.arg.named reference "$@" && local reference=$REPLY
 
   if z.var.exists "z_cls_command_suffixes[$class_name]"; then
     z.cls.store._names "$z_cls_command_suffixes[$class_name]"

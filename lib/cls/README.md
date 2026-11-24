@@ -24,7 +24,6 @@ z.cls.draw Counter
     $self.count.set "$(( REPLY + count ))" || return
     $self.count.get
   z.cls.method.defined
-
 z.cls.drew
 ```
 

@@ -15,16 +15,15 @@
 #  # REPLY: hello
 #  # return: 0
 z.cls.instance.call._get() {
-  local instance_id=${z_cls_references[$1]:-$1}
+  local instance_id=${z_cls_references[$1]-$1}
   z.cls.instance.call._validate "$instance_id" "$1" || return
+  z.is.not.eq "$#" 2 && return 1
 
   local attribute_key="$instance_id:$2"
   if (( ${+z_cls_values[$attribute_key]} )); then
-    z.cls.instance.call._access "$instance_id" get "$2" "${@:3}"
-    return $?
+    z.cls.instance.call._access "$instance_id" get "$2"
+    return
   fi
-
-  z.is.eq "$#" 2 || return 1
 
   if (( ${+z_cls_scalars[$attribute_key]} )); then
     REPLY=$z_cls_scalars[$attribute_key]

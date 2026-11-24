@@ -34,7 +34,7 @@ z.cls.owner.move() {
     return 1
   fi
 
-  local z_cls_instance_id=${z_cls_references[$z_cls_old_reference]:-$z_cls_old_reference}
+  local z_cls_instance_id=${z_cls_references[$z_cls_old_reference]-$z_cls_old_reference}
   if z.is.not.null "${z_cls_active[$z_cls_instance_id]-}"; then
     z.io.error "Cannot move an active instance."
     return 1
@@ -81,8 +81,11 @@ z.cls.owner.move() {
 #  # return: 0
 #  # 変更後: counter="counter_reference"。counterはreadonly
 z.cls.owner._bind() {
+  local z_cls_reference=$1
+  shift
+
   local REPLY=""
-  z.arg.named to "${@:2}" && local z_cls_binding=$REPLY
+  z.arg.named to "$@" && local z_cls_binding=$REPLY
 
   if z.is.null "$z_cls_binding"; then
     return 1
@@ -90,9 +93,9 @@ z.cls.owner._bind() {
 
   local z_cls_marker="z_cls_owner_$(( ++z_cls_next_owner_id ))"
 
-  builtin typeset -gT "$z_cls_binding=$1" "$z_cls_marker" || return 1
+  builtin typeset -gT "$z_cls_binding=$z_cls_reference" "$z_cls_marker" || return 1
   builtin typeset -gr -- "$z_cls_binding" || return 1
 
-  z.arg.named instance "${@:2}" "default=$1"
+  z.arg.named instance "$@" default="$z_cls_reference"
   z_cls_owner_markers[$REPLY]=$z_cls_marker
 }

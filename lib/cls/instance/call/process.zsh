@@ -16,9 +16,8 @@
 z.cls.instance.call._validate() {
   local instance_id=$1
   local reference=$2
-  local owner_reference=${z_cls_owner_refs[$instance_id]:-$instance_id}
-
-  if ! (( ${+z_cls_instances[$instance_id]} )) ||
+  local owner_reference=${z_cls_owner_refs[$instance_id]-$instance_id}
+  if ! z.var.exists "z_cls_instances[$instance_id]" ||
       z.is.not.eq "$reference" "$owner_reference"; then
     z.io.error "Instance reference $reference is not available in this scope."
     return 1
@@ -63,20 +62,23 @@ z.cls.instance.call._validate() {
 #  # return: 0
 #  # 変更後: labelの値はhello
 z.cls.instance.call._set() {
-  local z_cls_id=${z_cls_references[$1]:-$1}
+  local z_cls_id=${z_cls_references[$1]-$1}
   z.cls.instance.call._validate "$z_cls_id" "$1" || return
 
-  if (( ${+z_cls_values[$z_cls_id:$2]} )); then
-    z.cls.instance.call._access "$z_cls_id" set "$2" "${@:3}"
-    return $?
+  local z_cls_attribute_name=$2
+  shift 2
+
+  if (( ${+z_cls_values[$z_cls_id:$z_cls_attribute_name]} )); then
+    z.cls.instance.call._access "$z_cls_id" set "$z_cls_attribute_name" "$@"
+    return
   fi
 
-  z.is.eq "$#" 3 || return 1
+  z.is.not.eq "$#" 1 && return 1
 
-  local default_key="${z_cls_instances[$z_cls_id]}:$2"
+  local default_key="${z_cls_instances[$z_cls_id]}:$z_cls_attribute_name"
   (( ${+z_cls_defaults[$default_key]} )) || return 1
 
-  z_cls_scalars[$z_cls_id:$2]=$3
+  z_cls_scalars[$z_cls_id:$z_cls_attribute_name]=$1
 }
 
 # 十進整数は保存形式から直接処理し、他の宣言は属性を復元して処理する。
@@ -152,13 +154,18 @@ z.cls.instance.call._access_typed() {
     fi
   done
 
+  local z_cls_member=$3
+
   case $2 in
     get)
-      z.cls.instance.execute._get "$3" "${@:4}"
+      shift 3
+      z.cls.instance.execute._get "$z_cls_member" "$@"
       ;;
     set)
-      z.cls.instance.execute._set "$3" "${@:4}" || return
-      z.cls.instance._snapshot "$1" "$3"
+      local z_cls_instance_id=$1
+      shift 3
+      z.cls.instance.execute._set "$z_cls_member" "$@" || return
+      z.cls.instance._snapshot "$z_cls_instance_id" "$z_cls_member"
       ;;
   esac
 }
@@ -182,7 +189,7 @@ z.cls.instance.call._access_typed() {
 #  # return: 7
 #  # 変更後: countは4、実行中フラグは解除済み
 z.cls.instance.call._run() {
-  local z_cls_instance=${z_cls_references[$1]:-$1}
+  local z_cls_instance=${z_cls_references[$1]-$1}
 
   z.cls.instance.call._validate "$z_cls_instance" "$1" || return
   (( ${+z_cls_bodies[${z_cls_instances[$z_cls_instance]}:$2]} )) || return 1

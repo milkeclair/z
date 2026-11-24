@@ -857,21 +857,34 @@ z.t.describe "z.cls.new"; {
 
 z.t.describe "z.cls.delete"; {
   z.t.context "errexitが有効な場合"; {
-    z.t.it "errexit下で生成した関数と状態を削除する"; {
-      local -a output=()
-      output=("${(@f)$(
+    z.t.it "インスタンスを登録表から削除する"; {
+      (
         setopt errexit
         local counter=""
         z.cls.new TestCounter counter
         $counter.increment
+
         z.cls.delete counter
-        print -rl -- "${#z_cls_instances}" "${+functions[$counter.increment]}"
-      )}")
+
+        ! z.var.exists "z_cls_instances[$counter]"
+      )
 
       z.t.expect.status.is.true
-      z.t.expect "${#output}" 2
-      z.t.expect "$output[1]" 0
-      z.t.expect "$output[2]" 0
+    }
+
+    z.t.it "インスタンスのコマンドを解除する"; {
+      (
+        setopt errexit
+        local counter=""
+        z.cls.new TestCounter counter
+        $counter.increment
+
+        z.cls.delete counter
+
+        ! z.var.exists "functions[$counter.increment]"
+      )
+
+      z.t.expect.status.is.true
     }
   }
 

@@ -18,11 +18,16 @@ z.cls.instance.execute._set() {
   case ${(tP)1} in
     association*)
       z.int.is.zero $(( ($# - 1) % 2 )) || return 1
-      set -A "$1" "${@:2}"
+
+      local z_cls_target=$1
+      shift
+      set -A "$z_cls_target" "$@"
       return
       ;;
     array*)
-      set -A "$1" "${@:2}"
+      local z_cls_target=$1
+      shift
+      set -A "$z_cls_target" "$@"
       return
       ;;
   esac
