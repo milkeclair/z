@@ -29,6 +29,21 @@ z.t.describe "z.cls.instance._resolve"; {
     }
   }
 
+  z.t.context "参照が空の場合"; {
+    z.t.it "利用できない参照として失敗する"; {
+      z.cls.store._ensure
+      z.t.mock name=z.io.error
+
+      z.cls.instance._resolve ""
+
+      z.t.expect.status.is.false skip_unmock=true
+
+      z.t.mock.result name=z.io.error
+
+      z.t.expect.reply "Instance reference  is not available in this scope."
+    }
+  }
+
   z.t.context "実行中の別インスタンスに戻る場合"; {
     z.t.it "再入を拒否する"; {
       () {
