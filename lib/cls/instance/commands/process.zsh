@@ -5,8 +5,8 @@
 # return: 全ての名前が利用可能または所有済みなら0、それ以外はエラーを表示して1
 #
 # example:
-#  # 前提: counter.incrementというコマンドや別名は未登録
-#  z.cls.instance.commands._validate counter.increment
+#  # 前提: z_cls_12345_1.incrementというコマンドや別名は未登録
+#  z.cls.instance.commands._validate z_cls_12345_1.increment
 #  # return: 0
 z.cls.instance.commands._validate() {
   local REPLY=""
@@ -39,10 +39,10 @@ z.cls.instance.commands._validate() {
 # return: 0|1
 #
 # example:
-#  # 前提: 保存領域を初期化し、counter.incrementの名前を検証済み
-#  z.cls.instance.commands._install counter.increment
+#  # 前提: 保存領域を初期化し、z_cls_12345_1.incrementの名前を検証済み
+#  z.cls.instance.commands._install z_cls_12345_1.increment
 #  # return: 0
-#  # 変更後: counter.incrementを登録し、参照数は1
+#  # 変更後: z_cls_12345_1.incrementを登録し、参照数は1
 z.cls.instance.commands._install() {
   local -a REPLY=()
   local -a installed_commands=()
