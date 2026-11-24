@@ -117,6 +117,24 @@ z.t.describe "z.arr.join"; {
       z.t.expect "$result_ifs" ":"
     }
   }
+
+  z.t.context "nounsetが有効な場合"; {
+    z.t.it "区切り文字を指定しても省略しても結合する"; {
+      local result=""
+      result=$(
+        setopt nounset
+
+        z.arr.join delimiter=: "a b" c || exit 1
+        print -r -- "$REPLY"
+
+        z.arr.join "a b" c || exit 1
+        print -r -- "$REPLY"
+      )
+
+      z.t.expect.status.is.true
+      z.t.expect "$result" $'a b:c\na b c'
+    }
+  }
 }
 
 z.t.describe "z.arr.split"; {

@@ -65,20 +65,52 @@ z.cls.store._scalar() {
   unset "z_cls_values[$1:$2]"
 }
 
-# クラスのメソッド一覧と、対応する本体を保存する。
+# クラスのメソッド名と実行する本体を保存する。
 #
-# $1: 定義中のクラス名
-# $2: メソッド名
-# $3: メソッド本体
+# $1: メソッド名
+# $class: 定義中のクラス名
+# $body [code]: メソッド本体
 # REPLY: null
 # return: 0
 #
 # example:
 #  # 前提: Counterを定義中
-#  z.cls.store._method Counter value 'REPLY=0'
+#  z.cls.store._method value class=Counter body='REPLY=0'
 #  # return: 0
 #  # 変更後: Counterのメソッド一覧にvalueを加え、本体にREPLY=0を保存
 z.cls.store._method() {
-  z_cls_bodies[$1:$2]=$3
-  z_cls_class_methods[$1]+="$2 "
+  local REPLY=""
+  z.arg.named class "${@:2}" && local class_name=$REPLY
+  z.arg.named body "${@:2}" && local body=$REPLY
+
+  z_cls_bodies[$class_name:$1]=$body
+  z_cls_class_methods[$class_name]+="$1 "
+}
+
+# 未公開クラスが登録した属性とメソッドを破棄する。
+#
+# $1: 定義中のクラス名
+# REPLY: null
+# return: 0
+#
+# example:
+#  # 前提: Counterの公開前にcountとincrementを宣言している
+#  z.cls.store._discard Counter
+#  # return: 0
+#  # 変更後: Counterの属性、初期値、メソッド本体を破棄
+z.cls.store._discard() {
+  local -a REPLY=()
+  local member
+
+  z.cls.store._names "${z_cls_class_attrs[$1]-}"
+  for member in "${REPLY[@]}"; do
+    unset "z_cls_defaults[$1:$member]"
+  done
+
+  z.cls.store._names "${z_cls_class_methods[$1]-}"
+  for member in "${REPLY[@]}"; do
+    unset "z_cls_bodies[$1:$member]"
+  done
+
+  unset "z_cls_class_attrs[$1]" "z_cls_class_methods[$1]"
 }

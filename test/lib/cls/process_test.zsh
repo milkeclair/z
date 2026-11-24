@@ -1,6 +1,15 @@
 source ${z_main}
 
 z.t.describe "z.cls.draw"; {
+  z.t.context "有効なクラス名の場合"; {
+    z.t.it "定義を開始する"; {
+      z.cls.draw DirectDraw
+        z.t.expect "$z_cls_drawing" DirectDraw
+
+      z.cls.abort
+    }
+  }
+
   z.t.context "DEBUGトラップが呼出元のresultに代入する場合"; {
     z.t.it "定義開始は成功し、トラップの代入は呼出元へ届く"; {
       local -a output=()
@@ -23,15 +32,6 @@ z.t.describe "z.cls.draw"; {
       z.t.expect.status.is.true
       z.t.expect "$output[1]" 0
       z.t.expect "$output[2]" 61
-    }
-  }
-
-  z.t.context "有効なクラス名の場合"; {
-    z.t.it "定義を開始する"; {
-      z.cls.draw DirectDraw
-        z.t.expect "$z_cls_drawing" DirectDraw
-
-      z.cls.abort
     }
   }
 
@@ -81,29 +81,50 @@ z.t.describe "z.cls.attr"; {
       z.cls.abort
     }
   }
-  z.t.context "defaultが空文字または省略の場合"; {
-    z.t.it "空の初期値は受け付け、初期値を省略したクラスは公開しない"; {
+
+  z.t.context "空の初期値を明示した場合"; {
+    z.t.it "空文字列をスカラーとして保持する"; {
       z.cls.draw EmptyDefault
         z.cls.attr default default=
-        z.cls.attr default=0 count
       z.cls.drew
 
       () {
         local object=""
         z.cls.new EmptyDefault object
+
         $object.default.get
-
-        z.t.expect.reply.is.null
-
-        $object.count.get
         local reply_kind=${(t)REPLY}
-        local count_value=$REPLY
+        local default_value=$REPLY
 
         z.t.expect "$reply_kind" scalar
-        z.t.expect "$count_value" 0
+        z.t.expect.is.null "$default_value"
+
         z.cls.delete object
       }
+    }
+  }
 
+  z.t.context "defaultを属性名より前に置く場合"; {
+    z.t.it "初期値の空白と等号を保持する"; {
+      z.cls.draw NamedDefault
+        z.cls.attr 'default=a b=c' label
+      z.cls.drew
+
+      () {
+        local named_default=""
+        z.cls.new NamedDefault named_default
+
+        $named_default.label.get
+
+        z.t.expect.reply "a b=c"
+
+        z.cls.delete named_default
+      }
+    }
+  }
+
+  z.t.context "defaultを省略した場合"; {
+    z.t.it "属性の登録とクラスの公開が失敗する"; {
       z.cls.draw MissingDefault
         z.cls.attr value 2>/dev/null # zls: ignore missing-named-argument
 
@@ -111,7 +132,24 @@ z.t.describe "z.cls.attr"; {
       z.cls.drew
 
       z.t.expect.status.is.false
-      z.var.exists 'z_cls_classes[MissingDefault]'
+
+      z.hash.has.key z_cls_classes key=MissingDefault
+
+      z.t.expect.status.is.false
+    }
+  }
+
+  z.t.context "defaultを重複して指定した場合"; {
+    z.t.it "属性の登録とクラスの公開が失敗する"; {
+      z.cls.draw DuplicateDefault
+        z.cls.attr default=one default=two 2>/dev/null # zls: ignore missing-positional-argument
+
+        z.t.expect.status.is.false
+      z.cls.drew
+
+      z.t.expect.status.is.false
+
+      z.hash.has.key z_cls_classes key=DuplicateDefault
 
       z.t.expect.status.is.false
     }
@@ -155,33 +193,6 @@ z.t.describe "z.cls.drew"; {
 }
 
 z.t.describe "z.cls.abort"; {
-  z.t.context "DEBUGトラップが呼出元のkeyに代入する場合"; {
-    z.t.it "トラップの代入を保ち、未公開の定義を破棄する"; {
-      local -a output=()
-      output=("${(@f)$(
-        local key=before
-        TRAPDEBUG() {
-          if [[ $funcstack[2] == z.cls.abort && $ZSH_DEBUG_CMD == 'z.str.start_with '* ]]; then
-            key=other
-          fi
-          return 0
-        }
-
-        z.cls.draw DebugAbort
-          z.cls.attr count default=1
-          z.cls.method value 'REPLY=old'
-        z.cls.abort
-        unfunction TRAPDEBUG
-        print -rl -- "$key" "${+z_cls_defaults[DebugAbort:count]}" "${+z_cls_bodies[DebugAbort:value]}"
-      )}")
-
-      z.t.expect.status.is.true
-      z.t.expect "$output[1]" other
-      z.t.expect "$output[2]" 0
-      z.t.expect "$output[3]" 0
-    }
-  }
-
   z.t.context "呼出元にreadonly argがある場合"; {
     z.t.it "呼出元を変更せずに定義を破棄する"; {
       z.cls.draw ReadonlyAbort
@@ -197,6 +208,34 @@ z.t.describe "z.cls.abort"; {
         }
 
         z.t.expect.is.null "$z_cls_drawing"
+    }
+  }
+
+  z.t.context "DEBUGトラップが呼出元のkeyに代入する場合"; {
+    z.t.it "トラップの代入を保ち、未公開の定義を破棄する"; {
+      local -a output=()
+      output=("${(@f)$(
+        local key=before
+        TRAPDEBUG() {
+          if [[ $ZSH_DEBUG_CMD == ': after_abort' ]]; then
+            key=other
+          fi
+          return 0
+        }
+
+        z.cls.draw DebugAbort
+          z.cls.attr count default=1
+          z.cls.method value 'REPLY=old'
+        z.cls.abort
+        : after_abort
+        unfunction TRAPDEBUG
+        print -rl -- "$key" "${+z_cls_defaults[DebugAbort:count]}" "${+z_cls_bodies[DebugAbort:value]}"
+      )}")
+
+      z.t.expect.status.is.true
+      z.t.expect "$output[1]" other
+      z.t.expect "$output[2]" 0
+      z.t.expect "$output[3]" 0
     }
   }
 
@@ -222,6 +261,86 @@ z.t.describe "z.cls.abort"; {
 }
 
 z.t.describe "z.cls.new"; {
+  z.t.context "呼出元に同名の通常関数がある場合"; {
+    z.t.it "通常関数と実体のメソッドを独立して呼び出せる"; {
+      () {
+        local first=""
+        first.value() {
+          REPLY=original
+        }
+
+        z.cls.new TestCounter first
+
+        z.t.expect.status.is.true
+
+        $first.value
+
+        z.t.expect.reply 0
+
+        first.value
+
+        z.t.expect.reply original
+
+        z.cls.delete first
+        unfunction first.value
+      }
+    }
+  }
+
+  z.t.context "生成する名前を先に別の通常関数が使っている場合"; {
+    z.t.it "既存の関数と空の代入先を保持する"; {
+      () {
+        local object=""
+        local -i z_cls_next_id=500
+        local reference="z_cls_${$}_501"
+        functions[$reference.value]='REPLY=original'
+        z.t.mock name=z.io.error
+
+        z.cls.new TestCounter object
+
+        z.t.expect.status.is.false
+        z.t.expect.is.null "$object"
+
+        "$reference.value"
+
+        z.t.expect.reply original
+        z.var.exists "functions[$reference.increment]"
+
+        z.t.expect.status.is.false
+
+        unfunction "$reference.value"
+      }
+    }
+  }
+
+  z.t.context "呼出元がIFSとGLOB_SUBSTを設定している場合"; {
+    z.t.it "属性を復元でき、削除後に生成コマンドを残さない"; {
+      () {
+        local object=""
+        local IFS=:
+        setopt localoptions globsubst
+
+        z.cls.draw ClassWithOptions
+          z.cls.attr value default=1
+          z.cls.attr other default=2
+        z.cls.drew
+
+        z.cls.new ClassWithOptions object
+        z_cls_values[${object}:value]='typeset -i value=1'
+
+        $object.value.set 'other + 1'
+        $object.value.get
+
+        z.t.expect.reply 3
+
+        z.cls.delete object
+        z.var.exists "functions[$object.value.get]"
+
+        z.t.expect.status.is.false
+      }
+    }
+  }
+
   z.t.context "参照を変換する変数属性がある場合"; {
     z.t.it "大文字へ変換する変数には実体を作らない"; {
       () {

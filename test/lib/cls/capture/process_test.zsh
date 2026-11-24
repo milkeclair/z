@@ -9,20 +9,43 @@ z.t.describe "z.cls.capture._start"; {
       z.t.mock name=z.cls.capture._debug behavior='local REPLY=""'
       REPLY=(before "two words" "")
 
-      z.cls.capture._start captured_method test_stack test_file 0
+      z.cls.capture._start captured_method file="test file.zsh" discard=1 stack=test_stack
+
       local -a preserved_reply=("${REPLY[@]}")
       local installed_debug=${+functions[TRAPDEBUG]}
       local captured_name=$z_cls_capture_method
       local captured_stack=$z_cls_capture_stack
+      local captured_file=$z_cls_capture_file
+      local captured_discard=$z_cls_capture_discard
+
       z.cls.capture._stop
 
       z.t.expect "$installed_debug" 1
       z.t.expect "$captured_name" captured_method
       z.t.expect "$captured_stack" test_stack
+      z.t.expect "$captured_file" "test file.zsh"
+      z.t.expect "$captured_discard" 1
       z.t.expect "${#preserved_reply}" 3
       z.t.expect "$preserved_reply[1]" before
       z.t.expect "$preserved_reply[2]" "two words"
       z.t.expect.is.null "$preserved_reply[3]"
+    }
+  }
+
+  z.t.context "最上位の定義を収集する場合"; {
+    z.t.it "空のスタックを保持し、既定では本体を破棄しない"; {
+      z.cls.store._ensure
+      z.t.mock name=z.cls.capture._debug
+
+      z.cls.capture._start captured_method stack= file=test_file
+
+      local captured_stack=$z_cls_capture_stack
+      local captured_discard=$z_cls_capture_discard
+
+      z.cls.capture._stop
+
+      z.t.expect.is.null "$captured_stack"
+      z.t.expect "$captured_discard" 0
     }
   }
 }
@@ -37,7 +60,7 @@ z.t.describe "z.cls.capture._stop"; {
       }
 
       local original_debug=$functions[TRAPDEBUG]
-      z.cls.capture._start captured_method test_stack test_file 0
+      z.cls.capture._start captured_method stack=test_stack file=test_file
 
       z.cls.capture._stop
 

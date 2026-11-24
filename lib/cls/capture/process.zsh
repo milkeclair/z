@@ -1,24 +1,29 @@
 # 1つのメソッド本体を収集するため、一時的なDEBUGトラップを設定する。
 #
 # $1: メソッド名
-# $2: 定義元の呼出しスタック
-# $3: 定義元のファイル
-# $4: 1の場合は不正な定義を破棄する
+# $stack: 定義元の呼出しスタック。最上位は空文字列
+# $file: 定義元のファイル
+# $discard?: 1の場合は不正な定義を破棄する（既定: 0）
 # REPLY: null
 # return: 0
 #
 # example:
 #  # 前提: Counterを定義中で、DEBUGトラップにより呼出元を監視できる
-#  z.cls.capture._start increment "$z_cls_draw_stack" counter.zsh 0
+#  z.cls.capture._start increment stack="$z_cls_draw_stack" file=counter.zsh
 #  # return: 0
 #  # 変更後: z_cls_capture_method=increment、z_cls_capture_body=''
 z.cls.capture._start() {
   z.cls.capture._watch
 
-  typeset -g +x z_cls_capture_discard=${4:-0}
+  local REPLY=""
+  z.arg.named stack "${@:2}" && local stack=$REPLY
+  z.arg.named file "${@:2}" && local file=$REPLY
+  z.arg.named discard "${@:2}" default=0 && local discard=$REPLY
+
+  typeset -g +x z_cls_capture_discard=$discard
   typeset -g +x z_cls_capture_done_result=0
-  typeset -g +x z_cls_capture_stack=$2
-  typeset -g +x z_cls_capture_file=$3
+  typeset -g +x z_cls_capture_stack=$stack
+  typeset -g +x z_cls_capture_file=$file
   typeset -g +x z_cls_capture_body=''
   z_cls_capture_method=$1
 }
@@ -119,7 +124,7 @@ z.cls.capture._debug() {
   local REPLY=""
   local current_stack=${(j:|:)funcstack[3,-1]}
 
-  if (( ${z_cls_reject_depth:-0} )); then
+  if z.int.is.not.zero "${z_cls_reject_depth:-0}"; then
     if [[ $current_stack == "$z_cls_reject_stack" ]]; then
       z.cls.capture._skip "$1"
       return 0
@@ -161,25 +166,26 @@ z.cls.capture._debug() {
 #  z.cls.capture._skip 'print unexpected'
 #  # 変更後: printの実行を抑止
 z.cls.capture._skip() {
-  if (( z_cls_reject_method )); then
+  if z.int.is.not.zero "${z_cls_reject_method:-0}"; then
     z.is.eq "$1" z.cls.method.defined && z_cls_reject_method=0
   elif z.is.eq "$1" z.cls.method || z.str.start_with "$1" 'z.cls.method '; then
     local -a REPLY=()
     z.str.split.shell "$1"
-    # 拒否する前の判定と同じく、呼出元のSH_WORD_SPLITを単語数に反映する。
-    local -a words=(${REPLY[@]})
-    z.int.is.lteq "${#words}" 2 && z_cls_reject_method=1
+    # 呼出元のSH_WORD_SPLITを単語数の判定に反映する。
+    z.arr.count ${REPLY[@]}
+    z.int.is.lteq "$REPLY" 2 && z_cls_reject_method=1
   elif z.is.eq "$1" z.cls.draw || z.str.start_with "$1" 'z.cls.draw '; then
     (( ++z_cls_reject_depth ))
   elif z.is.eq "$1" z.cls.drew; then
     (( --z_cls_reject_depth ))
-    if (( ! z_cls_reject_depth )); then
+    if z.int.is.zero "$z_cls_reject_depth"; then
       unset z_cls_reject_depth z_cls_reject_method z_cls_reject_stack
       typeset -g +x z_cls_reject_result=1
       return 0
     fi
   fi
 
+  # DEBUGトラップから戻ったとき、拒否したコマンドの実行を抑止する。
   setopt errexit
 }
 
@@ -203,17 +209,19 @@ z.cls.capture._method() {
 
   if z.is.not.eq "$1" z.cls.method.defined; then
     z_cls_capture_body+="$1"$'\n'
+
+    # 収集したコマンドはメソッド呼出しまで実行しない。
     setopt errexit
     return 0
   fi
 
-  if (( z_cls_capture_discard )); then
+  if z.int.is.not.zero "${z_cls_capture_discard:-0}"; then
     z.cls.abort
     z_cls_capture_done_result=1
     return 0
   fi
 
-  z.cls.store._method "$z_cls_drawing" "$z_cls_capture_method" "$z_cls_capture_body"
+  z.cls.store._method "$z_cls_capture_method" class="$z_cls_drawing" body="$z_cls_capture_body"
   z_cls_capture_method=''
   z.is.not.null "$z_cls_drawing" || z.cls.capture._stop
 }

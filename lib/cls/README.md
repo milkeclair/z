@@ -38,18 +38,18 @@ z.cls.new Counter counter
 $counter.increment
 $counter.add count=4
 $counter.count.get
-print -r -- "$REPLY"  # 5
+z.io "$REPLY"  # 5
 
 $counter.count.set 10
 $counter.increment
-print -r -- "$REPLY"  # 11
+z.io "$REPLY"  # 11
 
 z.cls.delete counter
 ```
 
 ## メソッドからのアクセス
 
-メソッドには、実体IDを持つreadonlyのローカル変数`self`を渡します。
+メソッドには、呼び出しに使った実体参照を持つreadonlyのローカル変数`self`を渡します。
 同じ実体のメソッドは`$self.increment`、属性は`$self.count.get`と
 `$self.count.set value`で呼び出します。実体IDには空白やシェルの特殊文字を含めないため、
 この形式で呼び出せます。
@@ -80,13 +80,13 @@ example() {
   local counter=""
   z.cls.new Counter counter
   $counter.increment
-  print -r -- "$REPLY"  # 1
+  z.io "$REPLY"  # 1
   z.cls.delete counter
 }
 
 example
 $counter.count.get
-print -r -- "$REPLY"  # 10
+z.io "$REPLY"  # 10
 ```
 
 続けて参照をコピーすると、同じ実体の状態を共有できます。コピーは同じ呼び出し用IDを保持します。実体の寿命は所有者に従います。
@@ -94,9 +94,9 @@ print -r -- "$REPLY"  # 10
 
 ```zsh
 typeset -r other=$counter
-"$other.increment"
-"$other.count.get"
-print -r -- "$REPLY"  # 11
+$other.increment
+$other.count.get
+z.io "$REPLY"  # 11
 ```
 
 `$counter.increment`と`$other.increment`は、それぞれの変数に保存した実体参照を展開して呼び出します。
@@ -170,17 +170,16 @@ z-lsではshowPrivateFunctions設定で表示できます。この規約は、Zs
 
 ## 実行時の処理と編集
 
-メソッド本体の収集では、ZshのDEBUGトラップを一時的に使い、
-コマンドを実行せずに記録します。終了マーカーで、元の関数形式またはリスト形式の
-DEBUGトラップと、実行タイミング・localtrapsの設定を復元します。
-収集中は元のDEBUGトラップを一時停止します。Zshがコードを復元するため、
-実行時に保存する本体には元のコメントや整形を保持しません。
+クラスの定義中は元のDEBUGトラップを退避し、メソッド本体のコマンドを実行せずに記録します。
+`z.cls.method.defined`で本体の収集を終え、`z.cls.drew`または`z.cls.abort`で
+元のDEBUGトラップと、実行タイミング・`localtraps`の設定を復元します。
+保存する本体には、Zshが復元したコマンドを使います。
 
 定義ファイルは通常のシェル構文を保つため、シンタックスハイライトと本体の診断を利用できます。
 
 ## 実行時の費用
 
-メソッド呼出しでは実体IDを`self`へ渡し、属性の変数を復元せずに本体を実行します。
+メソッド呼び出しでは実体参照を`self`へ渡し、属性の変数を復元せずに本体を実行します。
 通常のスカラー属性の取得・更新は、その属性の保存値だけを扱います。
 型付きの値を扱う場合はアクセサー内で必要な属性を復元し、更新に成功すると宣言へ保存します。
 数値式を評価するsetterでは、同じ実体の他の属性も参照できます。
