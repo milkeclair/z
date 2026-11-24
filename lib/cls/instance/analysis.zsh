@@ -1,33 +1,30 @@
-# 実体の変数名と参照から呼べるコマンド名を列挙する。
+# 実体参照から呼び出すメソッドと属性のコマンド名を列挙する。
 #
 # $1: クラス名
-# $2: 実体の参照を持つ変数名
-# $3: 実体参照
+# $reference?: 生成名の接頭辞となる実体参照。省略時は接尾辞だけを返す
 # REPLY: コマンド名の配列。メンバーがない場合は空配列
 # return: 0
 #
 # example:
 #  # 前提: Counterは属性countだけを持つ
-#  z.cls.instance._commands Counter counter ref
-#  # REPLY: ("counter.count.get" "counter.count.set" "ref.count.get" "ref.count.set")
+#  z.cls.instance._commands Counter reference=ref
+#  # REPLY: ("ref.count.get" "ref.count.set")
 #  # return: 0
 z.cls.instance._commands() {
   local class_name=$1
-  local binding=$2
-  local instance_id=$3
+  z.arg.named reference "${@:2}" && local reference=$REPLY
+
   local -a wrappers=()
-  local prefix
   local member
 
-  for prefix in "$binding" "$instance_id"; do
-    for member in ${=z_cls_class_methods[$class_name]}; do
-      wrappers+=("$prefix.$member")
-    done
+  z.cls.store._names "${z_cls_class_methods[$class_name]-}"
+  for member in "${REPLY[@]}"; do
+    wrappers+=("$reference.$member")
+  done
 
-    for member in ${=z_cls_class_attrs[$class_name]}; do
-      wrappers+=("$prefix.$member.get")
-      wrappers+=("$prefix.$member.set")
-    done
+  z.cls.store._names "${z_cls_class_attrs[$class_name]-}"
+  for member in "${REPLY[@]}"; do
+    wrappers+=("$reference.$member.get" "$reference.$member.set")
   done
 
   REPLY=("${wrappers[@]}")

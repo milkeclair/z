@@ -345,6 +345,29 @@ z.t.describe "z.arg.parse"; {
     }
   }
 
+  z.t.context "nounsetが有効な場合"; {
+    z.t.it "最初の名前付き引数と未指定の既定値を取得する"; {
+      local result=""
+      result=$(
+        setopt nounset
+        local -a input_args=(key=first item)
+        local -A parsed_named=([key]=fallback)
+        local -a parsed_args=()
+
+        z.arg.parse input=input_args named=parsed_named rest=parsed_args || exit 1
+        print -rl -- "$parsed_named[key]" "$parsed_args[1]"
+
+        input_args=(item)
+        parsed_named=([key]=fallback)
+        z.arg.parse input=input_args named=parsed_named rest=parsed_args || exit 1
+        print -rl -- "$parsed_named[key]" "$parsed_args[1]"
+      )
+
+      z.t.expect.status.is.true
+      z.t.expect "$result" $'first\nitem\nfallback\nitem'
+    }
+  }
+
   z.t.context "宣言した名前自体が真偽値風の場合"; {
     z.t.it "キーを変換せずに名前付き引数を取得する"; {
       local -a input_args=("true=false" "item")

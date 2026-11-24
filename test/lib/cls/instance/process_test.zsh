@@ -16,7 +16,7 @@ z.t.describe "z.cls.instance._call"; {
 
         z.t.expect.reply 4
 
-        object.count.get
+        $object.count.get
 
         z.t.expect.reply 4
 
@@ -137,7 +137,7 @@ z.t.describe "z.cls.instance._release"; {
 
         z.t.expect.status.is.false
 
-        second.count.get
+        $second.count.get
 
         z.t.expect.reply 3
 

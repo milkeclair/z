@@ -64,3 +64,23 @@ z.t.describe "z.cls.instance.commands._install"; {
     }
   }
 }
+
+z.t.describe "z.cls.instance.commands._uninstall"; {
+  z.t.context "生成された関数の場合"; {
+    z.t.it "最後の登録を手放したときだけ関数を消す"; {
+      z.cls.store._ensure
+      z.cls.instance.commands._install uninstall_cls.run
+      z.cls.instance.commands._install uninstall_cls.run
+
+      z.cls.instance.commands._uninstall uninstall_cls.run
+
+      z.var.exists 'functions[uninstall_cls.run]'
+      z.t.expect.status.is.true
+
+      z.cls.instance.commands._uninstall uninstall_cls.run
+
+      z.var.exists 'functions[uninstall_cls.run]'
+      z.t.expect.status.is.false
+    }
+  }
+}

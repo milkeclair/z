@@ -1,7 +1,7 @@
 # 実体の作成前に、引数と呼出元の代入先変数を検証する。
 #
 # $1: 公開済みのクラス名
-# $2: readonly・型変換・桁揃えのない通常のスカラー変数名
+# $2: 呼出元で宣言済みの、書き込み可能なスカラー変数名
 # REPLY: null
 # return: 0|1
 #
@@ -17,8 +17,8 @@ z.cls.new._validate() {
   fi
 
   case ${parameters[$2]:-} in
-    *readonly*|*array*|*association*|*integer*|*float*|*tied*|*upper*|*lower*|*left*|*right_blanks*|*right_zeros*)
-      z.io.error "Instance variable $2 must be an ordinary writable scalar."
+    ""|*readonly*|*array*|*association*|*integer*|*float*|*tied*|*upper*|*lower*|*left*|*right_blanks*|*right_zeros*)
+      z.io.error "Instance variable $2 must be a declared writable scalar."
       return 1
       ;;
   esac

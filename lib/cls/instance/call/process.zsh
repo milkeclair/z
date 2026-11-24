@@ -104,7 +104,9 @@ z.cls.instance.call._access_typed() {
   local -a z_cls_attributes=("$3")
   if z.is.eq "$2" set; then
     # 数値式から参照できるよう、更新時は同じ実体の属性をすべて復元する。
-    z_cls_attributes=(${=z_cls_class_attrs[${z_cls_instances[$1]}]})
+    local -a REPLY=()
+    z.cls.store._names "${z_cls_class_attrs[${z_cls_instances[$1]}]-}"
+    z_cls_attributes=("${REPLY[@]}")
   fi
 
   local z_cls_attribute

@@ -81,29 +81,50 @@ z.t.describe "z.cls.attr"; {
       z.cls.abort
     }
   }
-  z.t.context "defaultが空文字または省略の場合"; {
-    z.t.it "空の初期値は受け付け、初期値を省略したクラスは公開しない"; {
+
+  z.t.context "空の初期値を明示した場合"; {
+    z.t.it "空文字列をスカラーとして保持する"; {
       z.cls.draw EmptyDefault
         z.cls.attr default default=
-        z.cls.attr default=0 count
       z.cls.drew
 
       () {
         local object=""
         z.cls.new EmptyDefault object
-        object.default.get
 
-        z.t.expect.reply.is.null
-
-        object.count.get
+        $object.default.get
         local reply_kind=${(t)REPLY}
-        local count_value=$REPLY
+        local default_value=$REPLY
 
         z.t.expect "$reply_kind" scalar
-        z.t.expect "$count_value" 0
+        z.t.expect.is.null "$default_value"
+
         z.cls.delete object
       }
+    }
+  }
 
+  z.t.context "defaultを属性名より前に置く場合"; {
+    z.t.it "初期値の空白と等号を保持する"; {
+      z.cls.draw NamedDefault
+        z.cls.attr 'default=a b=c' label
+      z.cls.drew
+
+      () {
+        local named_default=""
+        z.cls.new NamedDefault named_default
+
+        $named_default.label.get
+
+        z.t.expect.reply "a b=c"
+
+        z.cls.delete named_default
+      }
+    }
+  }
+
+  z.t.context "defaultを省略した場合"; {
+    z.t.it "属性の登録とクラスの公開が失敗する"; {
       z.cls.draw MissingDefault
         z.cls.attr value 2>/dev/null # zls: ignore missing-named-argument
 
@@ -111,7 +132,24 @@ z.t.describe "z.cls.attr"; {
       z.cls.drew
 
       z.t.expect.status.is.false
-      z.var.exists 'z_cls_classes[MissingDefault]'
+
+      z.hash.has.key z_cls_classes key=MissingDefault
+
+      z.t.expect.status.is.false
+    }
+  }
+
+  z.t.context "defaultを重複して指定した場合"; {
+    z.t.it "属性の登録とクラスの公開が失敗する"; {
+      z.cls.draw DuplicateDefault
+        z.cls.attr default=one default=two 2>/dev/null # zls: ignore missing-positional-argument
+
+        z.t.expect.status.is.false
+      z.cls.drew
+
+      z.t.expect.status.is.false
+
+      z.hash.has.key z_cls_classes key=DuplicateDefault
 
       z.t.expect.status.is.false
     }
@@ -179,7 +217,7 @@ z.t.describe "z.cls.abort"; {
       output=("${(@f)$(
         local key=before
         TRAPDEBUG() {
-          if [[ $funcstack[2] == z.cls.abort && $ZSH_DEBUG_CMD == 'z.str.start_with '* ]]; then
+          if [[ $ZSH_DEBUG_CMD == ': after_abort' ]]; then
             key=other
           fi
           return 0
@@ -189,6 +227,7 @@ z.t.describe "z.cls.abort"; {
           z.cls.attr count default=1
           z.cls.method value 'REPLY=old'
         z.cls.abort
+        : after_abort
         unfunction TRAPDEBUG
         print -rl -- "$key" "${+z_cls_defaults[DebugAbort:count]}" "${+z_cls_bodies[DebugAbort:value]}"
       )}")
@@ -222,6 +261,66 @@ z.t.describe "z.cls.abort"; {
 }
 
 z.t.describe "z.cls.new"; {
+  z.t.context "参照を変換する変数属性がある場合"; {
+    z.t.it "大文字へ変換する変数には実体を作らない"; {
+      () {
+        z.cls.draw RejectUpper
+        z.cls.drew
+        local -u object=""
+        z.t.mock name=z.io.error
+
+        z.cls.new RejectUpper object
+
+        z.t.expect.status.is.false
+        z.t.expect.is.null "$object"
+
+        z.hash.count z_cls_instances
+
+        z.t.expect.reply 0
+      }
+    }
+
+    z.t.it "桁揃えする変数には実体を作らない"; {
+      () {
+        z.cls.draw RejectJustified
+        z.cls.drew
+        local -L 40 object=""
+        z.t.mock name=z.io.error
+
+        z.cls.new RejectJustified object
+
+        z.t.expect.status.is.false
+
+        z.hash.count z_cls_instances
+
+        z.t.expect.reply 0
+      }
+    }
+  }
+
+  z.t.context "値を変換しないタグ付きスカラーの場合"; {
+    z.t.it "通常の参照として生成と削除ができる"; {
+      () {
+        z.cls.draw TaggedBinding
+          z.cls.attr count default=3
+        z.cls.drew
+        local -t object=""
+
+        z.cls.new TaggedBinding object
+
+        z.t.expect.status.is.true
+
+        $object.count.get
+
+        z.t.expect.reply 3
+
+        z.cls.delete object
+
+        z.t.expect.status.is.true
+      }
+    }
+  }
+
   z.t.context "呼出元に内部処理と同じ用途の名前がある場合"; {
     z.t.it "指定した変数に実体を代入し、メソッドから呼出元の変数を参照できる"; {
       () {
@@ -253,9 +352,9 @@ z.t.describe "z.cls.new"; {
         z.cls.new TestCounter counter
         local -r other=$counter
         "$other.increment"
-        counter.count.get
+        $counter.count.get
         print -rl -- "$REPLY"
-        counter.add count=4
+        $counter.add count=4
         "$other.value"
         print -rl -- "$REPLY"
         z.cls.delete other
@@ -280,7 +379,7 @@ z.t.describe "z.cls.new"; {
         local object=""
 
         z.cls.new false object
-        object.literal.get
+        $object.literal.get
 
         z.t.expect.reply null
 
@@ -301,7 +400,7 @@ z.t.describe "z.cls.new"; {
 
         local object=""
         z.cls.new ScopedInternals object
-        object.increment
+        $object.increment
 
         z.t.expect.reply 1
         z.t.expect "$z_cls_instance" caller_instance
@@ -327,11 +426,11 @@ z.t.describe "z.cls.new"; {
         local object=""
         z.cls.new FormerPrefix object
 
-        object.increment
+        $object.increment
 
         z.t.expect.reply 1
 
-        object.__z_cls_value.get
+        $object.__z_cls_value.get
 
         z.t.expect.reply 1
 
@@ -355,7 +454,7 @@ z.t.describe "z.cls.new"; {
 
         z.t.expect.status.is.true
 
-        arg.count.get
+        $arg.count.get
 
         z.t.expect.reply 3
 
@@ -380,7 +479,7 @@ z.t.describe "z.cls.new"; {
 
         z.t.expect.status.is.true
 
-        object.count.get
+        $object.count.get
 
         z.t.expect.reply 7
 
@@ -415,7 +514,7 @@ z.t.describe "z.cls.new"; {
         z.t.expect.reply "$object"
         z.t.expect.includes "$parameters[object]" readonly
 
-        object.count.get
+        $object.count.get
 
         z.t.expect.reply 0
 
@@ -430,7 +529,7 @@ z.t.describe "z.cls.new"; {
         local counter=""
         z.cls.new TestCounter counter
         local outer_id=$counter
-        counter.count.set 10
+        $counter.count.set 10
 
         () {
           local counter=""
@@ -440,8 +539,8 @@ z.t.describe "z.cls.new"; {
           z.t.expect.status.is.true
           z.t.expect.not "$counter" "$outer_id"
 
-          counter.increment
-          counter.count.get
+          $counter.increment
+          $counter.count.get
 
           z.t.expect.reply 1
 
@@ -452,12 +551,12 @@ z.t.describe "z.cls.new"; {
 
         z.t.expect "$counter" "$outer_id"
 
-        counter.count.get
+        $counter.count.get
 
         z.t.expect.reply 10
 
         z.cls.delete counter
-        z.var.exists 'functions[counter.increment]'
+        z.var.exists "functions[$counter.increment]"
 
         z.t.expect.status.is.false
       }
@@ -467,7 +566,7 @@ z.t.describe "z.cls.new"; {
       () {
         local counter=""
         z.cls.new TestCounter counter
-        counter.count.set 8
+        $counter.count.set 8
 
         () {
           local counter=""
@@ -480,20 +579,20 @@ z.t.describe "z.cls.new"; {
             local -a items=()
             z.cls.instance._snapshot "$counter" items
           }
-          counter.fill
-          counter.items.get
+          $counter.fill
+          $counter.items.get
           local item_count=${#REPLY}
 
           z.t.expect "$item_count" 3
 
-          counter.count.get 2>/dev/null
+          z.var.exists "functions[$counter.count.get]"
 
           z.t.expect.status.is.false
 
           z.cls.delete counter
         }
 
-        counter.count.get
+        $counter.count.get
 
         z.t.expect.reply 8
 
@@ -525,8 +624,8 @@ z.t.describe "z.cls.new"; {
 
         z.t.expect.status.is.false
 
-        counter.count.set 3
-        counter.increment
+        $counter.count.set 3
+        $counter.increment
 
         z.t.expect.reply 4
 
@@ -535,25 +634,97 @@ z.t.describe "z.cls.new"; {
     }
   }
 
-  z.t.context "作成先のコマンド名に既存の関数がある場合"; {
-    z.t.it "既存の関数を保ち、実体のコマンドを部分的に残さない"; {
-      first.value() {
-        REPLY=original
+  z.t.context "呼出元に同名の通常関数がある場合"; {
+    z.t.it "通常関数と実体のメソッドを独立して呼び出せる"; {
+      () {
+        local first=""
+        first.value() {
+          REPLY=original
+        }
+
+        z.cls.new TestCounter first
+
+        z.t.expect.status.is.true
+
+        $first.value
+
+        z.t.expect.reply 0
+
+        first.value
+
+        z.t.expect.reply original
+
+        z.cls.delete first
+        unfunction first.value
       }
+    }
+  }
 
-      z.cls.new TestCounter first 2>/dev/null
+  z.t.context "生成する名前を先に別の通常関数が使っている場合"; {
+    z.t.it "既存の関数と空の代入先を保持する"; {
+      () {
+        local object=""
+        local -i z_cls_next_id=500
+        local reference="z_cls_${$}_501"
+        functions[$reference.value]='REPLY=original'
+        z.t.mock name=z.io.error
+
+        z.cls.new TestCounter object
+
+        z.t.expect.status.is.false
+        z.t.expect.is.null "$object"
+
+        "$reference.value"
+
+        z.t.expect.reply original
+        z.var.exists "functions[$reference.increment]"
+
+        z.t.expect.status.is.false
+
+        unfunction "$reference.value"
+      }
+    }
+  }
+
+  z.t.context "呼出元がIFSとGLOB_SUBSTを設定している場合"; {
+    z.t.it "属性を復元でき、削除後に生成コマンドを残さない"; {
+      () {
+        local object=""
+        local IFS=:
+        setopt localoptions globsubst
+
+        z.cls.draw ClassWithOptions
+          z.cls.attr value default=1
+          z.cls.attr other default=2
+        z.cls.drew
+
+        z.cls.new ClassWithOptions object
+        z_cls_values[${object}:value]='typeset -i value=1'
+
+        $object.value.set 'other + 1'
+        $object.value.get
+
+        z.t.expect.reply 3
+
+        z.cls.delete object
+        z.var.exists "functions[$object.value.get]"
+
+        z.t.expect.status.is.false
+      }
+    }
+  }
+
+  z.t.context "作成先を宣言していない場合"; {
+    z.t.it "グローバル変数と実体を作らない"; {
+      z.t.mock name=z.io.error
+
+      z.cls.new TestCounter missing_counter
 
       z.t.expect.status.is.false
 
-      first.value
-
-      z.t.expect.reply original
-
-      z.var.exists 'functions[first.increment]'
+      z.var.exists missing_counter
 
       z.t.expect.status.is.false
-
-      unfunction first.value
     }
   }
 }
@@ -566,9 +737,9 @@ z.t.describe "z.cls.delete"; {
         setopt errexit
         local counter=""
         z.cls.new TestCounter counter
-        counter.increment
+        $counter.increment
         z.cls.delete counter
-        print -rl -- "${#z_cls_instances}" "${+functions[counter.increment]}"
+        print -rl -- "${#z_cls_instances}" "${+functions[$counter.increment]}"
       )}")
 
       z.t.expect.status.is.true
@@ -595,7 +766,7 @@ z.t.describe "z.cls.delete"; {
         z.t.expect.status.is.false
 
         unset "z_cls_active[$object]"
-        object.count.get
+        $object.count.get
 
         z.t.expect.reply 3
 
@@ -619,7 +790,7 @@ z.t.describe "z.cls.delete"; {
 
         z.t.expect.reply false
 
-        z.var.exists 'functions[object.count.get]'
+        z.var.exists "functions[$object.count.get]"
 
         z.t.expect.status.is.false
 
@@ -635,21 +806,20 @@ z.t.describe "z.cls.delete"; {
       () {
         local first=""
         z.cls.new TestCounter first
-        first.value() {
-          REPLY=replacement
-        }
+        functions[$first.value]='REPLY=replacement'
 
-        first.increment
-        first.count.get
+
+        $first.increment
+        $first.count.get
 
         z.t.expect.reply 1
 
         z.cls.delete first
-        first.value
+        $first.value
 
         z.t.expect.reply replacement
 
-        unfunction first.value
+        unfunction "$first.value"
       }
     }
 
@@ -657,14 +827,14 @@ z.t.describe "z.cls.delete"; {
       () {
         local first=""
         z.cls.new TestCounter first
-        functions -c first.increment first.value
-        local expected=$functions[first.value]
+        functions -c "$first.increment" "$first.value"
+        local expected=$functions[$first.value]
 
         z.cls.delete first
 
-        z.t.expect "${functions[first.value]-}" "$expected"
+        z.t.expect "${functions[$first.value]-}" "$expected"
 
-        unfunction first.value
+        unfunction "$first.value"
       }
     }
   }
@@ -725,7 +895,7 @@ z.t.describe "z.cls.delete"; {
 
         z.t.expect.status.is.true
 
-        fresh.increment
+        $fresh.increment
 
         z.t.expect.reply 1
 
@@ -758,15 +928,15 @@ z.t.describe "z.cls.delete"; {
 
         z.t.expect.status.is.true
 
-        z.var.exists 'functions[first.increment]'
+        z.var.exists "functions[$first.increment]"
 
         z.t.expect.status.is.false
 
-        z.var.exists 'functions[first.count.get]'
+        z.var.exists "functions[$first.count.get]"
 
         z.t.expect.status.is.false
 
-        z.var.exists 'functions[first.count.set]'
+        z.var.exists "functions[$first.count.set]"
 
         z.t.expect.status.is.false
 
@@ -777,7 +947,7 @@ z.t.describe "z.cls.delete"; {
 
           z.t.expect.status.is.true
 
-          first.value
+          $first.value
 
           z.t.expect.reply 0
 
