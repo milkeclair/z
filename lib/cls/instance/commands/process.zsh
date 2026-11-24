@@ -10,21 +10,21 @@
 #  # return: 0
 z.cls.instance.commands._validate() {
   local REPLY=""
-  local z_cls_command
+  local command_name
 
-  for z_cls_command in "$@"; do
-    if z.var.exists "aliases[$z_cls_command]" || z.var.exists "galiases[$z_cls_command]"; then
-      z.io.error "Command $z_cls_command already exists."
+  for command_name in "$@"; do
+    if z.var.exists "aliases[$command_name]" || z.var.exists "galiases[$command_name]"; then
+      z.io.error "Command $command_name already exists."
       return 1
     fi
 
-    if z.is.not.null "${z_cls_wrapper_refs[$z_cls_command]:-}" &&
-        z.cls.instance._owns "$z_cls_command"; then
+    if z.is.not.null "${z_cls_wrapper_refs[$command_name]:-}" &&
+        z.cls.instance._owns "$command_name"; then
       continue
     fi
 
-    if z.var.exists "functions[$z_cls_command]" || z.var.exists "commands[$z_cls_command]"; then
-      z.io.error "Command $z_cls_command already exists."
+    if z.var.exists "functions[$command_name]" || z.var.exists "commands[$command_name]"; then
+      z.io.error "Command $command_name already exists."
       return 1
     fi
   done
@@ -44,26 +44,26 @@ z.cls.instance.commands._validate() {
 #  # return: 0
 #  # 変更後: counter.incrementを登録し、参照数は1
 z.cls.instance.commands._install() {
-  local z_cls_command
+  local command_name
 
-  for z_cls_command in "$@"; do
-    local z_cls_member=${z_cls_command#*.}
-    local z_cls_operation=method
+  for command_name in "$@"; do
+    local member=${command_name#*.}
+    local operation=method
 
-    if z.str.includes "$z_cls_member" .; then
-      z_cls_operation=${z_cls_member##*.}
-      z_cls_member=${z_cls_member%.*}
+    if z.str.includes "$member" .; then
+      operation=${member##*.}
+      member=${member%.*}
     fi
 
-    local z_cls_template="z_cls_dispatch_${z_cls_operation}_$z_cls_member"
+    local template="z_cls_dispatch_${operation}_$member"
 
-    if ! z.var.exists "functions[$z_cls_template]"; then
-      functions[$z_cls_template]='z.cls.instance._call "${funcstack[1]%%.*}" '"$z_cls_operation ${(q)z_cls_member}"' "$@"'
-      z_cls_dispatch_programs[${z_cls_command#*.}]=$functions[$z_cls_template]
+    if ! z.var.exists "functions[$template]"; then
+      functions[$template]='z.cls.instance._call "${funcstack[1]%%.*}" '"$operation ${(q)member}"' "$@"'
+      z_cls_dispatch_programs[${command_name#*.}]=$functions[$template]
     fi
 
-    functions -c "$z_cls_template" "$z_cls_command"
-    (( z_cls_wrapper_refs[$z_cls_command] += 1 ))
+    functions -c "$template" "$command_name"
+    (( z_cls_wrapper_refs[$command_name] += 1 ))
   done
 
   return 0

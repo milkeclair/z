@@ -124,9 +124,7 @@ z.cls.capture._debug() {
       return 0
     fi
 
-    if z.cls.capture._within_scope "$z_cls_stack" "$z_cls_reject_stack"; then
-      return 0
-    fi
+    z.cls.capture._within_scope "$z_cls_stack" "$z_cls_reject_stack" && return 0
 
     unset z_cls_reject_depth z_cls_reject_method z_cls_reject_stack
     if z.is.null "$z_cls_drawing"; then
@@ -165,8 +163,11 @@ z.cls.capture._skip() {
   if (( z_cls_reject_method )); then
     z.is.eq "$1" z.cls.fn.done && z_cls_reject_method=0
   elif z.is.eq "$1" z.cls.fn || z.str.start_with "$1" 'z.cls.fn '; then
-    local -a z_cls_words=(${(z)1})
-    z.int.is.lteq "${#z_cls_words}" 2 && z_cls_reject_method=1
+    local -a REPLY=()
+    z.str.split.shell "$1"
+    # 拒否する前の判定と同じく、呼出元のSH_WORD_SPLITを単語数に反映する。
+    local -a words=(${REPLY[@]})
+    z.int.is.lteq "${#words}" 2 && z_cls_reject_method=1
   elif z.is.eq "$1" z.cls.draw || z.str.start_with "$1" 'z.cls.draw '; then
     (( ++z_cls_reject_depth ))
   elif z.is.eq "$1" z.cls.drew; then
