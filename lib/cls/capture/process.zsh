@@ -142,7 +142,7 @@ z.cls.capture._debug() {
   local current_stack=${(j:|:)funcstack[3,-1]}
 
   if z.var.exists z_cls_reject_depth; then
-    if [[ $current_stack == "$z_cls_reject_stack" ]]; then
+    if z.is.eq "$current_stack" "$z_cls_reject_stack"; then
       z.cls.capture._skip "$1"
       return 0
     fi
@@ -157,7 +157,7 @@ z.cls.capture._debug() {
   fi
 
   if z.is.not.null "$z_cls_capture_method"; then
-    if [[ $current_stack == "$z_cls_capture_stack" ]]; then
+    if z.is.eq "$current_stack" "$z_cls_capture_stack"; then
       z.cls.capture._method "$1"
     elif ! z.cls.capture._within_scope "$current_stack" "$z_cls_capture_stack"; then
       z.cls.abort

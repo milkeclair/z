@@ -64,7 +64,8 @@ z.cls.instance.commands._install() {
         operation=$REPLY[2]
       fi
 
-      functions[$template]='z.cls.instance._call "${funcstack[1]%%.*}" '"$operation ${(q)member}"' "$@"'
+      z.str.quote "$member"
+      functions[$template]='z.cls.instance._call "${funcstack[1]%%.*}" '"$operation $REPLY"' "$@"'
       z_cls_dispatch_programs[$suffix]=$functions[$template]
     fi
 
