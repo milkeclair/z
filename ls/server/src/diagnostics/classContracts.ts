@@ -1,3 +1,4 @@
+import { again, done, loop } from '../util/loop';
 import { functionCommand } from '../connection/ast/cursor';
 import { namedKey, zArgNamedKey } from '../connection/ast/word';
 import { literalWord } from '../refreshFunctions/word';
@@ -310,24 +311,30 @@ function commandBeforeMove(
         : 'continues';
     }
     case 'ifCommand': {
-      let continues = false;
-      for (const branch of command.branches) {
-        const condition = beforeMove(file, branch.condition, parameter, depth + 1);
-        if (condition === 'returns') return 'returns';
-        if (condition === 'moved') return continues ? 'continues' : 'moved';
+      return loop<{ readonly index: number; readonly continues: boolean }, Pending>(
+        { index: 0, continues: false },
+        ({ index, continues }) => {
+          const branch = command.branches[index];
 
-        const body = beforeMove(file, branch.body, parameter, depth + 1);
-        if (body === 'returns') return 'returns';
-        continues ||= body === 'continues';
-      }
-      const alternative = command.elseBody
-        ? beforeMove(file, command.elseBody, parameter, depth + 1)
-        : 'continues';
-      return alternative === 'returns'
-        ? 'returns'
-        : continues || alternative === 'continues'
-          ? 'continues'
-          : 'moved';
+          if (!branch) {
+            const alternative = command.elseBody
+              ? beforeMove(file, command.elseBody, parameter, depth + 1)
+              : 'continues';
+
+            if (alternative === 'returns') return done('returns');
+            return done(continues || alternative === 'continues' ? 'continues' : 'moved');
+          }
+
+          const condition = beforeMove(file, branch.condition, parameter, depth + 1);
+          if (condition === 'returns') return done('returns');
+          if (condition === 'moved') return done(continues ? 'continues' : 'moved');
+
+          const body = beforeMove(file, branch.body, parameter, depth + 1);
+          if (body === 'returns') return done('returns');
+
+          return again({ index: index + 1, continues: continues || body === 'continues' });
+        },
+      );
     }
     case 'groupCommand':
       if (!command.always) return beforeMove(file, command.body, parameter, depth + 1);

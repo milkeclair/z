@@ -1,3 +1,4 @@
+import { numberRange } from '../../util/collections';
 import type { CommentNode, SimpleCommandNode, WordNode } from '../../zshParser/ast';
 import type { SourcePosition } from '../../zshParser/lexer';
 import type { HydrationOptions } from '../directive';
@@ -35,7 +36,7 @@ export function methodReceivers(
 
     const leading = [];
 
-    for (let line = start.line - 1; ; line--) {
+    for (const line of numberRange(start.line - 1, -1, -1)) {
       const comment = byLine.get(line);
 
       if (!comment) {

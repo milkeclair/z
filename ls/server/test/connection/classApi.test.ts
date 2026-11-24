@@ -75,7 +75,7 @@ describe('zCompletion', () => {
       const internal = names.filter(privateCommand);
 
       expect(names).toEqual(expect.arrayContaining(publicCommands));
-      expect(internal).toContain('z.cls.instance._call');
+      expect(internal).toContain('z.cls.instance._resolve');
       expect(internal).toContain('z.cls.capture._start');
       expect(names).not.toContain('z.cls.instance.call');
     });
@@ -85,7 +85,7 @@ describe('zCompletion', () => {
 describe('zDefinition', () => {
   describe('補完で隠すクラス内部関数を明示した場合', () => {
     test('明示した内部関数の定義へ移動する', () => {
-      const scenario = fixture('z.cls.instance._¦call reference method member\n');
+      const scenario = fixture('z.cls.instance._¦resolve reference\n');
       const diagnostics = refreshDiagnosticSnapshot({
         snapshot: scenario.snapshot,
         environment: emptyShellEnvironment(),

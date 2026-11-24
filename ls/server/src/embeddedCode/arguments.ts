@@ -1,3 +1,5 @@
+import { castDraft } from 'immer';
+import { produce } from '../util/collections';
 import type { ResolutionContext } from '../diagnostics/calls';
 import { uncertainWord } from '../diagnostics/calls';
 import { documentationOf } from '../zshHydrator';
@@ -35,37 +37,35 @@ export function codeArguments(
     return { arguments: [], inspected: 0 };
   }
 
-  const argumentsFound: CodeArgument[] = [];
-  let remaining = maxText;
+  const initial: {
+    readonly arguments: readonly CodeArgument[];
+    readonly inspected: number;
+  } = { arguments: [], inspected: 0 };
+  const matches = documentedArguments(command.arguments, parameters, (word) =>
+    uncertainWord(word, context),
+  );
 
-  for (const { word, parameter, key, uncertain } of documentedArguments(
-    command.arguments,
-    parameters,
-    (word) => uncertainWord(word, context),
-  )) {
-    if (parameter.valueType !== 'code' || uncertain) {
-      continue;
+  return produce(initial, (draft) => {
+    for (const { word, parameter, key, uncertain } of matches) {
+      if (parameter.valueType !== 'code' || uncertain) continue;
+
+      if (word.raw.length > maxText - draft.inspected) {
+        draft.arguments.push(castDraft({ kind: 'limit', word }));
+        continue;
+      }
+
+      draft.inspected += word.raw.length;
+      const decoded = decodeLiteral(word, allowUnterminated);
+      if (!decoded) continue;
+
+      const prefix = key ? key.length + 1 : 0;
+      const source = literalValue(decoded, prefix);
+
+      if (!parameter.literalValues?.includes(source.text)) {
+        draft.arguments.push(
+          castDraft({ kind: 'code', word, source, prefix: decoded.text.slice(0, prefix) }),
+        );
+      }
     }
-
-    if (word.raw.length > remaining) {
-      argumentsFound.push({ kind: 'limit', word });
-      continue;
-    }
-
-    remaining -= word.raw.length;
-    const decoded = decodeLiteral(word, allowUnterminated);
-
-    if (!decoded) {
-      continue;
-    }
-
-    const prefix = key ? key.length + 1 : 0;
-    const source = literalValue(decoded, prefix);
-
-    if (!parameter.literalValues?.includes(source.text)) {
-      argumentsFound.push({ kind: 'code', word, source, prefix: decoded.text.slice(0, prefix) });
-    }
-  }
-
-  return { arguments: argumentsFound, inspected: maxText - remaining };
+  });
 }

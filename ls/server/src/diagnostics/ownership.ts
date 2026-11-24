@@ -1,3 +1,4 @@
+import { numberRange } from '../util/collections';
 import { namedKey } from '../connection/ast/word';
 import { literalWord } from '../refreshFunctions/word';
 import { classMethodAt, documentationOf, type ZshFileHydration } from '../zshHydrator';
@@ -163,7 +164,7 @@ export function ownerAt(
   const site = siteAt(file, offset);
   if (!site) return null;
 
-  for (let index = moves.length - 1; index >= 0; index--) {
+  for (const index of numberRange(moves.length - 1, -1, -1)) {
     const event = moves[index];
     if (event.offset > offset || event.scope !== site.scope) continue;
     if (event.from !== binding && event.to !== binding) continue;

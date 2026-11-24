@@ -1,3 +1,4 @@
+import { numberRange } from '../util/collections';
 import { decodeLiteral } from '../embeddedCode/literal';
 import type { ZshFileHydration } from '../zshHydrator';
 import type { WordNode, WordPartNode } from '../zshParser/ast';
@@ -107,7 +108,7 @@ export function resolveInstanceCommand(
     };
   }
 
-  for (let index = files.length - 1; index >= 0; index--) {
+  for (const index of numberRange(files.length - 1, -1, -1)) {
     const definition = files[index].definitions.findLast(
       (candidate) => candidate.name === className && candidate.state === 'published',
     );
