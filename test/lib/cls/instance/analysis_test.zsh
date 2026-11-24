@@ -1,47 +1,113 @@
 source ${z_main}
 
-z.t.describe "z.cls.instance._commands"; {
-  z.t.context "属性とメソッドがある場合"; {
-    z.t.it "インスタンスID付きのコマンドだけを列挙する"; {
-      z.cls.store._ensure
-      z_cls_class_methods[CommandList]='increment '
-      z_cls_class_attrs[CommandList]='count '
-
-      z.cls.instance._commands CommandList reference=ref
-
-      z.t.expect.reply.is.arr ref.increment ref.count.get ref.count.set
-    }
-  }
-
-  z.t.context "空のクラスの場合"; {
-    z.t.it "空配列を返す"; {
-      z.cls.store._ensure
-      z_cls_class_methods[EmptyCommandList]=''
-      z_cls_class_attrs[EmptyCommandList]=''
-
-      z.cls.instance._commands EmptyCommandList reference=ref
-
-      local reply_type=${(t)REPLY}
-      local reply_count=${#REPLY}
-
-      z.t.expect "$reply_count" 0
-      z.t.expect.includes "$reply_type" array
-    }
-  }
-
-  z.t.context "クラスを公開したあと"; {
-    z.t.it "公開時の一覧からインスタンスのコマンドを返す"; {
+z.t.describe "z.cls.instance._resolve"; {
+  z.t.context "公開済みインスタンスの参照の場合"; {
+    z.t.it "インスタンスIDを返す"; {
       () {
-        z.cls.draw PublishedCommandList
-          z.cls.attr count default=0
-          z.cls.method value '$self.count.get'
-          z.cls.method increment '$self.count.set 1'
+        z.cls.draw ResolveInstance
         z.cls.drew
+        local counter=""
+        z.cls.new ResolveInstance counter
 
-        local -A z_cls_class_methods=() z_cls_class_attrs=()
+        z.cls.instance._resolve "$counter"
 
-        z.cls.instance._commands PublishedCommandList reference=ref
-        z.t.expect.reply.is.arr ref.value ref.increment ref.count.get ref.count.set
+        z.t.expect.reply "$counter"
+
+        z.cls.delete counter
+      }
+    }
+  }
+
+  z.t.context "所有権を移した場合"; {
+    z.t.it "新しい参照を元のインスタンスIDへ解決する"; {
+      () {
+        z.cls.draw ResolveAfterMove
+        z.cls.drew
+        local first=""
+        local second=""
+        z.cls.new ResolveAfterMove first
+        z.cls.owner.move from=first to=second
+
+        z.cls.instance._resolve "$second"
+
+        z.t.expect.reply "$first"
+
+        z.cls.delete second
+      }
+    }
+
+    z.t.it "移動前にコピーした参照を拒否する"; {
+      () {
+        z.cls.draw ResolveCopyAfterMove
+        z.cls.drew
+        local first=""
+        local second=""
+        z.cls.new ResolveCopyAfterMove first
+        local copy=$first
+        z.cls.owner.move from=first to=second
+        z.t.mock name=z.io.error
+
+        z.cls.instance._resolve "$copy"
+
+        z.t.expect.status.is.false
+
+        z.cls.delete second
+      }
+    }
+  }
+
+  z.t.context "参照を解決できない場合"; {
+    z.t.it "失敗する"; {
+      z.cls.store._ensure
+      z.t.mock name=z.io.error
+
+      z.cls.instance._resolve unknown_reference
+
+      z.t.expect.status.is.false
+    }
+  }
+
+  z.t.context "参照が空の場合"; {
+    z.t.it "利用できない参照として失敗する"; {
+      z.cls.store._ensure
+      z.t.mock name=z.io.error
+
+      z.cls.instance._resolve ""
+
+      z.t.expect.status.is.false skip_unmock=true
+
+      z.t.mock.result name=z.io.error
+
+      z.t.expect.reply "Instance reference  is not available in this scope."
+    }
+  }
+
+  z.t.context "実行中の別インスタンスに戻る場合"; {
+    z.t.it "再入を拒否する"; {
+      () {
+        z.cls.draw RecursiveCall
+          z.cls.method identity
+            REPLY=$self
+          z.cls.method.defined
+          z.cls.method relay
+            "$1.relay_back" "$self"
+          z.cls.method.defined
+          z.cls.method relay_back
+            "$1.identity"
+          z.cls.method.defined
+        z.cls.drew
+        local first=""
+        local second=""
+        z.cls.new RecursiveCall first
+        z.cls.new RecursiveCall second
+        z.t.mock name=z.io.error
+
+        $first.relay "$second"
+
+        z.t.expect.status.is.false
+
+        z.cls.delete first
+        z.cls.delete second
       }
     }
   }

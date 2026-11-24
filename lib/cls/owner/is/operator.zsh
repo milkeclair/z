@@ -27,20 +27,13 @@ z.cls.owner.is._writable() {
 
   local REPLY=""
   z.var.get "$1"
-  local reference=$REPLY[1]
-
-  if z.is.null "$reference"; then
-    return 0
-  fi
-
-  local instance_id=${z_cls_references[$reference]:-$reference}
-  z.is.null "${z_cls_instances[$instance_id]-}"
+  z.is.null "$REPLY[1]" || ! z.var.exists "z_cls_references[$REPLY[1]]"
 }
 
 # 指定した変数が参照先インスタンスの現在の所有者か判定する。
 #
 # $1: 所有者か確認する変数名
-# $reference: インスタンスの参照
+# $instance: 解決済みのインスタンスID
 # REPLY: null
 # return: 0|1
 #
@@ -49,21 +42,16 @@ z.cls.owner.is._writable() {
 #  z.cls.drew
 #  local counter=""
 #  z.cls.new CurrentCounter counter
-#  z.cls.owner.is._current counter reference="$counter"
+#  z.cls.owner.is._current counter instance="$counter"
 #  # return: 0
 z.cls.owner.is._current() {
   local z_cls_variable=$1
   shift
 
   local REPLY=""
-  z.arg.named reference "$@" && local z_cls_reference=$REPLY
-
-  local z_cls_instance_id=${z_cls_references[$z_cls_reference]-$z_cls_reference}
-  if z.is.not.eq "$z_cls_reference" "${z_cls_owner_refs[$z_cls_instance_id]-$z_cls_instance_id}"; then
-    return 1
-  fi
-
+  z.arg.named instance "$@" && local z_cls_instance_id=$REPLY
   local z_cls_marker=${z_cls_owner_markers[$z_cls_instance_id]-}
+
   if ! z.var.exists "$z_cls_marker"; then
     return 1
   fi

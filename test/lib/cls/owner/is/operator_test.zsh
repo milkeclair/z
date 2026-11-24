@@ -56,7 +56,7 @@ z.t.describe "z.cls.owner.is._current"; {
         z.cls.new CurrentOwnerAfterMove source_owner
         z.cls.owner.move from=source_owner to=declaration
 
-        z.cls.owner.is._current declaration reference="$declaration"
+        z.cls.owner.is._current declaration instance="$source_owner"
 
         z.t.expect.status.is.true
 
@@ -74,7 +74,7 @@ z.t.describe "z.cls.owner.is._current"; {
         z.cls.new FormerOwnerAfterMove former
         z.cls.owner.move from=former to=current
 
-        z.cls.owner.is._current former reference="$former"
+        z.cls.owner.is._current former instance="$former"
 
         z.t.expect.status.is.false
 
@@ -97,7 +97,7 @@ z.t.describe "z.cls.owner.is._current"; {
 
         () {
           setopt localoptions nounset
-          z.cls.owner.is._current owner reference="$owner"
+          z.cls.owner.is._current owner instance="$owner"
         }
 
         z.t.expect.status.is.false
@@ -120,7 +120,7 @@ z.t.describe "z.cls.owner.is._current"; {
 
         () {
           setopt localoptions nounset
-          z.cls.owner.is._current owner reference="$owner"
+          z.cls.owner.is._current owner instance="$owner"
         }
 
         z.t.expect.status.is.false
@@ -141,7 +141,7 @@ z.t.describe "z.cls.owner.is._current"; {
         z.cls.new OwnerWithDifferentMarker owner
         local -T copied="$owner" other_mark
 
-        z.cls.owner.is._current copied reference="$copied"
+        z.cls.owner.is._current copied instance="$copied"
 
         z.t.expect.status.is.false
 

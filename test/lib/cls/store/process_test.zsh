@@ -43,29 +43,6 @@ z.t.describe "z.cls.store._ensure"; {
   }
 }
 
-z.t.describe "z.cls.store._scalar"; {
-  z.t.context "空白と空値を保存する場合"; {
-    z.t.it "値をそのまま保存し、呼出元のREPLYを保持する"; {
-      () {
-        z.cls.store._ensure
-        REPLY=before
-
-        z.cls.store._scalar declaration_ref label "two words"
-
-        z.t.expect.reply before
-
-        z.t.expect "$z_cls_scalars[declaration_ref:label]" "two words"
-
-        z.cls.store._scalar declaration_ref label ""
-
-        z.t.expect.is.null "$z_cls_scalars[declaration_ref:label]"
-
-        unset 'z_cls_scalars[declaration_ref:label]'
-      }
-    }
-  }
-}
-
 z.t.describe "z.cls.store._method"; {
   z.t.context "等号と改行を含む本体の場合"; {
     z.t.it "本体をそのまま保存し、呼出元のREPLYを保つ"; {

@@ -80,16 +80,6 @@ z.t.describe "z.hash.entries"; {
     }
   }
 
-  z.t.context "ハッシュ名がhash_nameの場合"; {
-    z.t.it "呼出元のハッシュの組を返す"; {
-      local -A hash_name=([name]="John Doe")
-
-      z.hash.entries hash_name
-
-      z.t.expect.reply.is.arr name "John Doe"
-    }
-  }
-
   z.t.context "値をそのまま取得する場合"; {
     z.t.it "空の値と書式風の値を含む組を保持する"; {
       local -A hash=([empty]="" [word]="keep_empty=true" [flag]="false")

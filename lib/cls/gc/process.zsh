@@ -30,11 +30,11 @@ z.cls.gc._collect() {
 
   z.hash.keys z_cls_owner_markers
   for instance_id in "${REPLY[@]}"; do
-    if z.var.exists "${z_cls_owner_markers[$instance_id]-}"; then
+    if z.var.exists "$z_cls_owner_markers[$instance_id]"; then
       continue
     fi
 
-    if z.is.not.null "${z_cls_active[$instance_id]-}"; then
+    if z.var.exists "z_cls_active[$instance_id]"; then
       continue
     fi
 

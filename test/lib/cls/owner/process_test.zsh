@@ -152,7 +152,7 @@ z.t.describe "z.cls.owner.move"; {
 
         z.t.expect.status.is.false
 
-        z.cls.owner.is._current holder reference="$holder"
+        z.cls.owner.is._current holder instance="$holder"
 
         z.t.expect.status.is.true
 
@@ -166,11 +166,11 @@ z.t.describe "z.cls.owner._bind"; {
   z.t.context "所有者の変数に参照を代入する場合"; {
     z.t.it "呼出元のREPLYを保持する"; {
       () {
-        local -A z_cls_owner_markers=()
+        local -A z_cls_owner_markers=() z_cls_references=() z_cls_owner_refs=()
         local binding=""
         REPLY=before
 
-        z.cls.owner._bind test_reference to=binding
+        z.cls.owner._bind test_reference to=binding instance=test_reference
         local bind_status=$? bind_reply=$REPLY
 
         z.t.expect "$bind_status" 0
@@ -180,10 +180,10 @@ z.t.describe "z.cls.owner._bind"; {
 
     z.t.it "変数名がbindingでも呼出元へ参照を代入する"; {
       () {
-        local -A z_cls_owner_markers=()
+        local -A z_cls_owner_markers=() z_cls_references=() z_cls_owner_refs=()
         local binding=""
 
-        z.cls.owner._bind test_reference to=binding
+        z.cls.owner._bind test_reference to=binding instance=test_reference
 
         z.t.expect "$binding" test_reference
       }
@@ -193,10 +193,10 @@ z.t.describe "z.cls.owner._bind"; {
   z.t.context "所有者のスコープが終了した場合"; {
     z.t.it "所有者と結び付けたマークを失う"; {
       () {
-        local -A z_cls_owner_markers=()
+        local -A z_cls_owner_markers=() z_cls_references=() z_cls_owner_refs=()
         () {
           local binding=""
-          z.cls.owner._bind test_reference to=binding
+          z.cls.owner._bind test_reference to=binding instance=test_reference
 
           z.var.exists "$z_cls_owner_markers[test_reference]"
 
@@ -213,7 +213,7 @@ z.t.describe "z.cls.owner._bind"; {
   z.t.context "参照とインスタンスIDが異なる場合"; {
     z.t.it "マークをインスタンスIDで登録する"; {
       () {
-        local -A z_cls_owner_markers=()
+        local -A z_cls_owner_markers=() z_cls_references=() z_cls_owner_refs=()
         local instance=""
 
         z.cls.owner._bind new_reference to=instance instance=original_instance
@@ -227,7 +227,7 @@ z.t.describe "z.cls.owner._bind"; {
 
   z.t.context "代入先が指定されていない場合"; {
     z.t.it "必須のtoがなければ失敗する"; {
-      z.cls.owner._bind missing_target # zls: ignore missing-named-argument
+      z.cls.owner._bind missing_target instance=missing_target # zls: ignore missing-named-argument
 
       z.t.expect.status.is.false
     }

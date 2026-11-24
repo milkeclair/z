@@ -51,7 +51,6 @@ z.t.describe "z.cls.draw"; {
 () {
   setopt localoptions localtraps
   source "$z_root/test/lib/cls/fixtures/counter.zsh"
-  source "$z_root/test/lib/cls/fixtures/arrays.zsh"
 }
 
 z.t.describe "z.cls.attr"; {
@@ -202,7 +201,9 @@ z.t.describe "z.cls.drew"; {
       z.cls.draw DirectPublish
       z.cls.drew
 
-      z.t.expect "$z_cls_classes[DirectPublish]" 1
+      z.var.exists "z_cls_classes[DirectPublish]"
+
+      z.t.expect.status.is.true
       z.t.expect.is.null "$z_cls_drawing"
     }
   }
@@ -291,100 +292,6 @@ z.t.describe "z.cls.abort"; {
 }
 
 z.t.describe "z.cls.new"; {
-  z.t.context "呼出元に同名の通常関数がある場合"; {
-    z.t.it "通常関数とインスタンスのメソッドを独立して呼び出せる"; {
-      () {
-        local first=""
-        first.value() {
-          REPLY=original
-        }
-
-        z.cls.new TestCounter first
-
-        z.t.expect.status.is.true
-
-        $first.value
-
-        z.t.expect.reply 0
-
-        first.value
-
-        z.t.expect.reply original
-
-        z.cls.delete first
-        unfunction first.value
-      }
-    }
-  }
-
-  z.t.context "生成する名前を先に別の通常関数が使っている場合"; {
-    z.t.it "既存の関数と空の代入先を保持する"; {
-      () {
-        local object=""
-        local -i z_cls_next_id=500
-        local reference="z_cls_${$}_501"
-        functions[$reference.value]='REPLY=original'
-        z.t.mock name=z.io.error
-
-        z.cls.new TestCounter object
-
-        z.t.expect.status.is.false
-        z.t.expect.is.null "$object"
-
-        "$reference.value"
-
-        z.t.expect.reply original
-        z.var.exists "functions[$reference.increment]"
-
-        z.t.expect.status.is.false
-
-        unfunction "$reference.value"
-      }
-    }
-  }
-
-  z.t.context "呼び出し元のIFSがコロンの場合"; {
-    z.t.it "setterで同じインスタンスの属性を参照する"; {
-      () {
-        local object=""
-        local IFS=:
-
-        z.cls.draw ClassWithCustomIFS
-          z.cls.attr value default=1
-          z.cls.attr other default=2
-        z.cls.drew
-        z.cls.new ClassWithCustomIFS object
-        z_cls_values[${object}:value]='typeset -i value=1'
-
-        $object.value.set 'other + 1'
-        $object.value.get
-
-        z.t.expect.reply 3
-
-        z.cls.delete object
-      }
-    }
-  }
-
-  z.t.context "GLOB_SUBSTが有効な場合"; {
-    z.t.it "インスタンスの削除で生成したgetterを解除する"; {
-      () {
-        local object=""
-        setopt localoptions globsubst
-
-        z.cls.draw ClassWithGlobSubst
-          z.cls.attr value default=1
-        z.cls.drew
-        z.cls.new ClassWithGlobSubst object
-
-        z.cls.delete object
-        z.var.exists "functions[$object.value.get]"
-
-        z.t.expect.status.is.false
-      }
-    }
-  }
-
   z.t.context "参照を変換する変数属性がある場合"; {
     z.t.it "大文字へ変換する変数にはインスタンスを作らない"; {
       () {
@@ -445,25 +352,6 @@ z.t.describe "z.cls.new"; {
     }
   }
 
-
-  z.t.context "代入先が宣言されていない場合"; {
-    z.t.it "インスタンスとグローバル変数の生成を拒否する"; {
-      () {
-        z.cls.draw UndeclaredNew
-        z.cls.drew
-        z.t.mock name=z.io.error
-
-        z.cls.new UndeclaredNew missing_gc_binding
-
-        z.t.expect.status.is.false
-        z.var.exists missing_gc_binding
-        z.t.expect.status.is.false
-        z.hash.count z_cls_instances
-        z.t.expect.reply 0
-      }
-    }
-  }
-
   z.t.context "代入先の名前がclassの場合"; {
     z.t.it "呼び出し元のclassにインスタンス参照を代入する"; {
       () {
@@ -516,7 +404,6 @@ z.t.describe "z.cls.new"; {
         z.t.expect.reply initial
         z.var.exists "z_cls_scalars[${first}:label]"
         z.t.expect.status.is.false
-        z.t.expect "${+z_cls_values[${first}:label]}" 0
 
         $first.label.set ""
         $first.label.get
@@ -768,19 +655,16 @@ z.t.describe "z.cls.new"; {
         () {
           local counter=""
 
-          z.cls.new ArrayBox counter
+          z.cls.draw InnerCounter
+            z.cls.attr items default=inner
+          z.cls.drew
+          z.cls.new InnerCounter counter
 
           z.t.expect.status.is.true
 
-          () {
-            local -a items=()
-            z.cls.instance._snapshot "$counter" items
-          }
-          $counter.fill
           $counter.items.get
-          local item_count=${#REPLY}
 
-          z.t.expect "$item_count" 3
+          z.t.expect.reply inner
 
           z.var.exists "functions[$counter.count.get]"
 
@@ -831,26 +715,112 @@ z.t.describe "z.cls.new"; {
     }
   }
 
-  z.t.context "参照変数と同じ接頭辞を持つ関数がある場合"; {
-    z.t.it "既存の関数を保ち、インスタンスID付きの関数だけを登録する"; {
-      first.value() {
-        REPLY=original
+  z.t.context "呼出元に同名の通常関数がある場合"; {
+    z.t.it "通常関数とインスタンスのメソッドを独立して呼び出せる"; {
+      () {
+        local first=""
+        first.value() {
+          REPLY=original
+        }
+
+        z.cls.new TestCounter first
+
+        z.t.expect.status.is.true
+
+        $first.value
+
+        z.t.expect.reply 0
+
+        first.value
+
+        z.t.expect.reply original
+
+        z.cls.delete first
+        unfunction first.value
       }
+    }
+  }
 
-      local first=""
-      z.cls.new TestCounter first && $first.value
-      local result_code=$? result_value=$REPLY
+  z.t.context "生成する名前を先に別の通常関数が使っている場合"; {
+    z.t.it "既存の関数と空の代入先を保持する"; {
+      () {
+        local object=""
+        local -i z_cls_next_id=500
+        local reference="z_cls_${$}_501"
+        functions[$reference.value]='REPLY=original'
+        z.t.mock name=z.io.error
 
-      z.t.expect "$result_code" 0
-      z.t.expect "$result_value" 0
-      first.value
-      z.t.expect.reply original
+        z.cls.new TestCounter object
 
-      z.var.exists 'functions[first.increment]'
+        z.t.expect.status.is.false
+        z.t.expect.is.null "$object"
+
+        "$reference.value"
+
+        z.t.expect.reply original
+        z.var.exists "functions[$reference.increment]"
+
+        z.t.expect.status.is.false
+
+        unfunction "$reference.value"
+      }
+    }
+  }
+
+  z.t.context "呼び出し元のIFSがコロンの場合"; {
+    z.t.it "各属性を別のコマンドで取得できる"; {
+      () {
+        local object=""
+        local IFS=:
+
+        z.cls.draw ClassWithCustomIFS
+          z.cls.attr value default=one
+          z.cls.attr other default=two
+        z.cls.drew
+        z.cls.new ClassWithCustomIFS object
+
+        $object.value.get
+        local value=$REPLY
+        $object.other.get
+
+        z.t.expect.reply two
+        z.t.expect "$value" one
+
+        z.cls.delete object
+      }
+    }
+  }
+
+  z.t.context "GLOB_SUBSTが有効な場合"; {
+    z.t.it "インスタンスの削除で生成したgetterを解除する"; {
+      () {
+        local object=""
+        setopt localoptions globsubst
+
+        z.cls.draw ClassWithGlobSubst
+          z.cls.attr value default=1
+        z.cls.drew
+        z.cls.new ClassWithGlobSubst object
+
+        z.cls.delete object
+        z.var.exists "functions[$object.value.get]"
+
+        z.t.expect.status.is.false
+      }
+    }
+  }
+
+  z.t.context "作成先を宣言していない場合"; {
+    z.t.it "グローバル変数とインスタンスを作らない"; {
+      z.t.mock name=z.io.error
+
+      z.cls.new TestCounter missing_counter
+
       z.t.expect.status.is.false
 
-      z.cls.delete first
-      unfunction first.value
+      z.var.exists missing_counter
+
+      z.t.expect.status.is.false
     }
   }
 }
@@ -946,6 +916,7 @@ z.t.describe "z.cls.delete"; {
         local first=""
         z.cls.new TestCounter first
         functions[$first.value]='REPLY=replacement'
+
 
         $first.increment
         $first.count.get

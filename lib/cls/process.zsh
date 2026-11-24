@@ -184,15 +184,12 @@ z.cls.drew() {
     return 1
   fi
 
-  z.cls.capture._stop
-  () {
-    local REPLY=""
-    z.cls.instance._commands "$z_cls_drawing"
-    z.arr.join "${REPLY[@]}"
-    z_cls_command_suffixes[$z_cls_drawing]=$REPLY
-  }
+  local -a REPLY=()
+  z.cls.instance.commands._prepare "$z_cls_drawing"
+  z.arr.join "${REPLY[@]}"
+  z_cls_classes[$z_cls_drawing]=$REPLY
 
-  z_cls_classes[$z_cls_drawing]=1
+  z.cls.capture._stop
   z_cls_drawing=''
 }
 
@@ -222,7 +219,7 @@ z.cls.abort() {
 # 独立したインスタンスを作成し、参照をreadonly変数へ代入する。
 #
 # $1: 公開済みのクラス名
-# $2: インスタンスを所有する、呼び出し元で宣言済みの変数名
+# $2: インスタンス参照を受け取る、呼び出し元で宣言済みの変数名
 # REPLY: インスタンス参照
 # return: 0|1
 #
@@ -244,19 +241,13 @@ z.cls.new() {
 
   local z_cls_id="z_cls_${$}_$z_cls_next_id"
 
-  z.cls.instance._commands "$1" reference="$z_cls_id"
+  z.cls.instance.commands._install "$z_cls_id" "class=$1" || return
 
-  local -a z_cls_wrappers=("${(@)REPLY}")
-
-  z.cls.instance.commands._install "${z_cls_wrappers[@]}" || return
-
-  if ! z.cls.owner._bind "$z_cls_id" "to=$2"; then
-    z.cls.instance.commands._uninstall "${z_cls_wrappers[@]}"
+  if ! z.cls.owner._bind "$z_cls_id" "to=$2" "instance=$z_cls_id"; then
+    z.cls.instance.commands._uninstall "$z_cls_id" "class=$1"
     return 1
   fi
 
-  z.arr.join "${z_cls_wrappers[@]}"
-  z_cls_members[$z_cls_id]=$REPLY
   z_cls_instances[$z_cls_id]=$1
   (( ++z_cls_gc_allocations ))
 
@@ -284,20 +275,20 @@ z.cls.delete() {
 
   z.is.not.eq "$#" 1 && return 1
 
-  z.var.get "$1"
-  local reference="$REPLY"
+  if z.str.start_with "$1" z_cls_; then
+    local reference=$1
+  else
+    z.var.get "$1"
+    local reference=$REPLY[1]
+  fi
 
-  z.str.start_with "$1" z_cls_ && reference=$1
-  local instance_id=${z_cls_references[$reference]-$reference}
+  z.cls.instance._resolve "$reference" || return
+  local instance_id=$REPLY
 
-  z.cls.instance.call._validate "$instance_id" "$reference" || return
-
-  if z.is.not.null "${z_cls_active[$instance_id]-}"; then
+  if z.var.exists "z_cls_active[$instance_id]"; then
     z.io.error "Expected an inactive instance reference."
     return 1
   fi
 
   z.cls.instance._release "$instance_id"
-
-  return 0
 }

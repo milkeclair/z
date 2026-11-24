@@ -29,55 +29,47 @@ z.cls.owner.move() {
   fi
 
   z.var.get "$z_cls_from"
-  local z_cls_old_reference="$REPLY"
+  local z_cls_old_reference=$REPLY[1]
+  z.cls.instance._resolve "$z_cls_old_reference" || return
+  local z_cls_instance_id=$REPLY
 
-  if ! z.cls.owner.is._current "$z_cls_from" "reference=$z_cls_old_reference"; then
+  if ! z.cls.owner.is._current "$z_cls_from" "instance=$z_cls_instance_id"; then
     z.io.error "Instance variable $z_cls_from is not the current owner."
     return 1
   fi
 
-  local z_cls_instance_id=${z_cls_references[$z_cls_old_reference]-$z_cls_old_reference}
-  if z.is.not.null "${z_cls_active[$z_cls_instance_id]-}"; then
+  if z.var.exists "z_cls_active[$z_cls_instance_id]"; then
     z.io.error "Cannot move an active instance."
     return 1
   fi
 
-  local z_cls_new_reference="z_cls_ref_${$}_$(( ++z_cls_next_reference ))"
-  z.cls.instance._commands "$z_cls_instances[$z_cls_instance_id]" "reference=$z_cls_new_reference"
-  local -a z_cls_new_commands=("${(@)REPLY}")
+  local z_cls_class=$z_cls_instances[$z_cls_instance_id]
+  local z_cls_reference="z_cls_ref_${$}_$(( ++z_cls_next_reference ))"
 
-  z.cls.instance.commands._install "${z_cls_new_commands[@]}" || return
+  z.cls.instance.commands._install "$z_cls_reference" "class=$z_cls_class" || return
 
-  if ! z.cls.owner._bind "$z_cls_new_reference" "to=$z_cls_to" "instance=$z_cls_instance_id"; then
-    z.cls.instance.commands._uninstall "${z_cls_new_commands[@]}"
+  if ! z.cls.owner._bind "$z_cls_reference" "to=$z_cls_to" "instance=$z_cls_instance_id"; then
+    z.cls.instance.commands._uninstall "$z_cls_reference" "class=$z_cls_class"
     return 1
   fi
 
-  unset "z_cls_references[$z_cls_old_reference]"
-  z_cls_references[$z_cls_new_reference]=$z_cls_instance_id
-  z_cls_owner_refs[$z_cls_instance_id]=$z_cls_new_reference
+  z.cls.instance.commands._uninstall "$z_cls_old_reference" "class=$z_cls_class"
 
-  z.cls.store._names "$z_cls_members[$z_cls_instance_id]"
-  z.cls.instance.commands._uninstall "${REPLY[@]}"
-
-  z.arr.join "${z_cls_new_commands[@]}"
-  z_cls_members[$z_cls_instance_id]=$REPLY
-
-  REPLY=$z_cls_new_reference
+  REPLY=$z_cls_reference
 }
 
 # インスタンス参照を代入し、代入先と同じ寿命の配列を所有者のマークにする。
 #
 # $1: インスタンス参照
 # $to: 検証済みの代入先変数名
-# $instance?: 内部のインスタンスID（省略時はインスタンス参照と同じ）
+# $instance: 内部のインスタンスID
 # REPLY: null
 # return: 0|1
 #
 # example:
 #  z.cls.store._ensure
 #  local counter=""
-#  z.cls.owner._bind counter_reference to=counter
+#  z.cls.owner._bind counter_reference to=counter instance=counter_reference
 #  # return: 0
 #  z.var.exists "$z_cls_owner_markers[counter_reference]"
 #  # return: 0
@@ -88,8 +80,9 @@ z.cls.owner._bind() {
 
   local REPLY=""
   z.arg.named to "$@" && local z_cls_binding=$REPLY
+  z.arg.named instance "$@" && local z_cls_bound_instance=$REPLY
 
-  if z.is.null "$z_cls_binding"; then
+  if z.is.null "$z_cls_binding" || z.is.null "$z_cls_bound_instance"; then
     return 1
   fi
 
@@ -98,6 +91,12 @@ z.cls.owner._bind() {
   builtin typeset -gT "$z_cls_binding=$z_cls_reference" "$z_cls_marker" || return 1
   builtin typeset -gr -- "$z_cls_binding" || return 1
 
-  z.arg.named instance "$@" default="$z_cls_reference"
-  z_cls_owner_markers[$REPLY]=$z_cls_marker
+  local old_reference=${z_cls_owner_refs[$z_cls_bound_instance]-}
+  if z.is.not.null "$old_reference"; then
+    unset "z_cls_references[$old_reference]"
+  fi
+
+  z_cls_references[$z_cls_reference]=$z_cls_bound_instance
+  z_cls_owner_refs[$z_cls_bound_instance]=$z_cls_reference
+  z_cls_owner_markers[$z_cls_bound_instance]=$z_cls_marker
 }

@@ -4,8 +4,8 @@ z.t.describe "z.cls.gc._collect"; {
   z.t.context "関数内で短命のインスタンスを繰り返し作る場合"; {
     z.t.it "生成したインスタンスをスクリプト実行中に回収する"; {
       () {
-        local -A z_cls_instances=() z_cls_scalars=() z_cls_values=() z_cls_members=()
-        local -A z_cls_active=() z_cls_owner_markers=() z_cls_wrapper_refs=()
+        local -A z_cls_instances=() z_cls_scalars=() z_cls_references=() z_cls_owner_refs=()
+        local -A z_cls_active=() z_cls_owner_markers=()
         local -i z_cls_gc_allocations=0
 
         z.cls.draw CollectInLoop
@@ -98,28 +98,6 @@ z.t.describe "z.cls.gc._collect"; {
         }
 
         z.var.exists "z_cls_instances[$counter]"
-
-        z.t.expect.status.is.false
-      }
-    }
-
-    z.t.it "実行中のフラグが空のインスタンスを回収する"; {
-      () {
-        z.cls.draw CollectIdleInstance
-        z.cls.drew
-
-        local instance=""
-        () {
-          local counter=""
-          z.cls.new CollectIdleInstance counter
-          instance=$counter
-        }
-        z_cls_active[$instance]=""
-
-        z_cls_gc_allocations=64
-        z.cls.gc._collect
-
-        z.var.exists "z_cls_instances[$instance]"
 
         z.t.expect.status.is.false
       }

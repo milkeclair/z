@@ -1,156 +1,41 @@
-# インスタンスの参照からメソッドまたは属性への操作を呼び出す。
+# インスタンスのコマンドと、変更した属性値を解放する。
 #
-# $1: インスタンスの変数名または参照
-# $2: method、get、setのいずれか
-# $3: メソッド名または属性名
-# $@?: 処理に渡す引数
-# REPLY: 処理の結果
-# return: 処理の終了コード
+# $1: 存在する非実行中のインスタンスID
+# REPLY: null
+# return: 0
 #
 # example:
 #  z.cls.draw Counter
 #    z.cls.attr count default=0
-#    z.cls.method increment 'REPLY=1'
 #  z.cls.drew
-#  local object=""
-#  z.cls.new Counter object
-#  z.cls.instance._call object method increment
-#  # REPLY: 1
-#  # return: 0
-z.cls.instance._call() {
-  # 再読込前に生成したコマンドも、新しい保存領域を使って属性を更新する。
-  if ! z.var.exists z_cls_scalars; then
-    z.cls.store._ensure
-  fi
-
-  local z_cls_instance=${(P)1-}
-
-  z.str.start_with "$1" z_cls_ && z_cls_instance=$1
-  if z.is.null "$z_cls_instance"; then
-    z.io.error "Instance reference $1 is not available in this scope."
-    return 1
-  fi
-
-  local z_cls_operation=$2
-  local z_cls_member=$3
-  shift 3
-
-  case $z_cls_operation in
-    method) z.cls.instance.call._run "$z_cls_instance" "$z_cls_member" "$@" ;;
-    get) z.cls.instance.call._get "$z_cls_instance" "$z_cls_member" "$@" ;;
-    set) z.cls.instance.call._set "$z_cls_instance" "$z_cls_member" "$@" ;;
-    *) return 1 ;;
-  esac
-}
-
-# 復元済みの属性を保存する。通常のスカラーは文字列、型付き属性は宣言として保持する。
-#
-# $1: インスタンス参照
-# $2: 属性名
-# REPLY: null
-# return: 0
-#
-# example:
-#  z.cls.store._ensure
-#  local -i 16 number=255
-#  z.cls.instance._snapshot object number
-#  # return: 0
-#  # 変更後: z_cls_values[object:number]に基数16を保つ宣言を保存済み
-z.cls.instance._snapshot() {
-  if ! z.var.exists "$2"; then
-    unset "z_cls_scalars[$1:$2]"
-    z_cls_values[$1:$2]="typeset -- $2; unset $2"
-    return 0
-  fi
-
-  local -a REPLY=()
-
-  case ${(tP)2} in
-    scalar|scalar-local)
-      z.var.get "$2"
-      z.cls.store._scalar "$1" "$2" "$REPLY[1]"
-      return 0
-      ;;
-  esac
-
-  unset "z_cls_scalars[$1:$2]"
-
-  case ${(tP)2} in
-    integer|integer-local)
-      z.var.get "$2"
-      if z.int.is.match "$REPLY[1]"; then
-        z_cls_values[$1:$2]="typeset -i $2=$REPLY[1]"
-        return 0
-      fi
-      ;;
-    array|array-local|association|association-local)
-      if z.str.start_with "${(tP)2}" array; then
-        z.var.get "$2"
-        local declaration_flag=-a
-      else
-        z.hash.entries "$2"
-        local declaration_flag=-A
-      fi
-
-      z.arr.quote style=single "${REPLY[@]}"
-      z.arr.join "${REPLY[@]}"
-      z_cls_values[$1:$2]="typeset $declaration_flag $2=( $REPLY )"
-      return 0
-      ;;
-  esac
-
-  local declaration=$(typeset -p "$2")
-
-  z_cls_values[$1:$2]=${declaration/#typeset -g /typeset }
-}
-
-# 検証済みのインスタンスについて、生成したコマンドと保存済みの属性を解放する。
-#
-# $1: 存在する非実行中のインスタンス参照
-# REPLY: null
-# return: 0
-#
-# example:
-#  z.cls.draw Counter
-#  z.cls.drew
-#  local object=""
-#  z.cls.new Counter object
-#  z.cls.instance._release "$object"
-#  # return: 0
-#  # 変更後: インスタンスと、参照がなくなった生成コマンドを解放済み
+#  local counter=""
+#  z.cls.new Counter counter
+#  z.cls.instance._release "$counter"
+#  # 変更後: counterのインスタンスと生成コマンドを解放済み
 z.cls.instance._release() {
   local -a REPLY=()
   local instance_id=$1
-  local reference=${z_cls_owner_refs[$instance_id]-$instance_id}
   local class_name=$z_cls_instances[$instance_id]
 
-  unset "z_cls_references[$reference]" "z_cls_owner_refs[$instance_id]"
-  z.cls.store._names "$z_cls_members[$instance_id]"
-  z.cls.instance.commands._uninstall "${REPLY[@]}"
+  local reference=$z_cls_owner_refs[$instance_id]
 
-  local attribute
+  z.cls.instance.commands._uninstall "$reference" "class=$class_name"
 
   z.cls.store._names "$z_cls_class_attrs[$class_name]"
+  local attribute
   for attribute in "${REPLY[@]}"; do
-    unset "z_cls_scalars[$instance_id:$attribute]" "z_cls_values[$instance_id:$attribute]"
+    unset "z_cls_scalars[$instance_id:$attribute]"
   done
 
-  # 未設定のactive要素も管理ノードを残すため、一緒に削除する。
-  unset "z_cls_instances[$instance_id]" "z_cls_members[$instance_id]" \
-    "z_cls_active[$instance_id]" "z_cls_owner_markers[$instance_id]"
+  unset "z_cls_instances[$instance_id]" "z_cls_active[$instance_id]"
+  unset "z_cls_references[$reference]" "z_cls_owner_refs[$instance_id]" "z_cls_owner_markers[$instance_id]"
 
-  z.hash.count z_cls_instances
-  if z.int.is.zero "$REPLY"; then
-    # 最後のインスタンスを片付けたら、空のテーブルの容量も解放する。
+  if z.int.is.zero "${#z_cls_instances}"; then
     z_cls_instances=()
     z_cls_scalars=()
-    z_cls_values=()
-    z_cls_members=()
     z_cls_active=()
-    z_cls_wrapper_refs=()
-    z_cls_owner_markers=()
     z_cls_references=()
     z_cls_owner_refs=()
-    z_cls_gc_allocations=0
+    z_cls_owner_markers=()
   fi
 }
