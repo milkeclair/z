@@ -36,7 +36,7 @@ z.cls.instance.commands._validate() {
 #
 # $@: 検証済みのコマンド名
 # REPLY: null
-# return: 0
+# return: 0|1
 #
 # example:
 #  # 前提: 保存領域を初期化し、counter.incrementの名前を検証済み
@@ -44,26 +44,58 @@ z.cls.instance.commands._validate() {
 #  # return: 0
 #  # 変更後: counter.incrementを登録し、参照数は1
 z.cls.instance.commands._install() {
+  local -a REPLY=()
+  local -a installed_commands=()
   local command_name
 
   for command_name in "$@"; do
-    local member=${command_name#*.}
-    local operation=method
-
-    if z.str.includes "$member" .; then
-      operation=${member##*.}
-      member=${member%.*}
-    fi
-
-    local template="z_cls_dispatch_${operation}_$member"
+    local suffix=${command_name#*.}
+    local template="z_cls_dispatch_$suffix"
 
     if ! z.var.exists "functions[$template]"; then
+      z.arr.split delimiter=. "$suffix"
+      local member=$REPLY[1]
+      local operation=${REPLY[2]:-method}
+
       functions[$template]='z.cls.instance._call "${funcstack[1]%%.*}" '"$operation ${(q)member}"' "$@"'
-      z_cls_dispatch_programs[${command_name#*.}]=$functions[$template]
+      z_cls_dispatch_programs[$suffix]=$functions[$template]
     fi
 
-    functions -c "$template" "$command_name"
+    if ! functions -c "$template" "$command_name"; then
+      z.cls.instance.commands._uninstall "${installed_commands[@]}"
+      return 1
+    fi
+
+    installed_commands+=("$command_name")
     (( z_cls_wrapper_refs[$command_name] += 1 ))
+  done
+
+  return 0
+}
+
+# 生成時に登録したコマンドを手放し、置き換えられていない本体を解放する。
+#
+# $@: 登録済みのコマンド名
+# REPLY: null
+# return: 0
+#
+# example:
+#  # 前提: z_cls_12345_1.incrementが実体用に1回登録されている
+#  z.cls.instance.commands._uninstall z_cls_12345_1.increment
+#  # 変更後: z_cls_12345_1.incrementの生成済みコマンドを削除
+z.cls.instance.commands._uninstall() {
+  local REPLY=""
+  local command_name
+
+  for command_name in "$@"; do
+    z_cls_wrapper_refs[$command_name]=$(( z_cls_wrapper_refs[$command_name] - 1 ))
+    z.int.is.zero $z_cls_wrapper_refs[$command_name] || continue
+
+    if z.cls.instance._owns "$command_name"; then
+      unfunction "$command_name"
+    fi
+
+    unset "z_cls_wrapper_refs[$command_name]"
   done
 
   return 0

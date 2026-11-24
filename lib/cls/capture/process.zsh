@@ -221,7 +221,7 @@ z.cls.capture._method() {
     return 0
   fi
 
-  z.cls.store._method "$z_cls_drawing" "$z_cls_capture_method" "$z_cls_capture_body"
+  z.cls.store._method "$z_cls_capture_method" class="$z_cls_drawing" body="$z_cls_capture_body"
   z_cls_capture_method=''
   z.is.not.null "$z_cls_drawing" || z.cls.capture._stop
 }

@@ -81,7 +81,6 @@ z.cls.instance._snapshot() {
         z.cls.store._scalar "$1" "$2" "${(P)2}" -i
         return 0
       fi
-
       ;;
     array|array-local)
       local -a REPLY=()
@@ -118,24 +117,17 @@ z.cls.instance._snapshot() {
 #  # return: 0
 #  # 変更後: 実体と、参照がなくなった生成コマンドを解放済み
 z.cls.instance._release() {
+  local -a REPLY=()
   local instance_id=$1
-  local command_name
+  local class_name=$z_cls_instances[$instance_id]
 
-  for command_name in ${=z_cls_members[$instance_id]}; do
-    z_cls_wrapper_refs[$command_name]=$(( z_cls_wrapper_refs[$command_name] - 1 ))
-
-    z.int.is.zero $z_cls_wrapper_refs[$command_name] || continue
-
-    if z.cls.instance._owns "$command_name"; then
-      unfunction "$command_name"
-    fi
-
-    unset "z_cls_wrapper_refs[$command_name]"
-  done
+  z.cls.store._names "${z_cls_members[$instance_id]-}"
+  z.cls.instance.commands._uninstall "${REPLY[@]}"
 
   local attribute
 
-  for attribute in ${=z_cls_class_attrs[${z_cls_instances[$instance_id]}]}; do
+  z.cls.store._names "${z_cls_class_attrs[$class_name]-}"
+  for attribute in "${REPLY[@]}"; do
     unset "z_cls_values[$instance_id:$attribute]"
   done
 

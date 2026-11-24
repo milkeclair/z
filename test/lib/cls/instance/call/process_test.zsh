@@ -60,12 +60,12 @@ z.t.describe "z.cls.instance.call._access"; {
         z_cls_values[${object}:count]='typeset -i count=0'
 
         z.cls.instance.call._access "$object" set count +7
-        object.count.get
+        $object.count.get
 
         z.t.expect.reply 7
 
         z.cls.instance.call._access "$object" set count -3
-        object.count.get
+        $object.count.get
 
         z.t.expect.reply -3
 
@@ -112,7 +112,7 @@ z.t.describe "z.cls.instance.call._access"; {
         z_cls_values[${object}:count]='typeset -i count=1'
 
         z.cls.instance.call._access "$object" set count 'other+1'
-        object.count.get
+        $object.count.get
 
         z.t.expect.reply 14
 
@@ -137,7 +137,7 @@ z.t.describe "z.cls.instance.call._access"; {
           local -i count=4
           z.cls.instance._snapshot "$object" count
         }
-        object.prepare
+        $object.prepare
         local original_count=$z_cls_values[${object}:count]
         local original_other=$z_cls_values[${object}:other]
 
@@ -147,11 +147,11 @@ z.t.describe "z.cls.instance.call._access"; {
         z.t.expect "$z_cls_values[${object}:count]" "$original_count"
         z.t.expect "$z_cls_values[${object}:other]" "$original_other"
 
-        object.count.get
+        $object.count.get
 
         z.t.expect.reply 4
 
-        object.other.get
+        $object.other.get
 
         z.t.expect.reply 13
 
@@ -231,7 +231,7 @@ z.t.describe "z.cls.instance.call._run"; {
 
         z.t.expect.status.is.false
 
-        object.count.get
+        $object.count.get
 
         z.t.expect.reply 4
 
@@ -249,364 +249,366 @@ z.t.describe "z.cls.instance.call._run"; {
   source "$z_root/test/lib/cls/fixtures/typed-state.zsh"
   source "$z_root/test/lib/cls/fixtures/arithmetic-setter.zsh"
 
-  z.t.context "インスタンスを呼び出す場合"; {
-    z.t.it "属性を独立して保存し、get/setとメソッドで共有する"; {
-      () {
-        local first=""
-        local second=""
-        z.cls.new TestCounter first
-        z.cls.new TestCounter second
-        first.increment
-        first.add count=4
-
-        z.t.expect.reply 5
-
-        second.count.get
-
-        z.t.expect.reply 0
-
-        first.count.set 10
-        first.increment
-        first.value
-
-        z.t.expect.reply 11
-
-        local literal=$'space "quote" \\ slash\n$(print SHOULD_NOT_RUN)'
-        first.label.set "$literal"
-        first.label.get
-
-        z.t.expect.reply "$literal"
-
-        first.label.set ""
-        first.label.get
-
-        z.t.expect.reply.is.null
-
-        z.cls.delete first
-        z.cls.delete second
-      }
-    }
-  }
-
-  z.t.context "同じ実体のメソッドを入れ子で呼ぶ場合"; {
-    z.t.it "内側と外側で同じ状態を使う"; {
-      () {
-        local first=""
-        z.cls.new TestCounter first
-        first.twice
-        first.value
-
-        z.t.expect.reply 2
-
-        z.cls.delete first
-      }
-    }
-  }
-
-  z.t.context "メソッドが明示的にreturnする場合"; {
-    z.t.it "状態とREPLYと終了コードを保持する"; {
-      () {
-        local first=""
-        z.cls.new TestCounter first
-        first.fail reason
-        local call_status=$?
-        local call_reply=$REPLY
-
-        z.t.expect "$call_status" 7
-        z.t.expect "$call_reply" failure:reason
-
-        first.value
-
-        z.t.expect.reply 1
-
-        z.cls.delete first
-      }
-    }
-  }
-
-  z.t.context "配列を属性へ保存する場合"; {
-    z.t.it "空要素と空白を含む要素を更新後も保持する"; {
-      () {
-        local first=""
-        z.cls.new ArrayBox first
+  z.t.describe "z.cls.instance._call"; {
+    z.t.context "インスタンスを呼び出す場合"; {
+      z.t.it "属性を独立して保存し、get/setとメソッドで共有する"; {
         () {
-          local -a items=()
-          z.cls.instance._snapshot "$first" items
+          local first=""
+          local second=""
+          z.cls.new TestCounter first
+          z.cls.new TestCounter second
+          $first.increment
+          $first.add count=4
+
+          z.t.expect.reply 5
+
+          $second.count.get
+
+          z.t.expect.reply 0
+
+          $first.count.set 10
+          $first.increment
+          $first.value
+
+          z.t.expect.reply 11
+
+          local literal=$'space "quote" \\ slash\n$(print SHOULD_NOT_RUN)'
+          $first.label.set "$literal"
+          $first.label.get
+
+          z.t.expect.reply "$literal"
+
+          $first.label.set ""
+          $first.label.get
+
+          z.t.expect.reply.is.null
+
+          z.cls.delete first
+          z.cls.delete second
         }
-        first.fill
-        first.items.get
-        local -a initial_items=("${REPLY[@]}")
-
-        z.t.expect "${#initial_items}" 3
-        z.t.expect.is.null "$initial_items[1]"
-        z.t.expect "$initial_items[2]" "two words"
-        z.t.expect "$initial_items[3]" last
-
-        first.items.set "" replaced
-        first.items.get
-        local -a updated_items=("${REPLY[@]}")
-
-        z.t.expect "${#updated_items}" 2
-        z.t.expect.is.null "$updated_items[1]"
-        z.t.expect "$updated_items[2]" replaced
-
-        first.items.set
-        first.items.get
-        local empty_count=${#REPLY}
-
-        z.t.expect "$empty_count" 0
-
-        z.cls.delete first
       }
     }
-  }
 
-  z.t.context "属性の型とフラグを変更する場合"; {
-    z.t.it "保存と復元で型を保ち、呼出元の同名変数を変更しない"; {
-      () {
-        local -i number=77
-        local -F fraction=7.5
-        local -a values=(outside)
-        local typed=""
-        z.cls.new TypedState typed
+    z.t.context "同じ実体のメソッドを入れ子で呼ぶ場合"; {
+      z.t.it "内側と外側で同じ状態を使う"; {
         () {
-          local -A table=()
-          local -i 16 number=0
-          local -F 8 fraction=0
-          local -aU values=()
-          local missing=""
-          unset missing
-          z.cls.instance._snapshot "$typed" table
-          z.cls.instance._snapshot "$typed" number
-          z.cls.instance._snapshot "$typed" fraction
-          z.cls.instance._snapshot "$typed" values
-          z.cls.instance._snapshot "$typed" missing
+          local first=""
+          z.cls.new TestCounter first
+          $first.twice
+          $first.value
+
+          z.t.expect.reply 2
+
+          z.cls.delete first
         }
-        typed.fill
-        typed.verify
+      }
+    }
 
-        z.t.expect.status.is.true
-
+    z.t.context "メソッドが明示的にreturnする場合"; {
+      z.t.it "状態とREPLYと終了コードを保持する"; {
         () {
-          eval "$z_cls_values[${typed}:table]"
-          eval "$z_cls_values[${typed}:number]"
-          eval "$z_cls_values[${typed}:fraction]"
-          eval "$z_cls_values[${typed}:values]"
-          eval "$z_cls_values[${typed}:missing]"
+          local first=""
+          z.cls.new TestCounter first
+          $first.fail reason
+          local call_status=$?
+          local call_reply=$REPLY
 
-          z.t.expect.includes "${(t)table}" association
-          if z.str.includes "${(t)table}" association; then
-            z.t.expect "$table[space key]" "value words"
-            z.t.expect.is.null "$table[empty]"
-            z.t.expect "${#table}" 2
+          z.t.expect "$call_status" 7
+          z.t.expect "$call_reply" failure:reason
 
-            z.var.exists 'table[empty]'
+          $first.value
+
+          z.t.expect.reply 1
+
+          z.cls.delete first
+        }
+      }
+    }
+
+    z.t.context "配列を属性へ保存する場合"; {
+      z.t.it "空要素と空白を含む要素を更新後も保持する"; {
+        () {
+          local first=""
+          z.cls.new ArrayBox first
+          () {
+            local -a items=()
+            z.cls.instance._snapshot "$first" items
+          }
+          $first.fill
+          $first.items.get
+          local -a initial_items=("${REPLY[@]}")
+
+          z.t.expect "${#initial_items}" 3
+          z.t.expect.is.null "$initial_items[1]"
+          z.t.expect "$initial_items[2]" "two words"
+          z.t.expect "$initial_items[3]" last
+
+          $first.items.set "" replaced
+          $first.items.get
+          local -a updated_items=("${REPLY[@]}")
+
+          z.t.expect "${#updated_items}" 2
+          z.t.expect.is.null "$updated_items[1]"
+          z.t.expect "$updated_items[2]" replaced
+
+          $first.items.set
+          $first.items.get
+          local empty_count=${#REPLY}
+
+          z.t.expect "$empty_count" 0
+
+          z.cls.delete first
+        }
+      }
+    }
+
+    z.t.context "属性の型とフラグを変更する場合"; {
+      z.t.it "保存と復元で型を保ち、呼出元の同名変数を変更しない"; {
+        () {
+          local -i number=77
+          local -F fraction=7.5
+          local -a values=(outside)
+          local typed=""
+          z.cls.new TypedState typed
+          () {
+            local -A table=()
+            local -i 16 number=0
+            local -F 8 fraction=0
+            local -aU values=()
+            local missing=""
+            unset missing
+            z.cls.instance._snapshot "$typed" table
+            z.cls.instance._snapshot "$typed" number
+            z.cls.instance._snapshot "$typed" fraction
+            z.cls.instance._snapshot "$typed" values
+            z.cls.instance._snapshot "$typed" missing
+          }
+          $typed.fill
+          $typed.verify
+
+          z.t.expect.status.is.true
+
+          () {
+            eval "$z_cls_values[${typed}:table]"
+            eval "$z_cls_values[${typed}:number]"
+            eval "$z_cls_values[${typed}:fraction]"
+            eval "$z_cls_values[${typed}:values]"
+            eval "$z_cls_values[${typed}:missing]"
+
+            z.t.expect.includes "${(t)table}" association
+            if z.str.includes "${(t)table}" association; then
+              z.t.expect "$table[space key]" "value words"
+              z.t.expect.is.null "$table[empty]"
+              z.t.expect "${#table}" 2
+
+              z.var.exists 'table[empty]'
+
+              z.t.expect.status.is.true
+            fi
+
+            (( number == 255 ))
 
             z.t.expect.status.is.true
-          fi
+            z.t.expect.includes "$number" "16#"
+            z.t.expect.includes "${(t)number}" integer
 
-          (( number == 255 ))
+            (( fraction == 1.23456789 ))
 
-          z.t.expect.status.is.true
-          z.t.expect.includes "$number" "16#"
-          z.t.expect.includes "${(t)number}" integer
+            z.t.expect.status.is.true
+            z.t.expect.includes "${(t)fraction}" float
+            z.t.expect "${#values}" 2
+            z.t.expect "$values[1]" one
+            z.t.expect "$values[2]" two
+            z.t.expect.includes "${(t)values}" unique
 
-          (( fraction == 1.23456789 ))
+            z.var.exists missing
 
-          z.t.expect.status.is.true
-          z.t.expect.includes "${(t)fraction}" float
-          z.t.expect "${#values}" 2
-          z.t.expect "$values[1]" one
-          z.t.expect "$values[2]" two
-          z.t.expect.includes "${(t)values}" unique
+            z.t.expect.status.is.false
+          }
 
-          z.var.exists missing
+          local saved_table=$z_cls_values[${typed}:table]
+          local saved_number=$z_cls_values[${typed}:number]
+          local saved_fraction=$z_cls_values[${typed}:fraction]
+          local saved_values=$z_cls_values[${typed}:values]
+          local saved_missing=$z_cls_values[${typed}:missing]
+
+          $typed.table.set odd
 
           z.t.expect.status.is.false
+          z.t.expect "$z_cls_values[${typed}:table]" "$saved_table"
+
+          $typed.plain.get
+
+          z.t.expect.reply $'quote\' slash\\ newline\n$(print SHOULD_NOT_RUN)'
+
+          $typed.verify
+
+          z.t.expect.status.is.true
+          z.t.expect "$z_cls_values[${typed}:table]" "$saved_table"
+          z.t.expect "$z_cls_values[${typed}:number]" "$saved_number"
+          z.t.expect "$z_cls_values[${typed}:fraction]" "$saved_fraction"
+          z.t.expect "$z_cls_values[${typed}:values]" "$saved_values"
+          z.t.expect "$z_cls_values[${typed}:missing]" "$saved_missing"
+          z.t.expect "$number" 77
+          z.t.expect "$fraction" 7.5000000000
+          z.t.expect "$values[1]" outside
+
+          z.cls.delete typed
         }
+      }
+    }
 
-        local saved_table=$z_cls_values[${typed}:table]
-        local saved_number=$z_cls_values[${typed}:number]
-        local saved_fraction=$z_cls_values[${typed}:fraction]
-        local saved_values=$z_cls_values[${typed}:values]
-        local saved_missing=$z_cls_values[${typed}:missing]
+    z.t.context "整数setterの式が他の属性を参照する場合"; {
+      z.t.it "同じ実体のスコープで式を評価する"; {
+        () {
+          local arithmetic=""
+          z.cls.new ArithmeticSetter arithmetic
+          () {
+            local -i count=0
+            z.cls.instance._snapshot "$arithmetic" count
+          }
+          $arithmetic.prepare
+          $arithmetic.count.set 'other+1'
+          $arithmetic.count.get
 
-        typed.table.set odd
+          z.t.expect.reply 14
+
+          z.cls.delete arithmetic
+        }
+      }
+    }
+
+    z.t.context "errexitが有効なメソッド呼び出しの場合"; {
+      z.t.it "失敗の後続を実行せず通常のZshと同じ終了コードを返す"; {
+        local output=""
+
+        output=$(zsh -f "$z_root/test/lib/cls/fixtures/method-errexit.zsh")
 
         z.t.expect.status.is.false
-        z.t.expect "$z_cls_values[${typed}:table]" "$saved_table"
-
-        typed.plain.get
-
-        z.t.expect.reply $'quote\' slash\\ newline\n$(print SHOULD_NOT_RUN)'
-
-        typed.verify
-
-        z.t.expect.status.is.true
-        z.t.expect "$z_cls_values[${typed}:table]" "$saved_table"
-        z.t.expect "$z_cls_values[${typed}:number]" "$saved_number"
-        z.t.expect "$z_cls_values[${typed}:fraction]" "$saved_fraction"
-        z.t.expect "$z_cls_values[${typed}:values]" "$saved_values"
-        z.t.expect "$z_cls_values[${typed}:missing]" "$saved_missing"
-        z.t.expect "$number" 77
-        z.t.expect "$fraction" 7.5000000000
-        z.t.expect "$values[1]" outside
-
-        z.cls.delete typed
+        z.t.expect.is.null "$output"
       }
     }
-  }
 
-  z.t.context "整数setterの式が他の属性を参照する場合"; {
-    z.t.it "同じ実体のスコープで式を評価する"; {
-      () {
-        local arithmetic=""
-        z.cls.new ArithmeticSetter arithmetic
+    z.t.context "属性と同名の引数がある場合"; {
+      z.t.it "named引数と呼出元のcountを属性から独立して扱う"; {
         () {
-          local -i count=0
-          z.cls.instance._snapshot "$arithmetic" count
+          local count=3
+          local counter=""
+          z.cls.new TestCounter counter
+          $counter.count.set 10
+
+          $counter.add count=3
+          local add_status=$?
+          local add_result=$REPLY
+
+          z.t.expect "$add_status" 0
+          z.t.expect "$add_result" 13
+          z.t.expect "$count" 3
+
+          $counter.count.get
+
+          z.t.expect.reply 13
+
+          z.cls.delete counter
         }
-        arithmetic.prepare
-        arithmetic.count.set 'other+1'
-        arithmetic.count.get
-
-        z.t.expect.reply 14
-
-        z.cls.delete arithmetic
       }
     }
-  }
 
-  z.t.context "errexitが有効な裸のメソッド呼出しの場合"; {
-    z.t.it "失敗の後続を実行せず通常のZshと同じ終了コードを返す"; {
-      local output=""
+    z.t.context "同じ実体のメソッドを入れ子で呼ぶ場合"; {
+      z.t.it "selfを同じIDに保ち、外側の実行中フラグも保持する"; {
+        () {
+          z.cls.draw SameSelf
+            z.cls.method identity
+              REPLY=$self
+            z.cls.method.defined
+            z.cls.method nested
+              local before=$self
+              $self.identity || return 1
+              local nested_id=$REPLY
+              z.cls.delete "$self" 2>/dev/null
+              local delete_status=$?
+              REPLY=("$before" "$nested_id" "$self" "$delete_status")
+            z.cls.method.defined
+          z.cls.drew
+          local object=""
+          z.cls.new SameSelf object
 
-      output=$(zsh -f "$z_root/test/lib/cls/fixtures/method-errexit.zsh")
+          $object.nested
+          local result=("${REPLY[@]}")
 
-      z.t.expect.status.is.false
-      z.t.expect.is.null "$output"
-    }
-  }
+          z.t.expect "${#result}" 4
+          z.t.expect "$result[1]" "$object"
+          z.t.expect "$result[2]" "$object"
+          z.t.expect "$result[3]" "$object"
+          z.t.expect "$result[4]" 1
 
-  z.t.context "属性と同名の引数がある場合"; {
-    z.t.it "named引数と呼出元のcountを属性から独立して扱う"; {
-      () {
-        local count=3
-        local counter=""
-        z.cls.new TestCounter counter
-        counter.count.set 10
-
-        counter.add count=3
-        local add_status=$?
-        local add_result=$REPLY
-
-        z.t.expect "$add_status" 0
-        z.t.expect "$add_result" 13
-        z.t.expect "$count" 3
-
-        counter.count.get
-
-        z.t.expect.reply 13
-
-        z.cls.delete counter
+          z.cls.delete object
+        }
       }
     }
-  }
 
-  z.t.context "同じ実体のメソッドを入れ子で呼ぶ場合"; {
-    z.t.it "selfを同じIDに保ち、外側の実行中フラグも保持する"; {
-      () {
-        z.cls.draw SameSelf
-          z.cls.method identity
-            REPLY=$self
-          z.cls.method.defined
-          z.cls.method nested
-            local before=$self
-            $self.identity || return 1
-            local nested_id=$REPLY
-            z.cls.delete "$self" 2>/dev/null
-            local delete_status=$?
-            REPLY=("$before" "$nested_id" "$self" "$delete_status")
-          z.cls.method.defined
-        z.cls.drew
-        local object=""
-        z.cls.new SameSelf object
+    z.t.context "別の実体を呼んでから戻る場合"; {
+      z.t.it "内側だけselfを切り替え、戻った後は外側のIDを使う"; {
+        () {
+          z.cls.draw DifferentSelf
+            z.cls.method identity
+              REPLY=$self
+            z.cls.method.defined
+            z.cls.method bounce
+              local before=$self
+              $1.identity || return 1
+              local other_id=$REPLY
+              $self.identity || return 1
+              REPLY=("$before" "$other_id" "$REPLY" "$self")
+            z.cls.method.defined
+          z.cls.drew
+          local first=""
+          local second=""
+          z.cls.new DifferentSelf first
+          z.cls.new DifferentSelf second
 
-        object.nested
-        local result=("${REPLY[@]}")
+          $first.bounce "$second"
+          local result=("${REPLY[@]}")
 
-        z.t.expect "${#result}" 4
-        z.t.expect "$result[1]" "$object"
-        z.t.expect "$result[2]" "$object"
-        z.t.expect "$result[3]" "$object"
-        z.t.expect "$result[4]" 1
+          z.t.expect "${#result}" 4
+          z.t.expect "$result[1]" "$first"
+          z.t.expect "$result[2]" "$second"
+          z.t.expect "$result[3]" "$first"
+          z.t.expect "$result[4]" "$first"
 
-        z.cls.delete object
+          z.cls.delete first
+          z.cls.delete second
+        }
       }
     }
-  }
 
-  z.t.context "別の実体を呼んでから戻る場合"; {
-    z.t.it "内側だけselfを切り替え、戻った後は外側のIDを使う"; {
-      () {
-        z.cls.draw DifferentSelf
-          z.cls.method identity
-            REPLY=$self
-          z.cls.method.defined
-          z.cls.method bounce
-            local before=$self
-            $1.identity || return 1
-            local other_id=$REPLY
-            $self.identity || return 1
-            REPLY=("$before" "$other_id" "$REPLY" "$self")
-          z.cls.method.defined
-        z.cls.drew
-        local first=""
-        local second=""
-        z.cls.new DifferentSelf first
-        z.cls.new DifferentSelf second
+    z.t.context "selfを読み取る場合"; {
+      z.t.it "実体IDをreadonlyで渡し、呼出元のselfを変更しない"; {
+        () {
+          local -r self=caller_self
+          z.cls.draw ReadonlySelf
+            z.cls.method inspect
+              local before=$self
+              (self=replacement) 2>/dev/null
+              local assignment_status=$?
+              REPLY=("$before" "$self" "$parameters[self]" "$assignment_status")
+            z.cls.method.defined
+          z.cls.drew
+          local object=""
+          z.cls.new ReadonlySelf object
 
-        first.bounce "$second"
-        local result=("${REPLY[@]}")
+          $object.inspect
+          local result=("${REPLY[@]}")
 
-        z.t.expect "${#result}" 4
-        z.t.expect "$result[1]" "$first"
-        z.t.expect "$result[2]" "$second"
-        z.t.expect "$result[3]" "$first"
-        z.t.expect "$result[4]" "$first"
+          z.t.expect "${#result}" 4
+          z.t.expect "$result[1]" "$object"
+          z.t.expect "$result[2]" "$object"
+          z.t.expect.includes "$result[3]" readonly
+          z.t.expect "$result[4]" 1
+          z.t.expect "$self" caller_self
 
-        z.cls.delete first
-        z.cls.delete second
-      }
-    }
-  }
-
-  z.t.context "selfを読み取る場合"; {
-    z.t.it "実体IDをreadonlyで渡し、呼出元のselfを変更しない"; {
-      () {
-        local -r self=caller_self
-        z.cls.draw ReadonlySelf
-          z.cls.method inspect
-            local before=$self
-            (self=replacement) 2>/dev/null
-            local assignment_status=$?
-            REPLY=("$before" "$self" "$parameters[self]" "$assignment_status")
-          z.cls.method.defined
-        z.cls.drew
-        local object=""
-        z.cls.new ReadonlySelf object
-
-        object.inspect
-        local result=("${REPLY[@]}")
-
-        z.t.expect "${#result}" 4
-        z.t.expect "$result[1]" "$object"
-        z.t.expect "$result[2]" "$object"
-        z.t.expect.includes "$result[3]" readonly
-        z.t.expect "$result[4]" 1
-        z.t.expect "$self" caller_self
-
-        z.cls.delete object
+          z.cls.delete object
+        }
       }
     }
   }

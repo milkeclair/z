@@ -47,7 +47,6 @@ z.t.describe "z.cls.store._ensure"; {
   }
 }
 
-
 z.t.describe "z.cls.store._scalar"; {
   z.t.context "空白と空値を保存する場合"; {
     z.t.it "引用して復元でき、呼出元のREPLYを保持する"; {
@@ -70,6 +69,56 @@ z.t.describe "z.cls.store._scalar"; {
         z.t.expect.is.null "$label"
 
         unset 'z_cls_values[declaration_ref:label]'
+      }
+    }
+  }
+}
+
+z.t.describe "z.cls.store._method"; {
+  z.t.context "等号と改行を含む本体の場合"; {
+    z.t.it "本体をそのまま保存し、呼出元のREPLYを保つ"; {
+      () {
+        local -A z_cls_bodies=() z_cls_class_methods=()
+        local body=$'local value="a=b"\nREPLY=$value'
+        REPLY=unchanged
+
+        z.cls.store._method read class=WithBody body="$body"
+
+        z.t.expect.reply unchanged
+        z.t.expect "$z_cls_bodies[WithBody:read]" "$body"
+        z.cls.store._names "$z_cls_class_methods[WithBody]"
+
+        z.t.expect.reply.is.arr read
+      }
+    }
+  }
+}
+
+z.t.describe "z.cls.store._discard"; {
+  z.t.context "別のクラスにもメンバーがある場合"; {
+    z.t.it "選んだクラスの未公開データだけを破棄する"; {
+      () {
+        local -A z_cls_class_attrs=([Draft]=count [Existing]=value)
+        local -A z_cls_class_methods=([Draft]=run [Existing]=read)
+        local -A z_cls_defaults=([Draft:count]=0 [Existing:value]=1)
+        local -A z_cls_bodies=([Draft:run]=':' [Existing:read]='REPLY=1')
+
+        z.cls.store._discard Draft
+
+        z.var.exists 'z_cls_class_attrs[Draft]'
+        z.t.expect.status.is.false
+
+        z.var.exists 'z_cls_class_methods[Draft]'
+        z.t.expect.status.is.false
+
+        z.var.exists 'z_cls_defaults[Draft:count]'
+        z.t.expect.status.is.false
+
+        z.var.exists 'z_cls_bodies[Draft:run]'
+        z.t.expect.status.is.false
+
+        z.t.expect "$z_cls_defaults[Existing:value]" 1
+        z.t.expect "$z_cls_bodies[Existing:read]" 'REPLY=1'
       }
     }
   }

@@ -13,5 +13,7 @@ z.cls.instance._owns() {
   local suffix=${1#*.}
   local expected_program=${z_cls_dispatch_programs[$suffix]-}
 
+  # 関数本体の角括弧などをパターンにせず、文字列として照合する。
+  setopt localoptions noglobsubst
   z.is.not.null "$program" && z.is.eq "$program" "$expected_program"
 }

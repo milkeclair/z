@@ -113,7 +113,7 @@ z.cls.method() {
 
   if z.int.is.gteq $# 2; then
     z.int.is.zero $invalid || return 1
-    z.cls.store._method "$z_cls_drawing" "$1" "$2"
+    z.cls.store._method "$1" class="$z_cls_drawing" body="$2"
     return 0
   fi
 
@@ -173,36 +173,20 @@ z.cls.drew() {
 #  # 変更後: Counterの未公開定義を破棄し、元のDEBUGトラップを復元済み
 z.cls.abort() {
   z.cls.store._ensure
-  unsetopt localoptions
-  z.cls.capture._stop
-
-  local REPLY=""
-  # 復元したDEBUGトラップは、呼出元の変数と同じ名前に代入できる。
-  local z_cls_abort_key
-
-  z.hash.keys z_cls_defaults
-  for z_cls_abort_key in "${(@)REPLY}"; do
-    z.str.start_with "$z_cls_abort_key" "$z_cls_drawing:" && unset "z_cls_defaults[$z_cls_abort_key]"
-  done
-
-  z.hash.keys z_cls_bodies
-  for z_cls_abort_key in "${(@)REPLY}"; do
-    z.str.start_with "$z_cls_abort_key" "$z_cls_drawing:" && unset "z_cls_bodies[$z_cls_abort_key]"
-  done
 
   if z.is.not.null "$z_cls_drawing"; then
-    unset "z_cls_class_attrs[$z_cls_drawing]" "z_cls_class_methods[$z_cls_drawing]"
+    z.cls.store._discard "$z_cls_drawing"
+    z_cls_drawing=''
   fi
 
-  z_cls_drawing=''
-
-  return 0
+  unsetopt localoptions
+  z.cls.capture._stop
 }
 
 # 独立した実体を作成し、参照をreadonly変数へ代入する。
 #
 # $1: 公開済みのクラス名
-# $2: 実体参照を受け取る変数名。必要に応じて呼出元でlocal宣言する
+# $2: 実体参照を受け取る、呼出元で宣言済みの変数名
 # REPLY: 実体参照
 # return: 0|1
 #
@@ -222,19 +206,19 @@ z.cls.new() {
 
   local z_cls_id="z_cls_${$}_$z_cls_next_id"
 
-  z.cls.instance._commands "$1" "$2" "$z_cls_id"
-
+  z.cls.instance._commands "$1" reference="$z_cls_id"
   local -a z_cls_wrappers=("${(@)REPLY}")
 
   z.cls.instance.commands._validate "${z_cls_wrappers[@]}" || return 1
 
   local z_cls_member
 
-  for z_cls_member in ${=z_cls_class_attrs[$1]}; do
+  z.cls.store._names "${z_cls_class_attrs[$1]-}"
+  for z_cls_member in "${REPLY[@]}"; do
     z.cls.store._scalar "$z_cls_id" "$z_cls_member" "$z_cls_defaults[$1:$z_cls_member]"
   done
 
-  z.cls.instance.commands._install "${z_cls_wrappers[@]}"
+  z.cls.instance.commands._install "${z_cls_wrappers[@]}" || return 1
 
   z.arr.join "${z_cls_wrappers[@]}"
   z_cls_members[$z_cls_id]=$REPLY
