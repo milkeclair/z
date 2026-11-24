@@ -13,7 +13,12 @@ z.cls.instance.execute._get() {
   z.is.not.eq "$#" 1 && return 1
 
   case ${(tP)1} in
-    array*|association*) REPLY=("${(@P)1}") ;;
-    *) REPLY=${(P)1} ;;
+    array*|association*)
+      z.var.get "$1"
+      ;;
+    *)
+      z.var.get "$1"
+      REPLY="$REPLY"
+      ;;
   esac
 }

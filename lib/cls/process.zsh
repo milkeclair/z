@@ -279,7 +279,8 @@ z.cls.delete() {
 
   z.is.not.eq "$#" 1 && return 1
 
-  local instance_id=${(P)1-}
+  z.var.get "$1"
+  local instance_id="$REPLY"
 
   z.is.not.null "${z_cls_instances[$1]-}" && instance_id=$1
 

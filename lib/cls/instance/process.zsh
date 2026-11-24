@@ -85,31 +85,33 @@ z.cls.instance._snapshot() {
     return 0
   fi
 
+  local -a REPLY=()
+
   case ${(tP)2} in
     scalar|scalar-local)
-      z.cls.store._scalar "$1" "$2" "${(P)2}"
+      z.var.get "$2"
+      z.cls.store._scalar "$1" "$2" "$REPLY[1]"
       return 0
       ;;
     integer|integer-local)
-      if z.int.is.match "${(P)2}"; then
-        z_cls_values[$1:$2]="typeset -i $2=${(P)2}"
+      z.var.get "$2"
+      if z.int.is.match "$REPLY[1]"; then
+        z_cls_values[$1:$2]="typeset -i $2=$REPLY[1]"
         return 0
       fi
       ;;
-    array|array-local)
-      local -a REPLY=()
-      z.arr.quote style=single "${(@P)2}"
+    array|array-local|association|association-local)
+      if z.str.start_with "${(tP)2}" array; then
+        z.var.get "$2"
+        local declaration_flag=-a
+      else
+        z.hash.entries "$2"
+        local declaration_flag=-A
+      fi
 
+      z.arr.quote style=single "${REPLY[@]}"
       z.arr.join "${REPLY[@]}"
-      z_cls_values[$1:$2]="typeset -a $2=( $REPLY )"
-      return 0
-      ;;
-    association|association-local)
-      local -a REPLY=()
-      z.arr.quote style=single "${(@Pkv)2}"
-
-      z.arr.join "${REPLY[@]}"
-      z_cls_values[$1:$2]="typeset -A $2=( $REPLY )"
+      z_cls_values[$1:$2]="typeset $declaration_flag $2=( $REPLY )"
       return 0
       ;;
   esac
