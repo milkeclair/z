@@ -41,7 +41,9 @@ z.hash.values() {
 #  z.hash.entries hash
 #  # REPLY: ("name" "John")
 z.hash.entries() {
-  REPLY=("${(@Pkv)1}")
+  local hash_name=$1
+
+  REPLY=("${(@Pkv)hash_name}")
 }
 
 # 連想配列の要素数を数える

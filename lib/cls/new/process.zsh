@@ -18,7 +18,7 @@ z.cls.new._validate() {
     return 1
   fi
 
-  if z.is.null "${z_cls_classes[$1]-}" || ! z.cls.is._attribute "$2"; then
+  if ! z.var.exists "z_cls_classes[$1]" || ! z.cls.is._attribute "$2"; then
     z.io.error "Expected an existing class and an ordinary instance variable name."
     return 1
   fi

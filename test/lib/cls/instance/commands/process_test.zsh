@@ -32,55 +32,70 @@ z.t.describe "z.cls.instance.commands._validate"; {
   }
 }
 
-z.t.describe "z.cls.instance.commands._install"; {
-  z.t.context "検証済みのメソッド名の場合"; {
-    z.t.it "呼び出し先と引数を渡す"; {
+z.t.describe "z.cls.instance.commands._template"; {
+  z.t.context "属性の取得テンプレートを作る場合"; {
+    z.t.it "登録された本体を照合用に記録する"; {
       z.cls.store._ensure
-      z.t.mock name=z.cls.instance._call
 
-      z.cls.instance.commands._install installed_cls.run
-      installed_cls.run one two
+      z.cls.instance.commands._template template_probe.get member=template_probe handler=z.cls.instance.call._get
 
-      z.t.mock.result name=z.cls.instance._call
-
-      z.t.expect.reply.is.arr installed_cls method run one two
-
-      unfunction installed_cls.run
-      unset 'z_cls_wrapper_refs[installed_cls.run]'
+      z.t.expect "$functions[z_cls_dispatch_template_probe.get]" "$z_cls_dispatch_programs[template_probe.get]"
     }
   }
+}
 
-  z.t.context "同じコマンドを複数インスタンスが使う場合"; {
-    z.t.it "参照数を加算する"; {
-      z.cls.store._ensure
+z.t.describe "z.cls.instance.commands._prepare"; {
+  z.t.context "メソッドと属性がある場合"; {
+    z.t.it "公開するコマンドの接尾辞を返す"; {
+      z.cls.draw PrepareCommands
+        z.cls.attr count default=0
+        z.cls.method read 'REPLY=$1'
+        z.cls.instance.commands._prepare PrepareCommands
 
-      z.cls.instance.commands._install shared_cls.count.get
-      z.cls.instance.commands._install shared_cls.count.get
+        z.t.expect.reply.is.arr read count.get count.set
+      z.cls.drew
+    }
+  }
+}
 
-      z.t.expect "$z_cls_wrapper_refs[shared_cls.count.get]" 2
+z.t.describe "z.cls.instance.commands._install"; {
+  z.t.context "メソッドを公開した場合"; {
+    z.t.it "インスタンス参照と入力を呼び出し先へ渡す"; {
+      z.cls.draw InstallCommands
+        z.cls.method run 'REPLY=$1'
+      z.cls.drew
+      z.t.mock name=z.cls.instance.call._run
 
-      unfunction shared_cls.count.get
-      unset 'z_cls_wrapper_refs[shared_cls.count.get]'
+      z.cls.instance.commands._install installed_cls class=InstallCommands
+      installed_cls.run one "two words"
+      z.t.mock.result name=z.cls.instance.call._run
+
+      z.t.expect.reply.is.arr installed_cls run one "two words"
+
+      z.cls.instance.commands._uninstall installed_cls class=InstallCommands
     }
   }
 }
 
 z.t.describe "z.cls.instance.commands._uninstall"; {
-  z.t.context "生成された関数の場合"; {
-    z.t.it "最後の登録を手放したときだけ関数を消す"; {
-      z.cls.store._ensure
-      z.cls.instance.commands._install uninstall_cls.run
-      z.cls.instance.commands._install uninstall_cls.run
+  z.t.context "同じクラスのコマンドが別の参照にある場合"; {
+    z.t.it "指定した参照のコマンドを解除する"; {
+      z.cls.draw UninstallCommands
+        z.cls.method run 'REPLY=$1'
+      z.cls.drew
+      z.cls.instance.commands._install uninstall_cls class=UninstallCommands
+      z.cls.instance.commands._install keep_cls class=UninstallCommands
 
-      z.cls.instance.commands._uninstall uninstall_cls.run
-
+      z.cls.instance.commands._uninstall uninstall_cls class=UninstallCommands
       z.var.exists 'functions[uninstall_cls.run]'
+
+      z.t.expect.status.is.false
+
+      z.var.exists 'functions[keep_cls.run]'
+
       z.t.expect.status.is.true
 
-      z.cls.instance.commands._uninstall uninstall_cls.run
-
-      z.var.exists 'functions[uninstall_cls.run]'
-      z.t.expect.status.is.false
+      z.cls.instance.commands._uninstall keep_cls class=UninstallCommands
     }
   }
 }
