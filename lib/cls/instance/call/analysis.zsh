@@ -15,8 +15,8 @@
 #  # REPLY: "0"
 z.cls.instance.call._get() {
   z.is.eq "$#" 2 || return
-  z.cls.instance._resolve "$1" || return
-  local instance_id=$REPLY
+  local instance_id=""
+  z.cls.instance._resolve "$1" instance_id || return
 
   local default_key="$z_cls_instances[$instance_id]:$2"
   z.var.exists "z_cls_defaults[$default_key]" || return

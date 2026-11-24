@@ -282,8 +282,8 @@ z.cls.delete() {
     local reference=$REPLY[1]
   fi
 
-  z.cls.instance._resolve "$reference" || return
-  local instance_id=$REPLY
+  local instance_id=""
+  z.cls.instance._resolve "$reference" instance_id || return
 
   if z.var.exists "z_cls_active[$instance_id]"; then
     z.io.error "Expected an inactive instance reference."
