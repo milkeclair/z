@@ -50,7 +50,7 @@ z.t.describe "z.cls.instance.commands._install"; {
     }
   }
 
-  z.t.context "同じコマンドを複数実体が使う場合"; {
+  z.t.context "同じコマンドを複数インスタンスが使う場合"; {
     z.t.it "参照数を加算する"; {
       z.cls.store._ensure
 

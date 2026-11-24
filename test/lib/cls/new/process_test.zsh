@@ -29,7 +29,7 @@ z.t.describe "z.cls.new._validate"; {
   }
 
   z.t.context "readonly参照がある場合"; {
-    z.t.it "元の実体を保持する"; {
+    z.t.it "元のインスタンスを保持する"; {
       () {
         z.cls.draw NewValidateReadonly
         z.cls.drew

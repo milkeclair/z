@@ -2,7 +2,7 @@ source ${z_main}
 
 z.t.describe "z.cls.store._ensure"; {
   z.t.context "親がallexportを設定している場合"; {
-    z.t.it "allexport下で初期化しても子のZshは独立して初期化する"; {
+    z.t.it "allexportが有効な親シェルの状態を子に渡さない"; {
       local -a output=()
       output=("${(@f)$(
         setopt allexport

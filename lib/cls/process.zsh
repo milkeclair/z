@@ -174,7 +174,8 @@ z.cls.drew() {
 # return: 0
 #
 # example:
-#  # 前提: Counterを定義中で、まだ公開していない
+#  z.cls.draw Counter
+#    z.cls.attr count default=0
 #  z.cls.abort
 #  # return: 0
 #  # 変更後: Counterの未公開定義を破棄し、元のDEBUGトラップを復元済み
@@ -190,15 +191,16 @@ z.cls.abort() {
   z.cls.capture._stop
 }
 
-# 独立した実体を作成し、参照をreadonly変数へ代入する。
+# 独立したインスタンスを作成し、参照をreadonly変数へ代入する。
 #
 # $1: 公開済みのクラス名
-# $2: 実体を所有する、呼出元で宣言済みの変数名
-# REPLY: 実体参照
+# $2: インスタンスを所有する、呼び出し元で宣言済みの変数名
+# REPLY: インスタンス参照
 # return: 0|1
 #
 # example:
-#  # 前提: Counterを公開済み。PIDが12345で、初回の実体作成である場合の例
+#  z.cls.draw Counter
+#  z.cls.drew
 #  local counter=""
 #  z.cls.new Counter counter
 #  # return: 0
@@ -207,7 +209,7 @@ z.cls.abort() {
 z.cls.new() {
   z.cls.store._ensure
 
-  z.cls.new._validate "$@" || return 1
+  z.cls.new._validate "$@" || return
   z.cls.gc._collect
 
   (( ++z_cls_next_id ))
@@ -218,8 +220,7 @@ z.cls.new() {
 
   local -a z_cls_wrappers=("${(@)REPLY}")
 
-  z.cls.instance.commands._validate "${z_cls_wrappers[@]}" || return 1
-  z.cls.instance.commands._install "${z_cls_wrappers[@]}" || return 1
+  z.cls.instance.commands._install "${z_cls_wrappers[@]}" || return
 
   if ! z.cls.owner._bind "$z_cls_id" "to=$2"; then
     z.cls.instance.commands._uninstall "${z_cls_wrappers[@]}"
@@ -234,29 +235,32 @@ z.cls.new() {
   REPLY=$z_cls_id
 }
 
-# 実体、生成したコマンド、保存済みの属性を削除する。
+# インスタンス、生成したコマンド、保存済みの属性を削除する。
 #
-# $1: 実体の変数名または参照
+# $1: インスタンスの変数名または参照
 # REPLY: null
 # return: 0|1
 #
 # example:
-#  # 前提: counterが非実行中の実体を参照している
+#  z.cls.draw Counter
+#  z.cls.drew
+#  local counter=""
+#  z.cls.new Counter counter
 #  z.cls.delete counter
 #  # return: 0
-#  # 変更後: 実体の状態と生成したコマンドを解放済み。counterの値は維持
+#  # 変更後: インスタンスの状態と生成したコマンドを解放済み。counterの値は維持
 z.cls.delete() {
   z.cls.store._ensure
 
   local REPLY=""
 
-  z.is.eq "$#" 1 || return 1
+  z.is.not.eq "$#" 1 && return 1
 
-  local reference=${(P)1:-}
+  local reference=${(P)1-}
   z.str.start_with "$1" z_cls_ && reference=$1
   local instance_id=${z_cls_references[$reference]:-$reference}
 
-  z.cls.instance.call._validate "$instance_id" "$reference" || return 1
+  z.cls.instance.call._validate "$instance_id" "$reference" || return
 
   if z.is.not.null "${z_cls_active[$instance_id]-}"; then
     z.io.error "Expected an inactive instance reference."

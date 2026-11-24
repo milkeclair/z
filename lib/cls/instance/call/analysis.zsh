@@ -1,18 +1,22 @@
-# 実体IDから属性を読み、値をREPLYへ返す。
+# インスタンスIDから属性を読み、値をREPLYへ返す。
 #
-# $1: 実体参照
+# $1: インスタンス参照
 # $2: 属性名
 # REPLY: 属性値
 # return: 0|1
 #
 # example:
-#  # 前提: objectはlabelの値がhelloである実体の参照変数
+#  z.cls.draw Counter
+#    z.cls.attr label default=hello
+#  z.cls.drew
+#  local object=""
+#  z.cls.new Counter object
 #  z.cls.instance.call._get "$object" label
 #  # REPLY: hello
 #  # return: 0
 z.cls.instance.call._get() {
   local instance_id=${z_cls_references[$1]:-$1}
-  z.cls.instance.call._validate "$instance_id" "$1" || return 1
+  z.cls.instance.call._validate "$instance_id" "$1" || return
 
   local attribute_key="$instance_id:$2"
   if (( ${+z_cls_values[$attribute_key]} )); then

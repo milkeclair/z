@@ -1,19 +1,26 @@
-# クラス定義、実体の状態、本体収集用の管理変数を初期化する。
+# クラス定義、インスタンスの状態、本体収集用の管理変数を初期化する。
 #
 # REPLY: null
 # return: 0
 #
 # example:
-#  # 前提: 保存領域は未初期化
 #  z.cls.store._ensure
 #  # return: 0
 #  # 変更後: z_cls_instances、z_cls_scalars、z_cls_valuesを空の連想配列で初期化
 z.cls.store._ensure() {
-  if z.is.eq "${z_cls_store_ready:-0}" 1 &&
-      z.var.exists z_cls_dispatch_programs && z.var.exists z_cls_owner_markers &&
-      z.var.exists z_cls_scalars && z.var.exists z_cls_references &&
-      z.var.exists z_cls_command_suffixes; then
-    return 0
+  if z.is.eq "${z_cls_store_ready-}" 1; then
+    local table
+    local ready=true
+
+    for table in z_cls_dispatch_programs z_cls_owner_markers z_cls_scalars \
+        z_cls_references z_cls_command_suffixes; do
+      if ! z.var.exists "$table"; then
+        ready=false
+        break
+      fi
+    done
+
+    z.is.true "$ready" && return 0
   fi
 
   zmodload zsh/parameter
@@ -47,16 +54,16 @@ z.cls.store._ensure() {
   typeset -gi +x z_cls_store_ready=1
 }
 
-# 実体のスカラー属性を文字列として保存する。
+# インスタンスのスカラー属性を文字列として保存する。
 #
-# $1: 実体参照
+# $1: インスタンス参照
 # $2: 属性名
 # $3: 保存する値
 # REPLY: null
 # return: 0
 #
 # example:
-#  # 前提: z.cls.store._ensureで保存領域を初期化している
+#  z.cls.store._ensure
 #  z.cls.store._scalar object label "two words"
 #  # return: 0
 #  # 変更後: z_cls_scalars[object:label]="two words"
@@ -74,7 +81,7 @@ z.cls.store._scalar() {
 # return: 0
 #
 # example:
-#  # 前提: Counterを定義中
+#  z.cls.draw Counter
 #  z.cls.store._method value class=Counter body='REPLY=0'
 #  # return: 0
 #  # 変更後: Counterのメソッド一覧にvalueを加え、本体にREPLY=0を保存
@@ -94,7 +101,9 @@ z.cls.store._method() {
 # return: 0
 #
 # example:
-#  # 前提: Counterの公開前にcountとincrementを宣言している
+#  z.cls.draw Counter
+#    z.cls.attr count default=0
+#    z.cls.method increment 'REPLY=1'
 #  z.cls.store._discard Counter
 #  # return: 0
 #  # 変更後: Counterの属性、初期値、メソッド本体を破棄
@@ -102,12 +111,12 @@ z.cls.store._discard() {
   local -a REPLY=()
   local member
 
-  z.cls.store._names "${z_cls_class_attrs[$1]-}"
+  z.cls.store._names "$z_cls_class_attrs[$1]"
   for member in "${REPLY[@]}"; do
     unset "z_cls_defaults[$1:$member]"
   done
 
-  z.cls.store._names "${z_cls_class_methods[$1]-}"
+  z.cls.store._names "$z_cls_class_methods[$1]"
   for member in "${REPLY[@]}"; do
     unset "z_cls_bodies[$1:$member]"
   done

@@ -1,6 +1,6 @@
-# 実体の参照からメソッドまたは属性への操作を呼び出す。
+# インスタンスの参照からメソッドまたは属性への操作を呼び出す。
 #
-# $1: 実体の変数名または参照
+# $1: インスタンスの変数名または参照
 # $2: method、get、setのいずれか
 # $3: メソッド名または属性名
 # $@?: 処理に渡す引数
@@ -8,7 +8,12 @@
 # return: 処理の終了コード
 #
 # example:
-#  # 前提: objectは初期値0のcountとincrementを持つCounterの参照変数
+#  z.cls.draw Counter
+#    z.cls.attr count default=0
+#    z.cls.method increment 'REPLY=1'
+#  z.cls.drew
+#  local object=""
+#  z.cls.new Counter object
 #  z.cls.instance._call object method increment
 #  # REPLY: 1
 #  # return: 0
@@ -18,7 +23,7 @@ z.cls.instance._call() {
     z.cls.store._ensure
   fi
 
-  local z_cls_instance=${(P)1:-}
+  local z_cls_instance=${(P)1-}
 
   z.str.start_with "$1" z_cls_ && z_cls_instance=$1
   if z.is.null "$z_cls_instance"; then
@@ -36,13 +41,14 @@ z.cls.instance._call() {
 
 # 復元済みの属性を保存する。通常のスカラーは文字列、型付き属性は宣言として保持する。
 #
-# $1: 実体参照
+# $1: インスタンス参照
 # $2: 属性名
 # REPLY: null
 # return: 0
 #
 # example:
-#  # 前提: 呼出元でlocal -i 16 number=255を宣言している
+#  z.cls.store._ensure
+#  local -i 16 number=255
 #  z.cls.instance._snapshot object number
 #  # return: 0
 #  # 変更後: z_cls_values[object:number]に基数16を保つ宣言を保存済み
@@ -92,17 +98,20 @@ z.cls.instance._snapshot() {
   z_cls_values[$1:$2]=${declaration/#typeset -g /typeset }
 }
 
-# 検証済みの実体について、生成したコマンドと保存済みの属性を解放する。
+# 検証済みのインスタンスについて、生成したコマンドと保存済みの属性を解放する。
 #
-# $1: 存在する非実行中の実体参照
+# $1: 存在する非実行中のインスタンス参照
 # REPLY: null
 # return: 0
 #
 # example:
-#  # 前提: objectは非実行中のCounterの実体参照
+#  z.cls.draw Counter
+#  z.cls.drew
+#  local object=""
+#  z.cls.new Counter object
 #  z.cls.instance._release "$object"
 #  # return: 0
-#  # 変更後: 実体と、参照がなくなった生成コマンドを解放済み
+#  # 変更後: インスタンスと、参照がなくなった生成コマンドを解放済み
 z.cls.instance._release() {
   local -a REPLY=()
   local instance_id=$1
@@ -110,12 +119,12 @@ z.cls.instance._release() {
   local class_name=$z_cls_instances[$instance_id]
 
   unset "z_cls_references[$reference]" "z_cls_owner_refs[$instance_id]"
-  z.cls.store._names "${z_cls_members[$instance_id]-}"
+  z.cls.store._names "$z_cls_members[$instance_id]"
   z.cls.instance.commands._uninstall "${REPLY[@]}"
 
   local attribute
 
-  z.cls.store._names "${z_cls_class_attrs[$class_name]-}"
+  z.cls.store._names "$z_cls_class_attrs[$class_name]"
   for attribute in "${REPLY[@]}"; do
     unset "z_cls_scalars[$instance_id:$attribute]" "z_cls_values[$instance_id:$attribute]"
   done
@@ -126,7 +135,7 @@ z.cls.instance._release() {
 
   z.hash.count z_cls_instances
   if z.int.is.zero "$REPLY"; then
-    # 最後の実体を片付けたら、空のテーブルの容量も解放する。
+    # 最後のインスタンスを片付けたら、空のテーブルの容量も解放する。
     z_cls_instances=()
     z_cls_scalars=()
     z_cls_values=()

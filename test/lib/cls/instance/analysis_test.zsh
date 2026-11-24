@@ -2,7 +2,7 @@ source ${z_main}
 
 z.t.describe "z.cls.instance._commands"; {
   z.t.context "属性とメソッドがある場合"; {
-    z.t.it "実体ID付きのコマンドだけを列挙する"; {
+    z.t.it "インスタンスID付きのコマンドだけを列挙する"; {
       z.cls.store._ensure
       z_cls_class_methods[CommandList]='increment '
       z_cls_class_attrs[CommandList]='count '
@@ -30,7 +30,7 @@ z.t.describe "z.cls.instance._commands"; {
   }
 
   z.t.context "クラスを公開したあと"; {
-    z.t.it "公開時の一覧から実体のコマンドを返す"; {
+    z.t.it "公開時の一覧からインスタンスのコマンドを返す"; {
       () {
         z.cls.draw PublishedCommandList
           z.cls.attr count default=0

@@ -5,10 +5,11 @@
 # return: 0|1
 #
 # example:
-#  # 前提: z_cls_12345_1.incrementを共有本体から登録済みで、利用者が置き換えていない
-#  z.cls.instance._owns z_cls_12345_1.increment
+#  z.cls.store._ensure
+#  z.cls.instance.commands._install z_cls_12345_1.increment
+#  z.cls.instance.commands.is._managed z_cls_12345_1.increment
 #  # return: 0
-z.cls.instance._owns() {
+z.cls.instance.commands.is._managed() {
   local program=${functions[$1]-}
   local suffix=${1#*.}
   local expected_program=${z_cls_dispatch_programs[$suffix]-}
