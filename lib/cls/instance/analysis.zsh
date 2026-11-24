@@ -1,35 +1,27 @@
-# インスタンス参照から呼び出すメソッドと属性のコマンド名を列挙する。
+# 呼び出しに使われた参照を有効なインスタンスIDへ解決する。
 #
-# $1: クラス名
-# $reference?: 生成名の接頭辞となるインスタンス参照。省略時は接尾辞だけを返す
-# REPLY: コマンド名の配列。メンバーがない場合は空配列
-# return: 0
+# $1: インスタンス参照
+# REPLY: インスタンスID
+# return: 0|1
 #
 # example:
 #  z.cls.draw Counter
-#    z.cls.attr count default=0
 #  z.cls.drew
-#  z.cls.instance._commands Counter reference=ref
-#  # REPLY: ("ref.count.get" "ref.count.set")
+#  local counter=""
+#  z.cls.new Counter counter
+#  z.cls.instance._resolve "$counter"
+#  # REPLY: counterと同じインスタンスID
 #  # return: 0
-z.cls.instance._commands() {
-  local class_name=$1
-  shift
+z.cls.instance._resolve() {
+  if z.is.null "$1" || ! z.var.exists "z_cls_instances[$1]"; then
+    z.io.error "Instance reference $1 is not available in this scope."
+    return 1
+  fi
 
-  z.arg.named reference "$@" && local reference=$REPLY
+  if z.var.exists "z_cls_active[$1]" && z.is.not.eq "${z_cls_current_instance-}" "$1"; then
+    z.io.error "Instance $1 is active in another instance call."
+    return 1
+  fi
 
-  local -a wrappers=()
-  local member
-
-  z.cls.store._names "$z_cls_class_methods[$class_name]"
-  for member in "${REPLY[@]}"; do
-    wrappers+=("$reference.$member")
-  done
-
-  z.cls.store._names "$z_cls_class_attrs[$class_name]"
-  for member in "${REPLY[@]}"; do
-    wrappers+=("$reference.$member.get" "$reference.$member.set")
-  done
-
-  REPLY=("${wrappers[@]}")
+  REPLY=$1
 }

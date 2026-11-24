@@ -14,5 +14,8 @@
 #  # return: 0
 z.cls.capture._within_scope() {
   # パスや関数名に含まれる記号も、スタックの文字として比較する。
-  z.is.null "$2" || [[ "|$1" == *"|$2" ]]
+  z.is.null "$2" && return 0
+
+  setopt localoptions noglobsubst
+  z.str.end_with "|$1" "|$2"
 }

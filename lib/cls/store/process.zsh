@@ -6,7 +6,7 @@
 # example:
 #  z.cls.store._ensure
 #  # return: 0
-#  # 変更後: z_cls_instances=()とz_cls_values=()を初期化済み
+#  # 変更後: z_cls_instances=()とz_cls_scalars=()を初期化済み
 z.cls.store._ensure() {
   if z.is.eq "${z_cls_store_ready-}" 1 && z.var.exists z_cls_dispatch_programs; then
     return 0
@@ -21,9 +21,7 @@ z.cls.store._ensure() {
   z.var.exists z_cls_bodies || typeset -gA z_cls_bodies
 
   z.var.exists z_cls_instances || typeset -gA z_cls_instances
-  z.var.exists z_cls_values || typeset -gA z_cls_values
-  z.var.exists z_cls_members || typeset -gA z_cls_members
-  z.var.exists z_cls_wrapper_refs || typeset -gA z_cls_wrapper_refs
+  z.var.exists z_cls_scalars || typeset -gA z_cls_scalars
   z.var.exists z_cls_dispatch_programs || typeset -gA z_cls_dispatch_programs
   z.var.exists z_cls_next_id || typeset -gi z_cls_next_id=0
   z.var.exists z_cls_active || typeset -gA z_cls_active
@@ -32,27 +30,6 @@ z.cls.store._ensure() {
   z.var.exists z_cls_capture_method || typeset -g z_cls_capture_method=''
 
   typeset -gi z_cls_store_ready=1
-}
-
-# スカラーを復元できる宣言として保存する。
-#
-# $1: インスタンス参照
-# $2: 属性名
-# $3: 保存する値
-# REPLY: null
-# return: 0
-#
-# example:
-#  z.cls.store._ensure
-#  z.cls.store._scalar object label "two words"
-#  # return: 0
-#  # 変更後: z_cls_values[object:label]="typeset -- label='two words'"
-z.cls.store._scalar() {
-  local -a REPLY=()
-
-  z.arr.quote style=single "$3"
-
-  z_cls_values[$1:$2]="typeset -- $2=$REPLY[1]"
 }
 
 # クラスのメソッド名と実行する本体を保存する。

@@ -51,7 +51,6 @@ z.t.describe "z.cls.draw"; {
 () {
   setopt localoptions localtraps
   source "$z_root/test/lib/cls/fixtures/counter.zsh"
-  source "$z_root/test/lib/cls/fixtures/arrays.zsh"
 }
 
 z.t.describe "z.cls.attr"; {
@@ -202,7 +201,9 @@ z.t.describe "z.cls.drew"; {
       z.cls.draw DirectPublish
       z.cls.drew
 
-      z.t.expect "$z_cls_classes[DirectPublish]" 1
+      z.var.exists "z_cls_classes[DirectPublish]"
+
+      z.t.expect.status.is.true
       z.t.expect.is.null "$z_cls_drawing"
     }
   }
@@ -615,19 +616,16 @@ z.t.describe "z.cls.new"; {
         () {
           local counter=""
 
-          z.cls.new ArrayBox counter
+          z.cls.draw InnerCounter
+            z.cls.attr items default=inner
+          z.cls.drew
+          z.cls.new InnerCounter counter
 
           z.t.expect.status.is.true
 
-          () {
-            local -a items=()
-            z.cls.instance._snapshot "$counter" items
-          }
-          $counter.fill
           $counter.items.get
-          local item_count=${#REPLY}
 
-          z.t.expect "$item_count" 3
+          z.t.expect.reply inner
 
           z.var.exists "functions[$counter.count.get]"
 
@@ -731,22 +729,23 @@ z.t.describe "z.cls.new"; {
   }
 
   z.t.context "呼び出し元のIFSがコロンの場合"; {
-    z.t.it "setterで同じインスタンスの属性を参照する"; {
+    z.t.it "各属性を別のコマンドで取得できる"; {
       () {
         local object=""
         local IFS=:
 
         z.cls.draw ClassWithCustomIFS
-          z.cls.attr value default=1
-          z.cls.attr other default=2
+          z.cls.attr value default=one
+          z.cls.attr other default=two
         z.cls.drew
         z.cls.new ClassWithCustomIFS object
-        z_cls_values[${object}:value]='typeset -i value=1'
 
-        $object.value.set 'other + 1'
         $object.value.get
+        local value=$REPLY
+        $object.other.get
 
-        z.t.expect.reply 3
+        z.t.expect.reply two
+        z.t.expect "$value" one
 
         z.cls.delete object
       }

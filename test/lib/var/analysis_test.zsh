@@ -21,6 +21,16 @@ z.t.describe "z.var.get"; {
     }
   }
 
+  z.t.context "変数名がvar_nameの場合"; {
+    z.t.it "呼出元の変数の値を返す"; {
+      local var_name="two words"
+
+      z.var.get var_name
+
+      z.t.expect.reply "two words"
+    }
+  }
+
   z.t.context "変数が配列の場合"; {
     z.t.it "配列の値を返す"; {
       local TEST_VAR_ARRAY=("one" "two" "three")

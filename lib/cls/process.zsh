@@ -184,8 +184,12 @@ z.cls.drew() {
     return 1
   fi
 
+  local -a REPLY=()
+  z.cls.instance.commands._prepare "$z_cls_drawing"
+  z.arr.join "${REPLY[@]}"
+  z_cls_classes[$z_cls_drawing]=$REPLY
+
   z.cls.capture._stop
-  z_cls_classes[$z_cls_drawing]=1
   z_cls_drawing=''
 }
 
@@ -236,21 +240,8 @@ z.cls.new() {
 
   local z_cls_id="z_cls_${$}_$z_cls_next_id"
 
-  z.cls.instance._commands "$1" reference="$z_cls_id"
-  local -a z_cls_wrappers=("${(@)REPLY}")
+  z.cls.instance.commands._install "$z_cls_id" "class=$1" || return
 
-
-  local z_cls_member
-
-  z.cls.store._names "$z_cls_class_attrs[$1]"
-  for z_cls_member in "${REPLY[@]}"; do
-    z.cls.store._scalar "$z_cls_id" "$z_cls_member" "$z_cls_defaults[$1:$z_cls_member]"
-  done
-
-  z.cls.instance.commands._install "${z_cls_wrappers[@]}" || return
-
-  z.arr.join "${z_cls_wrappers[@]}"
-  z_cls_members[$z_cls_id]=$REPLY
   z_cls_instances[$z_cls_id]=$1
   : ${(P)2::=$z_cls_id}
   typeset -gr -- "$2"
@@ -279,26 +270,20 @@ z.cls.delete() {
 
   z.is.not.eq "$#" 1 && return 1
 
-  local instance_id=${(P)1-}
+  if z.str.start_with "$1" z_cls_; then
+    local reference=$1
+  else
+    z.var.get "$1"
+    local reference=$REPLY[1]
+  fi
 
-  z.is.not.null "${z_cls_instances[$1]-}" && instance_id=$1
+  z.cls.instance._resolve "$reference" || return
+  local instance_id=$REPLY
 
-  if z.is.null "${z_cls_instances[$instance_id]-}" || z.is.not.null "${z_cls_active[$instance_id]-}"; then
-    z.io.error "Expected an existing, inactive instance reference."
+  if z.var.exists "z_cls_active[$instance_id]"; then
+    z.io.error "Expected an inactive instance reference."
     return 1
   fi
 
   z.cls.instance._release "$instance_id"
-
-  z.hash.count z_cls_instances
-  if z.int.is.zero $REPLY; then
-    # 全インスタンスの削除後に空テーブルを作り直し、バケットと未設定ノードを解放する。
-    z_cls_instances=()
-    z_cls_values=()
-    z_cls_members=()
-    z_cls_active=()
-    z_cls_wrapper_refs=()
-  fi
-
-  return 0
 }
