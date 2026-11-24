@@ -10,16 +10,16 @@ z.cls.draw Counter
   z.cls.attr count default=0
 
   z.cls.method increment
-    $self.count.get || return 1
-    $self.count.set "$(( REPLY + 1 ))" || return 1
+    $self.count.get || return
+    $self.count.set "$(( REPLY + 1 ))" || return
     $self.count.get
   z.cls.method.defined
 
   z.cls.method add
     z.arg.named count "$@" && local count=$REPLY
-    z.int.is.match "$count" || return 1
-    $self.count.get || return 1
-    $self.count.set "$(( REPLY + count ))" || return 1
+    z.int.is.match "$count" || return
+    $self.count.get || return
+    $self.count.set "$(( REPLY + count ))" || return
     $self.count.get
   z.cls.method.defined
 
