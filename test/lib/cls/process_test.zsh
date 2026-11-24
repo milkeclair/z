@@ -10,6 +10,31 @@ z.t.describe "z.cls.draw"; {
     }
   }
 
+  z.t.context "DEBUGトラップが呼出元のresultに代入する場合"; {
+    z.t.it "定義開始は成功し、トラップの代入は呼出元へ届く"; {
+      local -a output=()
+      output=("${(@f)$(
+        local result=before
+        TRAPDEBUG() {
+          if [[ $funcstack[2] == z.cls.draw && $ZSH_DEBUG_CMD == 'unsetopt localoptions' ]]; then
+            result=61
+          fi
+          return 0
+        }
+
+        z.cls.draw DebugDraw
+        local draw_status=$?
+        z.cls.drew
+        unfunction TRAPDEBUG
+        print -rl -- "$draw_status" "$result"
+      )}")
+
+      z.t.expect.status.is.true
+      z.t.expect "$output[1]" 0
+      z.t.expect "$output[2]" 61
+    }
+  }
+
   z.t.context "引数が不足する場合"; {
     z.t.it "失敗する"; {
       z.t.mock name=z.io.error
@@ -148,6 +173,33 @@ z.t.describe "z.cls.abort"; {
     }
   }
 
+  z.t.context "DEBUGトラップが呼出元のkeyに代入する場合"; {
+    z.t.it "トラップの代入を保ち、未公開の定義を破棄する"; {
+      local -a output=()
+      output=("${(@f)$(
+        local key=before
+        TRAPDEBUG() {
+          if [[ $funcstack[2] == z.cls.abort && $ZSH_DEBUG_CMD == 'z.str.start_with '* ]]; then
+            key=other
+          fi
+          return 0
+        }
+
+        z.cls.draw DebugAbort
+          z.cls.attr count default=1
+          z.cls.method value 'REPLY=old'
+        z.cls.abort
+        unfunction TRAPDEBUG
+        print -rl -- "$key" "${+z_cls_defaults[DebugAbort:count]}" "${+z_cls_bodies[DebugAbort:value]}"
+      )}")
+
+      z.t.expect.status.is.true
+      z.t.expect "$output[1]" other
+      z.t.expect "$output[2]" 0
+      z.t.expect "$output[3]" 0
+    }
+  }
+
   z.t.context "未公開の定義がある場合"; {
     z.t.it "初期値と本体を破棄する"; {
       z.cls.draw DirectAbort
@@ -170,6 +222,28 @@ z.t.describe "z.cls.abort"; {
 }
 
 z.t.describe "z.cls.new"; {
+  z.t.context "呼出元に内部処理と同じ用途の名前がある場合"; {
+    z.t.it "指定した変数に実体を代入し、メソッドから呼出元の変数を参照できる"; {
+      () {
+        local class=""
+        local result=caller_result
+        local current_instance=caller_instance
+
+        z.cls.draw CallerVariables
+          z.cls.method read 'REPLY="${result}:$current_instance"'
+        z.cls.drew
+
+        z.cls.new CallerVariables class
+
+        z.t.expect.status.is.true
+        "$class.read"
+
+        z.t.expect.reply "caller_result:caller_instance"
+        z.cls.delete class
+      }
+    }
+  }
+
   z.t.context "nounsetの下で参照をコピーした場合"; {
     z.t.it "nounset下でコピーした参照の状態共有と削除ができる"; {
       local -a output=()

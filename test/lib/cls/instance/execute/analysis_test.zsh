@@ -20,9 +20,9 @@ z.t.describe "z.cls.instance.execute._get"; {
   z.t.context "一般的なgetterの作業変数と同名の属性の場合"; {
     z.t.it "実体の配列を参照し要素の境界を保持する"; {
       () {
-        local -a var_name=("" "two words" false null)
+        local -a name=("" "two words" false null)
 
-        z.cls.instance.execute._get var_name
+        z.cls.instance.execute._get name
         local -a result=("${REPLY[@]}")
 
         z.t.expect "${#result}" 4

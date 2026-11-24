@@ -14,18 +14,14 @@
 #  # return: 0
 z.cls.instance._call() {
   local z_cls_instance=${(P)1:-}
-  local z_cls_operation=$2
-  local z_cls_member=$3
 
   z.is.not.null "${z_cls_instances[$1]:-}" && z_cls_instance=$1
-  z.cls.instance.call._validate "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$1" || return 1
+  z.cls.instance.call._validate "$z_cls_instance" "$2" "$3" "$1" || return 1
 
-  shift 3
-
-  if z.is.eq "$z_cls_operation" method; then
-    z.cls.instance.call._run "$z_cls_instance" "$z_cls_member" "$@"
+  if z.is.eq "$2" method; then
+    z.cls.instance.call._run "$z_cls_instance" "$3" "${@:4}"
   else
-    z.cls.instance.call._access "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
+    z.cls.instance.call._access "$z_cls_instance" "$2" "$3" "${@:4}"
   fi
 }
 
@@ -44,8 +40,7 @@ z.cls.instance._call() {
 #  # return: 0
 z.cls.instance._execute() {
   local z_cls_instance=$1
-  local z_cls_member=$2
-  local z_cls_body=$z_cls_bodies[${z_cls_instances[$z_cls_instance]}:$z_cls_member]
+  local z_cls_body=$z_cls_bodies[${z_cls_instances[$1]}:$2]
 
   shift 2
 
@@ -71,51 +66,44 @@ z.cls.instance._execute() {
 #  # return: 0
 #  # 変更後: z_cls_values[object:number]に基数16を保つ宣言を保存済み
 z.cls.instance._snapshot() {
-  local z_cls_snapshot_key="$1:$2"
-  local z_cls_snapshot_name=$2
-
-  if ! z.var.exists "$z_cls_snapshot_name"; then
-    z_cls_values[$z_cls_snapshot_key]="typeset -- $z_cls_snapshot_name; unset $z_cls_snapshot_name"
+  if ! z.var.exists "$2"; then
+    z_cls_values[$1:$2]="typeset -- $2; unset $2"
     return 0
   fi
 
-  local z_cls_snapshot_type=${(tP)z_cls_snapshot_name}
-
-  case $z_cls_snapshot_type in
+  case ${(tP)2} in
     scalar|scalar-local)
-      local z_cls_snapshot_value=${(P)z_cls_snapshot_name}
-
-      z.cls.store._scalar "$1" "$z_cls_snapshot_name" "$z_cls_snapshot_value"
+      z.cls.store._scalar "$1" "$2" "${(P)2}"
       return 0
       ;;
     integer|integer-local)
-      local z_cls_snapshot_value=${(P)z_cls_snapshot_name}
-
-      if z.int.is.match "$z_cls_snapshot_value"; then
-        z.cls.store._scalar "$1" "$z_cls_snapshot_name" "$z_cls_snapshot_value" -i
+      if z.int.is.match "${(P)2}"; then
+        z.cls.store._scalar "$1" "$2" "${(P)2}" -i
         return 0
       fi
 
       ;;
     array|array-local)
       local -a REPLY=()
-      z.arr.quote style=single "${(@P)z_cls_snapshot_name}"
+      z.arr.quote style=single "${(@P)2}"
 
-      z_cls_values[$z_cls_snapshot_key]="typeset -a $z_cls_snapshot_name=( ${(j: :)REPLY} )"
+      z.arr.join "${REPLY[@]}"
+      z_cls_values[$1:$2]="typeset -a $2=( $REPLY )"
       return 0
       ;;
     association|association-local)
       local -a REPLY=()
-      z.arr.quote style=single "${(@Pkv)z_cls_snapshot_name}"
+      z.arr.quote style=single "${(@Pkv)2}"
 
-      z_cls_values[$z_cls_snapshot_key]="typeset -A $z_cls_snapshot_name=( ${(j: :)REPLY} )"
+      z.arr.join "${REPLY[@]}"
+      z_cls_values[$1:$2]="typeset -A $2=( $REPLY )"
       return 0
       ;;
   esac
 
-  local z_cls_snapshot_declaration="$(typeset -p "$z_cls_snapshot_name")"
+  local declaration=$(typeset -p "$2")
 
-  z_cls_values[$z_cls_snapshot_key]=${z_cls_snapshot_declaration/#typeset -g /typeset }
+  z_cls_values[$1:$2]=${declaration/#typeset -g /typeset }
 }
 
 # 検証済みの実体について、生成したコマンドと保存済みの属性を解放する。

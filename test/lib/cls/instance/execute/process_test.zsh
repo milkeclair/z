@@ -14,6 +14,18 @@ z.t.describe "z.cls.instance.execute._set"; {
     }
   }
 
+  z.t.context "代入先がnameという名前の場合"; {
+    z.t.it "呼出元の変数を更新する"; {
+      () {
+        local name=old
+
+        z.cls.instance.execute._set name new
+
+        z.t.expect "$name" new
+      }
+    }
+  }
+
   z.t.context "空要素を含む配列の場合"; {
     z.t.it "要素の境界を保って更新する"; {
       () {

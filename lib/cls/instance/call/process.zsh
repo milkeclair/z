@@ -51,49 +51,39 @@ z.cls.instance.call._validate() {
 #  # REPLY: 0
 #  # return: 0
 z.cls.instance.call._access() {
-  local z_cls_instance=$1
-  local z_cls_operation=$2
-  local z_cls_member=$3
-  local z_cls_declaration=$z_cls_values[$1:$3]
-  local z_cls_value_type=""
-
-  if z.str.start_with "$z_cls_declaration" "typeset -- $z_cls_member="; then
-    z_cls_value_type=scalar
-  elif z.str.start_with "$z_cls_declaration" "typeset -i $z_cls_member="; then
-    z_cls_value_type=integer
+  if z.str.start_with "$z_cls_values[$1:$3]" "typeset -i $3="; then
+    case $2 in
+      get)
+        z.is.eq "$#" 3 || return 1
+        z.str.unquote "${z_cls_values[$1:$3]#*=}"
+        return $?
+        ;;
+      set)
+        z.is.eq "$#" 4 || return 1
+        if z.int.is.match "$4"; then
+          local -i number=0
+          (( number = $4, 1 )) || return 1
+          z.cls.store._scalar "$1" "$3" "$number" -i
+          return 0
+        fi
+        ;;
+    esac
+  elif z.str.start_with "$z_cls_values[$1:$3]" "typeset -- $3="; then
+    case $2 in
+      get)
+        z.is.eq "$#" 3 || return 1
+        z.str.unquote "${z_cls_values[$1:$3]#*=}"
+        return $?
+        ;;
+      set)
+        z.is.eq "$#" 4 || return 1
+        z.cls.store._scalar "$1" "$3" "$4"
+        return 0
+        ;;
+    esac
   fi
 
-  shift 3
-
-  case "$z_cls_operation:$z_cls_value_type" in
-    get:scalar|get:integer)
-      z.int.is.zero $# || return 1
-
-      local z_cls_literal=${z_cls_declaration#*=}
-
-      z.str.unquote "$z_cls_literal"
-      return $?
-      ;;
-    set:scalar)
-      z.int.is.eq $# 1 || return 1
-      z.cls.store._scalar "$z_cls_instance" "$z_cls_member" "$1"
-      return 0
-      ;;
-    set:integer)
-      z.int.is.eq $# 1 || return 1
-
-      if z.int.is.match "$1"; then
-        local -i z_cls_numeric=0
-
-        (( z_cls_numeric = $1, 1 )) || return 1
-
-        z.cls.store._scalar "$z_cls_instance" "$z_cls_member" "$z_cls_numeric" -i
-        return 0
-      fi
-      ;;
-  esac
-
-  z.cls.instance.call._access_typed "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
+  z.cls.instance.call._access_typed "$@"
 }
 
 # 型付き属性の復元、取得・更新、保存を同じ関数スコープで行う。
@@ -111,31 +101,24 @@ z.cls.instance.call._access() {
 #  # REPLY: ("one" "two words")
 #  # return: 0
 z.cls.instance.call._access_typed() {
-  local z_cls_instance=$1
-  local z_cls_operation=$2
-  local z_cls_member=$3
-  local -a z_cls_attributes=("$z_cls_member")
-
-  shift 3
-
-  if z.is.eq "$z_cls_operation" set; then
-    # 数値式は、同じ実体の他の属性を参照できる。
-    z_cls_attributes=(${=z_cls_class_attrs[${z_cls_instances[$z_cls_instance]}]})
+  local -a z_cls_attributes=("$3")
+  if z.is.eq "$2" set; then
+    # 数値式から参照できるよう、更新時は同じ実体の属性をすべて復元する。
+    z_cls_attributes=(${=z_cls_class_attrs[${z_cls_instances[$1]}]})
   fi
 
   local z_cls_attribute
-
   for z_cls_attribute in "${z_cls_attributes[@]}"; do
-    eval "$z_cls_values[$z_cls_instance:$z_cls_attribute]"
+    eval "$z_cls_values[$1:$z_cls_attribute]"
   done
 
-  case $z_cls_operation in
+  case $2 in
     get)
-      z.cls.instance.execute._get "$z_cls_member" "$@"
+      z.cls.instance.execute._get "$3" "${@:4}"
       ;;
     set)
-      z.cls.instance.execute._set "$z_cls_member" "$@" || return $?
-      z.cls.instance._snapshot "$z_cls_instance" "$z_cls_member"
+      z.cls.instance.execute._set "$3" "${@:4}" || return $?
+      z.cls.instance._snapshot "$1" "$3"
       ;;
   esac
 }
@@ -154,23 +137,17 @@ z.cls.instance.call._access_typed() {
 #  # return: 7
 #  # 変更後: countは4、実行中フラグは解除済み
 z.cls.instance.call._run() {
-  local z_cls_instance=$1
-
-  if z.is.not.null "${z_cls_active[$z_cls_instance]:-}"; then
+  if z.is.not.null "${z_cls_active[$1]:-}"; then
     z.cls.instance._execute "$@"
     return $?
   fi
 
-  local z_cls_current_instance=$z_cls_instance
-  local z_cls_result=0
+  local z_cls_current_instance=$1
 
-  z_cls_active[$z_cls_instance]=1
+  z_cls_active[$1]=1
   {
     z.cls.instance._execute "$@"
   } always {
-    z_cls_result=$?
-    unset "z_cls_active[$z_cls_instance]"
+    unset "z_cls_active[$1]"
   }
-
-  return $z_cls_result
 }
