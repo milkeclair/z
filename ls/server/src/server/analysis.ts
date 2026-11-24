@@ -50,6 +50,8 @@ function refreshAnalysis(
     projectRoot: root,
     documents,
     previous: current.snapshot,
+    functionSources:
+      current.environment.kind === 'available' ? current.environment.functionSources : undefined,
     changedPaths: current.watcherReady ? changedPaths : undefined,
   });
   const diagnosticSnapshot = refreshDiagnosticSnapshot({

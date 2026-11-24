@@ -44,16 +44,18 @@ export function hydrateDiskFile({
   previous,
   projectRoot,
   relativePath,
+  maxBytes = Infinity,
 }: {
   readonly previous: ZshHydrator;
   readonly projectRoot: string;
   readonly relativePath: string;
+  readonly maxBytes?: number;
 }): ZshHydrationEntry | null {
   try {
-    const absolutePath = path.join(projectRoot, relativePath);
+    const absolutePath = path.resolve(projectRoot, relativePath);
     const stat = fs.statSync(absolutePath);
 
-    if (!stat.isFile()) {
+    if (!stat.isFile() || stat.size > maxBytes) {
       return null;
     }
 

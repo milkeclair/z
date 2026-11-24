@@ -7,12 +7,14 @@ import { documentSnapshots } from './documents';
 import type { FileFunctionProjections } from './projection';
 import { projectFunctions } from './projection';
 import type { FunctionTargets } from './target';
+import { refreshShellFunctions, type ShellFunctionIndex } from './shell';
 
 export type FunctionSnapshot = {
   readonly hydrator: ZshHydrator;
   readonly functions: readonly Func[];
   readonly targets: FunctionTargets;
   readonly documents: DocumentSnapshots;
+  readonly shellFunctions?: ShellFunctionIndex;
   readonly fileProjections: FileFunctionProjections;
 };
 
@@ -29,6 +31,7 @@ export function createFunctionSnapshot(): FunctionSnapshot {
 type RefreshInput = {
   readonly projectRoot: string;
   readonly changedPaths?: readonly string[];
+  readonly functionSources?: ReadonlyMap<string, string>;
   readonly documents: readonly TextDocument[] | TextDocuments<TextDocument>;
 };
 
@@ -36,6 +39,7 @@ export function refreshFunctionSnapshot({
   projectRoot,
   documents,
   changedPaths,
+  functionSources,
   previous = createFunctionSnapshot(),
 }: RefreshInput & {
   readonly previous?: FunctionSnapshot;
@@ -49,7 +53,18 @@ export function refreshFunctionSnapshot({
   });
   const open = documentSnapshots(inputs, hydrator, previous.documents);
 
-  if (previous.hydrator === hydrator && open === previous.documents) {
+  const shellFunctions = refreshShellFunctions({
+    sources: functionSources,
+    project: hydrator,
+    previous: previous.shellFunctions,
+    changedPaths,
+  });
+
+  if (
+    previous.hydrator === hydrator &&
+    open === previous.documents &&
+    previous.shellFunctions === shellFunctions
+  ) {
     return previous;
   }
 
@@ -66,6 +81,7 @@ export function refreshFunctionSnapshot({
     functions: projection.functions,
     targets: projection.targets,
     documents: open,
+    ...(shellFunctions ? { shellFunctions } : {}),
     fileProjections: projection.fileProjections,
   };
 }

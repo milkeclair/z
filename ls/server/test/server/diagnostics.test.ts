@@ -14,6 +14,68 @@ import { createLspClient, createProjectDirectory, withRequestTimeout } from './c
 
 describe('startServer', () => {
   describe('診断を取得する場合', () => {
+    test('.zshrcが読み込んだプロジェクト外の引数契約でselfを診断する', async () => {
+      const root = createProjectDirectory();
+      const outside = createProjectDirectory();
+      const library = path.join(outside, 'shared functions');
+      fs.writeFileSync(
+        library,
+        '# $1 [Counter<write>]: 更新する実体\nexternal_update() { $1.count.set 1; }\n',
+      );
+      fs.writeFileSync(path.join(outside, '.zshrc'), 'source ' + JSON.stringify(library) + '\n');
+      fs.writeFileSync(
+        path.join(root, 'dsl.zsh'),
+        ['z.cls.draw', 'z.cls.attr', 'z.cls.fn', 'z.cls.fn.done', 'z.cls.drew']
+          .map((name) => name + '() { :; }')
+          .join('\n'),
+      );
+      const caller = pathToFileURL(path.join(root, 'caller.zsh')).href;
+      const source = [
+        'z.cls.draw Counter',
+        '  z.cls.attr count default=0',
+        '  # $self [Counter<read>]: 読み取る実体',
+        '  z.cls.fn value',
+        '    external_update "$self"',
+        '  z.cls.fn.done',
+        'z.cls.drew',
+        '',
+      ].join('\n');
+      const client = createLspClient({ env: { ...process.env, ZDOTDIR: outside } });
+      const request = () =>
+        withRequestTimeout(
+          client.connection.sendRequest(DocumentDiagnosticRequest.type, {
+            textDocument: { uri: caller },
+          }),
+        );
+
+      try {
+        await client.initialize({ projectRoot: root, supportsRefresh: false });
+        await client.open(caller, source);
+
+        expect(await request()).toMatchObject({
+          kind: 'full',
+          items: [
+            {
+              code: 'class-argument-type',
+              range: { start: { line: 4 } },
+              message: 'Expected Counter<write> for self, received Counter<read>.',
+            },
+          ],
+        });
+
+        fs.writeFileSync(
+          library,
+          '# $1 [Counter<read>]: 読み取る実体\nexternal_update() { $1.count.get; }\n',
+        );
+        await client.connection.sendNotification(DidChangeWatchedFilesNotification.type, {
+          changes: [{ uri: pathToFileURL(library).href, type: FileChangeType.Changed }],
+        });
+        await expect.poll(request).toMatchObject({ kind: 'full', items: [] });
+      } finally {
+        await client.close();
+      }
+    }, 15000);
+
     test('引用した名前付き引数の診断・署名・hoverを実サーバーで返す', async () => {
       const root = createProjectDirectory();
       const caller = pathToFileURL(path.join(root, 'caller.zsh')).href;

@@ -12,6 +12,7 @@ export type ShellEnvironment =
       readonly globalAliases: ReadonlySet<string>;
       readonly suffixAliases: ReadonlySet<string>;
       readonly functions: ReadonlySet<string>;
+      readonly functionSources?: ReadonlyMap<string, string>;
       readonly commandBuiltins: boolean;
     }
   | {
@@ -33,6 +34,19 @@ const QUERY = [
   'for zlsName in "${(@k)galiases}"; do builtin printf "global-alias\\0%s\\0" "$zlsName"; done',
   'for zlsName in "${(@k)saliases}"; do builtin printf "suffix-alias\\0%s\\0" "$zlsName"; done',
   'for zlsName in "${(@k)functions}"; do builtin printf "function\\0%s\\0" "$zlsName"; done',
+  'typeset -A zlsSourcePaths',
+  'for zlsName in "${(@k)functions_source}"; do',
+  '  [[ ${functions[$zlsName]} == "builtin autoload -X"* ]] && continue',
+  '  zlsSource=${functions_source[$zlsName]}',
+  '  [[ -n $zlsSource ]] || continue',
+  '  if (( ! ${+zlsSourcePaths[$zlsSource]} )); then',
+  '    zlsSourcePaths[$zlsSource]=""',
+  '    [[ -f $zlsSource ]] && zlsSourcePaths[$zlsSource]=${zlsSource:A}',
+  '  fi',
+  '  if [[ -n ${zlsSourcePaths[$zlsSource]} ]]; then',
+  '    builtin printf "function-source\\0%s\\0%s\\0" "$zlsName" "$zlsSourcePaths[$zlsSource]"',
+  '  fi',
+  'done',
   'if [[ -o POSIX_BUILTINS ]]; then builtin printf "option\\0command-builtins\\0"; fi',
   "builtin printf '__ZLS_ENV_END__\\0'",
 ].join('\n');
@@ -66,11 +80,13 @@ export function parseShellEnvironment(output: string): ShellEnvironment {
   const words = output.slice(start + marker.length).split(String.fromCharCode(0));
   const initial: {
     readonly tables: SymbolTables;
+    readonly functionSources: ReadonlyMap<string, string>;
     readonly valid: boolean;
     readonly commandBuiltins: boolean;
   } = {
     valid: false,
     commandBuiltins: false,
+    functionSources: new Map(),
     tables: {
       commands: new Set(),
       builtins: new Set(),
@@ -93,6 +109,13 @@ export function parseShellEnvironment(output: string): ShellEnvironment {
       const name = words[index + 1];
       if (!name) return done(undefined);
 
+      if (kind === 'function-source') {
+        const source = words[index + 2];
+        if (!source) return done(undefined);
+        draft.functionSources.set(name, source);
+        return again(index + 3);
+      }
+
       if (kind === 'option' && name === 'command-builtins') {
         draft.commandBuiltins = true;
 
@@ -109,7 +132,12 @@ export function parseShellEnvironment(output: string): ShellEnvironment {
   });
 
   return parsed.valid
-    ? { ...parsed.tables, kind: 'available', commandBuiltins: parsed.commandBuiltins }
+    ? {
+        ...parsed.tables,
+        kind: 'available',
+        functionSources: parsed.functionSources,
+        commandBuiltins: parsed.commandBuiltins,
+      }
     : { kind: 'unavailable', reason: 'invalid-output' };
 }
 

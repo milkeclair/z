@@ -27,6 +27,7 @@ export type FileDiagnostics = {
 export type DiagnosticSnapshot = {
   readonly revision: number;
   readonly targets: FunctionTargets;
+  readonly shellTargets?: FunctionTargets;
   readonly context: ResolutionContext;
   readonly files: ReadonlyMap<string, FileDiagnostics>;
 };
@@ -182,7 +183,9 @@ export function refreshDiagnosticSnapshot({
     snapshot.hydrator.projectRoot,
     previous.context,
   );
-  const reusableContracts = sameCallContracts(previous.targets, snapshot.targets);
+  const shellTargets = snapshot.shellFunctions?.targets;
+  const reusableContracts =
+    sameCallContracts(previous.targets, snapshot.targets) && previous.shellTargets === shellTargets;
   const revision = previous.revision + 1;
   const entries = [...inputs].flatMap(
     ([uri, input]): readonly (readonly [string, FileDiagnostics])[] => {
@@ -210,11 +213,18 @@ export function refreshDiagnosticSnapshot({
   if (
     previous.context === context &&
     previous.targets === snapshot.targets &&
+    previous.shellTargets === shellTargets &&
     files.size === previous.files.size &&
     [...files].every(([uri, file]) => previous.files.get(uri) === file)
   ) {
     return previous;
   }
 
-  return { revision, files, targets: snapshot.targets, context };
+  return {
+    revision,
+    files,
+    targets: snapshot.targets,
+    context,
+    ...(shellTargets ? { shellTargets } : {}),
+  };
 }
