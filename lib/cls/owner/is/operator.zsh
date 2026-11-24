@@ -25,7 +25,10 @@ z.cls.owner.is._writable() {
       ;;
   esac
 
-  local reference=${(P)1}
+  local REPLY=""
+  z.var.get "$1"
+  local reference=$REPLY[1]
+
   if z.is.null "$reference"; then
     return 0
   fi

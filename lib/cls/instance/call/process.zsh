@@ -192,9 +192,10 @@ z.cls.instance.call._run() {
   local z_cls_instance=${z_cls_references[$1]-$1}
 
   z.cls.instance.call._validate "$z_cls_instance" "$1" || return
-  (( ${+z_cls_bodies[${z_cls_instances[$z_cls_instance]}:$2]} )) || return 1
+  local z_cls_method_key="${z_cls_instances[$z_cls_instance]}:$2"
+  z.var.exists "z_cls_bodies[$z_cls_method_key]" || return
 
-  local z_cls_body=$z_cls_bodies[${z_cls_instances[$z_cls_instance]}:$2]
+  local z_cls_body=$z_cls_bodies[$z_cls_method_key]
   local z_cls_activated=0
   if z.is.null "${z_cls_active[$z_cls_instance]-}"; then
     local z_cls_current_instance=$z_cls_instance

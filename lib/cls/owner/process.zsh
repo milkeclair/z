@@ -28,7 +28,9 @@ z.cls.owner.move() {
     return 1
   fi
 
-  local z_cls_old_reference=${(P)z_cls_from-}
+  z.var.get "$z_cls_from"
+  local z_cls_old_reference="$REPLY"
+
   if ! z.cls.owner.is._current "$z_cls_from" "reference=$z_cls_old_reference"; then
     z.io.error "Instance variable $z_cls_from is not the current owner."
     return 1
