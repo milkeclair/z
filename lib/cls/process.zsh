@@ -13,10 +13,10 @@
 z.cls.draw() {
   z.cls.store._ensure
 
-  local z_cls_stack=${(j:|:)funcstack[2,-1]}
-  local z_cls_result=1
+  local caller_stack=${(j:|:)funcstack[2,-1]}
+  local result=1
 
-  if ! z.int.is.eq $# 1 || ! z.cls.is._name "${1:-}"; then
+  if ! z.is.eq "$#" 1 || ! z.cls.is._name "${1:-}"; then
     z.io.error "Expected a valid class name."
   elif z.is.not.null "$z_cls_drawing" || z.is.not.null "${z_cls_classes[$1]:-}"; then
     z.io.error "Class $1 already exists or a definition is active."
@@ -24,20 +24,20 @@ z.cls.draw() {
     z_cls_class_attrs[$1]=''
     z_cls_class_methods[$1]=''
     z_cls_drawing=$1
-    typeset -g +x z_cls_draw_stack=$z_cls_stack
+    typeset -g +x z_cls_draw_stack=$caller_stack
     typeset -gi +x z_cls_draw_failed=0
-    z_cls_result=0
+    result=0
   fi
 
-  if z.int.is.not.zero $z_cls_result; then
+  if z.int.is.not.zero $result; then
     typeset -gi +x z_cls_reject_depth=1 z_cls_reject_method=0
-    typeset -g +x z_cls_reject_stack=$z_cls_stack
+    typeset -g +x z_cls_reject_stack=$caller_stack
   fi
 
   unsetopt localoptions
   z.cls.capture._watch
 
-  return $z_cls_result
+  return $result
 }
 
 # 定義中のクラスにスカラー属性と初期値を登録する。
@@ -55,11 +55,11 @@ z.cls.draw() {
 z.cls.attr() {
   z.cls.store._ensure
 
-  if z.int.is.eq $# 2 && z.str.start_with "$1" default=; then
+  if z.is.eq "$#" 2 && z.str.start_with "$1" default=; then
     set -- "$2" "$1"
   fi
 
-  if ! z.int.is.eq $# 2 || z.is.null "$z_cls_drawing" || ! z.cls.is._attribute "${1:-}" ||
+  if ! z.is.eq "$#" 2 || z.is.null "$z_cls_drawing" || ! z.cls.is._attribute "${1:-}" ||
       ! z.str.start_with "${2:-}" default=; then
     z.io.error "Expected an active class, an ordinary attribute name, and default=."
     z.is.not.null "$z_cls_drawing" && z_cls_draw_failed=1

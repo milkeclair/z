@@ -12,24 +12,24 @@
 #  z.cls.instance.call._validate "$object" get count object
 #  # return: 0
 z.cls.instance.call._validate() {
-  local z_cls_instance=$1
+  local instance_id=$1
 
-  if z.is.null "${z_cls_instances[$z_cls_instance]:-}"; then
+  if z.is.null "${z_cls_instances[$instance_id]:-}"; then
     z.io.error "Instance reference $4 is not available in this scope."
     return 1
   fi
 
-  local z_cls_key="${z_cls_instances[$z_cls_instance]}:$3"
+  local member_key="${z_cls_instances[$instance_id]}:$3"
 
   if z.is.eq "$2" method; then
-    z.var.exists "z_cls_bodies[$z_cls_key]" || return 1
+    z.var.exists "z_cls_bodies[$member_key]" || return 1
   else
-    z.var.exists "z_cls_defaults[$z_cls_key]" || return 1
+    z.var.exists "z_cls_defaults[$member_key]" || return 1
   fi
 
-  if z.is.not.null "${z_cls_active[$z_cls_instance]:-}" &&
-      z.is.not.eq "${z_cls_current_instance:-}" "$z_cls_instance"; then
-    z.io.error "Instance $z_cls_instance is active in another instance call."
+  if z.is.not.null "${z_cls_active[$instance_id]:-}" &&
+      z.is.not.eq "${z_cls_current_instance:-}" "$instance_id"; then
+    z.io.error "Instance $instance_id is active in another instance call."
     return 1
   fi
 

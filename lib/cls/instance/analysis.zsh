@@ -12,23 +12,23 @@
 #  # REPLY: ("counter.count.get" "counter.count.set" "ref.count.get" "ref.count.set")
 #  # return: 0
 z.cls.instance._commands() {
-  local z_cls_class=$1
-  local z_cls_binding=$2
-  local z_cls_id=$3
-  local -a z_cls_wrappers=()
-  local z_cls_prefix
-  local z_cls_member
+  local class_name=$1
+  local binding=$2
+  local instance_id=$3
+  local -a wrappers=()
+  local prefix
+  local member
 
-  for z_cls_prefix in "$z_cls_binding" "$z_cls_id"; do
-    for z_cls_member in ${=z_cls_class_methods[$z_cls_class]}; do
-      z_cls_wrappers+=("$z_cls_prefix.$z_cls_member")
+  for prefix in "$binding" "$instance_id"; do
+    for member in ${=z_cls_class_methods[$class_name]}; do
+      wrappers+=("$prefix.$member")
     done
 
-    for z_cls_member in ${=z_cls_class_attrs[$z_cls_class]}; do
-      z_cls_wrappers+=("$z_cls_prefix.$z_cls_member.get")
-      z_cls_wrappers+=("$z_cls_prefix.$z_cls_member.set")
+    for member in ${=z_cls_class_attrs[$class_name]}; do
+      wrappers+=("$prefix.$member.get")
+      wrappers+=("$prefix.$member.set")
     done
   done
 
-  REPLY=("${z_cls_wrappers[@]}")
+  REPLY=("${wrappers[@]}")
 }

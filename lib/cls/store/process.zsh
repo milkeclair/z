@@ -45,9 +45,9 @@ z.cls.store._ensure() {
 #  # return: 0
 #  # 変更後: z_cls_values[object:label]="typeset -- label='two words'"
 z.cls.store._scalar() {
-  local z_cls_declaration_flag=${4:---}
+  local declaration_flag=${4:---}
 
-  z_cls_values[$1:$2]="typeset $z_cls_declaration_flag $2=${(qq)3}"
+  z_cls_values[$1:$2]="typeset $declaration_flag $2=${(qq)3}"
 }
 
 # クラスのメソッド一覧と、対応する本体を保存する。
