@@ -48,7 +48,7 @@ z.cls.capture._watch() {
 
   local REPLY=""
 
-  typeset -g z_cls_debug_function="${functions[TRAPDEBUG]-}"
+  typeset -g z_cls_debug_function="${functions[TRAPDEBUG]}"
   typeset -g z_cls_debug_has_function=${+functions[TRAPDEBUG]}
   typeset -g z_cls_debug_trap=''
   typeset -g z_cls_debug_before=$options[debugbeforecmd]
