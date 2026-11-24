@@ -113,7 +113,7 @@ z.cls.instance.commands._install() {
   for suffix in "${suffixes[@]}"; do
     local command_name="$reference.$suffix"
     if ! functions -c "z_cls_dispatch_$suffix" "$command_name"; then
-      if z.int.is.not.zero "${#installed}"; then
+      if z.is.not.eq "${#installed}" 0; then
         unfunction "${installed[@]}"
       fi
       return 1
@@ -156,7 +156,7 @@ z.cls.instance.commands._uninstall() {
     fi
   done
 
-  if z.int.is.not.zero "${#names}"; then
+  if z.is.not.eq "${#names}" 0; then
     unfunction "${names[@]}"
   fi
 }

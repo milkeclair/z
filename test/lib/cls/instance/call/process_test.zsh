@@ -87,6 +87,27 @@ z.t.describe "z.cls.instance.call._run"; {
     }
   }
 
+  z.t.context "メソッドが呼び出し前のREPLYを使う場合"; {
+    z.t.it "空要素を含む配列を保つ"; {
+      () {
+        z.cls.draw ReplyScope
+          z.cls.method keep
+            :
+          z.cls.method.defined
+        z.cls.drew
+        local object=""
+        z.cls.new ReplyScope object
+        REPLY=(before "two words" "")
+
+        $object.keep
+
+        z.t.expect.reply.is.arr before "two words" ""
+
+        z.cls.delete object
+      }
+    }
+  }
+
   z.t.context "メソッドでEXITトラップを設定する場合"; {
     z.t.it "トラップからメソッドの引数を参照できる"; {
       () {
