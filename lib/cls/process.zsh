@@ -52,29 +52,32 @@ z.cls.draw() {
 z.cls.attr() {
   z.cls.store._ensure
 
-  if z.is.eq "$#" 2 && z.str.start_with "$1" default=; then
-    set -- "$2" "$1"
-  fi
+  local REPLY=""
+  local -a input_args=("$@") parsed_args=()
+  local -A parsed_named=([default]="")
 
-  if ! z.is.eq "$#" 2 || z.is.null "$z_cls_drawing" || ! z.cls.is._attribute "${1:-}" ||
-      ! z.str.start_with "${2:-}" default=; then
+  z.arg.parse input=input_args named=parsed_named rest=parsed_args
+  z.arr.count "${parsed_args[@]}"
+  local attribute=${parsed_args[1]:-}
+
+  # 全2引数のうち1つを位置引数とし、空のdefault=も明示指定として受け付ける。
+  if z.is.not.eq "$#" 2 || z.is.not.eq "$REPLY" 1 ||
+      z.is.null "$z_cls_drawing" || ! z.cls.is._attribute "$attribute"; then
     z.io.error "Expected an active class, an ordinary attribute name, and default=."
     z.is.not.null "$z_cls_drawing" && z_cls_draw_failed=1
     return 1
   fi
 
-  local key="$z_cls_drawing:$1"
+  local key="$z_cls_drawing:$attribute"
 
-  if z.var.exists "z_cls_defaults[$key]"; then
-    z.io.error "Attribute $1 already exists."
+  if z.hash.has.key z_cls_defaults "key=$key"; then
+    z.io.error "Attribute $attribute already exists."
     z_cls_draw_failed=1
     return 1
   fi
 
-  local REPLY=""
-  z.str.remove.prefix "$2" default=
-  z_cls_defaults[$key]=$REPLY
-  z_cls_class_attrs[$z_cls_drawing]+="$1 "
+  z_cls_defaults[$key]=${parsed_named[default]}
+  z_cls_class_attrs[$z_cls_drawing]+="$attribute "
 }
 
 # メソッド本体の収集を開始するか、引数で渡された本体を登録する。
@@ -115,7 +118,10 @@ z.cls.method() {
   fi
 
   unsetopt localoptions
-  z.cls.capture._start "${1:-invalid}" "${(j:|:)funcstack[2,-1]}" "${funcfiletrace[1]%:*}" "$invalid"
+  z.cls.capture._start "${1:-invalid}" \
+    stack="${(j:|:)funcstack[2,-1]}" \
+    file="${funcfiletrace[1]%:*}" \
+    discard="$invalid"
 }
 
 # メソッドの収集を終えたクラスを公開する。

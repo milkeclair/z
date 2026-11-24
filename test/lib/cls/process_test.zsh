@@ -81,29 +81,50 @@ z.t.describe "z.cls.attr"; {
       z.cls.abort
     }
   }
-  z.t.context "defaultが空文字または省略の場合"; {
-    z.t.it "空の初期値は受け付け、初期値を省略したクラスは公開しない"; {
+
+  z.t.context "空の初期値を明示した場合"; {
+    z.t.it "空文字列をスカラーとして保持する"; {
       z.cls.draw EmptyDefault
         z.cls.attr default default=
-        z.cls.attr default=0 count
       z.cls.drew
 
       () {
         local object=""
         z.cls.new EmptyDefault object
-        object.default.get
 
-        z.t.expect.reply.is.null
-
-        object.count.get
+        $object.default.get
         local reply_kind=${(t)REPLY}
-        local count_value=$REPLY
+        local default_value=$REPLY
 
         z.t.expect "$reply_kind" scalar
-        z.t.expect "$count_value" 0
+        z.t.expect.is.null "$default_value"
+
         z.cls.delete object
       }
+    }
+  }
 
+  z.t.context "defaultを属性名より前に置く場合"; {
+    z.t.it "初期値の空白と等号を保持する"; {
+      z.cls.draw NamedDefault
+        z.cls.attr 'default=a b=c' label
+      z.cls.drew
+
+      () {
+        local named_default=""
+        z.cls.new NamedDefault named_default
+
+        $named_default.label.get
+
+        z.t.expect.reply "a b=c"
+
+        z.cls.delete named_default
+      }
+    }
+  }
+
+  z.t.context "defaultを省略した場合"; {
+    z.t.it "属性の登録とクラスの公開が失敗する"; {
       z.cls.draw MissingDefault
         z.cls.attr value 2>/dev/null # zls: ignore missing-named-argument
 
@@ -111,7 +132,24 @@ z.t.describe "z.cls.attr"; {
       z.cls.drew
 
       z.t.expect.status.is.false
-      z.var.exists 'z_cls_classes[MissingDefault]'
+
+      z.hash.has.key z_cls_classes key=MissingDefault
+
+      z.t.expect.status.is.false
+    }
+  }
+
+  z.t.context "defaultを重複して指定した場合"; {
+    z.t.it "属性の登録とクラスの公開が失敗する"; {
+      z.cls.draw DuplicateDefault
+        z.cls.attr default=one default=two 2>/dev/null # zls: ignore missing-positional-argument
+
+        z.t.expect.status.is.false
+      z.cls.drew
+
+      z.t.expect.status.is.false
+
+      z.hash.has.key z_cls_classes key=DuplicateDefault
 
       z.t.expect.status.is.false
     }
