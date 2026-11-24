@@ -26,6 +26,7 @@ function createDiagnosticProject() {
     "alias fixture-alias='print alias'",
     'fixture-function() { : }',
     'autoload -Uz fixture-autoload',
+    'alias -g typeset=false',
   ].join('\n');
   fs.writeFileSync(path.join(root, '.zshrc'), rc);
 
@@ -53,6 +54,10 @@ describe('readShellEnvironment', () => {
       expect(environment.aliases.has('fixture-alias')).toBe(true);
       expect(environment.functions.has('fixture-function')).toBe(true);
       expect(environment.functions.has('fixture-autoload')).toBe(true);
+      expect(environment.functionSources.get('fixture-function')).toBe(
+        path.join(project.root, '.zshrc'),
+      );
+      expect(environment.functionSources.has('fixture-autoload')).toBe(false);
       expect(fs.existsSync(path.join(project.root, 'autoload-executed'))).toBe(false);
     });
 

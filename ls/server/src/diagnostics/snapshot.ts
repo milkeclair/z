@@ -5,6 +5,7 @@ import type { FunctionSnapshot } from '../refreshFunctions/main';
 import type { FunctionTargets } from '../refreshFunctions/target';
 import type { ZshFileHydration } from '../zshHydrator';
 import type { ResolutionContext } from './calls';
+import { sameClassFiles } from './classes';
 import { sameCallContracts } from './contracts';
 import { collectIgnoreControls, ignored } from './controls';
 import type { ShellEnvironment } from './environment';
@@ -26,6 +27,7 @@ export type FileDiagnostics = {
 export type DiagnosticSnapshot = {
   readonly revision: number;
   readonly targets: FunctionTargets;
+  readonly shellTargets?: FunctionTargets;
   readonly context: ResolutionContext;
   readonly files: ReadonlyMap<string, FileDiagnostics>;
 };
@@ -37,6 +39,7 @@ export function createDiagnosticSnapshot(): DiagnosticSnapshot {
     context: {
       environment: emptyShellEnvironment(),
       projectRoot: '',
+      classFiles: [],
       aliases: new Set(),
       globalAliases: new Set(),
       suffixAliases: new Set(),
@@ -57,6 +60,7 @@ function resolutionContext(
   projectRoot: string,
   previous: ResolutionContext,
 ): ResolutionContext {
+  const classFiles = facts.map((file) => file.classes);
   const declarations: Declarations = {
     aliases: new Set(facts.flatMap((file) => [...file.declarations.aliases])),
     globalAliases: new Set(facts.flatMap((file) => [...file.declarations.globalAliases])),
@@ -72,12 +76,18 @@ function resolutionContext(
     sameSet(declarations.globalAliases, previous.globalAliases) &&
     sameSet(declarations.suffixAliases, previous.suffixAliases) &&
     sameSet(declarations.autoloads, previous.autoloads) &&
-    sameSet(declarations.builtins, previous.builtins)
+    sameSet(declarations.builtins, previous.builtins) &&
+    sameClassFiles(classFiles, previous.classFiles)
   ) {
     return previous;
   }
 
-  return { ...declarations, environment, projectRoot };
+  return {
+    ...declarations,
+    environment,
+    projectRoot,
+    classFiles,
+  };
 }
 
 function suppressed(
@@ -119,22 +129,18 @@ function diagnoseFile(
   snapshot: FunctionSnapshot,
   input: DiagnosticInput,
   facts: FileFacts,
+  projectFacts: readonly FileFacts[],
   context: ResolutionContext,
   revision: number,
 ): FileDiagnostics {
-  const local = input.project
-    ? context
-    : resolutionContext([facts], context.environment, context.projectRoot, context);
   const effective = input.project
     ? context
-    : {
-        ...context,
-        aliases: new Set([...context.aliases, ...local.aliases]),
-        globalAliases: new Set([...context.globalAliases, ...local.globalAliases]),
-        suffixAliases: new Set([...context.suffixAliases, ...local.suffixAliases]),
-        autoloads: new Set([...context.autoloads, ...local.autoloads]),
-        builtins: new Set([...context.builtins, ...local.builtins]),
-      };
+    : resolutionContext(
+        [...projectFacts, facts],
+        context.environment,
+        context.projectRoot,
+        context,
+      );
   const embedded = analyzeEmbeddedCode(snapshot, input.file, facts.calls, effective);
 
   return {
@@ -177,7 +183,9 @@ export function refreshDiagnosticSnapshot({
     snapshot.hydrator.projectRoot,
     previous.context,
   );
-  const reusableContracts = sameCallContracts(previous.targets, snapshot.targets);
+  const shellTargets = snapshot.shellFunctions?.targets;
+  const reusableContracts =
+    sameCallContracts(previous.targets, snapshot.targets) && previous.shellTargets === shellTargets;
   const revision = previous.revision + 1;
   const entries = [...inputs].flatMap(
     ([uri, input]): readonly (readonly [string, FileDiagnostics])[] => {
@@ -197,7 +205,7 @@ export function refreshDiagnosticSnapshot({
         return [[uri, cached]];
       }
 
-      return [[uri, diagnoseFile(snapshot, input, current, context, revision)]];
+      return [[uri, diagnoseFile(snapshot, input, current, projectFacts, context, revision)]];
     },
   );
   const files: ReadonlyMap<string, FileDiagnostics> = new Map(entries);
@@ -205,11 +213,18 @@ export function refreshDiagnosticSnapshot({
   if (
     previous.context === context &&
     previous.targets === snapshot.targets &&
+    previous.shellTargets === shellTargets &&
     files.size === previous.files.size &&
     [...files].every(([uri, file]) => previous.files.get(uri) === file)
   ) {
     return previous;
   }
 
-  return { revision, files, targets: snapshot.targets, context };
+  return {
+    revision,
+    files,
+    targets: snapshot.targets,
+    context,
+    ...(shellTargets ? { shellTargets } : {}),
+  };
 }

@@ -3,6 +3,7 @@ import { projectRootFromSettings } from '../connection/projectRoot';
 import { startPeriodicRescan } from '../connection/rescan';
 import { readShellEnvironment } from '../diagnostics/environment';
 import { refreshDiagnosticSnapshot } from '../diagnostics/snapshot';
+import { refreshFunctionSnapshot } from '../refreshFunctions/main';
 import { zInitialize, zSettingsFromConfigurationNotification } from '../main';
 import { DidChangeWatchedFilesNotification } from '../vscode_type';
 import { flushAnalysis, refreshAll, scheduleAnalysis, scheduleUriChanges } from './analysis';
@@ -25,10 +26,18 @@ async function initializeServer(context: ServerContext, params: InitializeParams
   }
 
   const current = state.read();
+  const snapshot = refreshFunctionSnapshot({
+    projectRoot: current.projectRoot,
+    documents: context.documents,
+    previous: current.snapshot,
+    changedPaths: [],
+    functionSources: environment.kind === 'available' ? environment.functionSources : undefined,
+  });
   state.replace({
     ...current,
     environment,
-    diagnosticSnapshot: refreshDiagnosticSnapshot({ snapshot: current.snapshot, environment }),
+    snapshot,
+    diagnosticSnapshot: refreshDiagnosticSnapshot({ snapshot, environment }),
     showPrivateFunctions: initialized.settings.completion.showPrivateFunctions,
     supportsRefresh: params.capabilities.workspace?.diagnostics?.refreshSupport === true,
     supportsWatchRegistration:

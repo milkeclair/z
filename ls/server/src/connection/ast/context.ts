@@ -53,7 +53,12 @@ export function resolveFunction(
       const uri = fileUri(cursor.file.sourceFile);
       const local = candidates.filter((candidate) => candidate.uri === uri);
 
-      return done(closest(local, current.offset) ?? candidates[0] ?? null);
+      return done(
+        closest(local, current.offset) ??
+          candidates[0] ??
+          snapshot.shellFunctions?.targets.get(name)?.[0] ??
+          null,
+      );
     },
   );
 }

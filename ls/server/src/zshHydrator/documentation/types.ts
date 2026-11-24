@@ -6,9 +6,15 @@ type DocNode<Kind extends string> = {
   readonly raw: string;
 };
 
+export type ClassReferenceType = {
+  readonly className: string;
+  readonly access: 'read' | 'write' | 'owner';
+};
+
 type ParameterBase<Kind extends string> = DocNode<Kind> & {
   readonly optional: boolean;
   readonly valueType?: 'code';
+  readonly classReference?: ClassReferenceType;
   readonly literalValues?: readonly string[];
   readonly description: string;
   readonly markerRange: SourceRange;

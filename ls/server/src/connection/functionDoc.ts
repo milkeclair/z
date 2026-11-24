@@ -26,8 +26,13 @@ export function argumentToken(arg: FuncArg): string {
   return '$' + arg.position.toString();
 }
 
-/** コード型と許可値を、関数コメントと同じ形式で表示する。 */
+/** 引数の型アノテーションを、関数コメントと同じ形式で表示する。 */
 export function argumentType(arg: FuncArg): string {
+  if (arg.classReference) {
+    const { className, access } = arg.classReference;
+    return '[' + className + '<' + access + '>]';
+  }
+
   if (arg.valueType !== 'code') {
     return '';
   }

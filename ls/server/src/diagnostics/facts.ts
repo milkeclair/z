@@ -1,3 +1,4 @@
+import { invalidOwnerParameters } from './classContracts';
 import {
   addValue,
   appendItems,
@@ -8,11 +9,12 @@ import {
   unionValues,
 } from '../util/collections';
 import { protocolRange } from '../connection/ast/cursor';
+import { zArgNamedKey } from '../connection/ast/word';
 import { literalWord } from '../refreshFunctions/word';
 import { again, done, loop } from '../util/loop';
 import { DiagnosticSeverity } from '../vscode_type';
-import type { ZshFileHydration } from '../zshHydrator';
-import { documentationOf } from '../zshHydrator';
+import type { ClassFileHydration, ZshFileHydration } from '../zshHydrator';
+import { classMethodAt, documentationOf } from '../zshHydrator';
 import type {
   AstNode,
   FunctionDefinitionNode,
@@ -36,6 +38,7 @@ export type FileFacts = {
   readonly calls: readonly SimpleCommandNode[];
   readonly base: readonly Diagnostics[];
   readonly declarations: Declarations;
+  readonly classes: ClassFileHydration;
 };
 
 type DeclarationSets = {
@@ -277,12 +280,7 @@ function enterFunctionScope(
 }
 
 function argumentUsage(usage: Usage, node: AstNode): Usage {
-  const named =
-    node.kind === 'simpleCommand' &&
-    node.commandName &&
-    literalWord(node.commandName.word) === 'z.arg.named'
-      ? node.arguments[0] && literalWord(node.arguments[0])
-      : null;
+  const named = node.kind === 'simpleCommand' ? zArgNamedKey(node) : null;
   const read = named ? use(usage, named) : usage;
   const words = node.kind === 'word' ? wordUsage(node, read) : read;
   const uncertain =
@@ -312,7 +310,9 @@ function collectNodeFacts(
       : scoped;
   const usage = current && declared.usages.get(current.definition);
 
-  if (!usage) return declared;
+  if (!usage || classMethodAt(file.classes, usage.definition, node.range.start.offset)) {
+    return declared;
+  }
 
   return {
     ...declared,
@@ -368,6 +368,17 @@ export function collectFileFacts(file: ZshFileHydration): FileFacts {
     ...formatDiagnostics(file),
     ...[...facts.usages.values()].flatMap(unusedArguments),
     ...syntaxDiagnostics(file),
+    ...(!file.lexerDiagnostics.length && !file.parserDiagnostics.length
+      ? [...new Set(file.functions.map(({ definition }) => definition))].flatMap((definition) =>
+          invalidOwnerParameters(file, definition).map((parameter): Diagnostics => ({
+            severity: DiagnosticSeverity.Error,
+            code: 'class-owner-contract',
+            range: protocolRange(parameter.markerRange),
+            message: 'An owner parameter must be moved on every returning path.',
+            source: 'z-ls',
+          })),
+        )
+      : []),
   ];
 
   const sets = facts.declarations;
@@ -375,6 +386,7 @@ export function collectFileFacts(file: ZshFileHydration): FileFacts {
   return {
     calls: facts.calls,
     base,
+    classes: file.classes,
     declarations: {
       aliases: new Set(sets.aliases),
       globalAliases: new Set(sets.globalAliases),

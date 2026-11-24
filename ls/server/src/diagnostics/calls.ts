@@ -17,10 +17,14 @@ import type { ZshFileHydration } from '../zshHydrator';
 import { documentationOf } from '../zshHydrator';
 import type { FunctionDefinitionNode, SimpleCommandNode, WordNode } from '../zshParser/ast';
 import type { SourceRange } from '../zshParser/lexer';
+import { classMemberReference, resolveInstanceCommand, type ClassCommandTarget } from './classes';
 import { isAliasReference, isKnownShellCommand, type ResolutionContext } from './commandResolution';
 import type { IgnoreControls } from './controls';
 import { ignored } from './controls';
 import { simpleParameter } from './facts';
+import { resolveSelfCommand } from './self';
+import { classOwnership, ownershipOperationIssue } from './ownership';
+import { classArgumentIssue } from './classArgument';
 import type { Diagnostics } from './type';
 
 export type { ResolutionContext } from './commandResolution';
@@ -135,6 +139,7 @@ export type CallAnalysisOptions = {
 export type CallAnalysis = {
   readonly diagnostics: readonly Diagnostics[];
   readonly targets: ReadonlyMap<SimpleCommandNode, FunctionDefinitionNode>;
+  readonly classTargets: ReadonlyMap<SimpleCommandNode, readonly ClassCommandTarget[]>;
 };
 
 /** 埋め込みコードやworkspace外の定義はローカルに保ち、workspaceの参照先には追加しない。 */
@@ -194,20 +199,73 @@ export function analyzeCalls(
   const origin = scopes.at(-1);
   const mapRange = options.mapRange ?? ((range) => range);
   const incomplete = file.lexerDiagnostics.length > 0 || file.parserDiagnostics.length > 0;
+  const resolveTarget = (name: string, offset: number) => {
+    const inherited = scopes
+      .map((scope) => localDefinition(scope.definitions, name, scope.offset))
+      .find((target) => target !== undefined);
+    return (
+      localDefinition(local, name, offset) ??
+      inherited ??
+      resolveFunction(snapshot, name, {
+        file: origin?.file ?? file,
+        offset: origin?.offset ?? offset,
+      })?.definition ??
+      null
+    );
+  };
+  const isUncertain = (word: WordNode) => uncertainWord(word, context);
+  const ownership = classOwnership(file, incomplete ? [] : commands, resolveTarget, isUncertain);
+
   const initial = {
     diagnostics: collectArray<Diagnostics>(),
     targets: makeMap<SimpleCommandNode, FunctionDefinitionNode>(),
+    classTargets: makeMap<SimpleCommandNode, readonly ClassCommandTarget[]>(),
   };
   const result = commands.reduce((previous, command) => {
     const word = command.commandName?.word;
-    const name = word && literalWord(word);
+    if (!word) return previous;
 
-    if (
-      !word ||
-      !name ||
-      (!word.quoted && word.raw.startsWith('=')) ||
-      uncertainWord(word, context)
-    ) {
+    const reference = functionCommand(command) ? classMemberReference(word) : null;
+    const member =
+      ownershipOperationIssue(file, command, ownership) ??
+      (reference
+        ? (resolveInstanceCommand(file, word, reference, context.classFiles, ownership) ??
+          (reference.binding === 'self'
+            ? resolveSelfCommand(file, word, reference.member, scopes)
+            : null))
+        : null);
+    if (member) {
+      if (!('code' in member) && member.target) {
+        return {
+          ...previous,
+          classTargets: setEntry(previous.classTargets, command, [member.target]),
+        };
+      }
+
+      const issue =
+        'code' in member
+          ? member
+          : {
+              code: 'undefined-command',
+              message: member.name + ' is not defined in class ' + member.definition.name + '.',
+            };
+      return options.ignores && ignored(options.ignores, word.range.start.line, issue.code)
+        ? previous
+        : {
+            ...previous,
+            diagnostics: appendItems(previous.diagnostics, {
+              severity: DiagnosticSeverity.Error,
+              code: issue.code,
+              range: protocolRange(mapRange(word.range)),
+              source: 'z-ls',
+              message: issue.message,
+            }),
+          };
+    }
+
+    const name = literalWord(word);
+
+    if (!name || (!word.quoted && word.raw.startsWith('=')) || uncertainWord(word, context)) {
       return previous;
     }
 
@@ -221,30 +279,39 @@ export function analyzeCalls(
       return previous;
     }
 
-    const inherited = scopes
-      .map((scope) => localDefinition(scope.definitions, name, scope.offset))
-      .find((target) => target !== undefined);
-    const target = functionCommand(command)
-      ? (localDefinition(local, name, word.range.start.offset) ??
-        inherited ??
-        resolveFunction(snapshot, name, {
-          file: origin?.file ?? file,
-          offset: origin?.offset ?? word.range.start.offset,
-        })?.definition)
-      : null;
+    const target = functionCommand(command) ? resolveTarget(name, word.range.start.offset) : null;
 
     if (target) {
-      const diagnostics = incomplete
-        ? previous.diagnostics
-        : previous.diagnostics.concat(
-            argumentDiagnostics(command, target, context, mapRange).filter(
-              (diagnostic) =>
-                !options.ignores ||
-                !ignored(options.ignores, word.range.start.line, diagnostic.code),
-            ),
-          );
+      const targets = setEntry(previous.targets, command, target);
 
-      return { diagnostics, targets: setEntry(previous.targets, command, target) };
+      if (incomplete) {
+        return { ...previous, targets };
+      }
+
+      const issue = classArgumentIssue({ command, file, target, ownership, scopes, isUncertain });
+
+      if (
+        issue &&
+        (!options.ignores || !ignored(options.ignores, word.range.start.line, issue.code))
+      ) {
+        return {
+          ...previous,
+          diagnostics: appendItems(previous.diagnostics, {
+            ...issue,
+            severity: DiagnosticSeverity.Error,
+            range: protocolRange(mapRange(word.range)),
+            source: 'z-ls',
+          }),
+          targets,
+        };
+      }
+
+      const diagnostics = argumentDiagnostics(command, target, context, mapRange).filter(
+        (diagnostic) =>
+          !options.ignores || !ignored(options.ignores, word.range.start.line, diagnostic.code),
+      );
+
+      return { ...previous, diagnostics: previous.diagnostics.concat(diagnostics), targets };
     }
 
     if (context.autoloads.has(name) && functionCommand(command)) {
@@ -269,7 +336,11 @@ export function analyzeCalls(
       : previous;
   }, initial);
 
-  return { diagnostics: result.diagnostics, targets: new Map(result.targets) };
+  return {
+    diagnostics: result.diagnostics,
+    targets: new Map(result.targets),
+    classTargets: new Map(result.classTargets),
+  };
 }
 
 /** 関数の参照先を必要としない呼び出し元向けに、既存の診断のみを返すAPIを保つ。 */

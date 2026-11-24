@@ -165,7 +165,7 @@ function readComment(
 }
 
 export function parseFunctionDocumentation(
-  block: DocBlockNode,
+  block: Pick<DocBlockNode, 'comments' | 'range'>,
   source: string,
   options: HydrationOptions = {},
 ): {

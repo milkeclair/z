@@ -3,7 +3,7 @@ import type { CommentNode } from '../../zshParser/ast';
 import { rangeWithinText } from '../../zshParser/parser/range';
 import { commentPayload } from '../directive';
 import { parseCodeParameterType } from './parameterType';
-import type { ParameterDoc } from './types';
+import type { ClassReferenceType, ParameterDoc } from './types';
 
 function isDigit(char: string): boolean {
   return char >= '0' && char <= '9';
@@ -46,7 +46,17 @@ export function parseParameter(comment: CommentNode): ParameterDoc | null {
   const optional = text[markerEnd] === '?';
   const beforeType = horizontalWhitespaceEnd(text, markerEnd + (optional ? 1 : 0));
   const annotation = text[beforeType] === '[' ? parseCodeParameterType(text, beforeType) : null;
-  const cursor = annotation ? horizontalWhitespaceEnd(text, annotation.end) : beforeType;
+  const classMatch =
+    !annotation && first !== '@' && first !== '*'
+      ? /^\[([A-Za-z_][A-Za-z_0-9]*)<(read|write|owner)>\]/.exec(text.slice(beforeType))
+      : null;
+  const access = classMatch?.[2];
+  const classReference: ClassReferenceType | undefined =
+    classMatch && (access === 'read' || access === 'write' || access === 'owner')
+      ? { className: classMatch[1], access }
+      : undefined;
+  const typeEnd = annotation?.end ?? beforeType + (classMatch?.[0].length ?? 0);
+  const cursor = horizontalWhitespaceEnd(text, typeEnd);
 
   if (text[cursor] !== ':') {
     return null;
@@ -54,6 +64,7 @@ export function parseParameter(comment: CommentNode): ParameterDoc | null {
 
   const valueType: 'code' | undefined = annotation ? 'code' : undefined;
   const base = {
+    ...(classReference ? { classReference } : {}),
     ...(valueType
       ? {
           valueType,

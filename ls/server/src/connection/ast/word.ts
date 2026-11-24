@@ -1,5 +1,7 @@
-import type { WordNode } from '../../zshParser/ast';
-import { hereDocDelimiter } from '../../zshParser/lexer/delimiter';
+import type { SimpleCommandNode } from '../../zshParser/ast';
+import { literalWord } from '../../zshParser/ast/word/literal';
+
+export { namedKey } from '../../zshParser/ast/word/literal';
 
 const RESERVED_COMMANDS: readonly string[] = [
   'if',
@@ -51,15 +53,11 @@ export function commandInsertion(name: string): string {
   return "'" + name.split("'").join(escapedQuote) + "'";
 }
 
-/** 展開を評価せずにシェルの引用を外し、単語の静的な接頭辞から名前付き引数のキーを読む。 */
-export function namedKey(word: WordNode): string | null {
-  const prefix = word.parts[0];
+/** z.arg.named が参照する静的な引数名を取得する。 */
+export function zArgNamedKey(command: SimpleCommandNode): string | null {
+  const argument = command.arguments[0];
 
-  if (prefix?.kind !== 'stringLiteral') {
-    return null;
-  }
-
-  const text = hereDocDelimiter(prefix.value).delimiter;
-
-  return /^([_a-zA-Z][_a-zA-Z0-9]*)=/.exec(text)?.[1] ?? null;
+  return argument && command.commandName && literalWord(command.commandName.word) === 'z.arg.named'
+    ? literalWord(argument)
+    : null;
 }

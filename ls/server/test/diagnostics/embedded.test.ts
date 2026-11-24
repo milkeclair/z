@@ -22,6 +22,7 @@ afterEach(() => {
 
 const environment: ShellEnvironment = {
   kind: 'available',
+  functionSources: new Map(),
   commands: new Set(['cat']),
   builtins: new Set(['print', ':', 'true', 'eval', 'alias', 'zmodload']),
   aliases: new Set(),

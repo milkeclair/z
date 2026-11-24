@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import type { ClassFileHydration } from '../zshHydrator';
 import type { SimpleCommandNode, WordNode } from '../zshParser/ast';
 import type { ShellEnvironment } from './environment';
 import type { Declarations } from './facts';
@@ -7,6 +8,7 @@ import type { Declarations } from './facts';
 export type ResolutionContext = Declarations & {
   readonly environment: ShellEnvironment;
   readonly projectRoot: string;
+  readonly classFiles: readonly ClassFileHydration[];
 };
 
 export function isAliasReference(
