@@ -34,7 +34,7 @@ const QUERY = [
   'for zlsName in "${(@k)galiases}"; do builtin printf "global-alias\\0%s\\0" "$zlsName"; done',
   'for zlsName in "${(@k)saliases}"; do builtin printf "suffix-alias\\0%s\\0" "$zlsName"; done',
   'for zlsName in "${(@k)functions}"; do builtin printf "function\\0%s\\0" "$zlsName"; done',
-  'typeset -A zlsSourcePaths',
+  "builtin 'typeset' -A zlsSourcePaths",
   'for zlsName in "${(@k)functions_source}"; do',
   '  [[ ${functions[$zlsName]} == "builtin autoload -X"* ]] && continue',
   '  zlsSource=${functions_source[$zlsName]}',

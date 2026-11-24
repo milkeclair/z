@@ -9,6 +9,7 @@ import {
   unionValues,
 } from '../util/collections';
 import { protocolRange } from '../connection/ast/cursor';
+import { zArgNamedKey } from '../connection/ast/word';
 import { literalWord } from '../refreshFunctions/word';
 import { again, done, loop } from '../util/loop';
 import { DiagnosticSeverity } from '../vscode_type';
@@ -279,12 +280,7 @@ function enterFunctionScope(
 }
 
 function argumentUsage(usage: Usage, node: AstNode): Usage {
-  const named =
-    node.kind === 'simpleCommand' &&
-    node.commandName &&
-    literalWord(node.commandName.word) === 'z.arg.named'
-      ? node.arguments[0] && literalWord(node.arguments[0])
-      : null;
+  const named = node.kind === 'simpleCommand' ? zArgNamedKey(node) : null;
   const read = named ? use(usage, named) : usage;
   const words = node.kind === 'word' ? wordUsage(node, read) : read;
   const uncertain =

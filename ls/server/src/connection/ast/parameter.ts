@@ -1,11 +1,11 @@
 import { appendItems, collectArray } from '../../util/collections';
 import type { FuncArg } from '../../getFunctions/type';
 import type { FunctionTarget } from '../../refreshFunctions/target';
-import { literalWord } from '../../refreshFunctions/word';
 import type { AstNode, SimpleCommandNode, WordNode } from '../../zshParser/ast';
 import { foldAst } from '../../zshParser/ast';
 import type { Cursor } from './cursor';
 import { inside } from './cursor';
+import { zArgNamedKey } from './word';
 
 function parameterName(raw: string): string | null {
   if (!raw.startsWith('$')) {
@@ -126,13 +126,7 @@ function namedReply(command: SimpleCommandNode, cursor: Cursor): string | null {
     return null;
   }
 
-  const previous = preceding.first;
-
-  if (!previous.commandName || literalWord(previous.commandName.word) !== 'z.arg.named') {
-    return null;
-  }
-
-  return previous.arguments[0] ? literalWord(previous.arguments[0]) : null;
+  return zArgNamedKey(preceding.first);
 }
 
 function aliasArgument(target: FunctionTarget, cursor: Cursor, name: string): FuncArg | null {

@@ -2,7 +2,13 @@ import { namedKey } from '../connection/ast/word';
 import { literalWord } from '../refreshFunctions/word';
 import { classMethodAt, documentationOf, type ZshFileHydration } from '../zshHydrator';
 import type { ClassInstance } from '../zshHydrator/classes';
-import { classArguments, commandName, parameterAt, variableArgument } from './classContracts';
+import {
+  classArguments,
+  commandName,
+  parameterAt,
+  variableArgument,
+  variableName,
+} from './classContracts';
 import {
   locate,
   type FunctionDefinitionNode,
@@ -10,6 +16,7 @@ import {
   type ListNode,
   type SimpleCommandNode,
 } from '../zshParser/ast';
+import { standalonePipeline } from '../zshParser/ast/listItem';
 
 export type ClassReferenceIssue = {
   readonly code:
@@ -62,18 +69,8 @@ function siteAt(file: ZshFileHydration, offset: number): Site | null {
 }
 
 function standalone(item: ListItemNode): SimpleCommandNode | null {
-  const { sublist, terminator } = item;
-  if (
-    sublist.kind !== 'sublist' ||
-    sublist.rest.length ||
-    sublist.first.rest.length ||
-    sublist.first.modifier ||
-    (terminator && terminator.type !== 'newline' && terminator.type !== 'semicolon')
-  )
-    return null;
-
-  const command = sublist.first.first;
-  return command.kind === 'simpleCommand' ? command : null;
+  const command = standalonePipeline(item)?.first;
+  return command?.kind === 'simpleCommand' ? command : null;
 }
 
 function moveCommand(item: ListItemNode): SimpleCommandNode | null {
@@ -116,8 +113,7 @@ function before(lists: readonly ListNode[], offset: number): readonly SimpleComm
 
 function variable(arg: string | null, name: string): string | null {
   if (!arg?.startsWith(name + '=')) return null;
-  const value = arg.slice(name.length + 1);
-  return /^[A-Za-z_][A-Za-z_0-9]*$/.test(value) ? value : null;
+  return variableName(arg.slice(name.length + 1));
 }
 
 function syntacticScope(instance: ClassInstance): Scope {

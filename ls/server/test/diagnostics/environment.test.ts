@@ -26,6 +26,7 @@ function createDiagnosticProject() {
     "alias fixture-alias='print alias'",
     'fixture-function() { : }',
     'autoload -Uz fixture-autoload',
+    'alias -g typeset=false',
   ].join('\n');
   fs.writeFileSync(path.join(root, '.zshrc'), rc);
 

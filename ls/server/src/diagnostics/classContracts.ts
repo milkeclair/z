@@ -1,5 +1,5 @@
 import { functionCommand } from '../connection/ast/cursor';
-import { namedKey } from '../connection/ast/word';
+import { namedKey, zArgNamedKey } from '../connection/ast/word';
 import { literalWord } from '../refreshFunctions/word';
 import { classMethodAt, documentationOf, type ZshFileHydration } from '../zshHydrator';
 import type { ParameterDoc } from '../zshHydrator/documentation/types';
@@ -151,9 +151,9 @@ function argumentAlias(
         continue;
       const value = declarationSource(tail.pipeline.first, name);
       if (!value) continue;
-      const key = head.arguments[0] && literalWord(head.arguments[0]);
-      return commandName(head) === 'z.arg.named' &&
-        key &&
+      const key = zArgNamedKey(head);
+      return key &&
+        functionCommand(head) &&
         value.source === 'REPLY' &&
         head.arguments[1]?.raw === '"$@"'
         ? { source: key, kind: 'named' }

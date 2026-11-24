@@ -12,6 +12,7 @@ import type {
   SimpleCommandNode,
 } from '../../zshParser/ast';
 import { foldAst } from '../../zshParser/ast';
+import { standalonePipeline } from '../../zshParser/ast/listItem';
 import type { FoldStep } from '../../zshParser/ast/traversal/walk';
 import { literalWord } from '../../zshParser/ast/word/literal';
 import type { SourceRange } from '../../zshParser/lexer';
@@ -438,19 +439,12 @@ type CollectionProgress = {
 };
 
 function standaloneCommand(item: ListItemNode): SimpleCommandNode | null {
-  if (item.sublist.kind !== 'sublist') return null;
+  const pipeline = standalonePipeline(item);
+  const command = pipeline?.first;
 
-  const pipeline = item.sublist.first;
-  const command = pipeline.first;
-  const foreground =
-    !item.terminator || item.terminator.type === 'newline' || item.terminator.type === 'semicolon';
-
-  return foreground &&
-    item.sublist.rest.length === 0 &&
-    pipeline.rest.length === 0 &&
+  return pipeline &&
     !pipeline.timing &&
-    !pipeline.modifier &&
-    command.kind === 'simpleCommand' &&
+    command?.kind === 'simpleCommand' &&
     command.precommandModifiers.length === 0
     ? command
     : null;
