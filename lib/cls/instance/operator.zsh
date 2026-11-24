@@ -9,9 +9,9 @@
 #  z.cls.instance._owns object.increment
 #  # return: 0
 z.cls.instance._owns() {
-  local z_cls_program=${functions[$1]-}
-  local z_cls_suffix=${1#*.}
-  local z_cls_expected=${z_cls_dispatch_programs[$z_cls_suffix]-}
+  local program=${functions[$1]-}
+  local suffix=${1#*.}
+  local expected_program=${z_cls_dispatch_programs[$suffix]-}
 
-  z.is.not.null "$z_cls_program" && z.is.eq "$z_cls_program" "$z_cls_expected"
+  z.is.not.null "$program" && z.is.eq "$program" "$expected_program"
 }
