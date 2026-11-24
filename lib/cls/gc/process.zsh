@@ -13,14 +13,14 @@ z.cls.gc._collect() {
   z_cls_gc_allocations=0
 
   local REPLY=""
-  local z_cls_gc_id
+  local instance_id
 
   z.hash.keys z_cls_owner_markers
-  for z_cls_gc_id in "${REPLY[@]}"; do
-    z.var.exists "$z_cls_owner_markers[$z_cls_gc_id]" && continue
-    [[ -n ${z_cls_active[$z_cls_gc_id]-} ]] && continue
+  for instance_id in "${REPLY[@]}"; do
+    z.var.exists "$z_cls_owner_markers[$instance_id]" && continue
+    z.is.not.null "${z_cls_active[$instance_id]-}" && continue
 
-    z.cls.instance._release "$z_cls_gc_id"
+    z.cls.instance._release "$instance_id"
   done
 
   return 0

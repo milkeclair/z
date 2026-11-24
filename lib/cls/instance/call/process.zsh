@@ -10,21 +10,21 @@
 #  z.cls.instance.call._validate "$object"
 #  # return: 0
 z.cls.instance.call._validate() {
-  local z_cls_instance=$1
-  local z_cls_ref=${2:-$1}
-  local z_cls_owner=${z_cls_owner_refs[$z_cls_instance]:-$z_cls_instance}
-  local z_cls_marker=${z_cls_owner_markers[$z_cls_instance]-}
+  local instance_id=$1
+  local reference=${2:-$1}
+  local owner_reference=${z_cls_owner_refs[$instance_id]:-$instance_id}
+  local owner_marker=${z_cls_owner_markers[$instance_id]-}
 
-  if [[ -z ${z_cls_instances[$z_cls_instance]-} || -z $z_cls_marker ]] ||
-      (( ! ${+parameters[$z_cls_marker]} )) ||
-      [[ $z_cls_owner != "$z_cls_ref" ]]; then
-    z.io.error "Instance reference $z_cls_ref is not available in this scope."
+  if [[ -z ${z_cls_instances[$instance_id]-} || -z $owner_marker ]] ||
+      (( ! ${+parameters[$owner_marker]} )) ||
+      [[ $owner_reference != "$reference" ]]; then
+    z.io.error "Instance reference $reference is not available in this scope."
     return 1
   fi
 
-  if z.is.not.null "${z_cls_active[$z_cls_instance]:-}" &&
-      z.is.not.eq "${z_cls_current_instance:-}" "$z_cls_instance"; then
-    z.io.error "Instance $z_cls_instance is active in another instance call."
+  if z.is.not.null "${z_cls_active[$instance_id]:-}" &&
+      z.is.not.eq "${z_cls_current_instance:-}" "$instance_id"; then
+    z.io.error "Instance $instance_id is active in another instance call."
     return 1
   fi
 
@@ -94,7 +94,7 @@ z.cls.instance.call._access() {
         return $?
         ;;
       set)
-        z.int.is.eq $# 1 || return 1
+        z.is.eq "$#" 1 || return 1
 
         if z.int.is.match "$1"; then
           local -i z_cls_numeric=0
@@ -144,10 +144,11 @@ z.cls.instance.call._access_typed() {
 
   for z_cls_attribute in "${z_cls_attributes[@]}"; do
     z_cls_key="$z_cls_instance:$z_cls_attribute"
-    if (( ${+z_cls_values[$z_cls_key]} )); then
+    if z.var.exists "z_cls_values[$z_cls_key]"; then
       eval "$z_cls_values[$z_cls_key]"
     else
-      local -- "$z_cls_attribute=${z_cls_scalars[$z_cls_key]-${z_cls_defaults[$z_cls_class:$z_cls_attribute]}}"
+      local z_cls_default_key="$z_cls_class:$z_cls_attribute"
+      local -- "$z_cls_attribute=${z_cls_scalars[$z_cls_key]-$z_cls_defaults[$z_cls_default_key]}"
     fi
   done
 

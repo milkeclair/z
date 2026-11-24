@@ -103,7 +103,7 @@ z.cls.fn() {
   local invalid=0
   local key="$z_cls_drawing:${1:-}"
 
-  if (( $# == 0 || $# > 2 )) ||
+  if z.int.is.lt $# 1 || z.int.is.gt $# 2 ||
       z.is.null "$z_cls_drawing" || ! z.cls.is._name "${1:-}"; then
     z.io.error "Expected an active class and a valid method name."
     invalid=1
@@ -112,7 +112,7 @@ z.cls.fn() {
     invalid=1
   fi
 
-  if (( $# >= 2 )); then
+  if z.int.is.gteq $# 2; then
     z.int.is.zero $invalid || return 1
     z.cls.store._method "$z_cls_drawing" "$1" "$2"
     return 0
@@ -266,12 +266,12 @@ z.cls.delete() {
   z.int.is.eq $# 1 || return 1
 
   local z_cls_ref=${(P)1:-}
-  [[ $1 == z_cls_* ]] && z_cls_ref=$1
+  z.str.start_with "$1" z_cls_ && z_cls_ref=$1
   local z_cls_id=${z_cls_references[$z_cls_ref]:-$z_cls_ref}
 
   z.cls.instance.call._validate "$z_cls_id" "$z_cls_ref" || return 1
 
-  if [[ -n ${z_cls_active[$z_cls_id]-} ]]; then
+  if z.is.not.null "${z_cls_active[$z_cls_id]-}"; then
     z.io.error "Expected an inactive instance reference."
     return 1
   fi

@@ -14,7 +14,7 @@
 #  # return: 0
 z.cls.instance._call() {
   # 再読込前に生成したコマンドも、新しい保存領域を使って属性を更新する。
-  if (( ! ${+z_cls_scalars} )); then
+  if ! z.var.exists z_cls_scalars; then
     z.cls.store._ensure
   fi
 
@@ -22,7 +22,7 @@ z.cls.instance._call() {
   local z_cls_operation=$2
   local z_cls_member=$3
 
-  [[ $1 == z_cls_* ]] && z_cls_instance=$1
+  z.str.start_with "$1" z_cls_ && z_cls_instance=$1
   if z.is.null "$z_cls_instance"; then
     z.io.error "Instance reference $1 is not available in this scope."
     return 1
@@ -112,20 +112,22 @@ z.cls.instance._snapshot() {
 #  # return: 0
 #  # 変更後: 実体と、参照がなくなった生成コマンドを解放済み
 z.cls.instance._release() {
-  local z_cls_id=$1
-  local z_cls_ref=${z_cls_owner_refs[$z_cls_id]:-$z_cls_id}
+  local instance_id=$1
+  local reference=${z_cls_owner_refs[$instance_id]:-$instance_id}
+  local class_name=$z_cls_instances[$instance_id]
 
-  unset "z_cls_references[$z_cls_ref]" "z_cls_owner_refs[$z_cls_id]"
-  z.cls.instance.commands._uninstall ${=z_cls_members[$z_cls_id]}
+  unset "z_cls_references[$reference]" "z_cls_owner_refs[$instance_id]"
+  z.cls.instance.commands._uninstall ${=z_cls_members[$instance_id]}
 
-  local z_cls_attribute
+  local attribute
 
-  for z_cls_attribute in ${=z_cls_class_attrs[${z_cls_instances[$z_cls_id]}]}; do
-    unset "z_cls_scalars[$z_cls_id:$z_cls_attribute]" "z_cls_values[$z_cls_id:$z_cls_attribute]"
+  for attribute in ${=z_cls_class_attrs[$class_name]}; do
+    unset "z_cls_scalars[$instance_id:$attribute]" "z_cls_values[$instance_id:$attribute]"
   done
 
   # 未設定のactive要素も管理ノードを残すため、一緒に削除する。
-  unset "z_cls_instances[$z_cls_id]" "z_cls_members[$z_cls_id]" "z_cls_active[$z_cls_id]" "z_cls_owner_markers[$z_cls_id]"
+  unset "z_cls_instances[$instance_id]" "z_cls_members[$instance_id]" \
+    "z_cls_active[$instance_id]" "z_cls_owner_markers[$instance_id]"
 
   if z.int.is.zero "${#z_cls_instances}"; then
     # 最後の実体を片付けたら、空のテーブルの容量も解放する。

@@ -43,7 +43,7 @@ z.cls.owner._writable() {
 #  # return: 0
 z.cls.owner._is_current() {
   local z_cls_id=${z_cls_references[$2]:-$2}
-  [[ "${z_cls_owner_refs[$z_cls_id]:-$z_cls_id}" == "$2" ]] || return 1
+  z.is.eq "$2" "${z_cls_owner_refs[$z_cls_id]:-$z_cls_id}" || return 1
 
   local z_cls_marker=${z_cls_owner_markers[$z_cls_id]:-}
   z.is.not.null "$z_cls_marker" || return 1

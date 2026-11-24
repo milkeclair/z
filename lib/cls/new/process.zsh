@@ -11,7 +11,7 @@
 #  # return: 1
 #  # 変更後: objectと実体の登録は元のまま
 z.cls.new._validate() {
-  if ! z.int.is.eq $# 2 || z.is.null "${z_cls_classes[$1]:-}"; then
+  if ! z.is.eq "$#" 2 || z.is.null "${z_cls_classes[$1]:-}"; then
     z.io.error "Expected an existing class and an instance variable name."
     return 1
   fi

@@ -45,11 +45,12 @@ z.t.describe "z.cls.owner.move"; {
           z.t.expect.reply 7
 
           z.t.expect "$counter" "$original"
-          [[ $saved != "$counter" ]]
+          z.is.not.eq "$saved" "$counter"
           z.t.expect.status.is.true
 
           local old_command=$counter.value
-          z.t.expect "${+functions[$old_command]}" 0
+          z.var.exists "functions[$old_command]"
+          z.t.expect.status.is.false
 
           z.cls.delete "$original" 2>/dev/null
           z.t.expect.status.is.false
@@ -57,7 +58,8 @@ z.t.describe "z.cls.owner.move"; {
 
         $escaped.value 2>/dev/null
         z.t.expect.status.is.false
-        z.t.expect "${+z_cls_instances[$original]}" 1
+        z.var.exists "z_cls_instances[$original]"
+        z.t.expect.status.is.true
       }
     }
   }
