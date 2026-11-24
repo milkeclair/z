@@ -17,7 +17,7 @@ z.cls.instance.call._validate() {
   local instance_id=$1
   local reference=$2
   local owner_reference=${z_cls_owner_refs[$instance_id]-$instance_id}
-  if ! z.var.exists "z_cls_instances[$instance_id]" ||
+  if ! (( ${+z_cls_instances[$instance_id]} )) ||
       z.is.not.eq "$reference" "$owner_reference"; then
     z.io.error "Instance reference $reference is not available in this scope."
     return 1
