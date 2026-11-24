@@ -1,3 +1,3 @@
 z.cls.draw Unfinished
-  z.cls.fn missing_end
+  z.cls.method missing_end
     print -r -- "MUST_NOT_EXECUTE"

@@ -93,11 +93,11 @@ z.t.describe "z.cls.attr"; {
   }
 }
 
-z.t.describe "z.cls.fn"; {
+z.t.describe "z.cls.method"; {
   z.t.context "明示的な本体の場合"; {
     z.t.it "クラスへ登録する"; {
       z.cls.draw DirectMethod
-        z.cls.fn value 'REPLY=literal'
+        z.cls.method value 'REPLY=literal'
 
         z.t.expect "$z_cls_bodies[DirectMethod:value]" 'REPLY=literal'
 
@@ -152,7 +152,7 @@ z.t.describe "z.cls.abort"; {
     z.t.it "初期値と本体を破棄する"; {
       z.cls.draw DirectAbort
         z.cls.attr count default=0
-        z.cls.fn value '$self.count.get'
+        z.cls.method value '$self.count.get'
 
       z.cls.abort
 
@@ -222,7 +222,7 @@ z.t.describe "z.cls.new"; {
         local -r z_cls_class=caller_class
         z.cls.draw ScopedInternals
           z.cls.attr count default=0
-          z.cls.fn increment '$self.count.get || return 1; $self.count.set "$(( REPLY + 1 ))" || return 1; $self.count.get'
+          z.cls.method increment '$self.count.get || return 1; $self.count.set "$(( REPLY + 1 ))" || return 1; $self.count.get'
         z.cls.drew
 
         local object=""
@@ -247,7 +247,7 @@ z.t.describe "z.cls.new"; {
       () {
         z.cls.draw FormerPrefix
           z.cls.attr __z_cls_value default=0
-          z.cls.fn increment '$self.__z_cls_value.get || return 1; $self.__z_cls_value.set "$(( REPLY + 1 ))" || return 1; $self.__z_cls_value.get'
+          z.cls.method increment '$self.__z_cls_value.get || return 1; $self.__z_cls_value.set "$(( REPLY + 1 ))" || return 1; $self.__z_cls_value.get'
         z.cls.drew
 
         local object=""
