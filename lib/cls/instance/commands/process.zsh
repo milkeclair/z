@@ -55,9 +55,14 @@ z.cls.instance.commands._install() {
     local template="z_cls_dispatch_$suffix"
 
     if ! z.var.exists "functions[$template]"; then
-      z.arr.split delimiter=. "$suffix"
-      local member=$REPLY[1]
-      local operation=${REPLY[2]:-method}
+      local member=$suffix
+      local operation=method
+
+      if z.str.includes "$suffix" .; then
+        z.arr.split delimiter=. "$suffix"
+        member=$REPLY[1]
+        operation=$REPLY[2]
+      fi
 
       functions[$template]='z.cls.instance._call "${funcstack[1]%%.*}" '"$operation ${(q)member}"' "$@"'
       z_cls_dispatch_programs[$suffix]=$functions[$template]

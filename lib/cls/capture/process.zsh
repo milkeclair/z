@@ -17,17 +17,20 @@
 z.cls.capture._start() {
   z.cls.capture._watch
 
+  local method_name=$1
+  shift
+
   local REPLY=""
-  z.arg.named stack "${@:2}" && local stack=$REPLY
-  z.arg.named file "${@:2}" && local file=$REPLY
-  z.arg.named discard "${@:2}" default=0 && local discard=$REPLY
+  z.arg.named stack "$@" && local stack=$REPLY
+  z.arg.named file "$@" && local file=$REPLY
+  z.arg.named discard "$@" default=0 && local discard=$REPLY
 
   unset z_cls_capture_done_result
-  typeset -g +x z_cls_capture_discard=$discard
-  typeset -g +x z_cls_capture_stack=$stack
-  typeset -g +x z_cls_capture_file=$file
-  typeset -g +x z_cls_capture_body=''
-  z_cls_capture_method=$1
+  typeset -g z_cls_capture_discard=$discard
+  typeset -g z_cls_capture_stack=$stack
+  typeset -g z_cls_capture_file=$file
+  typeset -g z_cls_capture_body=''
+  z_cls_capture_method=$method_name
 }
 
 # クラスの境界を監視する間だけ、利用者のDEBUGトラップを退避する。
@@ -45,11 +48,11 @@ z.cls.capture._watch() {
 
   local REPLY=""
 
-  typeset -g +x z_cls_debug_function="${functions[TRAPDEBUG]-}"
-  typeset -g +x z_cls_debug_has_function=${+functions[TRAPDEBUG]}
-  typeset -g +x z_cls_debug_trap=''
-  typeset -g +x z_cls_debug_before=$options[debugbeforecmd]
-  typeset -g +x z_cls_debug_localtraps=$options[localtraps]
+  typeset -g z_cls_debug_function="${functions[TRAPDEBUG]-}"
+  typeset -g z_cls_debug_has_function=${+functions[TRAPDEBUG]}
+  typeset -g z_cls_debug_trap=''
+  typeset -g z_cls_debug_before=$options[debugbeforecmd]
+  typeset -g z_cls_debug_localtraps=$options[localtraps]
 
   # 退避前のDEBUGトラップによる呼出元の変数への代入と区別する。
   local z_cls_debug_line
@@ -67,7 +70,7 @@ z.cls.capture._watch() {
   unsetopt localoptions localtraps
   setopt debugbeforecmd
   functions[TRAPDEBUG]='unsetopt localoptions; z.cls.capture._debug "$ZSH_DEBUG_CMD"'
-  typeset -g +x z_cls_debug_watching=1
+  typeset -g z_cls_debug_watching=1
 }
 
 # 元のDEBUGトラップと実行タイミングの設定を復元する。
@@ -204,7 +207,7 @@ z.cls.capture._skip() {
     (( --z_cls_reject_depth ))
     if z.int.is.zero "$z_cls_reject_depth"; then
       unset z_cls_reject_depth z_cls_reject_method z_cls_reject_stack
-      typeset -g +x z_cls_reject_result=1
+      typeset -g z_cls_reject_result=1
 
       # 最外のz.cls.drewを実行し、定義を拒否したことを返す。
       return 0
@@ -244,7 +247,7 @@ z.cls.capture._method() {
 
   if z.int.is.not.zero "$z_cls_capture_discard"; then
     z.cls.abort
-    typeset -g +x z_cls_capture_done_result=1
+    typeset -g z_cls_capture_done_result=1
     return 0
   fi
 

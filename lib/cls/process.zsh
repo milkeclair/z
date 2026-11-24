@@ -20,16 +20,16 @@ z.cls.draw() {
     z_cls_class_attrs[$1]=''
     z_cls_class_methods[$1]=''
     z_cls_drawing=$1
-    typeset -g +x z_cls_draw_stack=${(j:|:)funcstack[2,-1]}
-    typeset -gi +x z_cls_draw_failed=0
+    typeset -g z_cls_draw_stack=${(j:|:)funcstack[2,-1]}
+    typeset -gi z_cls_draw_failed=0
 
     unsetopt localoptions
     z.cls.capture._watch
     return 0
   fi
 
-  typeset -gi +x z_cls_reject_depth=1 z_cls_reject_method=0
-  typeset -g +x z_cls_reject_stack=${(j:|:)funcstack[2,-1]}
+  typeset -gi z_cls_reject_depth=1 z_cls_reject_method=0
+  typeset -g z_cls_reject_stack=${(j:|:)funcstack[2,-1]}
 
   unsetopt localoptions
   z.cls.capture._watch
@@ -136,9 +136,12 @@ z.cls.method() {
     return 0
   fi
 
+  # 不正な見出しの本体も、終了マーカーまでは収集して実行を止める。
+  local method_name=invalid
+  z.int.is.zero "$invalid" && method_name=$1
+
   unsetopt localoptions
-  # 名前が空でも、終了マーカーまで本体を収集して実行を止める。
-  z.cls.capture._start "${1:-invalid}" \
+  z.cls.capture._start "$method_name" \
     stack="${(j:|:)funcstack[2,-1]}" \
     file="${funcfiletrace[1]%:*}" \
     discard="$invalid"

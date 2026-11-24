@@ -28,10 +28,10 @@ z.cls.store._ensure() {
   z.var.exists z_cls_next_id || typeset -gi z_cls_next_id=0
   z.var.exists z_cls_active || typeset -gA z_cls_active
 
-  z.var.exists z_cls_drawing || typeset -g +x z_cls_drawing=''
-  z.var.exists z_cls_capture_method || typeset -g +x z_cls_capture_method=''
+  z.var.exists z_cls_drawing || typeset -g z_cls_drawing=''
+  z.var.exists z_cls_capture_method || typeset -g z_cls_capture_method=''
 
-  typeset -gi +x z_cls_store_ready=1
+  typeset -gi z_cls_store_ready=1
 }
 
 # スカラーを復元できる宣言として保存する。
@@ -69,12 +69,15 @@ z.cls.store._scalar() {
 #  # return: 0
 #  # 変更後: Counterのメソッド一覧にvalueを加え、本体にREPLY=0を保存
 z.cls.store._method() {
-  local REPLY=""
-  z.arg.named class "${@:2}" && local class_name=$REPLY
-  z.arg.named body "${@:2}" && local body=$REPLY
+  local method_name=$1
+  shift
 
-  z_cls_bodies[$class_name:$1]=$body
-  z_cls_class_methods[$class_name]+="$1 "
+  local REPLY=""
+  z.arg.named class "$@" && local class_name=$REPLY
+  z.arg.named body "$@" && local body=$REPLY
+
+  z_cls_bodies[$class_name:$method_name]=$body
+  z_cls_class_methods[$class_name]+="$method_name "
 }
 
 # 未公開クラスが登録した属性とメソッドを破棄する。

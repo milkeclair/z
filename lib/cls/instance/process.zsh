@@ -23,10 +23,14 @@ z.cls.instance._call() {
   z.is.not.null "${z_cls_instances[$1]-}" && z_cls_instance=$1
   z.cls.instance.call._validate "$z_cls_instance" "$2" "$3" "$1" || return
 
-  if z.is.eq "$2" method; then
-    z.cls.instance.call._run "$z_cls_instance" "$3" "${@:4}"
+  local z_cls_operation=$2
+  local z_cls_member=$3
+  shift 3
+
+  if z.is.eq "$z_cls_operation" method; then
+    z.cls.instance.call._run "$z_cls_instance" "$z_cls_member" "$@"
   else
-    z.cls.instance.call._access "$z_cls_instance" "$2" "$3" "${@:4}"
+    z.cls.instance.call._access "$z_cls_instance" "$z_cls_operation" "$z_cls_member" "$@"
   fi
 }
 

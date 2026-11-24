@@ -42,5 +42,4 @@ z.cls.draw TestCounter
       $self.label.get
     fi
   z.cls.method.defined
-
 z.cls.drew
