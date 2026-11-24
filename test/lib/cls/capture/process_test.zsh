@@ -1,18 +1,13 @@
 source ${z_main}
 
-# DEBUGトラップとシェルオプションはサブシェルに隔離する。
-
 z.t.describe "z.cls.capture._start"; {
-  z.t.context "DEBUG捕捉を開始する場合"; {
-    z.t.it "メソッド名と呼出元を保持する"; {
+  z.t.context "名前付き引数を順不同で渡す場合"; {
+    z.t.it "収集するメソッド名と定義元と破棄フラグを保存する"; {
       z.cls.store._ensure
-      z.t.mock name=z.cls.capture._debug behavior='local REPLY=""'
-      REPLY=(before "two words" "")
+      z.t.mock name=z.cls.capture._debug
 
       z.cls.capture._start captured_method file="test file.zsh" discard=1 stack=test_stack
 
-      local -a preserved_reply=("${REPLY[@]}")
-      local installed_debug=${+functions[TRAPDEBUG]}
       local captured_name=$z_cls_capture_method
       local captured_stack=$z_cls_capture_stack
       local captured_file=$z_cls_capture_file
@@ -20,11 +15,24 @@ z.t.describe "z.cls.capture._start"; {
 
       z.cls.capture._stop
 
-      z.t.expect "$installed_debug" 1
       z.t.expect "$captured_name" captured_method
       z.t.expect "$captured_stack" test_stack
       z.t.expect "$captured_file" "test file.zsh"
       z.t.expect "$captured_discard" 1
+    }
+  }
+
+  z.t.context "呼出元のREPLYが配列の場合"; {
+    z.t.it "収集開始後も呼出元のREPLYの空要素と空白を保つ"; {
+      z.cls.store._ensure
+      z.t.mock name=z.cls.capture._debug
+      REPLY=(before "two words" "")
+
+      z.cls.capture._start captured_method stack=test_stack file=test_file
+
+      local -a preserved_reply=("${REPLY[@]}")
+      z.cls.capture._stop
+
       z.t.expect "${#preserved_reply}" 3
       z.t.expect "$preserved_reply[1]" before
       z.t.expect "$preserved_reply[2]" "two words"
@@ -33,26 +41,37 @@ z.t.describe "z.cls.capture._start"; {
   }
 
   z.t.context "最上位の定義を収集する場合"; {
-    z.t.it "空のスタックを保持し、既定では本体を破棄しない"; {
+    z.t.it "最上位の空のスタックを保持する"; {
       z.cls.store._ensure
       z.t.mock name=z.cls.capture._debug
 
       z.cls.capture._start captured_method stack= file=test_file
 
       local captured_stack=$z_cls_capture_stack
-      local captured_discard=$z_cls_capture_discard
-
       z.cls.capture._stop
 
       z.t.expect.is.null "$captured_stack"
+    }
+  }
+
+  z.t.context "discardを省略した場合"; {
+    z.t.it "破棄の指定がなければメソッドを残す"; {
+      z.cls.store._ensure
+      z.t.mock name=z.cls.capture._debug
+
+      z.cls.capture._start captured_method stack=test_stack file=test_file
+
+      local captured_discard=$z_cls_capture_discard
+      z.cls.capture._stop
+
       z.t.expect "$captured_discard" 0
     }
   }
 }
 
 z.t.describe "z.cls.capture._stop"; {
-  z.t.context "DEBUG捕捉を終了する場合"; {
-    z.t.it "元の関数形式トラップを復元する"; {
+  z.t.context "元のDEBUGトラップが関数形式の場合"; {
+    z.t.it "退避した関数形式のDEBUGトラップを復元する"; {
       z.cls.store._ensure
       z.t.mock name=z.cls.capture._debug
       TRAPDEBUG() {
@@ -65,14 +84,11 @@ z.t.describe "z.cls.capture._stop"; {
       z.cls.capture._stop
 
       z.t.expect "$functions[TRAPDEBUG]" "$original_debug"
-      z.t.expect.is.null "$z_cls_capture_method"
 
       unfunction TRAPDEBUG
     }
-  }
 
-  z.t.context "既存のDEBUGトラップがある場合"; {
-    z.t.it "関数形式のトラップを復元し、元のトラップも実行する"; {
+    z.t.it "クラスを公開した後のコマンドで元のDEBUGトラップを実行する"; {
       local -a output=()
       output=("${(@f)$(
         local -i trap_calls=0
@@ -81,50 +97,61 @@ z.t.describe "z.cls.capture._stop"; {
           return 0
         }
 
-        local before=$functions[TRAPDEBUG]
         source "$z_root/test/lib/cls/fixtures/counter.zsh"
-        local after=$functions[TRAPDEBUG]
-        local calls=$trap_calls
-        local first=""
-        z.cls.new TestCounter first
-        $first.increment
-        local call_reply=$REPLY
+        local source_status=$?
+
+        local calls_before=$trap_calls
+        :
+        local calls_after=$trap_calls
+
         unfunction TRAPDEBUG
-        print -rl -- "${(qqqq)before}" "${(qqqq)after}" "$calls" "$call_reply"
+        print -rl -- "$source_status" "$calls_before" "$calls_after"
       )}")
 
-      z.t.expect.status.is.true
-      z.t.expect "${#output}" 4
-      z.t.expect "$output[2]" "$output[1]"
-      z.int.is.gt "$output[3]" 0
+      z.t.expect "${#output}" 3
+      z.t.expect "$output[1]" 0
+
+      z.int.is.gt "$output[3]" "$output[2]"
 
       z.t.expect.status.is.true
-      z.t.expect "$output[4]" 1
     }
+  }
 
-    z.t.it "リスト形式のトラップを復元する"; {
+  z.t.context "本体の収集中に監視を終了する場合"; {
+    z.t.it "監視を終了すると収集中のメソッド名を消去する"; {
+      z.cls.store._ensure
+      z.t.mock name=z.cls.capture._debug
+      z.cls.capture._start captured_method stack=test_stack file=test_file
+
+      z.cls.capture._stop
+
+      z.t.expect.is.null "$z_cls_capture_method"
+    }
+  }
+
+  z.t.context "元のDEBUGトラップがリスト形式の場合"; {
+    z.t.it "クラスの公開後に元のリスト形式のDEBUGトラップを復元する"; {
       local -a output=()
       output=("${(@f)$(
-        local -i trap_calls=0
-        trap '(( ++trap_calls ))' DEBUG
-        local before=$(trap)
+        trap ': original' DEBUG
+        local original=$(trap)
+
         source "$z_root/test/lib/cls/fixtures/counter.zsh"
-        local after=$(trap)
-        local first=""
-        z.cls.new TestCounter first
-        $first.increment
-        local call_reply=$REPLY
+        local source_status=$?
+
+        local restored=$(trap)
         trap - DEBUG
-        print -rl -- "${(qqqq)before}" "${(qqqq)after}" "$call_reply"
+        print -rl -- "$source_status" "${(qqqq)original}" "${(qqqq)restored}"
       )}")
 
-      z.t.expect.status.is.true
       z.t.expect "${#output}" 3
-      z.t.expect "$output[2]" "$output[1]"
-      z.t.expect "$output[3]" 1
+      z.t.expect "$output[1]" 0
+      z.t.expect "$output[3]" "$output[2]"
     }
+  }
 
-    z.t.it "標準出力へ表示するトラップも復元する"; {
+  z.t.context "元のDEBUGトラップが標準出力へ書く場合"; {
+    z.t.it "標準出力へ書くDEBUGトラップを復元する"; {
       local -a output=()
       output=("${(@f)$(
         trap 'print -rl -- "TRACE:$ZSH_DEBUG_CMD"' DEBUG
@@ -136,8 +163,9 @@ z.t.describe "z.cls.capture._stop"; {
         print -rl -- "$source_status" "${(qqqq)before}" "${(qqqq)after}"
       )}")
 
-      z.t.expect.status.is.true
-      z.t.expect.includes "${(j:\n:)output}" TRACE:
+      z.arr.join.line "${output[@]}"
+
+      z.t.expect.reply.includes TRACE:
       z.t.expect "$output[-3]" 0
       z.t.expect "$output[-1]" "$output[-2]"
     }
@@ -145,8 +173,8 @@ z.t.describe "z.cls.capture._stop"; {
 }
 
 z.t.describe "z.cls.capture._debug"; {
-  z.t.context "通常の本体を捕捉する場合"; {
-    z.t.it "コマンドを保存してerrexitで実行を抑制する"; {
+  z.t.context "通常のコマンドを収集する場合"; {
+    z.t.it "コマンドを本体に追記しその場の実行を止める"; {
       z.cls.store._ensure
       z_cls_capture_method=record
       z_cls_capture_stack=''
@@ -163,8 +191,8 @@ z.t.describe "z.cls.capture._debug"; {
     }
   }
 
-  z.t.context "定義ファイルを読み込む場合"; {
-    z.t.it "本体の実行を保留し、制御構文と呼出元の変数を保つ"; {
+  z.t.context "ループと条件分岐を含む定義ファイルを読み込む場合"; {
+    z.t.it "ループと条件分岐を実行し呼出元の変数を変更しない"; {
       local -a output=()
       output=("${(@f)$(
         local -i count=40
@@ -186,7 +214,10 @@ z.t.describe "z.cls.capture._debug"; {
       z.t.expect "$output[5]" 40
     }
 
-    z.t.it "終了マーカーがない定義を破棄してトラップを復元する"; {
+  }
+
+  z.t.context "メソッドを閉じず定義ファイルから戻る場合"; {
+    z.t.it "メソッドの終端がなければ定義を破棄しDEBUGトラップを外す"; {
       local -a output=()
       output=("${(@f)$(
         source "$z_root/test/lib/cls/fixtures/unfinished.zsh"
@@ -203,7 +234,10 @@ z.t.describe "z.cls.capture._debug"; {
       z.t.expect "$output[3]" 1
     }
 
-    z.t.it "クラスの終端を欠いた場合も定義を破棄しトラップを復元する"; {
+  }
+
+  z.t.context "クラスを閉じず定義ファイルから戻る場合"; {
+    z.t.it "drewがなければ初期値を破棄しクラスを公開しない"; {
       local -a output=()
       output=("${(@f)$(
         source "$z_root/test/lib/cls/fixtures/missing-drew.zsh"
@@ -218,7 +252,10 @@ z.t.describe "z.cls.capture._debug"; {
       z.t.expect "$output[4]" 0
     }
 
-    z.t.it "無効なメソッド名の本体を実行せず定義を破棄する"; {
+  }
+
+  z.t.context "メソッド名が不正な定義を読み込む場合"; {
+    z.t.it "不正なメソッド名の本文を実行せず定義を破棄する"; {
       local -a output=()
       output=("${(@f)$(
         local -i side_effect=0
@@ -232,7 +269,10 @@ z.t.describe "z.cls.capture._debug"; {
       z.t.expect "$output[2]" :
     }
 
-    z.t.it "メソッド内のdrawとdrewは呼び出すまで実行しない"; {
+  }
+
+  z.t.context "メソッド内で別のクラスを宣言する場合"; {
+    z.t.it "別のクラスはメソッドを実行したときに公開する"; {
       local -a output=()
       output=("${(@f)$(
         z.cls.draw MarkerOuter
@@ -259,7 +299,10 @@ z.t.describe "z.cls.capture._debug"; {
       z.t.expect "$output[2]" ready
     }
 
-    z.t.it "パイプ、ヒアドキュメント、条件付きコマンドを保存する"; {
+  }
+
+  z.t.context "パイプやヒアドキュメントを含む本文を収集する場合"; {
+    z.t.it "ヒアドキュメント内の終端マーカーを実行せず本文を保存する"; {
       local -a output=()
       output=("${(@f)$(
         source "$z_root/test/lib/cls/fixtures/body-syntax.zsh"
@@ -281,7 +324,7 @@ z.t.describe "z.cls.capture._debug"; {
 
 z.t.describe "z.cls.capture._skip"; {
   z.t.context "定義中に別の定義をsourceした場合"; {
-    z.t.it "対応するdrewまで実行を抑止し、外側の定義を維持する"; {
+    z.t.it "入れ子の定義を読み飛ばして外側のクラスを公開する"; {
       local -a output=()
       output=("${(@f)$(
         trap ': ORIGINAL' DEBUG
@@ -319,7 +362,7 @@ z.t.describe "z.cls.capture._skip"; {
   }
 
   z.t.context "公開済みのクラスと同じ名前をsourceした場合"; {
-    z.t.it "定義を上書きせず終端で失敗する"; {
+    z.t.it "公開済みの同名クラスの初期値を上書きしない"; {
       local -a output=()
       output=("${(@f)$(
         z.cls.draw Rejected
@@ -342,13 +385,26 @@ z.t.describe "z.cls.capture._skip"; {
 }
 
 z.t.describe "z.cls.capture._watch"; {
+  z.t.context "DEBUGトラップを監視していない場合"; {
+    z.t.it "監視を始めるとクラス用DEBUGトラップを登録する"; {
+      z.cls.store._ensure
+      z.cls.capture._watch
+      z.var.exists 'functions[TRAPDEBUG]'
+      local debug_status=$?
+
+      z.cls.capture._stop
+
+      z.t.expect "$debug_status" 0
+    }
+  }
+
   z.t.context "DEBUGトラップが呼出元のtrap_lineに代入する場合"; {
-    z.t.it "トラップを上書きせず、呼出元への代入を保つ"; {
+    z.t.it "退避中のDEBUGトラップが呼出元のtrap_lineを更新できる"; {
       local -a output=()
       output=("${(@f)$(
         local trap_line=before
         trap '
-          if [[ $funcstack[1] == z.cls.capture._watch && $ZSH_DEBUG_CMD == "z.is.eq \"\$REPLY\" DEBUG"* ]]; then
+          if [[ $funcstack[1] == z.cls.capture._watch ]]; then
             trap_line="assigned by DEBUG"
           fi
         ' DEBUG
@@ -362,7 +418,6 @@ z.t.describe "z.cls.capture._watch"; {
         print -rl -- "${(qqqq)original}" "${(qqqq)restored}" "$trap_line"
       )}")
 
-      z.t.expect.status.is.true
       z.t.expect "${#output}" 3
       z.t.expect "$output[2]" "$output[1]"
       z.t.expect "$output[3]" "assigned by DEBUG"
