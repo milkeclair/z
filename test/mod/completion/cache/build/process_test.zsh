@@ -18,7 +18,7 @@ z.t.describe "z.completion.cache.build._names"; {
 
       REPLY=("${class_names[@]}")
 
-      z.t.expect.reply.is.arr z.cls.abort z.cls.attr z.cls.delete z.cls.draw z.cls.drew z.cls.method z.cls.method.defined z.cls.new
+      z.t.expect.reply.is.arr z.cls.abort z.cls.attr z.cls.delete z.cls.draw z.cls.drew z.cls.method z.cls.method.defined z.cls.new z.cls.owner.move
     }
   }
 

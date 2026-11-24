@@ -157,6 +157,34 @@ z.t.describe "z.cls.instance.call._run"; {
     }
   }
 
+  z.t.context "インスタンス参照をコールバックに渡す場合"; {
+    z.t.it "コールバックから同じインスタンスを更新する"; {
+      () {
+        z.cls.draw CallbackUpdate
+          z.cls.attr count default=5
+          z.cls.method update '"$1" "$self"'
+        z.cls.drew
+
+        local owner=""
+        z.cls.new CallbackUpdate owner
+
+        update_through_reference() {
+          local ref=$1
+          $ref.count.set 8
+        }
+
+        $owner.update update_through_reference
+
+        z.t.expect.status.is.true
+        $owner.count.get
+        z.t.expect.reply 8
+
+        unfunction update_through_reference
+        z.cls.delete owner
+      }
+    }
+  }
+
   z.t.context "属性と同名の引数がある場合"; {
     z.t.it "named引数と呼出元のcountを属性から独立して扱う"; {
       () {

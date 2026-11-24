@@ -15,17 +15,29 @@
 #  # 変更後: instance_idにcounterと同じインスタンスIDを代入済み
 #  # return: 0
 z.cls.instance._resolve() {
-  if z.is.null "${z_cls_instances[$1]}"; then
+  local z_cls_resolved_id=${z_cls_references[$1]}
+
+  if z.is.null "$z_cls_resolved_id"; then
     z.io.error "Instance reference $1 is not available in this scope."
     return 1
   fi
 
-  if z.var.exists "z_cls_active[$1]" && z.is.not.eq "${z_cls_current_instance}" "$1"; then
-    z.io.error "Instance $1 is active in another instance call."
-    return 1
-  fi
+  case ${z_cls_active[$z_cls_resolved_id]} in
+    '')
+      if ! z.var.exists "$z_cls_owner_markers[$z_cls_resolved_id]"; then
+        z.io.error "Instance reference $1 is not available in this scope."
+        return 1
+      fi
+      ;;
+    *)
+      if z.is.not.eq "${z_cls_current_instance}" "$z_cls_resolved_id"; then
+        z.io.error "Instance $z_cls_resolved_id is active in another instance call."
+        return 1
+      fi
+      ;;
+  esac
 
-  : "${(P)2::=$1}"
+  : "${(P)2::=$z_cls_resolved_id}"
 }
 
 # インスタンスのコマンドと、変更した属性値を解放する。
@@ -47,7 +59,9 @@ z.cls.instance._release() {
   local instance_id=$1
   local class_name=$z_cls_instances[$instance_id]
 
-  z.cls.instance.commands._uninstall "$instance_id" "class=$class_name"
+  local reference=$z_cls_owner_refs[$instance_id]
+
+  z.cls.instance.commands._uninstall "$reference" "class=$class_name"
 
   z.cls.store._names "$z_cls_class_attrs[$class_name]"
   local attribute
@@ -56,10 +70,14 @@ z.cls.instance._release() {
   done
 
   unset "z_cls_instances[$instance_id]" "z_cls_active[$instance_id]"
+  unset "z_cls_references[$reference]" "z_cls_owner_refs[$instance_id]" "z_cls_owner_markers[$instance_id]"
 
   if z.is.eq "${#z_cls_instances}" 0; then
     z_cls_instances=()
     z_cls_scalars=()
     z_cls_active=()
+    z_cls_references=()
+    z_cls_owner_refs=()
+    z_cls_owner_markers=()
   fi
 }

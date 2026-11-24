@@ -8,7 +8,8 @@
 #  # return: 0
 #  # 変更後: z_cls_instances=()とz_cls_scalars=()を初期化済み
 z.cls.store._ensure() {
-  if z.is.eq "${z_cls_store_ready}" 1 && z.var.exists z_cls_dispatch_programs; then
+  if z.is.eq "${z_cls_store_ready}" 1 && z.var.exists z_cls_dispatch_programs &&
+    z.var.exists z_cls_owner_markers; then
     return 0
   fi
 
@@ -25,6 +26,13 @@ z.cls.store._ensure() {
   z.var.exists z_cls_dispatch_programs || typeset -gA z_cls_dispatch_programs
   z.var.exists z_cls_next_id || typeset -gi z_cls_next_id=0
   z.var.exists z_cls_active || typeset -gA z_cls_active
+
+  z.var.exists z_cls_owner_markers || typeset -gA z_cls_owner_markers
+  z.var.exists z_cls_references || typeset -gA z_cls_references
+  z.var.exists z_cls_owner_refs || typeset -gA z_cls_owner_refs
+  z.var.exists z_cls_next_owner_id || typeset -gi z_cls_next_owner_id=0
+  z.var.exists z_cls_next_reference || typeset -gi z_cls_next_reference=0
+  z.var.exists z_cls_gc_allocations || typeset -gi z_cls_gc_allocations=0
 
   z.var.exists z_cls_drawing || typeset -g z_cls_drawing=''
   z.var.exists z_cls_capture_method || typeset -g z_cls_capture_method=''

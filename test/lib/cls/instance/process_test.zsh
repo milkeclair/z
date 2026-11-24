@@ -20,6 +20,48 @@ z.t.describe "z.cls.instance._resolve"; {
     }
   }
 
+  z.t.context "所有権を移した場合"; {
+    z.t.it "新しい参照を元のインスタンスIDへ解決する"; {
+      () {
+        z.cls.draw ResolveAfterMove
+        z.cls.drew
+        local first=""
+        local second=""
+        z.cls.new ResolveAfterMove first
+        z.cls.owner.move from=first to=second
+
+        local instance_id=""
+
+        z.cls.instance._resolve "$second" instance_id
+
+        z.t.expect "$instance_id" "$first"
+
+        z.cls.delete second
+      }
+    }
+
+    z.t.it "移動前にコピーした参照を拒否する"; {
+      () {
+        z.cls.draw ResolveCopyAfterMove
+        z.cls.drew
+        local first=""
+        local second=""
+        z.cls.new ResolveCopyAfterMove first
+        local copy=$first
+        z.cls.owner.move from=first to=second
+        z.t.mock name=z.io.error
+
+        local instance_id=""
+
+        z.cls.instance._resolve "$copy" instance_id
+
+        z.t.expect.status.is.false
+
+        z.cls.delete second
+      }
+    }
+  }
+
   z.t.context "参照を解決できない場合"; {
     z.t.it "失敗する"; {
       z.cls.store._ensure

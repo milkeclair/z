@@ -388,6 +388,45 @@ z.t.describe "z.cls.new"; {
     }
   }
 
+  z.t.context "既定値を共有する場合"; {
+    z.t.it "未変更の属性を保持せず、明示した空文字だけをインスタンスに保存する"; {
+      () {
+        z.cls.draw SharedDefaults
+          z.cls.attr label default=initial
+        z.cls.drew
+
+        local first="" second=""
+        z.cls.new SharedDefaults first
+        z.cls.new SharedDefaults second
+
+        $first.label.get
+
+        z.t.expect.reply initial
+        z.var.exists "z_cls_scalars[${first}:label]"
+        z.t.expect.status.is.false
+
+        $first.label.set ""
+        $first.label.get
+
+        z.t.expect.reply.is.null
+        z.var.exists "z_cls_scalars[${first}:label]"
+        z.t.expect.status.is.true
+
+        $second.label.get
+
+        z.t.expect.reply initial
+        z.var.exists "z_cls_scalars[${second}:label]"
+        z.t.expect.status.is.false
+
+        z.cls.delete first
+
+        z.var.exists "z_cls_scalars[${first}:label]"
+        z.t.expect.status.is.false
+        z.cls.delete second
+      }
+    }
+  }
+
   z.t.context "参照をコピーした場合"; {
     z.t.it "コピーから更新した値を元の参照で読める"; {
       () {
@@ -922,15 +961,16 @@ z.t.describe "z.cls.delete"; {
         local index
 
         for (( index=1; index<=72; index++ )); do
+          local "owner_$index="
           () {
             local object=""
+            z.cls.new TestCounter object || return 1
 
-            z.cls.new TestCounter object
-
-            z.t.expect.status.is.true
-
-            saved_refs+=("$object")
+            z.cls.owner.move from=object "to=owner_$index" || return 1
+            saved_refs+=("$REPLY")
           }
+
+          z.t.expect.status.is.true
         done
 
         local reference
@@ -947,9 +987,8 @@ z.t.describe "z.cls.delete"; {
 
         z.t.expect.reply 42
 
-        object.increment() {
-          REPLY=custom
-        }
+        local replaced="$reference.increment"
+        functions[$replaced]='REPLY=custom'
 
         for reference in "${(@)saved_refs[37,72]}"; do
           z.cls.delete "$reference"
@@ -957,7 +996,7 @@ z.t.describe "z.cls.delete"; {
           z.t.expect.status.is.true
         done
 
-        object.increment
+        "$replaced"
 
         z.t.expect.reply custom
 
@@ -979,7 +1018,7 @@ z.t.describe "z.cls.delete"; {
 
         z.t.expect.status.is.true
 
-        unfunction object.increment
+        unfunction "$replaced"
       }
     }
   }

@@ -14,6 +14,21 @@ z.t.describe "z.cls.store._ensure"; {
     }
   }
 
+  z.t.context "既存の保存領域に所有者の管理表がない場合"; {
+    z.t.it "再読込時に既存のクラスを保ちながら所有者の管理表を初期化する"; {
+      (
+        z.cls.store._ensure
+        z_cls_classes[StoreBeforeGc]=1
+        unset z_cls_owner_markers
+        z.cls.store._ensure
+        z.var.exists z_cls_owner_markers &&
+          z.is.eq "$z_cls_classes[StoreBeforeGc]" 1
+      )
+
+      z.t.expect.status.is.true
+    }
+  }
+
   z.t.context "初期化フラグだけが残る場合"; {
     z.t.it "不足したストアを初期化する"; {
       unset z_cls_dispatch_programs

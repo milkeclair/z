@@ -235,6 +235,7 @@ z.cls.new() {
   z.cls.store._ensure
 
   z.cls.new._validate "$@" || return
+  z.cls.gc._collect
 
   (( ++z_cls_next_id ))
 
@@ -242,9 +243,13 @@ z.cls.new() {
 
   z.cls.instance.commands._install "$z_cls_id" "class=$1" || return
 
+  if ! z.cls.owner._bind "$z_cls_id" "to=$2" "instance=$z_cls_id"; then
+    z.cls.instance.commands._uninstall "$z_cls_id" "class=$1"
+    return 1
+  fi
+
   z_cls_instances[$z_cls_id]=$1
-  : ${(P)2::=$z_cls_id}
-  typeset -gr -- "$2"
+  (( ++z_cls_gc_allocations ))
 
   REPLY=$z_cls_id
 }
